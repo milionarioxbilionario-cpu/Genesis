@@ -14,6 +14,7 @@
 - E2E test: script `backend/scripts/e2e_test2.js` executado localmente — criou tenant/test owner, definiu PIN, criou produto, registou venda, cancelou venda com PIN, validou restauração de stock e entradas em AuditLog.
 - Shift-closing E2E: script `backend/scripts/shift_closing_e2e.js` executado localmente — criou tenant/owner/cashier, registou venda como cashier, efetuou fecho de turno, e validou entrada em ShiftClosing + AuditLog.
 - RLS validation: `backend/scripts/rls_validation.js` executed and confirmed tenant isolation queries returned expected rows when `SET app.tenant_id` is used.
+- Playwright offline->online sync test: a Playwright test was added at `frontend/tests/playwright_offline_sync_test.js`. Attempt to install browsers here failed due to missing system packages in this environment. A Docker helper is available at `scripts/run_playwright_docker.sh` to run the Playwright test using the official Playwright Docker image (recommended on CI or local Docker-enabled machines).
 
 ## Passos recomendados agora (end-to-end)
 1. Instalar dependências (se ainda não o fizeste):
