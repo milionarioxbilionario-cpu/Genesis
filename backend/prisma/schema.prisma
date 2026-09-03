@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// All monetary values stored as INTEGER representing centavos
+
+model Tenant {
+  id                  String   @id @default(uuid())
+  name                String
+  owner_name          String
+  business_type       String
+  location            String
+  phone               String
+  email               String?
+  nuit                String?
+  id_document         String?
+  status              String   @default("pending")
+  trial_ends_at       DateTime?
+  subscription_price  Int      @default(300000)
+  created_at          DateTime @default(now())
+  cancel_pin_hash     String?  // bcrypt hash for owner cancel PIN (optional)
+
+  users               User[]   @relation("TenantUsers")
+  products            Product[]
+  sales               Sale[]
+  stock_entries       StockEntry[]
+  employees           Employee[]
+  suppliers           Supplier[]
+  fixed_costs         FixedCost[]
+  debts               Debt[]
+  demand_captures     DemandCapture[]
+  shrinkage_records   ShrinkageRecord[]
+  shift_closings      ShiftClosing[]
+  sale_goals          SaleGoal[]
+  audit_logs          AuditLog[]
+  product_price_history ProductPriceHistory[]
+}
+
+model User {
+  id            String   @id @default(uuid())
+  tenant_id     String?  // NULL for super_admin users
+  role          String
+  name          String
+  email         String   @unique
+  password_hash String
+  phone         String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  tenant        Tenant?  @relation(fields: [tenant_id], references: [id], name: "TenantUsers")
+  sales         Sale[]   @relation("CashierSales")
+  stock_entries StockEntry[]
+  debts_created Debt[]   @relation("DebtCreator")
+  debt_payments DebtPayment[]
+  audit_logs    AuditLog[]
+  demand_captures_recorded DemandCapture[] @relation("DemandCapturedBy")
+  shrinkage_records_recorded ShrinkageRecord[] @relation("ShrinkageRecordedBy")
+  shift_closings_user ShiftClosing[] @relation("ShiftClosedBy")
+  product_price_changes ProductPriceHistory[] @relation("PriceChangedBy")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  name           String
+  category       String
+  barcode        String?
+  image_url      String?
+  cost_price     Int      @default(0)
+  sell_price     Int      @default(0)
+  stock_qty      Int      @default(0)
+  min_stock      Int      @default(5)
+  has_expiry     Boolean  @default(false)
+  expiry_date    DateTime?
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  tenant         Tenant   @relation(fields: [tenant_id], references: [id])
+  sale_items     SaleItem[]
+  stock_entries  StockEntry[]
+  demand_captures DemandCapture[]
+  shrinkage_records ShrinkageRecord[]
+  product_price_history ProductPriceHistory[]
+}
+
+model Sale {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  cashier_user_id  String
+  total_amount     Int
+  total_cost       Int
+  payment_method   String
+  amount_received  Int
+  change_given     Int
+  status           String
+  cancelled_by     String?
+  cancel_reason    String?
+  created_at       DateTime  @default(now())
+
+  tenant           Tenant    @relation(fields: [tenant_id], references: [id])
+  cashier          User      @relation(fields: [cashier_user_id], references: [id], name: "CashierSales")
+  items            SaleItem[]
+}
+
+model SaleItem {
+  id               String   @id @default(uuid())
+  sale_id          String
+  product_id       String
+  product_name     String
+  quantity         Int
+  unit_sell_price  Int
+  unit_cost_price  Int
+
+  sale             Sale     @relation(fields: [sale_id], references: [id])
+  product          Product  @relation(fields: [product_id], references: [id])
+}
+
+model StockEntry {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  product_id   String
+  quantity     Int
+  unit_cost    Int
+  supplier_id  String?
+  recorded_by  String
+  created_at   DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+  product      Product  @relation(fields: [product_id], references: [id])
+  recordedBy   User     @relation(fields: [recorded_by], references: [id])
+}
+
+model Employee {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  name           String
+  role           String
+  monthly_salary Int
+  phone          String?
+  start_date     DateTime?
+  is_active      Boolean  @default(true)
+
+  tenant         Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model Supplier {
+  id                      String   @id @default(uuid())
+  tenant_id               String
+  name                    String
+  phone                   String
+  delivery_cost_per_visit Int
+  is_active               Boolean  @default(true)
+
+  tenant                  Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model FixedCost {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  description String
+  amount     Int
+  type       String
+
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model Debt {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  debtor_name  String
+  debtor_phone String
+  total_amount Int
+  amount_paid  Int      @default(0)
+  due_date     DateTime
+  status       String
+  created_by   String
+  created_at   DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+  createdBy    User     @relation(fields: [created_by], references: [id], name: "DebtCreator")
+  payments     DebtPayment[]
+}
+
+model DebtPayment {
+  id          String   @id @default(uuid())
+  debt_id     String
+  amount      Int
+  paid_at     DateTime @default(now())
+  recorded_by String
+
+  debt        Debt     @relation(fields: [debt_id], references: [id])
+  recordedBy  User     @relation(fields: [recorded_by], references: [id])
+}
+
+model DemandCapture {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  product_id   String
+  recorded_by  String
+  requested_at DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+  product      Product  @relation(fields: [product_id], references: [id])
+  recordedBy   User     @relation(fields: [recorded_by], references: [id], name: "DemandCapturedBy")
+}
+
+model ShrinkageRecord {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  product_id   String
+  quantity     Int
+  reason       String
+  recorded_by  String
+  recorded_at  DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+  product      Product  @relation(fields: [product_id], references: [id])
+  recordedBy   User     @relation(fields: [recorded_by], references: [id], name: "ShrinkageRecordedBy")
+}
+
+model ShiftClosing {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  cashier_user_id String
+  counted_amount  Int
+  expected_amount Int
+  difference      Int
+  closed_at       DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id])
+  cashier         User     @relation(fields: [cashier_user_id], references: [id], name: "ShiftClosedBy")
+}
+
+model SaleGoal {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  month        Int
+  year         Int
+  target_amount Int
+  created_at   DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  tenant_id    String?
+  user_id      String
+  action       String
+  entity_type  String
+  entity_id    String?
+  old_value    Json?
+  new_value    Json?
+  ip_address   String
+  created_at   DateTime @default(now())
+
+  user         User     @relation(fields: [user_id], references: [id])
+  tenant       Tenant?  @relation(fields: [tenant_id], references: [id])
+}
+
+model MasterCatalog {
+  id              String   @id @default(uuid())
+  business_type   String
+  product_name    String
+  category        String
+  suggested_cost  Int
+  suggested_sell  Int
+}
+
+model ProductPriceHistory {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  product_id String
+  old_cost   Int
+  new_cost   Int
+  changed_at DateTime @default(now())
+  changed_by String
+
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+  product    Product  @relation(fields: [product_id], references: [id])
+  changedBy  User     @relation(fields: [changed_by], references: [id], name: "PriceChangedBy")
+}

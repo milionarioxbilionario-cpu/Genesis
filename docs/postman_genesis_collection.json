@@ -1,0 +1,62 @@
+{
+  "info": {
+    "name": "Genesis API - Core Flows",
+    "description": "Postman collection for core flows: login, set cancel PIN, create product, create sale, cancel sale.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"owner@example.test\",\n  \"password\": \"<password-demo-removida-do-historico>\"\n}" },
+        "url": { "raw": "{{API_BASE}}/api/auth/login", "host": ["{{API_BASE}}"], "path": ["api","auth","login"] }
+      }
+    },
+    {
+      "name": "Set Cancel PIN",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{TOKEN}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"pin\": \"1234\"\n}" },
+        "url": { "raw": "{{API_BASE}}/api/sales/cancel-pin", "host": ["{{API_BASE}}"], "path": ["api","sales","cancel-pin"] }
+      }
+    },
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{TOKEN}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Product\",\n  \"sell_price\": 500,\n  \"cost_price\": 300,\n  \"stock_qty\": 10\n}" },
+        "url": { "raw": "{{API_BASE}}/api/products", "host": ["{{API_BASE}}"], "path": ["api","products"] }
+      }
+    },
+    {
+      "name": "Create Sale",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{TOKEN}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"items\": [{ \"product_id\": \"{{PRODUCT_ID}}\", \"product_name\": \"Postman Product\", \"quantity\": 2, \"unit_sell_price\": 500, \"unit_cost_price\": 300 }],\n  \"total_amount\": 1000,\n  \"total_cost\": 600,\n  \"payment_method\": \"cash\",\n  \"amount_received\": 1000\n}" },
+        "url": { "raw": "{{API_BASE}}/api/sales", "host": ["{{API_BASE}}"], "path": ["api","sales"] }
+      }
+    },
+    {
+      "name": "Cancel Sale",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{TOKEN}}" } ],
+        "body": { "mode": "raw", "raw": "{ \"pin\": \"1234\" }" },
+        "url": { "raw": "{{API_BASE}}/api/sales/{{SALE_ID}}/cancel", "host": ["{{API_BASE}}"], "path": ["api","sales","{{SALE_ID}}","cancel"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "API_BASE", "value": "http://localhost:4000" },
+    { "key": "TOKEN", "value": "" },
+    { "key": "PRODUCT_ID", "value": "" },
+    { "key": "SALE_ID", "value": "" }
+  ]
+}
