@@ -7,10 +7,11 @@
 - Fecho de turno, impressão de recibos, cancelamento por PIN e hardening UX para cancelamentos implementados no código.
 
 ## Validações já concluídas
-- Frontend build validado localmente (vite build ok).
+- Frontend build validado localmente (vite build ok) e preview iniciado localmente (porta 5174).
 - Backend sintaxe validada (checagem Node/Prisma em ambiente local).
 - Prisma migrations: `npx prisma migrate deploy` reportou "No pending migrations".
 - RLS: script idempotente executado no SQL Editor do projeto; políticas criadas/confirmadas.
+- E2E test: script `backend/scripts/e2e_test2.js` executado localmente — criou tenant/test owner, definiu PIN, criou produto, registou venda, cancelou venda com PIN, validou restauração de stock e entradas em AuditLog.
 
 ## Passos recomendados agora (end-to-end)
 1. Instalar dependências (se ainda não o fizeste):
