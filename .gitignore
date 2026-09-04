@@ -1,3 +1,32 @@
+# Ficheiros de Ambiente / Credenciais (MUITO IMPORTANTE)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+
+# Dependências (Pastas muito pesadas que não devem ir para o GitHub)
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Logs do Sistema
+*.log
+backend_server.log
+
+# Ficheiros do Sistema Operativo / IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Ficheiros temporários e cache
+.npm
+.eslintcache
 node_modules/
 frontend/node_modules/
 backend/node_modules/
