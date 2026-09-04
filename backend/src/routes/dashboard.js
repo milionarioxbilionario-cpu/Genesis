@@ -22,7 +22,7 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
       prisma.sale.findMany({
         where: { tenant_id: tenantId },
         orderBy: { created_at: 'desc' },
-        take: 5,
+        take: 6,
         include: { items: true }
       }),
       prisma.sale.count({
@@ -83,6 +83,74 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
   } catch (err) {
     console.error('Dashboard summary error', err);
     return res.status(500).json({ error: 'Erro ao carregar resumo do negócio' });
+  }
+});
+
+router.get('/reports', auth, requireRole('owner', 'cashier'), async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const days = 7;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (days - 1));
+
+    const sales = await prisma.sale.findMany({
+      where: {
+        tenant_id: tenantId,
+        created_at: { gte: start }
+      },
+      orderBy: { created_at: 'asc' },
+      include: { items: true }
+    });
+
+    const dailyMap = new Map();
+    for (const sale of sales) {
+      const key = new Date(sale.created_at).toISOString().slice(0, 10);
+      const existing = dailyMap.get(key) || { date: key, revenue: 0, orders: 0 };
+      existing.revenue += Number(sale.total_amount || 0);
+      existing.orders += 1;
+      dailyMap.set(key, existing);
+    }
+
+    const salesByDay = Array.from({ length: days }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const key = date.toISOString().slice(0, 10);
+      const entry = dailyMap.get(key) || { revenue: 0, orders: 0 };
+      return {
+        label: date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' }),
+        revenue: Number(entry.revenue || 0),
+        orders: Number(entry.orders || 0)
+      };
+    });
+
+    const productBuckets = new Map();
+    for (const sale of sales) {
+      for (const item of sale.items) {
+        const key = item.product_name || 'Produto';
+        const existing = productBuckets.get(key) || { name: key, qty: 0, revenue: 0 };
+        existing.qty += Number(item.quantity || 0);
+        existing.revenue += Number(item.unit_sell_price || 0) * Number(item.quantity || 0);
+        productBuckets.set(key, existing);
+      }
+    }
+
+    const topProducts = Array.from(productBuckets.values())
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+
+    const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.total_amount || 0), 0);
+
+    return res.json({
+      salesByDay,
+      topProducts,
+      totalRevenue,
+      totalOrders: sales.length,
+      averageTicket: sales.length ? (totalRevenue / sales.length) : 0
+    });
+  } catch (err) {
+    console.error('Dashboard reports error', err);
+    return res.status(500).json({ error: 'Erro ao carregar relatórios' });
   }
 });
 

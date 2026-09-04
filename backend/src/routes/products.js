@@ -161,43 +161,6 @@ router.delete('/:id', auth, requireRole('owner'), async (req, res) => {
   }
 });
 
-router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
-  try {
-    const productId = req.params.id;
-    const tenantId = req.user.tenantId;
-    const data = updateProductSchema.parse(req.body);
-
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.tenant_id !== tenantId) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-
-    const updated = await prisma.product.update({
-      where: { id: productId },
-      data: {
-        name: data.name,
-        category: data.category,
-        barcode: data.barcode ?? undefined,
-        sell_price: data.sell_price,
-        cost_price: data.cost_price,
-        stock_qty: data.stock_qty,
-        min_stock: data.min_stock,
-        has_expiry: data.has_expiry,
-        expiry_date: data.expiry_date ? new Date(data.expiry_date) : null,
-        is_active: data.is_active
-      }
-    });
-
-    return res.json(updated);
-  } catch (err) {
-    if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
-    }
-    console.error('Update product error', err);
-    return res.status(500).json({ error: 'Erro ao atualizar produto' });
-  }
-});
-
 router.patch('/:id/stock', auth, requireRole('owner', 'cashier'), async (req, res) => {
   try {
     const productId = req.params.id;
@@ -249,28 +212,6 @@ router.patch('/:id/stock', auth, requireRole('owner', 'cashier'), async (req, re
     }
     console.error('Stock adjustment error', err);
     return res.status(500).json({ error: 'Erro ao ajustar stock' });
-  }
-});
-
-router.delete('/:id', auth, requireRole('owner'), async (req, res) => {
-  try {
-    const productId = req.params.id;
-    const tenantId = req.user.tenantId;
-
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.tenant_id !== tenantId) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-
-    const deleted = await prisma.product.update({
-      where: { id: productId },
-      data: { is_active: false }
-    });
-
-    return res.json({ success: true, product: deleted });
-  } catch (err) {
-    console.error('Delete product error', err);
-    return res.status(500).json({ error: 'Erro ao remover produto' });
   }
 });
 

@@ -22,6 +22,7 @@ export default function CashierDashboard() {
   const [countedAmount, setCountedAmount] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('0');
   const [cancelPinConfigured, setCancelPinConfigured] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleUnauthorized = (err) => {
     if (err?.response?.status === 401) {
@@ -138,9 +139,53 @@ export default function CashierDashboard() {
     return { totalAmount, totalCost };
   }, [cart]);
 
+  const filteredProducts = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return products;
+
+    return products.filter((product) => {
+      const name = String(product.name || '').toLowerCase();
+      const category = String(product.category || '').toLowerCase();
+      const barcode = String(product.barcode || '').toLowerCase();
+      return name.includes(query) || category.includes(query) || barcode.includes(query);
+    });
+  }, [products, searchTerm]);
+
   useEffect(() => {
     setExpectedAmount(String(Math.round(totals.totalAmount || 0)));
   }, [totals.totalAmount]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const tagName = event.target?.tagName;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) {
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setCart([]);
+        setMessage('Cesto limpo.');
+        return;
+      }
+
+      if (event.key === 'Enter' && cart.length > 0) {
+        event.preventDefault();
+        submitSale();
+        return;
+      }
+
+      if (/^\d$/.test(event.key) && filteredProducts.length > 0) {
+        const index = Number(event.key) - 1;
+        const product = filteredProducts[index];
+        if (product) {
+          addToCart(product);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredProducts, cart.length, submitSale, addToCart]);
 
   const currentReceived = paymentMethod === 'cash'
     ? Number(amountReceived || totals.totalAmount) || 0
@@ -345,23 +390,60 @@ export default function CashierDashboard() {
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
           <div className="bg-white rounded shadow p-4">
+            <div className="mb-4 flex items-center gap-3">
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Pesquisar produto ou código"
+                className="w-full rounded border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              />
+              <span className="rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                {filteredProducts.length} itens
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {products.map((product) => (
+              {filteredProducts.map((product, index) => (
                 <button
                   key={product.id}
                   type="button"
                   onClick={() => addToCart(product)}
-                  className="text-left rounded border p-3 hover:border-blue-400 hover:bg-blue-50"
+                  className="text-left rounded border border-slate-200 p-3 transition hover:border-blue-400 hover:bg-blue-50"
                 >
-                  <div className="font-semibold">{product.name}</div>
-                  <div className="text-sm text-slate-600">{product.category || 'Geral'}</div>
+                  <div className="mb-3 flex items-center gap-3">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="h-12 w-12 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
+                        {String(product.name || 'P').slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold">{product.name}</div>
+                      <div className="text-xs text-slate-500">{product.category || 'Geral'}</div>
+                    </div>
+                    <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">
+                      {index + 1}
+                    </span>
+                  </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span>{money(product.sell_price)}</span>
+                    <span className="font-semibold text-slate-800">{money(product.sell_price)}</span>
                     <span className="text-xs bg-slate-100 px-2 py-1 rounded">Stock: {product.stock_qty || 0}</span>
                   </div>
                 </button>
               ))}
             </div>
+
+            {filteredProducts.length === 0 && (
+              <div className="mt-3 rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                Nenhum produto encontrado para a pesquisa atual.
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded shadow p-4">

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api from '../../utils/api';
-import OnboardingWizard from '../OnboardingWizard';
 
 const formatMoney = (value) => `MZN ${(Number(value || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -19,6 +19,7 @@ export default function OwnerDashboard() {
     revenueMonth: 0,
     recentSales: []
   });
+  const [reports, setReports] = useState({ salesByDay: [], topProducts: [], totalRevenue: 0, totalOrders: 0, averageTicket: 0 });
   const [editingProductId, setEditingProductId] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -82,6 +83,15 @@ export default function OwnerDashboard() {
     }
   };
 
+  const loadReports = async () => {
+    try {
+      const res = await api.get('/api/dashboard/reports');
+      setReports(res.data || { salesByDay: [], topProducts: [], totalRevenue: 0, totalOrders: 0, averageTicket: 0 });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const loadCancelPinStatus = async () => {
     try {
       const res = await api.get('/api/sales/cancel-pin-status');
@@ -125,6 +135,7 @@ export default function OwnerDashboard() {
   useEffect(() => {
     loadProducts();
     loadSummary();
+    loadReports();
     loadSuppliers();
     loadStockEntries();
     loadCancelPinStatus();
@@ -175,7 +186,7 @@ export default function OwnerDashboard() {
       }
 
       resetForm();
-      await Promise.all([loadProducts(), loadSummary()]);
+      await Promise.all([loadProducts(), loadSummary(), loadReports()]);
     } catch (err) {
       setMessage(err?.response?.data?.error || 'Erro ao guardar produto');
     }
@@ -199,7 +210,7 @@ export default function OwnerDashboard() {
     try {
       await api.delete(`/api/products/${productId}`);
       setMessage('Produto removido com sucesso');
-      await Promise.all([loadProducts(), loadSummary(), loadStockEntries()]);
+      await Promise.all([loadProducts(), loadSummary(), loadReports(), loadStockEntries()]);
     } catch (err) {
       setMessage(err?.response?.data?.error || 'Erro ao remover produto');
     }
@@ -231,7 +242,7 @@ export default function OwnerDashboard() {
       });
       setMessage('Entrada de stock registada com sucesso');
       resetStockForm();
-      await Promise.all([loadProducts(), loadSummary(), loadStockEntries()]);
+      await Promise.all([loadProducts(), loadSummary(), loadReports(), loadStockEntries()]);
     } catch (err) {
       setMessage(err?.response?.data?.error || 'Erro ao registar entrada de stock');
     }
@@ -241,13 +252,13 @@ export default function OwnerDashboard() {
     try {
       await api.patch(`/api/products/${productId}/stock`, { delta, reason: 'manual_adjustment' });
       setMessage('Stock atualizado com sucesso');
-      await Promise.all([loadProducts(), loadSummary(), loadStockEntries()]);
+      await Promise.all([loadProducts(), loadSummary(), loadReports(), loadStockEntries()]);
     } catch (err) {
       setMessage(err?.response?.data?.error || 'Erro ao ajustar stock');
     }
   };
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: summary.productsCount || products.length,
     stock: summary.stockTotal || products.reduce((sum, p) => sum + Number(p.stock_qty || 0), 0),
     totalValue: products.reduce((sum, p) => sum + (Number(p.cost_price || 0) * Number(p.stock_qty || 0)), 0),
@@ -258,127 +269,196 @@ export default function OwnerDashboard() {
     revenueToday: summary.revenueToday || 0,
     revenueMonth: summary.revenueMonth || 0,
     recentSales: summary.recentSales || []
+  }), [products, summary]);
+
+  const exportCsv = () => {
+    const rows = [
+      ['Data', 'Pagamento', 'Total', 'Itens'],
+      ...(metrics.recentSales || []).map((sale) => [
+        new Date(sale.created_at).toLocaleString('pt-MZ'),
+        sale.payment_method,
+        Number(sale.total_amount || 0),
+        Number(sale.itemCount || 0)
+      ])
+    ];
+
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'genesis-relatorio-vendas.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Genesis — Loja</h1>
-        <p className="mb-6 text-slate-600">Dashboard do proprietário e gestão de stock.</p>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Genesis</p>
+            <h1 className="text-3xl font-black text-slate-900">Dashboard do negócio</h1>
+          </div>
+          <button
+            type="button"
+            onClick={exportCsv}
+            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          >
+            Exportar CSV
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Produtos</div>
-            <div className="text-2xl font-bold">{metrics.total}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Stock total</div>
-            <div className="text-2xl font-bold">{metrics.stock}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Valor em stock</div>
-            <div className="text-2xl font-bold">{formatMoney(metrics.totalValue)}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Baixo stock</div>
-            <div className="text-2xl font-bold text-amber-600">{metrics.lowStock}</div>
-          </div>
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: 'Produtos', value: metrics.total },
+            { label: 'Stock total', value: metrics.stock },
+            { label: 'Valor em stock', value: formatMoney(metrics.totalValue) },
+            { label: 'Baixo stock', value: metrics.lowStock, accent: 'text-amber-600' }
+          ].map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="text-sm text-slate-500">{item.label}</div>
+              <div className={`mt-2 text-2xl font-black ${item.accent || 'text-slate-900'}`}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[{ label: 'Vendas hoje', value: metrics.salesToday }, { label: 'Vendas mês', value: metrics.salesMonth }, { label: 'Receita hoje', value: formatMoney(metrics.revenueToday) }, { label: 'Receita mês', value: formatMoney(metrics.revenueMonth) }].map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="text-sm text-slate-500">{item.label}</div>
+              <div className="mt-2 text-2xl font-black text-slate-900">{item.value}</div>
+            </div>
+          ))}
         </div>
 
         {metrics.lowStockProducts.length > 0 && (
-          <div className="mb-8 rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <div className="font-semibold mb-2">Alertas de stock mínimo</div>
-            <ul className="list-disc ml-5 space-y-1">
+          <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="mb-2 font-semibold">Alertas de stock mínimo</div>
+            <ul className="ml-5 list-disc space-y-1">
               {metrics.lowStockProducts.map((product) => (
-                <li key={product.id}>
-                  {product.name}: stock {product.stock_qty} / mínimo {product.min_stock}
-                </li>
+                <li key={product.id}>{product.name}: stock {product.stock_qty} / mínimo {product.min_stock}</li>
               ))}
             </ul>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Vendas hoje</div>
-            <div className="text-2xl font-bold">{metrics.salesToday}</div>
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">Vendas por dia</h2>
+              <span className="text-sm text-slate-500">Últimos 7 dias</span>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={reports.salesByDay}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="label" stroke="#64748b" />
+                  <YAxis stroke="#64748b" />
+                  <Tooltip formatter={(value) => formatMoney(value)} />
+                  <Bar dataKey="revenue" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Vendas no mês</div>
-            <div className="text-2xl font-bold">{metrics.salesMonth}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Receita hoje</div>
-            <div className="text-2xl font-bold">{formatMoney(metrics.revenueToday)}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-slate-500">Receita do mês</div>
-            <div className="text-2xl font-bold">{formatMoney(metrics.revenueMonth)}</div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">Produtos mais vendidos</h2>
+              <span className="text-sm text-slate-500">{reports.totalOrders} vendas</span>
+            </div>
+            <div className="space-y-3">
+              {(reports.topProducts || []).map((product) => (
+                <div key={product.name} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                  <div>
+                    <div className="font-medium text-slate-800">{product.name}</div>
+                    <div className="text-xs text-slate-500">{product.qty} itens</div>
+                  </div>
+                  <div className="font-bold text-slate-900">{formatMoney(product.revenue)}</div>
+                </div>
+              ))}
+              {(!reports.topProducts || reports.topProducts.length === 0) && (
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">Sem dados suficientes para mostrar ranking.</div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-bold mb-2">PIN de cancelamento</h2>
-            <p className="mb-3 text-sm text-slate-600">
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900">PIN de cancelamento</h2>
+            <p className="mt-2 text-sm text-slate-600">
               {cancelPinConfigured ? 'PIN configurado e ativo.' : 'Ainda não foi definido um PIN para cancelar vendas.'}
             </p>
-            <form onSubmit={handleCancelPinSubmit} className="space-y-3">
+            <form onSubmit={handleCancelPinSubmit} className="mt-4 space-y-3">
               <input
                 type="password"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={6}
-                className="w-full border p-2 rounded"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none"
                 placeholder="Digite 4 a 6 dígitos"
                 value={cancelPin}
                 onChange={(e) => setCancelPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
               />
-              <button type="submit" className="w-full bg-slate-900 text-white rounded p-2">
+              <button type="submit" className="w-full rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">
                 Guardar PIN
               </button>
             </form>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-bold mb-2">Controlo de caixa</h2>
-            <p className="text-sm text-slate-600">
-              O proprietário deve definir o PIN para permitir o cancelamento de vendas com validação segura.
-            </p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900">Resumo financeiro</h2>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                <span className="text-slate-600">Receita total (7 dias)</span>
+                <span className="font-bold text-slate-900">{formatMoney(reports.totalRevenue)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                <span className="text-slate-600">Ticket médio</span>
+                <span className="font-bold text-slate-900">{formatMoney(reports.averageTicket)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                <span className="text-slate-600">Ordens</span>
+                <span className="font-bold text-slate-900">{reports.totalOrders}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded shadow">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h2 className="text-xl font-bold mb-4">{editingProductId ? 'Editar produto' : 'Adicionar produto'}</h2>
-            {message && <div className="mb-4 text-sm rounded bg-amber-100 p-2 text-amber-900">{message}</div>}
+            {message && <div className="mb-4 rounded-xl bg-amber-100 p-2 text-sm text-amber-900">{message}</div>}
             <form onSubmit={handleSubmit} className="space-y-3">
-              <input className="w-full border p-2 rounded" placeholder="Nome do produto" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-              <input className="w-full border p-2 rounded" placeholder="Categoria" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-              <input className="w-full border p-2 rounded" placeholder="Código de barras" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} />
+              <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none" placeholder="Nome do produto" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none" placeholder="Categoria" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+              <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none" placeholder="Código de barras" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" min="0" className="w-full border p-2 rounded" placeholder="Preço venda" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
-                <input type="number" min="0" className="w-full border p-2 rounded" placeholder="Custo" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
+                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Preço venda" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
+                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" min="0" className="w-full border p-2 rounded" placeholder="Stock" value={form.stock_qty} onChange={(e) => setForm({ ...form, stock_qty: e.target.value })} />
-                <input type="number" min="0" className="w-full border p-2 rounded" placeholder="Stock mínimo" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} />
+                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Stock" value={form.stock_qty} onChange={(e) => setForm({ ...form, stock_qty: e.target.value })} />
+                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Stock mínimo" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 bg-blue-600 text-white rounded p-2">{editingProductId ? 'Guardar alterações' : 'Guardar produto'}</button>
+                <button type="submit" className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700">{editingProductId ? 'Guardar alterações' : 'Guardar produto'}</button>
                 {editingProductId && (
-                  <button type="button" onClick={resetForm} className="bg-slate-200 rounded p-2">Cancelar</button>
+                  <button type="button" onClick={resetForm} className="rounded-xl bg-slate-200 px-4 py-2.5 font-medium text-slate-700">Cancelar</button>
                 )}
               </div>
             </form>
           </div>
 
-          <div className="bg-white p-4 rounded shadow">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h2 className="text-xl font-bold mb-4">Produto em stock</h2>
-            <div className="max-h-96 overflow-auto">
+            <div className="max-h-[420px] overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b">
+                  <tr className="border-b border-slate-200">
                     <th className="p-2 text-left">Nome</th>
                     <th className="p-2 text-left">Stock</th>
                     <th className="p-2 text-left">Preço</th>
@@ -387,12 +467,12 @@ export default function OwnerDashboard() {
                 </thead>
                 <tbody>
                   {products.map((product) => (
-                    <tr key={product.id} className="border-b align-top">
+                    <tr key={product.id} className="border-b border-slate-100 align-top">
                       <td className="p-2">{product.name}</td>
                       <td className="p-2">{product.stock_qty}</td>
                       <td className="p-2">{formatMoney(product.sell_price)}</td>
                       <td className="p-2">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => handleEdit(product)} className="text-blue-600">Editar</button>
                           <button type="button" onClick={() => adjustStock(product.id, 1)} className="text-green-600">+1</button>
                           <button type="button" onClick={() => adjustStock(product.id, -1)} className="text-amber-600">-1</button>
@@ -407,189 +487,89 @@ export default function OwnerDashboard() {
           </div>
         </div>
 
-        <div className="mt-8 bg-white rounded shadow p-4">
-          <h2 className="text-xl font-bold mb-4">Stock e fornecedores</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <p className="text-sm text-slate-500 mb-2">Indicadores</p>
-              <div className="bg-slate-50 rounded p-3 text-sm space-y-1">
-                <p>• Produtos abaixo do mínimo: <strong>{metrics.lowStock}</strong></p>
-                <p>• Stock total: <strong>{metrics.stock}</strong></p>
-                <p>• Custo em stock: <strong>{formatMoney(metrics.totalValue)}</strong></p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 mb-2">Ações rápidas</p>
-              <div className="bg-slate-50 rounded p-3 text-sm space-y-1">
-                <p>• Ajustar stock por produto na tabela acima</p>
-                <p>• Registrar entradas de compra por fornecedor</p>
-                <p>• Monitorizar stock mínimo e custo médio</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <form onSubmit={handleSupplierSubmit} className="space-y-3 border rounded p-4 bg-slate-50">
-              <h3 className="text-lg font-semibold">Adicionar fornecedor</h3>
-              <input
-                className="w-full border p-2 rounded"
-                placeholder="Nome do fornecedor"
-                value={supplierForm.name}
-                onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })}
-                required
-              />
-              <input
-                className="w-full border p-2 rounded"
-                placeholder="Telefone"
-                value={supplierForm.phone}
-                onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
-              />
-              <input
-                type="number"
-                min="0"
-                className="w-full border p-2 rounded"
-                placeholder="Custo de entrega por visita"
-                value={supplierForm.delivery_cost_per_visit}
-                onChange={(e) => setSupplierForm({ ...supplierForm, delivery_cost_per_visit: e.target.value })}
-              />
-              <button type="submit" className="bg-blue-600 text-white rounded p-2 w-full">Guardar fornecedor</button>
-            </form>
-
-            <form onSubmit={handleStockEntrySubmit} className="space-y-3 border rounded p-4 bg-slate-50">
-              <h3 className="text-lg font-semibold">Registrar entrada de stock</h3>
-              <select
-                className="w-full border p-2 rounded"
-                value={stockForm.product_id}
-                onChange={(e) => setStockForm({ ...stockForm, product_id: e.target.value, unit_cost: Number(products.find((product) => product.id === e.target.value)?.cost_price || 0) })}
-              >
-                <option value="">Selecione um produto</option>
+        <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">Registar entrada de stock</h2>
+            <form onSubmit={handleStockEntrySubmit} className="space-y-3">
+              <select className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" value={stockForm.product_id} onChange={(e) => setStockForm({ ...stockForm, product_id: e.target.value })}>
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>{product.name}</option>
                 ))}
               </select>
               <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  min="1"
-                  className="w-full border p-2 rounded"
-                  placeholder="Quantidade"
-                  value={stockForm.quantity}
-                  onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })}
-                />
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full border p-2 rounded"
-                  placeholder="Custo unitário"
-                  value={stockForm.unit_cost}
-                  onChange={(e) => setStockForm({ ...stockForm, unit_cost: e.target.value })}
-                />
+                <input type="number" min="1" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Quantidade" value={stockForm.quantity} onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })} />
+                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo unitário" value={stockForm.unit_cost} onChange={(e) => setStockForm({ ...stockForm, unit_cost: e.target.value })} />
               </div>
-              <select
-                className="w-full border p-2 rounded"
-                value={stockForm.supplier_id}
-                onChange={(e) => setStockForm({ ...stockForm, supplier_id: e.target.value })}
-              >
+              <select className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" value={stockForm.supplier_id} onChange={(e) => setStockForm({ ...stockForm, supplier_id: e.target.value })}>
                 <option value="">Fornecedor (opcional)</option>
                 {suppliers.map((supplier) => (
                   <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
                 ))}
               </select>
-              <button type="submit" className="bg-emerald-600 text-white rounded p-2 w-full">Registar entrada</button>
+              <button type="submit" className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 font-semibold text-white transition hover:bg-emerald-700">Registar entrada</button>
             </form>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold mb-2">Fornecedores</h4>
-              <div className="max-h-64 overflow-auto border rounded">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-slate-50">
-                      <th className="p-2 text-left">Nome</th>
-                      <th className="p-2 text-left">Telefone</th>
-                      <th className="p-2 text-left">Entrega</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {suppliers.length === 0 ? (
-                      <tr><td colSpan="3" className="p-2 text-slate-500">Sem fornecedores registados.</td></tr>
-                    ) : (
-                      suppliers.map((supplier) => (
-                        <tr key={supplier.id} className="border-b">
-                          <td className="p-2">{supplier.name}</td>
-                          <td className="p-2">{supplier.phone || '-'}</td>
-                          <td className="p-2">{formatMoney(supplier.delivery_cost_per_visit)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">Entradas recentes</h4>
-              <div className="max-h-64 overflow-auto border rounded">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-slate-50">
-                      <th className="p-2 text-left">Produto</th>
-                      <th className="p-2 text-left">Qtde</th>
-                      <th className="p-2 text-left">Custo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stockEntries.length === 0 ? (
-                      <tr><td colSpan="3" className="p-2 text-slate-500">Sem entradas de stock.</td></tr>
-                    ) : (
-                      stockEntries.map((entry) => (
-                        <tr key={entry.id} className="border-b">
-                          <td className="p-2">{entry.product?.name || 'Produto'}</td>
-                          <td className="p-2">{entry.quantity}</td>
-                          <td className="p-2">{formatMoney(entry.unit_cost)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">Últimas vendas</h2>
+            <div className="space-y-3">
+              {(metrics.recentSales || []).map((sale) => (
+                <div key={sale.id} className="rounded-xl bg-slate-50 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-800">{new Date(sale.created_at).toLocaleString('pt-MZ')}</span>
+                    <span className="text-sm text-slate-500">{sale.payment_method}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-slate-600">{sale.itemCount || 0} itens</span>
+                    <span className="font-bold text-slate-900">{formatMoney(sale.total_amount)}</span>
+                  </div>
+                </div>
+              ))}
+              {(!metrics.recentSales || metrics.recentSales.length === 0) && (
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">Sem vendas registadas ainda.</div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="mt-8 bg-white rounded shadow p-4">
-          <h2 className="text-xl font-bold mb-4">Resumo de vendas recentes</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-2 text-left">Data</th>
-                  <th className="p-2 text-left">Pagamento</th>
-                  <th className="p-2 text-left">Total</th>
-                  <th className="p-2 text-left">Itens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(metrics.recentSales || []).length === 0 ? (
-                  <tr><td colSpan="4" className="p-2 text-slate-500">Sem vendas recentes.</td></tr>
-                ) : (
-                  (metrics.recentSales || []).map((sale) => (
-                    <tr key={sale.id} className="border-b">
-                      <td className="p-2">{new Date(sale.created_at).toLocaleString('pt-MZ')}</td>
-                      <td className="p-2">{sale.payment_method}</td>
-                      <td className="p-2">{formatMoney(sale.total_amount)}</td>
-                      <td className="p-2">{sale.itemCount}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Registar fornecedor</h2>
+          <form onSubmit={handleSupplierSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <input className="rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Nome" value={supplierForm.name} onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })} required />
+            <input className="rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Telefone" value={supplierForm.phone} onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })} />
+            <div className="flex gap-2">
+              <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo visita" value={supplierForm.delivery_cost_per_visit} onChange={(e) => setSupplierForm({ ...supplierForm, delivery_cost_per_visit: e.target.value })} />
+              <button type="submit" className="rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white">Guardar</button>
+            </div>
+          </form>
         </div>
 
-        <div className="mt-8">
-          <OnboardingWizard />
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
+            <h2 className="text-xl font-bold mb-3">Histórico de stock</h2>
+            <div className="max-h-72 overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="p-2 text-left">Produto</th>
+                    <th className="p-2 text-left">Qtd</th>
+                    <th className="p-2 text-left">Custo</th>
+                    <th className="p-2 text-left">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockEntries.map((entry) => (
+                    <tr key={entry.id} className="border-b border-slate-100">
+                      <td className="p-2">{entry.product?.name || 'Produto'}</td>
+                      <td className="p-2">{entry.quantity}</td>
+                      <td className="p-2">{formatMoney(entry.unit_cost)}</td>
+                      <td className="p-2">{new Date(entry.created_at).toLocaleString('pt-MZ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
