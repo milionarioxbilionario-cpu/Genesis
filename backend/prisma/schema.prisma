@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // All monetary values stored as INTEGER representing centavos
@@ -22,6 +21,7 @@ model Tenant {
   id_document         String?
   status              String   @default("pending")
   trial_ends_at       DateTime?
+  onboarding_completed Boolean  @default(false)
   subscription_price  Int      @default(300000)
   created_at          DateTime @default(now())
   cancel_pin_hash     String?  // bcrypt hash for owner cancel PIN (optional)
@@ -40,6 +40,7 @@ model Tenant {
   sale_goals          SaleGoal[]
   audit_logs          AuditLog[]
   product_price_history ProductPriceHistory[]
+  device_keys          DeviceKey[]
 }
 
 model User {
@@ -63,11 +64,27 @@ model User {
   shrinkage_records_recorded ShrinkageRecord[] @relation("ShrinkageRecordedBy")
   shift_closings_user ShiftClosing[] @relation("ShiftClosedBy")
   product_price_changes ProductPriceHistory[] @relation("PriceChangedBy")
+  device_keys DeviceKey[] @relation("DeviceKeyOwner")
+}
+
+model DeviceKey {
+  id           String    @id @default(uuid())
+  device_name  String
+  key_hash     String
+  owner_user_id String
+  tenant_id    String
+  created_at   DateTime  @default(now())
+  last_used_at DateTime?
+  revoked_at   DateTime?
+  metadata     String?
+
+  owner        User      @relation(fields: [owner_user_id], references: [id], name: "DeviceKeyOwner")
+  tenant       Tenant    @relation(fields: [tenant_id], references: [id])
 }
 
 model Product {
   id             String   @id @default(uuid())
-  tenant_id      String
+  tenant_id      String  
   name           String
   category       String
   barcode        String?
@@ -91,7 +108,7 @@ model Product {
 
 model Sale {
   id               String    @id @default(uuid())
-  tenant_id        String
+  tenant_id        String   
   cashier_user_id  String
   total_amount     Int
   total_cost       Int
@@ -123,7 +140,7 @@ model SaleItem {
 
 model StockEntry {
   id           String   @id @default(uuid())
-  tenant_id    String
+  tenant_id    String  
   product_id   String
   quantity     Int
   unit_cost    Int
@@ -138,7 +155,7 @@ model StockEntry {
 
 model Employee {
   id             String   @id @default(uuid())
-  tenant_id      String
+  tenant_id      String  
   name           String
   role           String
   monthly_salary Int
@@ -151,7 +168,7 @@ model Employee {
 
 model Supplier {
   id                      String   @id @default(uuid())
-  tenant_id               String
+  tenant_id               String  
   name                    String
   phone                   String
   delivery_cost_per_visit Int
@@ -162,7 +179,7 @@ model Supplier {
 
 model FixedCost {
   id         String   @id @default(uuid())
-  tenant_id  String
+  tenant_id  String  
   description String
   amount     Int
   type       String
@@ -172,7 +189,7 @@ model FixedCost {
 
 model Debt {
   id           String   @id @default(uuid())
-  tenant_id    String
+  tenant_id    String  
   debtor_name  String
   debtor_phone String
   total_amount Int
@@ -200,7 +217,7 @@ model DebtPayment {
 
 model DemandCapture {
   id           String   @id @default(uuid())
-  tenant_id    String
+  tenant_id    String  
   product_id   String
   recorded_by  String
   requested_at DateTime @default(now())
@@ -212,7 +229,7 @@ model DemandCapture {
 
 model ShrinkageRecord {
   id           String   @id @default(uuid())
-  tenant_id    String
+  tenant_id    String  
   product_id   String
   quantity     Int
   reason       String
@@ -226,7 +243,7 @@ model ShrinkageRecord {
 
 model ShiftClosing {
   id              String   @id @default(uuid())
-  tenant_id       String
+  tenant_id       String  
   cashier_user_id String
   counted_amount  Int
   expected_amount Int
@@ -239,7 +256,7 @@ model ShiftClosing {
 
 model SaleGoal {
   id           String   @id @default(uuid())
-  tenant_id    String
+  tenant_id    String  
   month        Int
   year         Int
   target_amount Int
@@ -250,13 +267,13 @@ model SaleGoal {
 
 model AuditLog {
   id           String   @id @default(uuid())
-  tenant_id    String?
+  tenant_id    String? 
   user_id      String
   action       String
   entity_type  String
   entity_id    String?
-  old_value    Json?
-  new_value    Json?
+  old_value    String?
+  new_value    String?
   ip_address   String
   created_at   DateTime @default(now())
 
@@ -275,7 +292,7 @@ model MasterCatalog {
 
 model ProductPriceHistory {
   id         String   @id @default(uuid())
-  tenant_id  String
+  tenant_id  String  
   product_id String
   old_cost   Int
   new_cost   Int

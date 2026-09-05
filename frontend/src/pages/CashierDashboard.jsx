@@ -32,6 +32,59 @@ export default function CashierDashboard() {
     return false;
   };
 
+  const handleDemandCapture = async (product) => {
+    try {
+      const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+      const record = {
+        id,
+        tenant_id: product.tenant_id || 'local-tenant',
+        product_id: product.id,
+        recorded_by: null,
+        requested_at: new Date().toISOString(),
+        sync: false
+      };
+      await db.demand_captures.add(record);
+      setMessage(`Pedido de reposição registado para ${product.name}.`);
+    } catch (err) {
+      console.error('Failed to create demand capture', err);
+      setMessage('Não foi possível registar o pedido de reposição.');
+    }
+  };
+
+  const handleShrinkage = async (product) => {
+    const quantity = Number(window.prompt(`Quantidade perdida para ${product.name}?`, '1') || 0);
+    if (!quantity || quantity <= 0) return;
+
+    try {
+      const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+      const record = {
+        id,
+        tenant_id: product.tenant_id || 'local-tenant',
+        product_id: product.id,
+        quantity,
+        reason: 'other',
+        recorded_by: null,
+        recorded_at: new Date().toISOString(),
+        sync: false
+      };
+
+      await db.transaction('rw', db.shrinkage_records, db.products, async () => {
+        await db.shrinkage_records.add(record);
+        const existing = await db.products.get(product.id);
+        if (existing) {
+          const nextQty = Math.max(0, Number(existing.stock_qty || 0) - quantity);
+          await db.products.update(existing.id, { stock_qty: nextQty });
+        }
+      });
+
+      await loadProducts();
+      setMessage(`Perda registada: ${quantity} unidade(s) de ${product.name}.`);
+    } catch (err) {
+      console.error('Failed to create shrinkage record', err);
+      setMessage('Não foi possível registar a perda.');
+    }
+  };
+
   const loadProducts = async () => {
     try {
       const res = await api.get('/api/products');
@@ -58,10 +111,13 @@ export default function CashierDashboard() {
 
   const syncPendingSales = async () => {
     try {
-      const pendingSales = await db.sales.where('status').equals('pending').toArray();
+      const pendingSales = await db.sales.where('sync').equals(false).toArray();
       for (const queuedSale of pendingSales) {
-        await api.post('/api/sales', queuedSale.payload);
-        await db.sales.delete(queuedSale.id);
+        const payload = queuedSale.payload || queuedSale;
+        const response = await api.post('/api/sales', payload);
+        if (response.status >= 200 && response.status < 300) {
+          await db.sales.update(queuedSale.id, { sync: true, synced_at: new Date().toISOString() });
+        }
       }
     } catch (err) {
       handleUnauthorized(err);

@@ -30,6 +30,11 @@ cd ..
 # Start frontend
 echo "Starting frontend..."
 cd frontend
+# Ensure vite cache is writable (fixes EACCES if .vite was created by sudo earlier)
+if [ -d "node_modules/.vite" ]; then
+  echo "Fixing .vite cache ownership"
+  chown -R $(id -u):$(id -g) node_modules/.vite 2>/dev/null || true
+fi
 nohup npm run dev -- --host > ../logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "frontend pid: $FRONTEND_PID"

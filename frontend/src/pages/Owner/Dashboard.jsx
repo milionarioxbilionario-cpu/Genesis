@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api from '../../utils/api';
 
@@ -302,13 +303,51 @@ export default function OwnerDashboard() {
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Genesis</p>
             <h1 className="text-3xl font-black text-slate-900">Dashboard do negócio</h1>
           </div>
-          <button
-            type="button"
-            onClick={exportCsv}
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-          >
-            Exportar CSV
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/onboarding"
+              className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-500"
+            >
+              Iniciar onboarding
+            </Link>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400"
+            >
+              Imprimir recibo
+            </button>
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            >
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-3 md:grid-cols-3">
+          <Link to="/onboarding" className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 hover:bg-sky-100">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">1 clique</div>
+            <div className="mt-2 text-lg font-bold text-slate-900">Importar catálogo</div>
+            <div className="mt-1 text-sm text-slate-600">Escolha o tipo de loja e carregue a lista de produtos.</div>
+          </Link>
+          <Link to="/owner" className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">2 cliques</div>
+            <div className="mt-2 text-lg font-bold text-slate-900">Adicionar produto</div>
+            <div className="mt-1 text-sm text-slate-600">Registe preços, stock e categoria sem sair do dashboard.</div>
+          </Link>
+          <Link to="/pos" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-100">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">3 cliques</div>
+            <div className="mt-2 text-lg font-bold text-slate-900">Abrir o POS</div>
+            <div className="mt-1 text-sm text-slate-600">Comece a vender imediatamente com o stock já carregado.</div>
+          </Link>
+          <Link to="/owner/device-keys" className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-left transition hover:border-violet-300 hover:bg-violet-100">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">Segurança</div>
+            <div className="mt-2 text-lg font-bold text-slate-900">Dispositivos offline</div>
+            <div className="mt-1 text-sm text-slate-600">Emita e revogue chaves de sincronização para cada terminal.</div>
+          </Link>
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

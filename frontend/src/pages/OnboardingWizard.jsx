@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../utils/api';
 
+const businessOptions = [
+  { value: 'bottle_store', label: 'Bottle Store', description: 'Cervejas, bebidas, água e snacks' },
+  { value: 'mercearia', label: 'Mercearia', description: 'Secos, higiene, enlatados e básicos' },
+  { value: 'padaria', label: 'Padaria', description: 'Pães, sobremesas e laticínios' },
+  { value: 'talho', label: 'Talho', description: 'Frango, bovino, suíno e embutidos' },
+  { value: 'supermercado', label: 'Supermercado', description: 'Frescos, limpeza e casa' },
+  { value: 'outro', label: 'Outro', description: 'Personalize o catálogo da sua loja' }
+];
+
 export default function OnboardingWizard() {
-  const [businessType, setBusinessType] = useState('mercearia');
+  const [businessType, setBusinessType] = useState('bottle_store');
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -14,10 +24,10 @@ export default function OnboardingWizard() {
 
   async function fetchTemplate(type) {
     setLoading(true);
+    setMessage(null);
     try {
       const resp = await api.get(`/api/catalogs/${type}`);
-      // normalize sampleProducts into editable products state
-      const products = (resp.data.template.sampleProducts || []).map(p => ({
+      const products = (resp.data.template?.sampleProducts || []).map((p) => ({
         id: cryptoRandomId(),
         name: p.name || '',
         sku: p.sku || '',
@@ -29,7 +39,7 @@ export default function OnboardingWizard() {
       setTemplate({ ...resp.data.template, products });
     } catch (err) {
       console.error(err);
-      setMessage('Erro ao carregar template');
+      setMessage('Erro ao carregar o catálogo sugerido.');
     } finally {
       setLoading(false);
     }
@@ -44,28 +54,28 @@ export default function OnboardingWizard() {
   }
 
   function updateProductField(id, field, value) {
-    setTemplate(prev => ({
+    setTemplate((prev) => ({
       ...prev,
-      products: prev.products.map(p => p.id === id ? { ...p, [field]: value } : p)
+      products: prev.products.map((p) => (p.id === id ? { ...p, [field]: value } : p))
     }));
   }
 
   function addEmptyProduct() {
     const newP = { id: cryptoRandomId(), name: '', sku: '', price_mzn: 0, cost_mzn: 0, stock: 0, category: '' };
-    setTemplate(prev => ({ ...prev, products: [newP, ...prev.products] }));
+    setTemplate((prev) => ({ ...prev, products: [newP, ...(prev.products || [])] }));
   }
 
   function removeProduct(id) {
-    setTemplate(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
+    setTemplate((prev) => ({ ...prev, products: (prev.products || []).filter((p) => p.id !== id) }));
   }
 
   function validateProducts(products) {
     if (!products || products.length === 0) return false;
     for (const p of products) {
       if (!p.name || p.name.trim().length < 1) return false;
-      if (isNaN(p.price_mzn) || p.price_mzn < 0) return false;
-      if (isNaN(p.cost_mzn) || p.cost_mzn < 0) return false;
-      if (!Number.isInteger(Number(p.stock)) || p.stock < 0) return false;
+      if (Number.isNaN(Number(p.price_mzn)) || Number(p.price_mzn) < 0) return false;
+      if (Number.isNaN(Number(p.cost_mzn)) || Number(p.cost_mzn) < 0) return false;
+      if (!Number.isInteger(Number(p.stock)) || Number(p.stock) < 0) return false;
     }
     return true;
   }
@@ -73,15 +83,14 @@ export default function OnboardingWizard() {
   async function handleImport() {
     if (!template || !template.products) return;
     if (!validateProducts(template.products)) {
-      setMessage('Corrija os produtos antes de importar. Preencha nome, preços não-negativos e stock inteiro.');
+      setMessage('Corrija os produtos antes de importar. Preencha nome, preços válidos e stock inteiro.');
       return;
     }
 
     setImporting(true);
     setMessage(null);
     try {
-      // prepare payload: convert to expected shape
-      const products = template.products.map(p => ({
+      const products = template.products.map((p) => ({
         name: p.name,
         sku: p.sku || undefined,
         price_mzn: Number(p.price_mzn),
@@ -91,108 +100,161 @@ export default function OnboardingWizard() {
       }));
 
       const resp = await api.post(`/api/catalogs/${businessType}/import`, { products });
-      setMessage(`Importados: ${resp.data.imported}`);
+      const imported = resp.data.imported || products.length;
+      setMessage(`Catálogo importado com sucesso. ${imported} produtos adicionados e a sua loja foi marcada como pronta.`);
     } catch (err) {
       console.error(err);
-      setMessage(err?.response?.data?.error || 'Erro na importação');
+      setMessage(err?.response?.data?.error || 'Erro na importação do catálogo.');
     } finally {
       setImporting(false);
     }
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">Assistente de Onboarding</h2>
-      <p className="mb-4">Escolha o tipo de negócio e importe um catálogo inicial sugerido. Edite os produtos antes de importar.</p>
-
-      <div className="mb-4">
-        <label className="mr-2">Tipo:</label>
-        <select value={businessType} onChange={(e) => setBusinessType(e.target.value)}>
-          <option value="mercearia">Mercearia</option>
-          <option value="restaurante">Restaurante</option>
-          <option value="boutique">Boutique</option>
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <button disabled={loading} onClick={() => fetchTemplate(businessType)} className="px-3 py-1 bg-blue-600 text-white rounded">Carregar template</button>
-      </div>
-
-      {loading && <p>Carregando template...</p>}
-
-      {template && (
-        <div className="mb-4">
-          <h3 className="font-semibold">Categorias</h3>
-          <ul>
-            {template.categories.map((c, i) => <li key={i}>{c}</li>)}
-          </ul>
-
-          <h3 className="font-semibold mt-2">Produtos (edite antes de importar)</h3>
-
-          <div className="mb-2">
-            <button className="px-2 py-1 bg-gray-200 rounded mr-2" onClick={addEmptyProduct}>Adicionar produto</button>
-            <label className="px-2 py-1 bg-gray-100 rounded mr-2 cursor-pointer">
-              <input type="file" accept="text/csv" onChange={async (e)=>{
-                const f = e.target.files && e.target.files[0];
-                if (!f) return;
-                const txt = await f.text();
-                // simple CSV parser (header optional: name,sku,price_mzn,cost_mzn,stock,category)
-                const lines = txt.split(/\r?\n/).filter(l=>l.trim().length>0);
-                let parsed = [];
-                const hasHeader = lines[0].toLowerCase().includes('name') && lines[0].toLowerCase().includes('price');
-                for (let i=(hasHeader?1:0); i<lines.length; i++){
-                  const row = lines[i].split(/,|;|\t/).map(c=>c.trim());
-                  if (row.length===0) continue;
-                  if (hasHeader){
-                    // assume header order name,sku,price_mzn,cost_mzn,stock,category
-                    parsed.push({ id: cryptoRandomId(), name: row[0]||'', sku: row[1]||'', price_mzn: Number(row[2]||0), cost_mzn: Number(row[3]||0), stock: Number(row[4]||0), category: row[5]||'' });
-                  } else {
-                    // fallback columns
-                    parsed.push({ id: cryptoRandomId(), name: row[0]||'', sku: row[1]||'', price_mzn: Number(row[2]||0), cost_mzn: Number(row[3]||0), stock: Number(row[4]||0), category: row[5]||'' });
-                  }
-                }
-                setTemplate(prev => ({ ...prev, products: [...(prev.products||[]), ...parsed] }));
-              }} style={{display:'none'}} />
-              Carregar CSV
-            </label>
-            <button className="px-2 py-1 bg-green-600 text-white rounded" onClick={handleImport} disabled={importing}>Importar para a minha loja</button>
+    <div className="min-h-screen bg-slate-100 p-4 md:p-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Genesis</p>
+            <h1 className="text-3xl font-black text-slate-900">Assistente de onboarding</h1>
           </div>
-
-          <div className="overflow-auto max-h-64 border p-2 rounded bg-white">
-            <table className="w-full table-auto text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Nome</th>
-                  <th className="text-left">SKU</th>
-                  <th className="text-left">Preço (MZN)</th>
-                  <th className="text-left">Custo (MZN)</th>
-                  <th className="text-left">Stock</th>
-                  <th className="text-left">Categoria</th>
-                  <th className="text-left">Centavos</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {template.products.map(p => (
-                  <tr key={p.id} className="align-top border-t">
-                    <td><input value={p.name} onChange={e => updateProductField(p.id, 'name', e.target.value)} className="p-1 w-48"/></td>
-                    <td><input value={p.sku} onChange={e => updateProductField(p.id, 'sku', e.target.value)} className="p-1 w-28"/></td>
-                    <td><input type="number" step="0.01" value={p.price_mzn} onChange={e => updateProductField(p.id, 'price_mzn', Number(e.target.value))} className="p-1 w-28"/></td>
-                    <td><input type="number" step="0.01" value={p.cost_mzn} onChange={e => updateProductField(p.id, 'cost_mzn', Number(e.target.value))} className="p-1 w-28"/></td>
-                    <td><input type="number" value={p.stock} onChange={e => updateProductField(p.id, 'stock', Number(e.target.value))} className="p-1 w-20"/></td>
-                    <td><input value={p.category} onChange={e => updateProductField(p.id, 'category', e.target.value)} className="p-1 w-32"/></td>
-                    <td className="px-2">{Math.round(Number(p.price_mzn || 0) * 100)} / {Math.round(Number(p.cost_mzn || 0) * 100)}</td>
-                    <td className="px-2"><button className="text-sm text-red-600" onClick={() => removeProduct(p.id)}>Remover</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
+          <Link to="/owner" className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400">
+            Voltar ao dashboard
+          </Link>
         </div>
-      )}
 
-      {message && <div className="mt-4 p-2 bg-yellow-100 rounded">{message}</div>}
+        <div className="mb-6 grid gap-3 md:grid-cols-3">
+          {[
+            '1. Escolher tipo de negócio',
+            '2. Ajustar catálogo',
+            '3. Importar e vender'
+          ].map((step, index) => (
+            <div key={step} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-sm">
+              <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-sky-700">{index + 1}</span>
+              {step}
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold text-slate-900">Escolha o tipo de negócio</h2>
+            <p className="mt-1 text-sm text-slate-600">O Genesis sugere produtos e categorias conforme o tipo da sua loja.</p>
+          </div>
+
+          <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {businessOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setBusinessType(option.value)}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  businessType === option.value
+                    ? 'border-sky-500 bg-sky-50 shadow-sm ring-2 ring-sky-100'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-lg font-bold text-slate-900">{option.label}</div>
+                <div className="mt-1 text-sm text-slate-600">{option.description}</div>
+              </button>
+            ))}
+          </div>
+
+          {loading && <div className="mb-4 text-sm text-slate-600">A carregar o catálogo sugerido...</div>}
+
+          {template && (
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800" onClick={addEmptyProduct}>
+                  + Adicionar produto
+                </button>
+                <label className="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm">
+                  <input
+                    type="file"
+                    accept="text/csv"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const text = await file.text();
+                      const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+                      const hasHeader = lines[0]?.toLowerCase().includes('name') && lines[0]?.toLowerCase().includes('price');
+                      const parsed = [];
+
+                      for (let i = hasHeader ? 1 : 0; i < lines.length; i += 1) {
+                        const row = lines[i].split(/,|;|\t/).map((cell) => cell.trim());
+                        if (!row.length) continue;
+                        parsed.push({
+                          id: cryptoRandomId(),
+                          name: row[0] || '',
+                          sku: row[1] || '',
+                          price_mzn: Number(row[2] || 0),
+                          cost_mzn: Number(row[3] || 0),
+                          stock: Number(row[4] || 0),
+                          category: row[5] || ''
+                        });
+                      }
+
+                      setTemplate((prev) => ({ ...prev, products: [...(prev.products || []), ...parsed] }));
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                  Carregar CSV
+                </label>
+                <button type="button" className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500" onClick={handleImport} disabled={importing}>
+                  {importing ? 'Importando...' : 'Importar catálogo'}
+                </button>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-base font-bold text-slate-800">Categorias sugeridas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(template.categories || []).map((category, index) => (
+                    <span key={`${category}-${index}`} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overflow-auto rounded-2xl border border-slate-200 bg-slate-50">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-100 text-left text-slate-700">
+                      <th className="p-3">Nome</th>
+                      <th className="p-3">SKU</th>
+                      <th className="p-3">Preço</th>
+                      <th className="p-3">Custo</th>
+                      <th className="p-3">Stock</th>
+                      <th className="p-3">Categoria</th>
+                      <th className="p-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(template.products || []).map((p) => (
+                      <tr key={p.id} className="border-t border-slate-200 bg-white align-top">
+                        <td className="p-2"><input value={p.name} onChange={(e) => updateProductField(p.id, 'name', e.target.value)} className="w-36 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><input value={p.sku} onChange={(e) => updateProductField(p.id, 'sku', e.target.value)} className="w-28 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><input type="number" step="0.01" value={p.price_mzn} onChange={(e) => updateProductField(p.id, 'price_mzn', Number(e.target.value))} className="w-24 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><input type="number" step="0.01" value={p.cost_mzn} onChange={(e) => updateProductField(p.id, 'cost_mzn', Number(e.target.value))} className="w-24 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><input type="number" value={p.stock} onChange={(e) => updateProductField(p.id, 'stock', Number(e.target.value))} className="w-20 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><input value={p.category} onChange={(e) => updateProductField(p.id, 'category', e.target.value)} className="w-32 rounded border border-slate-300 p-2" /></td>
+                        <td className="p-2"><button type="button" className="text-sm font-medium text-red-600" onClick={() => removeProduct(p.id)}>Remover</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {message && (
+            <div className={`mt-5 rounded-xl border p-3 text-sm ${message.includes('sucesso') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+              {message}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -10,8 +10,14 @@ const productsRoutes = require('./routes/products');
 const dashboardRoutes = require('./routes/dashboard');
 const inventoryRoutes = require('./routes/inventory');
 const shiftClosingsRoutes = require('./routes/shift_closings');
+const demandCapturesRoutes = require('./routes/demand_captures');
+const deviceKeysRoutes = require('./routes/device_keys');
+const deviceKeyAuth = require('./middleware/deviceKeyAuth');
+const shrinkageRoutes = require('./routes/shrinkage_records');
 const authMiddleware = require('./middleware/auth');
+const authOrDevice = require('./middleware/authOrDevice');
 const requireRole = require('./middleware/rbac');
+const refreshRoute = require('./routes/refresh');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -22,6 +28,7 @@ app.use(express.json());
 
 // Rotas Públicas
 app.use('/api/auth', authRoutes);
+app.use('/api/refresh', refreshRoute);
 // Catálogos públicos (templates) e import (protegido)
 app.use('/api/catalogs', catalogRoutes);
 // Master catalogs (admin)
@@ -32,11 +39,22 @@ app.use('/api/products', productsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 // Gestão de stock e fornecedores
 app.use('/api/inventory', inventoryRoutes);
+// Demand captures (offlines / requisicoes) - require auth
+app.use('/api/demand_captures', authOrDevice, requireRole('owner', 'cashier'), demandCapturesRoutes);
+// Shrinkage records (stock loss) - require auth
+app.use('/api/shrinkage_records', authOrDevice, requireRole('owner', 'cashier'), shrinkageRoutes);
 // Fechos de turno (caixa cego)
-app.use('/api/shift_closings', authMiddleware, requireRole('owner', 'cashier'), shiftClosingsRoutes);
+app.use('/api/shift_closings', authOrDevice, requireRole('owner', 'cashier'), shiftClosingsRoutes);
 
-// Rotas de Sales (protegidas) — exige autenticação e role owner ou cashier
-app.use('/api/sales', authMiddleware, requireRole('owner', 'cashier'), salesRoutes);
+// Rotas de Sales - require auth
+app.use('/api/sales', authOrDevice, requireRole('owner', 'cashier'), salesRoutes);
+
+// Device Keys management (owner only)
+app.use('/api/device-keys', authMiddleware, requireRole('owner'), deviceKeysRoutes);
+
+// Example: if you want sync endpoints to allow device key auth, you can mount them alongside JWT auth on dedicated paths.
+// For example, allow POST /api/sync/sales to accept Device <secret> header via deviceKeyAuth middleware.
+// (No sync routes added here automatically; add per-need)
 
 // Rotas Protegidas de Admin
 app.use('/api/admin', authMiddleware, requireRole('super_admin'), adminRoutes);

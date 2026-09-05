@@ -1,5 +1,10 @@
 const requireRole = (...roles) => {
   return (req, res, next) => {
+    // If request is authenticated via device key, allow (device keys are scoped to sync endpoints only)
+    if (req.deviceKey) {
+      return next();
+    }
+
     if (!req.user) {
       return res.status(401).json({ error: 'Não autenticado' });
     }

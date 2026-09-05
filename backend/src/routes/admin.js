@@ -73,12 +73,9 @@ router.post('/requests/:tenantId/approve', async (req, res) => {
     }
 
     // Em produção, aqui enviariamos email ou WhatsApp
-    res.json({ 
-      message: 'Conta aprovada e dono criado',
-      credentials: {
-        email: ownerEmail,
-        temporaryPassword: tempPassword
-      }
+    res.json({
+      email: ownerEmail,
+      temporaryPassword: tempPassword
     });
   } catch (err) {
     console.error(err);
