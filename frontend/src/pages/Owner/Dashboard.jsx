@@ -142,6 +142,9 @@ export default function OwnerDashboard() {
     loadCancelPinStatus();
   }, []);
 
+  // If API doesn't provide data, fallback to demo mock data for admin UX preview
+  const demoTenant = (window.GENESIS_DATA && window.GENESIS_DATA.tenants && window.GENESIS_DATA.tenants.find(x => x.id === (window.GENESIS_DATA.activeTenantId))) || null;
+
   useEffect(() => {
     if (products.length > 0 && !stockForm.product_id) {
       setStockForm((prev) => ({
@@ -327,6 +330,7 @@ export default function OwnerDashboard() {
           </div>
         </div>
 
+        {/* Quick action cards */}
         <div className="mb-6 grid gap-3 md:grid-cols-3">
           <Link to="/onboarding" className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 hover:bg-sky-100">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">1 clique</div>
@@ -349,6 +353,28 @@ export default function OwnerDashboard() {
             <div className="mt-1 text-sm text-slate-600">Emita e revogue chaves de sincronização para cada terminal.</div>
           </Link>
         </div>
+
+        {/* Demo area: if API summary is empty, show mock dashboard visuals */}
+        {(!summary || Object.values(summary).every((v) => v === 0)) && window.GENESIS_DATA ? (
+          <div className="mb-6">
+            <div className="bg-white rounded shadow p-4">
+              <h3 className="font-semibold">Visão Geral (Demo)</h3>
+              <p className="text-sm text-slate-500">Dados de demonstração carregados localmente.</p>
+
+              <div style={{ marginTop: 12 }}>
+                { /* Stats grid */ }
+                <div style={{ marginBottom: 12 }}>
+                  {React.createElement(require('../../components/StatsGrid').default)}
+                </div>
+
+                { /* Pipeline */ }
+                <div>
+                  {React.createElement(require('../../components/Pipeline').default)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[

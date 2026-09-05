@@ -59,3 +59,23 @@ These changes were validated locally: the backend accepted demand capture and sh
 3. Avançar para Stage POS: integrar UI de caixa (POS) com a fila offline já preparada e testes de e2e de venda + fecho de turno.
 
 Se nada mais for pedido nesta etapa, este checkpoint está pronto para ser marcado como concluído.
+
+## Nova interface CRM (2026-09-06)
+- Adicionados recursos de interface tipo CRM para demonstração rápida no frontend:
+  - Arquivos CSS e animações importados em `frontend/src/ui/` (components.css, animations.css, main.css).
+  - Mock data para demo em `frontend/src/ui/mockData.js` (window.GENESIS_DATA).
+  - Componente de layout CRM: `frontend/src/layouts/CRMLayout.jsx` (sidebar, header, áreas principais).
+  - Componentes demo adicionados: `frontend/src/components/StatsGrid.jsx`, `frontend/src/components/Pipeline.jsx`.
+- As rotas principais (`/owner`, `/pos`, `/admin`, `/onboarding`) foram embrulhadas no `CRMLayout` para exibir o novo visual.
+- O Owner Dashboard foi adaptado para apresentar visualização demo (Stats + Pipeline) quando a API de backend não retornar dados (útil para revisão visual antes de ligar ao backend real).
+- Build do frontend validado: `npm run build` concluído sem erros.
+
+Próximos passos para completar o redesign CRM (se aprovado):
+1. Converter os widgets do `components.js.javascript` para React components reativos (botões, tenant switcher, badges, kanban cards) — isto trará interatividade real.
+2. Implementar Command Palette (Ctrl+K) com pesquisa global usando uma pequena store e foco acessível.
+3. Integrar TanStack Query e um adaptador demo↔API (VITE_API_BASE_URL) para alternar rapidamente entre dados locais de demonstração e o backend remoto.
+4. Criar componentes de Sheet/Modal e Toasts (usar sonner/React Motion) e migrar formulários inline para painéis deslizantes.
+5. Internacionalização (PT/EN) e tema claro/escuro com tokens em `src/ui/main.css`.
+
+Status: trabalho de reconstrução do frontend iniciado e demo visual funcional. Se concordar, prosseguir automaticamente para converter os componentes JS fornecidos em React, integrar command palette e finalizar o conjunto de componentes CRM para entrega QA.
+

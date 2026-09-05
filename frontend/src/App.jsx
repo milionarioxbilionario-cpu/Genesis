@@ -8,6 +8,11 @@ import OwnerDashboard from './pages/Owner/Dashboard';
 import OnboardingWizard from './pages/OnboardingWizard';
 import CashierDashboard from './pages/CashierDashboard';
 
+// CRM layout and demo UI assets
+import CRMLayout from './layouts/CRMLayout';
+import './ui/mockData.js';
+
+
 function App() {
   return (
     <Router>
@@ -16,11 +21,11 @@ function App() {
         <Route path="/forgot-password" element={<ResetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/request-account" element={<RequestAccount />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/owner" element={<OwnerDashboard />} />
-        <Route path="/onboarding" element={<OnboardingWizard />} />
-        <Route path="/pos" element={<CashierDashboard />} />
-        <Route path="/cashier" element={<CashierDashboard />} />
+        <Route path="/admin" element={<CRMLayout><AdminDashboard /></CRMLayout>} />
+        <Route path="/owner" element={<CRMLayout><OwnerDashboard /></CRMLayout>} />
+        <Route path="/onboarding" element={<CRMLayout><OnboardingWizard /></CRMLayout>} />
+        <Route path="/pos" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
+        <Route path="/cashier" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
