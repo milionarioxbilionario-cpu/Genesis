@@ -48,12 +48,12 @@ export default function RequestAccount() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-        <div className="max-w-lg w-full rounded-2xl bg-white p-8 shadow-lg text-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#0a1220] px-4 py-10 text-[#edf2f7]">
+        <div className="w-full max-w-lg rounded-[24px] border border-[#263548] bg-[#111c2b]/95 p-8 text-center shadow-[0_25px_80px_rgba(2,6,23,0.7)]">
           <div className="mb-4 text-5xl">✅</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-3">Pedido enviado</h1>
-          <p className="text-slate-600 mb-6">Pedido recebido. Entraremos em contacto em até 48 horas.</p>
-          <a href="/login" className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-white font-medium hover:bg-slate-700">
+          <h1 className="mb-3 text-2xl font-bold text-[#f2f6fb]">Pedido enviado</h1>
+          <p className="mb-6 text-[#b2bdcb]">Pedido recebido. Entraremos em contacto em até 48 horas.</p>
+          <a href="/login" className="inline-flex items-center justify-center rounded-xl bg-[#dfe7ef] px-4 py-2.5 font-semibold text-[#111c2b] transition hover:bg-[#eef4fb]">
             Voltar ao login
           </a>
         </div>
@@ -62,29 +62,29 @@ export default function RequestAccount() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-10">
-      <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-lg">
+    <div className="min-h-screen bg-[#0a1220] px-4 py-10 text-[#edf2f7]">
+      <div className="mx-auto max-w-3xl rounded-[24px] border border-[#263548] bg-[#111c2b]/95 p-8 shadow-[0_25px_80px_rgba(2,6,23,0.7)]">
         <div className="mb-8 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">Genesis</p>
-          <h1 className="mt-3 text-3xl font-bold text-slate-900">Solicitar conta</h1>
-          <p className="mt-2 text-slate-600">Abra a sua loja digital em Moçambique em poucos minutos.</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#dfe7ef]">Genesis</p>
+          <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#f2f6fb]">Solicitar conta</h1>
+          <p className="mt-2 text-[#b2bdcb]">Abra a sua loja digital em Moçambique em poucos minutos.</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Nome do negócio
-              <input name="businessName" value={form.businessName} onChange={onChange} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Ex.: Mercado Central" />
+              <input name="businessName" value={form.businessName} onChange={onChange} required className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="Ex.: Mercado Central" />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Nome completo do dono
-              <input name="ownerName" value={form.ownerName} onChange={onChange} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Seu nome" />
+              <input name="ownerName" value={form.ownerName} onChange={onChange} required className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="Seu nome" />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Tipo de negócio
-              <select name="businessType" value={form.businessType} onChange={onChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2">
+              <select name="businessType" value={form.businessType} onChange={onChange} className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]">
                 <option value="bottle_store">Bottle Store</option>
                 <option value="mercearia">Mercearia</option>
                 <option value="padaria">Padaria</option>
@@ -94,37 +94,37 @@ export default function RequestAccount() {
               </select>
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Localização
-              <input name="location" value={form.location} onChange={onChange} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Maputo, Matola..." />
+              <input name="location" value={form.location} onChange={onChange} required className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="Maputo, Matola..." />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Telefone
-              <input name="phone" value={form.phone} onChange={onChange} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="84xxxxxxx" />
+              <input name="phone" value={form.phone} onChange={onChange} required className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="84xxxxxxx" />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               Email (opcional)
-              <input type="email" name="email" value={form.email} onChange={onChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="nome@empresa.com" />
+              <input type="email" name="email" value={form.email} onChange={onChange} className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="nome@empresa.com" />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               NUIT (opcional)
-              <input name="nuit" value={form.nuit} onChange={onChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Não tenho" />
+              <input name="nuit" value={form.nuit} onChange={onChange} className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="Não tenho" />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-[#dfe7ef]">
               BI / Passaporte (opcional)
-              <input name="idDocument" value={form.idDocument} onChange={onChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" placeholder="Não tenho" />
+              <input name="idDocument" value={form.idDocument} onChange={onChange} className="mt-2 w-full rounded-xl border border-[#30455f] bg-[#182332] px-3 py-3 text-[#f4f7fb] outline-none transition focus:border-[#7aa5d6] focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)]" placeholder="Não tenho" />
             </label>
           </div>
 
-          {error && <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+          {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-            <a href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">Já tenho conta</a>
-            <button type="submit" disabled={loading} className="rounded-md bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500 disabled:opacity-60">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <a href="/login" className="text-sm font-medium text-[#bfd1e6] transition hover:text-[#edf2f7]">Já tenho conta</a>
+            <button type="submit" disabled={loading} className="rounded-xl bg-[#dfe7ef] px-5 py-3 font-semibold text-[#111c2b] transition hover:bg-[#eef4fb] disabled:opacity-60">
               {loading ? 'A enviar...' : 'Solicitar acesso'}
             </button>
           </div>

@@ -68,73 +68,73 @@ const SuperAdminDashboard = () => {
   }), [requests, tenants]);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-6">
+    <div className="min-h-screen p-4 md:p-6" style={{ color: 'var(--text-main)' }}>
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Genesis</p>
-            <h1 className="text-3xl font-black text-slate-900">Super Admin</h1>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--text-subtle)' }}>Genesis</p>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>Super Admin</h1>
           </div>
           <button
             type="button"
             onClick={() => window.location.href = '/login'}
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            style={{ borderRadius: 12, background: 'rgba(17,28,43,0.6)', padding: '8px 14px', color: 'var(--text-main)', fontWeight: 700 }}
           >
             Sair
           </button>
         </div>
 
         {message && (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div style={{ marginBottom: 18, borderRadius: 18, border: '1px solid var(--accent-amber-light)', background: 'rgba(245,158,11,0.08)', padding: '10px 14px', color: 'var(--accent-amber)' }}>
             {message}
           </div>
         )}
 
-        <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div style={{ marginBottom: 20, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))' }}>
           {[
             { label: 'Lojas ativas', value: metrics.activeStores },
             { label: 'Tenants totais', value: metrics.totalTenants },
             { label: 'Pedidos pendentes', value: metrics.pendingRequests },
             { label: 'Suspensas', value: metrics.suspended }
           ].map((item) => (
-            <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-sm text-slate-500">{item.label}</div>
-              <div className="mt-2 text-3xl font-black text-slate-900">{item.value}</div>
+            <div key={item.label} style={{ borderRadius: 18, border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-elevated)', padding: 16 }}>
+              <div style={{ color: 'var(--text-subtle)', fontSize: 13 }}>{item.label}</div>
+              <div style={{ marginTop: 8, fontSize: 28, fontWeight: 800, color: 'var(--text-main)' }}>{item.value}</div>
             </div>
           ))}
         </div>
 
-        <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-900">Pedidos pendentes</h2>
-            <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">{requests.length} em fila</span>
+        <section style={{ marginBottom: 24, borderRadius: 24, border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', padding: 20 }}>
+          <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-main)' }}>Pedidos pendentes</h2>
+            <span style={{ borderRadius: 999, background: 'rgba(99,102,241,0.08)', padding: '6px 10px', color: 'var(--text-subtle)', fontSize: 12 }}>{requests.length} em fila</span>
           </div>
 
           {loading ? (
-            <p className="text-slate-600">Carregando...</p>
+            <p style={{ color: 'var(--text-subtle)' }}>Carregando...</p>
           ) : requests.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">Nenhum pedido pendente.</div>
+            <div style={{ borderRadius: 18, border: '1px dashed var(--border-subtle)', background: 'rgba(255,255,255,0.02)', padding: 20, color: 'var(--text-subtle)' }}>Nenhum pedido pendente.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ minWidth: '100%', textAlign: 'left', fontSize: 14 }}>
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-600">
-                    <th className="p-3">Loja</th>
-                    <th className="p-3">Dono</th>
-                    <th className="p-3">Contacto</th>
-                    <th className="p-3">Ações</th>
+                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-subtle)' }}>
+                    <th style={{ padding: 12 }}>Loja</th>
+                    <th style={{ padding: 12 }}>Dono</th>
+                    <th style={{ padding: 12 }}>Contacto</th>
+                    <th style={{ padding: 12 }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {requests.map((req) => (
-                    <tr key={req.id} className="border-b border-slate-200 align-top">
-                      <td className="p-3 font-semibold text-slate-800">{req.name}</td>
-                      <td className="p-3 text-slate-700">{req.owner_name}</td>
-                      <td className="p-3 text-slate-700">{req.phone}</td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => approve(req.id)} className="rounded-xl bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-500">Aprovar</button>
-                          <button onClick={() => reject(req.id)} className="rounded-xl bg-red-600 px-3 py-2 text-white hover:bg-red-500">Rejeitar</button>
+                    <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <td style={{ padding: 12, fontWeight: 700, color: 'var(--text-main)' }}>{req.name}</td>
+                      <td style={{ padding: 12, color: 'var(--text-subtle)' }}>{req.owner_name}</td>
+                      <td style={{ padding: 12, color: 'var(--text-subtle)' }}>{req.phone}</td>
+                      <td style={{ padding: 12 }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => approve(req.id)} style={{ borderRadius: 12, background: 'var(--accent-emerald)', padding: '8px 12px', color: '#fff' }}>Aprovar</button>
+                          <button onClick={() => reject(req.id)} style={{ borderRadius: 12, background: 'var(--accent-rose)', padding: '8px 12px', color: '#fff' }}>Rejeitar</button>
                         </div>
                       </td>
                     </tr>
@@ -145,33 +145,33 @@ const SuperAdminDashboard = () => {
           )}
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-xl font-bold text-slate-900">Clientes / tenants</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+        <section style={{ borderRadius: 24, border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', padding: 20 }}>
+          <h2 style={{ marginBottom: 12, fontSize: 18, fontWeight: 700, color: 'var(--text-main)' }}>Clientes / tenants</h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ minWidth: '100%', textAlign: 'left', fontSize: 14 }}>
               <thead>
-                <tr className="border-b border-slate-200 text-slate-600">
-                  <th className="p-3">Loja</th>
-                  <th className="p-3">Estado</th>
-                  <th className="p-3">Tipo</th>
-                  <th className="p-3">Contacto</th>
-                  <th className="p-3">Ações</th>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-subtle)' }}>
+                  <th style={{ padding: 12 }}>Loja</th>
+                  <th style={{ padding: 12 }}>Estado</th>
+                  <th style={{ padding: 12 }}>Tipo</th>
+                  <th style={{ padding: 12 }}>Contacto</th>
+                  <th style={{ padding: 12 }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {tenants.map((tenant) => (
-                  <tr key={tenant.id} className="border-b border-slate-200">
-                    <td className="p-3 font-semibold text-slate-800">{tenant.name}</td>
-                    <td className="p-3">
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${tenant.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                  <tr key={tenant.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ padding: 12, fontWeight: 700, color: 'var(--text-main)' }}>{tenant.name}</td>
+                    <td style={{ padding: 12 }}>
+                      <span style={{ borderRadius: 999, padding: '4px 8px', background: tenant.status === 'suspended' ? 'rgba(244,63,94,0.08)' : 'rgba(16,185,129,0.08)', color: tenant.status === 'suspended' ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
                         {tenant.status}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-700">{tenant.business_type}</td>
-                    <td className="p-3 text-slate-700">{tenant.phone}</td>
-                    <td className="p-3">
+                    <td style={{ padding: 12, color: 'var(--text-subtle)' }}>{tenant.business_type}</td>
+                    <td style={{ padding: 12, color: 'var(--text-subtle)' }}>{tenant.phone}</td>
+                    <td style={{ padding: 12 }}>
                       {tenant.status !== 'suspended' && (
-                        <button onClick={() => suspend(tenant.id)} className="rounded-xl bg-yellow-500 px-3 py-2 text-white hover:bg-yellow-400">Suspender</button>
+                        <button onClick={() => suspend(tenant.id)} style={{ borderRadius: 12, background: 'rgba(245,158,11,0.9)', padding: '8px 12px', color: '#111' }}>Suspender</button>
                       )}
                     </td>
                   </tr>

@@ -299,58 +299,60 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+    <div className="min-h-screen p-4 md:p-6" style={{ background: 'transparent' }}>
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Genesis</p>
-            <h1 className="text-3xl font-black text-slate-900">Dashboard do negócio</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/onboarding"
-              className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-500"
-            >
-              Iniciar onboarding
-            </Link>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400"
-            >
-              Imprimir recibo
-            </button>
-            <button
-              type="button"
-              onClick={exportCsv}
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
-              Exportar CSV
-            </button>
+        <div className="mb-6 rounded-[28px] border border-[#25394d] bg-[radial-gradient(circle_at_top_left,_rgba(122,165,214,0.16),_transparent_30%),linear-gradient(135deg,#111c2b_0%,#0f1b2d_100%)] p-5 shadow-[0_20px_60px_rgba(2,6,23,0.45)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#dfe7ef]">Genesis</p>
+              <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#f2f6fb]">Dashboard do negócio</h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/onboarding"
+                className="rounded-xl bg-[#dfe7ef] px-4 py-2.5 text-sm font-semibold text-[#111c2b] shadow-sm transition hover:bg-[#eef4fb]"
+              >
+                Iniciar onboarding
+              </Link>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]"
+              >
+                Imprimir recibo
+              </button>
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="rounded-xl bg-[#1d2d40] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:bg-[#243a52]"
+              >
+                Exportar CSV
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Quick action cards */}
         <div className="mb-6 grid gap-3 md:grid-cols-3">
-          <Link to="/onboarding" className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 hover:bg-sky-100">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">1 clique</div>
-            <div className="mt-2 text-lg font-bold text-slate-900">Importar catálogo</div>
-            <div className="mt-1 text-sm text-slate-600">Escolha o tipo de loja e carregue a lista de produtos.</div>
+          <Link to="/onboarding" className="rounded-2xl border border-[#27415d] bg-[#122033] p-4 text-left transition hover:border-[#3c5d89] hover:bg-[#142742]">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#bfd1e6]">1 clique</div>
+            <div className="mt-2 text-lg font-bold text-[#f2f6fb]">Importar catálogo</div>
+            <div className="mt-1 text-sm text-[#b2bdcb]">Escolha o tipo de loja e carregue a lista de produtos.</div>
           </Link>
-          <Link to="/owner" className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">2 cliques</div>
-            <div className="mt-2 text-lg font-bold text-slate-900">Adicionar produto</div>
-            <div className="mt-1 text-sm text-slate-600">Registe preços, stock e categoria sem sair do dashboard.</div>
+          <Link to="/owner" className="rounded-2xl border border-[#2a3a4d] bg-[#111c2b] p-4 text-left transition hover:border-[#40546e]">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9aaec2]">2 cliques</div>
+            <div className="mt-2 text-lg font-bold text-[#f2f6fb]">Adicionar produto</div>
+            <div className="mt-1 text-sm text-[#b2bdcb]">Registe preços, stock e categoria sem sair do dashboard.</div>
           </Link>
-          <Link to="/pos" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-100">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">3 cliques</div>
-            <div className="mt-2 text-lg font-bold text-slate-900">Abrir o POS</div>
-            <div className="mt-1 text-sm text-slate-600">Comece a vender imediatamente com o stock já carregado.</div>
+          <Link to="/pos" className="rounded-2xl border border-[#244d4a] bg-[#122b2d] p-4 text-left transition hover:border-[#2d6b64]">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#a9dfd5]">3 cliques</div>
+            <div className="mt-2 text-lg font-bold text-[#f2f6fb]">Abrir o POS</div>
+            <div className="mt-1 text-sm text-[#b2bdcb]">Comece a vender imediatamente com o stock já carregado.</div>
           </Link>
-          <Link to="/owner/device-keys" className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-left transition hover:border-violet-300 hover:bg-violet-100">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">Segurança</div>
-            <div className="mt-2 text-lg font-bold text-slate-900">Dispositivos offline</div>
-            <div className="mt-1 text-sm text-slate-600">Emita e revogue chaves de sincronização para cada terminal.</div>
+          <Link to="/owner/device-keys" className="rounded-2xl border border-[#3d2f61] bg-[#201936] p-4 text-left transition hover:border-[#564781]">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7c4ff]">Segurança</div>
+            <div className="mt-2 text-lg font-bold text-[#f2f6fb]">Dispositivos offline</div>
+            <div className="mt-1 text-sm text-[#b2bdcb]">Emita e revogue chaves de sincronização para cada terminal.</div>
           </Link>
         </div>
 

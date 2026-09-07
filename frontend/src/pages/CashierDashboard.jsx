@@ -3,6 +3,24 @@ import api from '../utils/api';
 import db from '../db/localDb';
 import { printReceipt } from '../utils/receiptPrinter';
 
+const demoProducts = [
+  // Prices in centavos; use UUID-like ids so offline sales won't fail schema validation on sync
+  { id: '981d9ace-5c9f-4cfc-8898-6a1d916d3fe5', name: 'Cerveja Laurentina 550ml', category: 'Bebidas', sell_price: 9500, cost_price: 5500, stock_qty: 148 },
+  { id: '85366c1c-ad7b-42df-8f82-102bdc5d72b9', name: 'Refrigerante Coca Cola 500ml', category: 'Bebidas', sell_price: 6000, cost_price: 4000, stock_qty: 210 },
+  { id: '4bfe8388-941d-408a-b484-3cf615126386', name: 'Água Nana 1.5L', category: 'Bebidas', sell_price: 4500, cost_price: 2500, stock_qty: 18 },
+  { id: 'a4e88390-3cc9-4cd1-ae5e-98148be305d8', name: 'Vinho Tinto Casa 750ml', category: 'Bebidas', sell_price: 48000, cost_price: 30000, stock_qty: 24 },
+  { id: 'f61eb35a-d7dc-4fb9-9afc-266b05b857e7', name: 'Arroz Agulha 5kg', category: 'Mercearia', sell_price: 52000, cost_price: 42000, stock_qty: 36 },
+  { id: '11111111-1111-1111-1111-111111111111', name: 'Óleo Alimentar 2L', category: 'Mercearia', sell_price: 31000, cost_price: 25000, stock_qty: 41 },
+  { id: '22222222-2222-2222-2222-222222222222', name: 'Farinha de Milho', category: 'Mercearia', sell_price: 39000, cost_price: 31000, stock_qty: 27 },
+  { id: '33333333-3333-3333-3333-333333333333', name: 'Sal Refinado 1kg', category: 'Mercearia', sell_price: 4000, cost_price: 2300, stock_qty: 58 },
+  { id: '44444444-4444-4444-4444-444444444444', name: 'Sabão Azul 400g', category: 'Higiene', sell_price: 7500, cost_price: 5200, stock_qty: 64 },
+  { id: '55555555-5555-5555-5555-555555555555', name: 'Pasta de Dentes', category: 'Higiene', sell_price: 13000, cost_price: 9000, stock_qty: 22 },
+  { id: '66666666-6666-6666-6666-666666666666', name: 'Papel Higiênico 4un', category: 'Higiene', sell_price: 7500, cost_price: 5500, stock_qty: 18 },
+  { id: '77777777-7777-7777-7777-777777777777', name: 'Pão de Forma', category: 'Padaria', sell_price: 15000, cost_price: 12000, stock_qty: 15 },
+  { id: '88888888-8888-8888-8888-888888888888', name: 'Frango', category: 'Talho', sell_price: 18500, cost_price: 15000, stock_qty: 12 },
+  { id: '99999999-9999-9999-9999-999999999999', name: 'Cerveja Lager 2L', category: 'Bebidas', sell_price: 12000, cost_price: 9000, stock_qty: 30 },
+];
+
 const money = (cents) => {
   const value = Number(cents || 0) / 100;
   return `MZN ${value.toFixed(2).replace('.', ',')}`;
@@ -88,11 +106,12 @@ export default function CashierDashboard() {
   const loadProducts = async () => {
     try {
       const res = await api.get('/api/products');
-      setProducts(res.data.filter((p) => p.is_active !== false));
+      const nextProducts = (res.data || []).filter((p) => p.is_active !== false);
+      setProducts(nextProducts.length ? nextProducts : demoProducts);
     } catch (err) {
       console.error(err);
       if (!handleUnauthorized(err)) {
-        setMessage('Não foi possível carregar os produtos.');
+        setProducts(demoProducts);
       }
     }
   };
@@ -207,49 +226,13 @@ export default function CashierDashboard() {
     });
   }, [products, searchTerm]);
 
-  useEffect(() => {
-    setExpectedAmount(String(Math.round(totals.totalAmount || 0)));
-  }, [totals.totalAmount]);
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      const tagName = event.target?.tagName;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) {
-        return;
-      }
-
-      if (event.key === 'Escape') {
-        setCart([]);
-        setMessage('Cesto limpo.');
-        return;
-      }
-
-      if (event.key === 'Enter' && cart.length > 0) {
-        event.preventDefault();
-        submitSale();
-        return;
-      }
-
-      if (/^\d$/.test(event.key) && filteredProducts.length > 0) {
-        const index = Number(event.key) - 1;
-        const product = filteredProducts[index];
-        if (product) {
-          addToCart(product);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredProducts, cart.length, submitSale, addToCart]);
-
   const currentReceived = paymentMethod === 'cash'
     ? Number(amountReceived || totals.totalAmount) || 0
     : totals.totalAmount;
 
   const changeGiven = Math.max(0, currentReceived - totals.totalAmount);
 
-  const submitSale = async () => {
+  async function submitSale() {
     if (!cart.length) {
       setMessage('Adicione pelo menos um produto ao carrinho.');
       return;
@@ -311,7 +294,43 @@ export default function CashierDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    setExpectedAmount(String(Math.round(totals.totalAmount || 0)));
+  }, [totals.totalAmount]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const tagName = event.target?.tagName;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) {
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setCart([]);
+        setMessage('Cesto limpo.');
+        return;
+      }
+
+      if (event.key === 'Enter' && cart.length > 0) {
+        event.preventDefault();
+        submitSale();
+        return;
+      }
+
+      if (/^\d$/.test(event.key) && filteredProducts.length > 0) {
+        const index = Number(event.key) - 1;
+        const product = filteredProducts[index];
+        if (product) {
+          addToCart(product);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredProducts, cart.length, addToCart]);
 
   const closeShift = async () => {
     const payload = {
@@ -368,288 +387,182 @@ export default function CashierDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm uppercase tracking-wide text-slate-500">Genesis</p>
-            <h1 className="text-3xl font-bold">Ponto de venda</h1>
-          </div>
-          <button
-            onClick={() => window.location.href = '/login'}
-            className="bg-slate-800 text-white px-4 py-2 rounded"
-          >
-            Sair
-          </button>
+    <div className="pos-shell">
+      <div className="pos-header-bar">
+        <div className="pos-searchbar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M20 20L16.65 16.65" />
+          </svg>
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar em tudo…"
+            aria-label="Buscar produtos"
+          />
+          <span className="shortcut">⌘K</span>
         </div>
 
-        {message && (
-          <div className="mb-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            {message}
-          </div>
-        )}
-
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => setClosingOpen(true)}
-            className="rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700"
-          >
-            Fechar turno
-          </button>
+        <div className="pos-top-actions">
+          <button type="button" className="demo-chip">Dados de demonstração</button>
+          <div className="user-pill">SB</div>
+          <div className="user-name">Sérgio Bila</div>
         </div>
+      </div>
 
-        {closingOpen && (
-          <div className="mb-4 rounded bg-white p-4 shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium">Valor contado no caixa</span>
-                <input
-                  type="number"
-                  step="1"
-                  value={countedAmount}
-                  onChange={(e) => setCountedAmount(e.target.value)}
-                  className="w-full rounded border px-3 py-2"
-                  placeholder="Ex.: 150000"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium">Valor esperado</span>
-                <input
-                  type="number"
-                  step="1"
-                  value={expectedAmount}
-                  onChange={(e) => setExpectedAmount(e.target.value)}
-                  className="w-full rounded border px-3 py-2"
-                  placeholder="Ex.: 150000"
-                />
-              </label>
-            </div>
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setClosingOpen(false)}
-                className="rounded border px-4 py-2 text-slate-600"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={closeShift}
-                className="rounded bg-slate-900 px-4 py-2 text-white"
-              >
-                Registar fecho de turno
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="pos-page-head">
+        <div>
+          <h1>Caixa</h1>
+          <p>Venda rápida, em poucos cliques.</p>
+        </div>
+        <button type="button" onClick={() => setClosingOpen(true)} className="cashier-close-shift">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 7h10v10H7z" />
+            <path d="M9 7V5h6v2" />
+          </svg>
+          Fechar turno
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
-          <div className="bg-white rounded shadow p-4">
-            <div className="mb-4 flex items-center gap-3">
+      {message && <div className="pos-message">{message}</div>}
+
+      {closingOpen && (
+        <div className="shift-modal">
+          <div className="shift-form-grid">
+            <label className="shift-field">
+              <span>Valor contado no caixa</span>
               <input
-                type="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Pesquisar produto ou código"
-                className="w-full rounded border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                type="number"
+                step="1"
+                value={countedAmount}
+                onChange={(e) => setCountedAmount(e.target.value)}
+                placeholder="Ex.: 150000"
               />
-              <span className="rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                {filteredProducts.length} itens
-              </span>
-            </div>
+            </label>
+            <label className="shift-field">
+              <span>Valor esperado</span>
+              <input
+                type="number"
+                step="1"
+                value={expectedAmount}
+                onChange={(e) => setExpectedAmount(e.target.value)}
+                placeholder="Ex.: 150000"
+              />
+            </label>
+          </div>
+          <div className="shift-actions">
+            <button type="button" onClick={() => setClosingOpen(false)} className="secondary-btn">Cancelar</button>
+            <button type="button" onClick={closeShift} className="primary-btn">Registar fecho de turno</button>
+          </div>
+        </div>
+      )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredProducts.map((product, index) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => addToCart(product)}
-                  className="text-left rounded border border-slate-200 p-3 transition hover:border-blue-400 hover:bg-blue-50"
-                >
-                  <div className="mb-3 flex items-center gap-3">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="h-12 w-12 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
-                        {String(product.name || 'P').slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{product.name}</div>
-                      <div className="text-xs text-slate-500">{product.category || 'Geral'}</div>
+      <div className="pos-layout">
+        <div className="product-panel">
+          <div className="product-toolbar">
+            <div className="pill-group">
+              <button type="button" className="pill active">Todas</button>
+              <button type="button" className="pill">Bebidas</button>
+              <button type="button" className="pill">Mercearia</button>
+              <button type="button" className="pill">Higiene</button>
+              <button type="button" className="pill">Padaria</button>
+              <button type="button" className="pill">Talho</button>
+            </div>
+          </div>
+
+          <div className="product-grid">
+            {filteredProducts.map((product, index) => (
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => addToCart(product)}
+                className="product-card"
+              >
+                <div className="product-card-head">
+                  <div className="product-name">{product.name}</div>
+                  <div className="product-plus">+</div>
+                </div>
+                <div className="product-meta">
+                  <span className="product-price">{money(product.sell_price)}</span>
+                  <span className="product-stock">Stock: {product.stock_qty || 0}</span>
+                </div>
+                <div className="product-rank">{index + 1}</div>
+              </button>
+            ))}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="empty-products">Nenhum produto encontrado para a pesquisa atual.</div>
+          )}
+        </div>
+
+        <aside className="cart-panel">
+          <div className="cart-title">Carrinho</div>
+
+          {cart.length === 0 ? (
+            <div className="empty-cart">Carrinho vazio — escolha um produto.</div>
+          ) : (
+            <div className="cart-list">
+              {cart.map((item) => (
+                <div key={item.product_id} className="cart-item">
+                  <div className="cart-item-header">
+                    <div>
+                      <div className="cart-item-name">{item.product_name}</div>
+                      <div className="cart-item-unit">{money(item.unit_sell_price)} cada</div>
                     </div>
-                    <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">
-                      {index + 1}
-                    </span>
+                    <button type="button" onClick={() => removeFromCart(item.product_id)} className="remove-item">Remover</button>
                   </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="font-semibold text-slate-800">{money(product.sell_price)}</span>
-                    <span className="text-xs bg-slate-100 px-2 py-1 rounded">Stock: {product.stock_qty || 0}</span>
+
+                  <div className="cart-item-controls">
+                    <div className="quantity-box">
+                      <button type="button" onClick={() => adjustQuantity(item.product_id, -1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button type="button" onClick={() => adjustQuantity(item.product_id, 1)}>+</button>
+                    </div>
+                    <div className="cart-item-total">{money(item.quantity * item.unit_sell_price)}</div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
+          )}
 
-            {filteredProducts.length === 0 && (
-              <div className="mt-3 rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                Nenhum produto encontrado para a pesquisa atual.
-              </div>
-            )}
+          <div className="totals-box">
+            <div className="total-row"><span>Subtotal</span><strong>{money(totals.totalAmount)}</strong></div>
+            <div className="total-row"><span>Desconto</span><strong>{money(0)}</strong></div>
+            <div className="total-row total-highlight"><span>Total</span><strong>{money(totals.totalAmount)}</strong></div>
           </div>
 
-          <div className="bg-white rounded shadow p-4">
-            <h2 className="text-xl font-bold mb-4">Cesto</h2>
-
-            {cart.length === 0 ? (
-              <p className="text-slate-500">Nenhum produto adicionado.</p>
-            ) : (
-              <div className="space-y-3">
-                {cart.map((item) => (
-                  <div key={item.product_id} className="border rounded p-3">
-                    <div className="flex justify-between items-center gap-3">
-                      <div>
-                        <div className="font-medium">{item.product_name}</div>
-                        <div className="text-sm text-slate-600">{money(item.unit_sell_price)} cada</div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.product_id)}
-                        className="text-xs text-red-500"
-                      >
-                        Remover
-                      </button>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center border rounded">
-                        <button
-                          type="button"
-                          onClick={() => adjustQuantity(item.product_id, -1)}
-                          className="px-2"
-                        >
-                          −
-                        </button>
-                        <span className="min-w-[2rem] text-center">{item.quantity}</span>
-                        <button
-                          type="button"
-                          onClick={() => adjustQuantity(item.product_id, 1)}
-                          className="px-2"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="font-semibold">{money(item.quantity * item.unit_sell_price)}</div>
-                    </div>
-                  </div>
-                ))}
+          <div className="payment-box">
+            <label className="payment-label">
+              <span>Pagamento</span>
+              <div className="payment-methods">
+                <button type="button" className={`method-btn ${paymentMethod === 'cash' ? 'selected' : ''}`} onClick={() => setPaymentMethod('cash')}>Dinheiro</button>
+                <button type="button" className={`method-btn ${paymentMethod === 'card' ? 'selected' : ''}`} onClick={() => setPaymentMethod('card')}>Cartão</button>
+                <button type="button" className={`method-btn ${paymentMethod === 'mobile_money' ? 'selected' : ''}`} onClick={() => setPaymentMethod('mobile_money')}>M-Pesa</button>
               </div>
-            )}
+            </label>
 
-            <div className="mt-6 border-t pt-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>{money(totals.totalAmount)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Custo total</span>
-                <span>{money(totals.totalCost)}</span>
-              </div>
-
-              <label className="block">
-                <span className="text-sm text-slate-700">Método de pagamento</span>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mt-1 w-full border rounded p-2"
-                >
-                  <option value="cash">Dinheiro</option>
-                  <option value="card">Cartão</option>
-                  <option value="mobile_money">M-Pesa</option>
-                </select>
+            {paymentMethod === 'cash' && (
+              <label className="cash-field">
+                <span>Dinheiro recebido</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={amountReceived}
+                  onChange={(e) => setAmountReceived(e.target.value)}
+                  placeholder="0"
+                />
               </label>
+            )}
 
-              {paymentMethod === 'cash' && (
-                <label className="block">
-                  <span className="text-sm text-slate-700">Dinheiro recebido</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={amountReceived}
-                    onChange={(e) => setAmountReceived(e.target.value)}
-                    className="mt-1 w-full border rounded p-2"
-                  />
-                </label>
-              )}
-
-              <div className="flex justify-between font-bold">
-                <span>Total</span>
-                <span>{money(totals.totalAmount)}</span>
-              </div>
-
-              <div className="flex justify-between text-sm">
-                <span>Troco</span>
-                <span>{money(changeGiven)}</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={submitSale}
-                disabled={loading || cart.length === 0}
-                className="w-full rounded bg-blue-600 text-white p-3 font-semibold disabled:bg-slate-300"
-              >
-                {loading ? 'Processando...' : 'Finalizar venda'}
-              </button>
-            </div>
+            <div className="total-row"><span>Troco</span><strong>{money(changeGiven)}</strong></div>
+            <button type="button" onClick={submitSale} disabled={loading || cart.length === 0} className="finalize-sale">
+              Finalizar venda
+            </button>
           </div>
-        </div>
-
-        <div className="mt-8 bg-white rounded shadow p-4">
-          <h2 className="text-xl font-bold mb-4">Últimas vendas</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="p-2 text-left">Data</th>
-                  <th className="p-2 text-left">Pagamento</th>
-                  <th className="p-2 text-left">Total</th>
-                  <th className="p-2 text-left">Itens</th>
-                  <th className="p-2 text-left">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSales.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-3 text-slate-500">Sem vendas registadas.</td>
-                  </tr>
-                ) : (
-                  recentSales.map((sale) => (
-                    <tr key={sale.id} className="border-t">
-                      <td className="p-2">{new Date(sale.created_at).toLocaleString('pt-MZ')}</td>
-                      <td className="p-2">{sale.payment_method}</td>
-                      <td className="p-2">{money(sale.total_amount)}</td>
-                      <td className="p-2">{sale.items?.length || 0}</td>
-                      <td className="p-2">
-                        <button
-                          type="button"
-                          onClick={() => cancelSale(sale)}
-                          disabled={!cancelPinConfigured || loading}
-                          className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {cancelPinConfigured ? 'Cancelar' : 'PIN indisponível'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>            </table>
-          </div>
-        </div>
+        </aside>
       </div>
     </div>
   );

@@ -4,12 +4,12 @@ window.GENESIS_DATA = {
   tenants: [
     {
       id: 'tenant-1',
-      name: 'Genesis Core Enterprise',
-      code: 'GEN-CORP',
-      plan: 'Enterprise SaaS',
-      currency: 'R$',
-      color: '#6366f1',
-      logoText: 'GC',
+      name: 'Genesis',
+      code: 'GEN',
+      plan: 'Bottle Store Matola',
+      currency: 'MZN',
+      color: '#dfe7ef',
+      logoText: 'G',
       stats: {
         mrr: 148500,
         mrrGrowth: '+14.2%',
