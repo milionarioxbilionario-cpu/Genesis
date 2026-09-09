@@ -1,44 +1,38 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import axios from '../utils/api';
+import { getAuthSession, getPortalRoute, saveAuthSession } from '../utils/auth';
 
 const rolePresets = {
   owner: {
-    label: 'Dono',
-    email: 'sergio@genesis.co.mz',
-    password: 'genesis123'
+    label: 'Gestor da loja',
+    email: 'owner@genesis.local',
+    password: '<password-demo-removida-do-historico>'
   },
   cashier: {
-    label: 'Caixa',
-    email: 'caixa@genesis.co.mz',
-    password: 'genesis123'
+    label: 'Caixista',
+    email: 'cashier@genesis.local',
+    password: '<password-demo-removida-do-historico>'
   },
   super_admin: {
     label: 'Super Admin',
     email: 'admin@genesis.co.mz',
-    password: 'genesis123'
+    password: '<password-demo-removida-do-historico>'
   }
 };
 
-const Login = () => {
-  const [selectedRole, setSelectedRole] = useState('owner');
-  const [email, setEmail] = useState(rolePresets.owner.email);
-  const [password, setPassword] = useState(rolePresets.owner.password);
+const Login = ({ mode = 'owner' }) => {
+  const activeMode = ['owner', 'cashier', 'super_admin'].includes(mode) ? mode : 'owner';
+  const preset = rolePresets[activeMode];
+  const [email, setEmail] = useState(preset.email);
+  const [password, setPassword] = useState(preset.password);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const redirectByRole = (role) => {
     if (role === 'super_admin') window.location.href = '/admin';
     else if (role === 'owner') window.location.href = '/owner';
-    else window.location.href = '/pos';
-  };
-
-  const handleRoleChange = (role) => {
-    const preset = rolePresets[role];
-    setSelectedRole(role);
-    setEmail(preset.email);
-    setPassword(preset.password);
-    setError('');
+    else window.location.href = '/cashier';
   };
 
   const handleLogin = async (event) => {
@@ -55,6 +49,13 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const modeTitle = activeMode === 'super_admin' ? 'Acesso do Super Admin' : activeMode === 'cashier' ? 'Acesso do Caixista' : 'Acesso do Gestor da Loja';
+  const modeDescription = activeMode === 'super_admin'
+    ? 'Painel da plataforma e gestão dos tenants.'
+    : activeMode === 'cashier'
+      ? 'Operação do caixa e vendas do dia.'
+      : 'Gestão de stock, vendas, relatórios e subscrição do negócio.';
 
   return (
     <div className="auth-screen">
@@ -86,29 +87,12 @@ const Login = () => {
 
         <div className="auth-content">
           <h1 className="auth-title">Entrar no Genesis</h1>
-          <p className="auth-subtitle">Gestão de retalho multi-empresa, do caixa ao painel do dono.</p>
+          <p className="auth-subtitle">{modeTitle}</p>
+          <p className="auth-subtitle" style={{ marginTop: 0 }}>{modeDescription}</p>
 
           <form onSubmit={handleLogin} className="auth-form">
-            <div className="field-group">
-              <p className="field-caption">Entrar como</p>
-              <div className="role-switcher">
-                {Object.entries(rolePresets).map(([key, preset]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleRoleChange(key)}
-                    className={`role-tab ${selectedRole === key ? 'selected' : ''}`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {error && (
-              <div className="auth-error">
-                {error}
-              </div>
+              <div className="auth-error">{error}</div>
             )}
 
             <div className="field-group">
@@ -119,7 +103,7 @@ const Login = () => {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 className="auth-input"
-                placeholder="sergio@genesis.co.mz"
+                placeholder="email@empresa.com"
                 required
               />
             </div>
@@ -147,16 +131,18 @@ const Login = () => {
 
             <div className="text-row">
               <Link to="/forgot-password" className="text-link">Esqueci a senha</Link>
-              <Link to="/request-account" className="text-link">Pedir conta</Link>
+              {activeMode === 'owner' && <Link to="/request-account" className="text-link">Pedir conta</Link>}
             </div>
 
-            <Link to="/onboarding" className="company-link">
-              <span>Configurar nova empresa</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12h14" />
-                <path d="M13 5l7 7-7 7" />
-              </svg>
-            </Link>
+            {activeMode === 'owner' && (
+              <Link to="/onboarding" className="company-link">
+                <span>Configurar nova empresa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14" />
+                  <path d="M13 5l7 7-7 7" />
+                </svg>
+              </Link>
+            )}
           </form>
         </div>
       </div>

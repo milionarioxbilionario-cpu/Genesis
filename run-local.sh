@@ -59,12 +59,19 @@ for i in {1..25}; do
   sleep 1
 done
 
-# Open browser to /login if xdg-open present
+# Open browser to /login or /admin/login if xdg-open present
+OPEN_PATH="/login"
+if [ "${1:-}" = "--admin" ] || [ "${ADMIN_OPEN:-}" = "true" ]; then
+  OPEN_PATH="/admin/login"
+fi
 if command -v xdg-open >/dev/null 2>&1; then
-  echo "Opening browser at http://localhost:5173/login"
-  xdg-open "http://localhost:5173/login" || true
+  echo "Opening browser at http://localhost:5173${OPEN_PATH}"
+  xdg-open "http://localhost:5173${OPEN_PATH}" || true
+elif command -v open >/dev/null 2>&1; then
+  echo "Opening browser at http://localhost:5173${OPEN_PATH}"
+  open "http://localhost:5173${OPEN_PATH}" || true
 else
-  echo "xdg-open not available; open http://localhost:5173/login manually"
+  echo "Please open http://localhost:5173${OPEN_PATH} manually"
 fi
 
 echo "Done. Backend pid: $BACKEND_PID, Frontend pid: $FRONTEND_PID"

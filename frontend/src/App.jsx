@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import AdminLogin from './pages/AdminLogin';
+import CashierLogin from './pages/CashierLogin';
 import ResetPassword from './pages/ResetPassword';
 import RequestAccount from './pages/RequestAccount';
 import AdminDashboard from './pages/SuperAdmin/Dashboard';
@@ -12,20 +14,24 @@ import CashierDashboard from './pages/CashierDashboard';
 import CRMLayout from './layouts/CRMLayout';
 import './ui/mockData.js';
 
-
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/cashier/login" element={<CashierLogin />} />
         <Route path="/forgot-password" element={<ResetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/request-account" element={<RequestAccount />} />
+
         <Route path="/admin" element={<CRMLayout><AdminDashboard /></CRMLayout>} />
+        <Route path="/super-admin" element={<CRMLayout><AdminDashboard /></CRMLayout>} />
         <Route path="/owner" element={<CRMLayout><OwnerDashboard /></CRMLayout>} />
         <Route path="/onboarding" element={<CRMLayout><OnboardingWizard /></CRMLayout>} />
-        <Route path="/pos" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
         <Route path="/cashier" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
+        <Route path="/pos" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
+
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
