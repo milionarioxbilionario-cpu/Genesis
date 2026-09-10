@@ -19,6 +19,7 @@ const shrinkageRoutes = require('./routes/shrinkage_records');
 const authMiddleware = require('./middleware/auth');
 const authOrDevice = require('./middleware/authOrDevice');
 const requireRole = require('./middleware/rbac');
+const adminOriginCheck = require('./middleware/adminOriginCheck');
 const refreshRoute = require('./routes/refresh');
 
 const app = express();
@@ -179,7 +180,7 @@ app.use('/api/device-keys', authMiddleware, requireRole('owner'), deviceKeysRout
 // (No sync routes added here automatically; add per-need)
 
 // Rotas Protegidas de Admin
-app.use('/api/admin', authMiddleware, requireRole('super_admin'), adminRoutes);
+app.use('/api/admin', adminOriginCheck, authMiddleware, requireRole('super_admin'), adminRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Genesis API - v1.0' });
