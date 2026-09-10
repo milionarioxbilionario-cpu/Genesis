@@ -1,5 +1,5 @@
 Plano a Executar — Auditoria e Plano de Ação
-Projeto: Genesis (LucroCerto) — SaaS POS Multi-tenant
+Projeto: Genesis — SaaS POS Multi-tenant
 Data: 2026-09-09
 Autor: AI assistant (Copilot CLI runtime in VS Code)
 
@@ -29,6 +29,21 @@ Observação: Antes de qualquer modificação, o repositório foi auditado. O es
 - Implementação básica de endpoints e lógica POS: backend/src/routes/sales.js implementa POST /api/sales com transacção, validações, decremento de stock e audit logs; cancelamento com PIN e protecções também implementado.
 
 Conclusão rápida: ETAPA 0 já está implementada no repositório. A maioria dos artefactos existe e código está presente. Resta apenas a execução final no Supabase (aplicar RLS) e testes em ambiente real (Supabase/Postgres) para completar a validação ocupando o ambiente de produção/staging.
+
+Progresso recente (2026-09-10): Correções críticas de Fase 0-A implementadas e verificadas localmente:
+- Corrigido bug de moeda no OnboardingWizard (valores agora enviados em centavos).
+- Adicionado ProtectedRoute + useAuth hook e integrado nas rotas principais.
+- Adicionado endpoint GET /api/auth/me para validação de sessão via cookie.
+- Implementado QR code real nos recibos (geração via CDN qrcode ou biblioteca local).
+- Substituídas referências "LucroCerto" → "Genesis" no repositório principal.
+- Adicionada middleware adminOriginCheck para proteger /api/admin por origem (dev: http://localhost:5175).
+
+Validação local realizada:
+- Backend e frontend dev servers iniciados com sucesso (localhost:4000 e localhost:5173).
+- /api/auth/me responde 401 quando não autenticado.
+- /api/admin endpoints bloqueados por origem quando Origin ausente; permitido quando Origin é http://localhost:5175 (seguido de autenticação).
+
+Próximos passos (execução): aplicar RLS no Supabase, rodar E2E tests e implementar admin-frontend separado conforme Fase 1.
 
 ---
 

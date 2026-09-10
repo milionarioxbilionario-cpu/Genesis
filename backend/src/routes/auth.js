@@ -257,6 +257,34 @@ router.post('/logout', (req, res) => {
   return res.json({ message: 'Sessão encerrada.' });
 });
 
+// Simple endpoint to validate current session and return user info
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.cookies && req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Não autenticado' });
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true }
+    });
+    if (!user || !user.is_active) return res.status(401).json({ error: 'Conta inactiva ou não encontrada' });
+    if (user.tenant_id) {
+      const tenant = await prisma.tenant.findUnique({ where: { id: user.tenant_id }, select: { status: true } });
+      if (tenant?.status === 'suspended') return res.status(401).json({ error: 'Conta suspensa. Contacte o suporte.' });
+    }
+
+    return res.json({ user });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 router.post('/request-account', async (req, res) => {
   try {
     const data = requestAccountSchema.parse(req.body);

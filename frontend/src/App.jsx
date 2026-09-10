@@ -9,6 +9,7 @@ import AdminDashboard from './pages/SuperAdmin/Dashboard';
 import OwnerDashboard from './pages/Owner/Dashboard';
 import OnboardingWizard from './pages/OnboardingWizard';
 import CashierDashboard from './pages/CashierDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // CRM layout and demo UI assets
 import CRMLayout from './layouts/CRMLayout';
@@ -25,12 +26,28 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/request-account" element={<RequestAccount />} />
 
-        <Route path="/admin" element={<CRMLayout><AdminDashboard /></CRMLayout>} />
-        <Route path="/super-admin" element={<CRMLayout><AdminDashboard /></CRMLayout>} />
-        <Route path="/owner" element={<CRMLayout><OwnerDashboard /></CRMLayout>} />
-        <Route path="/onboarding" element={<CRMLayout><OnboardingWizard /></CRMLayout>} />
-        <Route path="/cashier" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
-        <Route path="/pos" element={<CRMLayout><CashierDashboard /></CRMLayout>} />
+        <Route path="/admin" element={<Navigate to="/login" replace />} />
+        <Route path="/super-admin" element={<Navigate to="/login" replace />} />
+        <Route path="/owner/*" element={
+          <ProtectedRoute requiredRole="owner">
+            <CRMLayout><OwnerDashboard /></CRMLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/onboarding" element={
+          <ProtectedRoute requiredRole="owner">
+            <CRMLayout><OnboardingWizard /></CRMLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/cashier" element={
+          <ProtectedRoute requiredRole="cashier">
+            <CRMLayout><CashierDashboard /></CRMLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/pos" element={
+          <ProtectedRoute requiredRole="cashier">
+            <CRMLayout><CashierDashboard /></CRMLayout>
+          </ProtectedRoute>
+        } />
 
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>

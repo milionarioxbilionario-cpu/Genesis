@@ -91,12 +91,13 @@ export default function OnboardingWizard() {
     setMessage(null);
     try {
       const products = template.products.map((p) => ({
-        name: p.name,
+        name: (p.name || '').trim(),
         sku: p.sku || undefined,
-        price_mzn: Number(p.price_mzn),
-        cost_mzn: Number(p.cost_mzn),
+        sell_price: Math.round(Number(p.price_mzn || 0) * 100),
+        cost_price: Math.round(Number(p.cost_mzn || 0) * 100),
         stock: Number(p.stock),
-        category: p.category || undefined
+        category: p.category || undefined,
+        is_active: true
       }));
 
       const resp = await api.post(`/api/catalogs/${businessType}/import`, { products });

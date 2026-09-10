@@ -61,9 +61,23 @@ export function buildReceiptHtml({ shopName = 'Genesis', sale = {}, items = [] }
         </div>
 
         <div class="qr">
-          <div class="qr-box">QR</div>
+          <img id="receipt-qr" src="" width="70" height="70" alt="QR Code" />
         </div>
         <div class="footer">Obrigado pela preferência!</div>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+        <script>
+          (async () => {
+            try {
+              const saleId = '${sale.id || ''}';
+              if (saleId) {
+                const url = 'https://genesis.co.mz/verify/' + saleId;
+                const dataUrl = await QRCode.toDataURL(url, { width: 150, margin: 1 });
+                const img = document.getElementById('receipt-qr');
+                if (img) img.src = dataUrl;
+              }
+            } catch (e) { console.warn('QR gen failed', e); }
+          })();
+        </script>
       </body>
     </html>
   `;
