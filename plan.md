@@ -1,11 +1,12 @@
 # Plano de implementação do Genesis
 
 ## Estado atual (completo e validado)
-- O sistema Genesis já está funcional em ambiente local e pronto para uso produtivo em contexto de demonstração e primeira implantação real.
-- Backend e frontend estão integrados, com autenticação, dashboard de proprietário, painel de super admin, POS e onboarding de catálogo.
-- As políticas de multi-tenancy e RLS foram validadas no Supabase e a camada de segurança foi reforçada com tenant scoping em todas as consultas protegidas.
+- O sistema Genesis está funcional em ambiente local e validado para a base do produto: autenticação, dashboard de proprietário, painel de super admin, POS e onboarding de catálogo.
+- Backend e frontend estão integrados e os principais pontos críticos de segurança e negócio foram verificados em smoke tests reais.
+- As políticas de multi-tenancy e RLS foram validadas no contexto local e a camada de segurança foi reforçada com tenant scoping em consultas protegidas.
 - O fluxo de onboarding foi melhorado para funcionar em poucos cliques, com seleção do tipo de negócio, catálogo sugerido e importação rápida de produtos.
 - O UX foi melhorado para reduzir atrito operacional: CTA de onboarding no dashboard, rota real do wizard e validações de importação mais claras.
+- Foram concluídos os ajustes finais da fase de acabamento: cálculo de lucro líquido do relatório mensal, persistência de horário de funcionamento por tenant, gestão completa do lifecycle de tenants no painel admin e launcher `run-localhost.sh --admin` funcional.
 
 ## O que foi entregue
 - Autenticação JWT com roles (`super_admin`, `owner`, `cashier`)
@@ -52,6 +53,12 @@ These changes were validated locally: the backend accepted demand capture and sh
 - Corrigido problema no arranque local onde o frontend Vite falhava com EACCES sobre `node_modules/.vite` (cache). O script `run-local.sh` agora garante ownership adequado antes de arrancar o frontend.
 - Validação completa do onboarding: request-account → admin approve → owner login → fetch template → import catalog → produtos visíveis em /api/products. `tenant.onboarding_completed` é marcado true na importação.
 - Scripts de desenvolvimento: `run-local.sh` actualizado para prevenir regressões (corrige .vite ownership) e para abrir o browser apenas quando o frontend responde.
+
+## Atualização operacional 2026-09-11
+- Implementados alertas de stock mínimo e validade vencida para o dashboard do owner via `/api/owner/alerts`.
+- Corrigida consistência do relatório mensal para expor `cost_of_goods` e `deductions` esperadas pelos componentes do frontend.
+- Dashboard do owner agora apresenta alertas operacionais combinados, incluindo itens em risco e produtos expirados.
+- Validação executada: `npm run build` no frontend e `node --check src/index.js` no backend concluídos com sucesso.
 
 ## Próximos passos recomendados
 1. Limpeza opcional: `rm -rf frontend/node_modules/.vite` e reiniciar `./run-local.sh` para forçar re-optimização do Vite se notar algum comportamento estranho.

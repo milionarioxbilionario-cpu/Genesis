@@ -123,6 +123,10 @@ router.post('/login', loginLimiter, async (req, res) => {
         role: user.role,
         tenantId: user.tenant_id,
         email: user.email,
+        tenant: user.tenant ? {
+          id: user.tenant.id,
+          onboarding_completed: Boolean(user.tenant.onboarding_completed)
+        } : null
       }
     });
   } catch (err) {

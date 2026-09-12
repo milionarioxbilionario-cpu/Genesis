@@ -30,7 +30,6 @@ cd ..
 # Start frontend
 echo "Starting frontend..."
 cd frontend
-# Ensure vite cache is writable (fixes EACCES if .vite was created by sudo earlier)
 if [ -d "node_modules/.vite" ]; then
   echo "Fixing .vite cache ownership"
   chown -R $(id -u):$(id -g) node_modules/.vite 2>/dev/null || true
@@ -38,6 +37,17 @@ fi
 nohup npm run dev -- --host > ../logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "frontend pid: $FRONTEND_PID"
+cd ..
+
+# Start admin frontend
+echo "Starting admin frontend..."
+cd admin-frontend
+if [ -d "node_modules" ]; then
+  echo "Admin frontend dependencies present"
+fi
+nohup npm run dev > ../logs/admin-frontend.log 2>&1 &
+ADMIN_FRONTEND_PID=$!
+echo "admin frontend pid: $ADMIN_FRONTEND_PID"
 cd ..
 
 # Wait for servers
@@ -59,19 +69,30 @@ for i in {1..25}; do
   sleep 1
 done
 
-# Open browser to /login or /admin/login if xdg-open present
-OPEN_PATH="/login"
+echo "Waiting for admin frontend to be ready..."
+for i in {1..25}; do
+  if curl -sS http://127.0.0.1:5175/ >/dev/null 2>&1; then
+    echo "admin frontend ready"
+    break
+  fi
+  sleep 1
+done
+
+TARGET_HOST="http://localhost:5173"
+TARGET_PATH="/login"
 if [ "${1:-}" = "--admin" ] || [ "${ADMIN_OPEN:-}" = "true" ]; then
-  OPEN_PATH="/admin/login"
-fi
-if command -v xdg-open >/dev/null 2>&1; then
-  echo "Opening browser at http://localhost:5173${OPEN_PATH}"
-  xdg-open "http://localhost:5173${OPEN_PATH}" || true
-elif command -v open >/dev/null 2>&1; then
-  echo "Opening browser at http://localhost:5173${OPEN_PATH}"
-  open "http://localhost:5173${OPEN_PATH}" || true
-else
-  echo "Please open http://localhost:5173${OPEN_PATH} manually"
+  TARGET_HOST="http://localhost:5175"
+  TARGET_PATH="/login"
 fi
 
-echo "Done. Backend pid: $BACKEND_PID, Frontend pid: $FRONTEND_PID"
+if command -v xdg-open >/dev/null 2>&1; then
+  echo "Opening browser at ${TARGET_HOST}${TARGET_PATH}"
+  xdg-open "${TARGET_HOST}${TARGET_PATH}" || true
+elif command -v open >/dev/null 2>&1; then
+  echo "Opening browser at ${TARGET_HOST}${TARGET_PATH}"
+  open "${TARGET_HOST}${TARGET_PATH}" || true
+else
+  echo "Please open ${TARGET_HOST}${TARGET_PATH} manually"
+fi
+
+echo "Done. Backend pid: $BACKEND_PID, Frontend pid: $FRONTEND_PID, Admin frontend pid: $ADMIN_FRONTEND_PID"

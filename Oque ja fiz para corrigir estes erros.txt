@@ -1,0 +1,49 @@
+Resumo do que foi validado até ao momento:
+
+1. Autenticação e sessão
+- Confirmei que o backend expõe o endpoint /api/auth/me.
+- Sem cookie de sessão, a rota responde 401 Unauthorized.
+- Com login válido do owner, o endpoint devolve os dados do utilizador autenticado.
+- A autenticação via cookie httpOnly e JWT foi verificada com login real.
+
+2. ProtectedRoute e redirecionamentos por role
+- O frontend contém ProtectedRoute e protege owner/cashier.
+- Acesso sem autenticação redireciona para /login.
+- O admin principal foi reduzido a redireção para /login para evitar exposição do painel no frontend principal.
+
+3. Separação do painel admin
+- Verifiquei a presença do middleware backend adminOriginCheck.
+- /api/admin rejeita origin inválida com 403.
+- A origem autorizada no ambiente de desenvolvimento (http://localhost:5175) passa a validação de origin e exige autenticação.
+
+4. QR code e recibos
+- Os recibos geram QR code com a URL verificável /verify/[sale_id].
+- A lógica foi validada no ficheiro frontend/src/utils/receiptPrinter.js.
+
+5. Build e compilação
+- Validação bem-sucedida:
+  - npm run build no frontend
+  - npm run build no admin-frontend
+  - node --check no backend/src/index.js
+
+6. Smoke tests de API
+- GET / -> 200 OK
+- GET /api/auth/me -> 401 quando não autenticado
+- GET /api/admin sem origem correta -> 403 Forbidden
+- GET /api/admin com origem autorizada -> 401 por ausência de token, confirmando que origin check e autenticação estão operando em conjunto.
+
+Conclusão:
+As correções críticas listadas no plano foram implementadas e validadas com smoke tests. Há ainda pontos do roadmap que exigem implementação mais aprofundada, mas o conjunto principal de segurança/autenticação, onboarding e isolamento admin foi confirmado.
+
+Atualização adicional (segunda etapa de execução):
+- Reestruturei a navegação do Owner para dar acesso directo a módulos específicos dentro do Dashboard (produtos, stock, fornecedores, caixistas, trabalhadores, chenecas, metas e definições).
+- Criei páginas modulares em frontend/src/pages/Owner/Goals.jsx, Settings.jsx e Debts.jsx para cobrir lacunas que estavam dispersas no dashboard monolítico.
+- Integrei rotas dedicadas em frontend/src/App.jsx para /owner/products, /owner/stock, /owner/suppliers, /owner/cashiers, /owner/employees, /owner/debts, /owner/goals, /owner/settings e /owner/reports.
+- Validado com builds de produção do frontend principal e do admin-frontend com sucesso.
+- O objetivo desta melhoria foi reduzir a dependência do dashboard monolítico e aumentar a navegabilidade funcional do sistema sem quebrar o fluxo principal de autenticação e autorização.
+
+Atualização final de acabamento:
+- Corrigi o cálculo de lucro líquido do relatório mensal para refletir margem bruta menos despesas operacionais, em vez de uma expressão matemática que anulava a lógica de lucro.
+- Adicionei persistência simples de horário de funcionamento por tenant no backend, com leitura e escrita via /api/owner/settings/hours.
+- O frontend Settings agora carrega o horário guardado ao abrir a página, mantendo o valor atualizado no formulário.
+- Revalidado em produção: frontend e admin-frontend compilam com sucesso; o backend continua a responder corretamente aos smoke tests de autenticação e origem admin.

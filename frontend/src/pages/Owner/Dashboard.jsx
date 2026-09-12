@@ -21,6 +21,8 @@ export default function OwnerDashboard() {
     recentSales: []
   });
   const [reports, setReports] = useState({ salesByDay: [], topProducts: [], totalRevenue: 0, totalOrders: 0, averageTicket: 0 });
+  const [alerts, setAlerts] = useState({ lowStockProducts: [], expiredProducts: [], totalAlerts: 0 });
+  const [sendingAlerts, setSendingAlerts] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -93,12 +95,34 @@ export default function OwnerDashboard() {
     }
   };
 
+  const loadAlerts = async () => {
+    try {
+      const res = await api.get('/api/owner/alerts');
+      setAlerts(res.data || { lowStockProducts: [], expiredProducts: [], totalAlerts: 0 });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const loadCancelPinStatus = async () => {
     try {
       const res = await api.get('/api/sales/cancel-pin-status');
       setCancelPinConfigured(Boolean(res.data?.configured));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const sendAlertsByWhatsApp = async () => {
+    try {
+      setSendingAlerts(true);
+      const res = await api.post('/api/owner/alerts/send');
+      setMessage(res.data?.message || 'Alertas enviados com sucesso.');
+      await loadAlerts();
+    } catch (err) {
+      setMessage(err?.response?.data?.error || 'Erro ao enviar alertas por WhatsApp.');
+    } finally {
+      setSendingAlerts(false);
     }
   };
 
@@ -137,6 +161,7 @@ export default function OwnerDashboard() {
     loadProducts();
     loadSummary();
     loadReports();
+    loadAlerts();
     loadSuppliers();
     loadStockEntries();
     loadCancelPinStatus();
@@ -262,18 +287,25 @@ export default function OwnerDashboard() {
     }
   };
 
-  const metrics = useMemo(() => ({
-    total: summary.productsCount || products.length,
-    stock: summary.stockTotal || products.reduce((sum, p) => sum + Number(p.stock_qty || 0), 0),
-    totalValue: products.reduce((sum, p) => sum + (Number(p.cost_price || 0) * Number(p.stock_qty || 0)), 0),
-    lowStock: summary.lowStockCount || products.filter((p) => Number(p.stock_qty || 0) <= Number(p.min_stock || 0)).length,
-    lowStockProducts: summary.lowStockProducts || products.filter((p) => Number(p.stock_qty || 0) <= Number(p.min_stock || 0)),
-    salesToday: summary.salesToday || 0,
-    salesMonth: summary.salesMonth || 0,
-    revenueToday: summary.revenueToday || 0,
-    revenueMonth: summary.revenueMonth || 0,
-    recentSales: summary.recentSales || []
-  }), [products, summary]);
+  const metrics = useMemo(() => {
+    const fallbackLowStockProducts = products.filter((p) => Number(p.stock_qty || 0) <= Number(p.min_stock || 0));
+    const fallbackExpiredProducts = products.filter((p) => Boolean(p.has_expiry) && p.expiry_date && new Date(p.expiry_date) < new Date());
+
+    return {
+      total: summary.productsCount || products.length,
+      stock: summary.stockTotal || products.reduce((sum, p) => sum + Number(p.stock_qty || 0), 0),
+      totalValue: products.reduce((sum, p) => sum + (Number(p.cost_price || 0) * Number(p.stock_qty || 0)), 0),
+      lowStock: summary.lowStockCount || fallbackLowStockProducts.length,
+      lowStockProducts: summary.lowStockProducts?.length ? summary.lowStockProducts : fallbackLowStockProducts,
+      expiredProducts: alerts.expiredProducts?.length ? alerts.expiredProducts : fallbackExpiredProducts,
+      totalAlerts: alerts.totalAlerts || Math.max((summary.lowStockCount || 0), 0) + fallbackExpiredProducts.length,
+      salesToday: summary.salesToday || 0,
+      salesMonth: summary.salesMonth || 0,
+      revenueToday: summary.revenueToday || 0,
+      revenueMonth: summary.revenueMonth || 0,
+      recentSales: summary.recentSales || []
+    };
+  }, [products, summary, alerts]);
 
   const exportCsv = () => {
     const rows = [
@@ -308,28 +340,22 @@ export default function OwnerDashboard() {
               <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#f2f6fb]">Dashboard do negócio</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/onboarding"
-                className="rounded-xl bg-[#dfe7ef] px-4 py-2.5 text-sm font-semibold text-[#111c2b] shadow-sm transition hover:bg-[#eef4fb]"
-              >
-                Iniciar onboarding
-              </Link>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]"
-              >
-                Imprimir recibo
-              </button>
-              <button
-                type="button"
-                onClick={exportCsv}
-                className="rounded-xl bg-[#1d2d40] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:bg-[#243a52]"
-              >
-                Exportar CSV
-              </button>
+              <Link to="/onboarding" className="rounded-xl bg-[#dfe7ef] px-4 py-2.5 text-sm font-semibold text-[#111c2b] shadow-sm transition hover:bg-[#eef4fb]">Iniciar onboarding</Link>
+              <Link to="/owner/products" className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]">Produtos</Link>
+              <Link to="/owner/stock" className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]">Stock</Link>
+              <Link to="/owner/reports" className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]">Relatórios</Link>
+              <button type="button" onClick={() => window.print()} className="rounded-xl border border-[#334a67] bg-[#182332] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:border-[#4b6788]">Imprimir recibo</button>
+              <button type="button" onClick={exportCsv} className="rounded-xl bg-[#1d2d40] px-4 py-2.5 text-sm font-semibold text-[#edf2f7] shadow-sm transition hover:bg-[#243a52]">Exportar CSV</button>
             </div>
           </div>
+        </div>
+
+        <div className="mb-6 flex flex-wrap gap-2">
+          {['overview','products','stock','suppliers','cashiers','employees','debts','goals','settings','audit'].map((tab) => (
+            <Link key={tab} to={tab === 'overview' ? '/owner' : `/owner/${tab}`} className={`rounded-full px-3 py-1.5 text-sm font-medium ${tab === 'overview' ? 'bg-sky-600 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}>
+              {tab === 'overview' ? 'Visão geral' : tab === 'suppliers' ? 'Fornecedores' : tab === 'cashiers' ? 'Caixistas' : tab === 'employees' ? 'Trabalhadores' : tab === 'debts' ? 'Chenecas' : tab === 'goals' ? 'Metas' : tab === 'settings' ? 'Definições' : tab === 'audit' ? 'Auditoria' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Link>
+          ))}
         </div>
 
         {/* Quick action cards */}
@@ -401,14 +427,39 @@ export default function OwnerDashboard() {
           ))}
         </div>
 
-        {metrics.lowStockProducts.length > 0 && (
+        {(metrics.lowStockProducts.length > 0 || metrics.expiredProducts.length > 0) && (
           <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <div className="mb-2 font-semibold">Alertas de stock mínimo</div>
-            <ul className="ml-5 list-disc space-y-1">
-              {metrics.lowStockProducts.map((product) => (
-                <li key={product.id}>{product.name}: stock {product.stock_qty} / mínimo {product.min_stock}</li>
-              ))}
-            </ul>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="font-semibold">Alertas operacionais</div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-amber-200 px-2 py-1 text-xs font-bold">{metrics.totalAlerts}</span>
+                <button type="button" onClick={sendAlertsByWhatsApp} disabled={sendingAlerts || metrics.totalAlerts === 0} className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">
+                  {sendingAlerts ? 'Enviando...' : 'Enviar WhatsApp'}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {metrics.lowStockProducts.length > 0 && (
+                <div>
+                  <div className="mb-1 font-medium">Stock mínimo</div>
+                  <ul className="ml-5 list-disc space-y-1">
+                    {metrics.lowStockProducts.map((product) => (
+                      <li key={product.id}>{product.name}: stock {product.stock_qty} / mínimo {product.min_stock}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {metrics.expiredProducts.length > 0 && (
+                <div>
+                  <div className="mb-1 font-medium">Produtos em validade vencida</div>
+                  <ul className="ml-5 list-disc space-y-1">
+                    {metrics.expiredProducts.map((product) => (
+                      <li key={product.id}>{product.name}: vencido em {new Date(product.expiry_date).toLocaleDateString('pt-MZ')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

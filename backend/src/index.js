@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const prisma = require('./utils/prisma');
 const authRoutes = require('./routes/auth');
@@ -9,6 +10,7 @@ const salesRoutes = require('./routes/sales');
 const catalogRoutes = require('./routes/catalogs');
 const masterCatalogRoutes = require('./routes/master_catalogs');
 const productsRoutes = require('./routes/products');
+const ownerRoutes = require('./routes/owner');
 const dashboardRoutes = require('./routes/dashboard');
 const inventoryRoutes = require('./routes/inventory');
 const shiftClosingsRoutes = require('./routes/shift_closings');
@@ -147,6 +149,7 @@ async function ensureDemoData() {
 
 // CORS: allow credentials (cookies) and accept requests from frontend (origin can be tightened)
 app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 
 // Rotas Públicas
@@ -158,6 +161,7 @@ app.use('/api/catalogs', catalogRoutes);
 app.use('/api/master_catalogs', masterCatalogRoutes);
 // Produtos do tenant
 app.use('/api/products', productsRoutes);
+app.use('/api/owner', ownerRoutes);
 // Resumo operacional
 app.use('/api/dashboard', dashboardRoutes);
 // Gestão de stock e fornecedores

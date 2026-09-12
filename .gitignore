@@ -34,3 +34,4 @@ backend/node_modules/
 .env.*
 dist/
 .DS_Store
+.aider*

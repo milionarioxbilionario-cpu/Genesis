@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 # Simple helper: only open the Super Admin login URL in the default browser
 # Does not start servers. Use when backend and frontend are already running.
 
-ADMIN_URL="http://localhost:5173/admin/login"
+ADMIN_URL="http://localhost:5175/login"
 
 if command -v xdg-open >/dev/null 2>&1; then
   xdg-open "$ADMIN_URL" || true

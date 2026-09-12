@@ -29,10 +29,12 @@ const Login = ({ mode = 'owner' }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const redirectByRole = (role) => {
-    if (role === 'super_admin') window.location.href = '/admin';
-    else if (role === 'owner') window.location.href = '/owner';
-    else window.location.href = '/cashier';
+  const redirectByRole = (role, tenant) => {
+    if (role === 'super_admin') window.location.href = '/admin/login';
+    else if (role === 'owner') {
+      const onboardingComplete = tenant?.onboarding_completed !== false;
+      window.location.href = onboardingComplete ? '/owner' : '/onboarding';
+    } else window.location.href = '/cashier';
   };
 
   const handleLogin = async (event) => {
@@ -42,7 +44,7 @@ const Login = ({ mode = 'owner' }) => {
 
     try {
       const response = await axios.post('/api/auth/login', { email, password }, { withCredentials: true });
-      redirectByRole(response.data.user.role);
+      redirectByRole(response.data.user.role, response.data.user.tenant);
     } catch (err) {
       setError(err?.response?.data?.error || 'Email ou senha incorretos.');
     } finally {
