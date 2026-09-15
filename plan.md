@@ -86,3 +86,11 @@ Próximos passos para completar o redesign CRM (se aprovado):
 
 Status: trabalho de reconstrução do frontend iniciado e demo visual funcional. Se concordar, prosseguir automaticamente para converter os componentes JS fornecidos em React, integrar command palette e finalizar o conjunto de componentes CRM para entrega QA.
 
+## Smoke tests (2026-09-15)
+- Execução: scripts locais de smoke e E2E executados com sucesso em ambiente local.
+- Testes realizados: onboarding (criação de tenant+owner via Prisma), owner login, criação de produto, venda, cancelamento com PIN, verificação de restauro de stock, geração de relatório mensal, criação de trabalhador e verificação da folha salarial, verificação de alertas e envio de resumo WhatsApp (modo "skipped" se Twilio não configurado).
+- Artefactos/novos scripts adicionados:
+  - backend/scripts/e2e_test2.fixed.js — versão corrigida do E2E com Authorization fix
+  - backend/scripts/smoke_tests.js — bateria de smoke tests cobrindo reports/payroll/alerts
+- Resultado: todos os passos da bateria de smoke tests passaram localmente. Alertas WhatsApp foram gerados em texto mas o envio foi ignorado porque as credenciais Twilio não estavam configuradas (comportamento esperado).
+

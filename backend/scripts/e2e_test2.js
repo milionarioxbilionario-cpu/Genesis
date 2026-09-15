@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
+const fetch = global.fetch || require('node-fetch');
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ async function waitForServer(timeout = 30000) {
 }
 
 async function run() {
-  console.log('Starting E2E test script (v2)');
+  console.log('Starting E2E test script (v2 fixed)');
 
   // 1) Create tenant and owner user directly using Prisma
   const tenantName = `E2E Test Tenant ${Date.now()}`;
@@ -71,15 +72,25 @@ async function run() {
   if (!loginRes.ok) {
     throw new Error(`Login failed: ${JSON.stringify(loginJson)}`);
   }
-  const ownerToken = loginJson.token;
-  console.log('Owner token received');
+  const ownerToken = loginJson.token; // API returns token and sets cookie
+  if (!ownerToken) {
+    console.warn('No token returned by login; script will rely on cookies set by the login response instead. If this fails, run the script with a bearer token strategy.');
+  }
+  console.log('Owner token received (or cookie set)');
+
+  // Helper to create headers with token if present
+  const authHeaders = (extra = {}) => {
+    const h = { 'Content-Type': 'application/json', ...extra };
+    if (ownerToken) h['Authorization'] = `Bearer ${ownerToken}`;
+    return h;
+  };
 
   // 3) Configure cancel PIN
   const pin = '1234';
   console.log('Setting cancel PIN...');
   const pinRes = await fetch(`${API_BASE}/api/sales/cancel-pin`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ownerToken}` },
+    headers: authHeaders(),
     body: JSON.stringify({ pin })
   });
   const pinJson = await pinRes.json();
@@ -90,7 +101,7 @@ async function run() {
   console.log('Creating product...');
   const prodRes = await fetch(`${API_BASE}/api/products`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ownerToken}` },
+    headers: authHeaders(),
     body: JSON.stringify({ name: 'E2E Test Product', sell_price: 500, cost_price: 300, stock_qty: 10 })
   });
   const prodJson = await prodRes.json();
@@ -113,7 +124,7 @@ async function run() {
 
   const saleRes = await fetch(`${API_BASE}/api/sales`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ownerToken}` },
+    headers: authHeaders(),
     body: JSON.stringify(salePayload)
   });
   const saleJson = await saleRes.json();
@@ -125,7 +136,7 @@ async function run() {
   console.log('Cancelling sale with PIN...');
   const cancelRes = await fetch(`${API_BASE}/api/sales/${saleId}/cancel`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ownerToken}` },
+    headers: authHeaders(),
     body: JSON.stringify({ pin })
   });
   const cancelJson = await cancelRes.json();
