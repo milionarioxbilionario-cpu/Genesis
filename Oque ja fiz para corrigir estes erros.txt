@@ -285,3 +285,29 @@ Prova real:
 Nota importante: DEMO_CASHIER_PASSWORD (cashier@genesis.local) ficou com a
 password aleatoria anterior no .env — se precisares do caixista demo, pede-me
 que tambem a alinho. Contas reais (criadas pelo Owner) NAO sao tocadas pelo seed.
+
+[2026-09-18] — CORRECAO FINAL DOS 3 BUGS DO HUB DE CAIXISTAS (Fase 0-C.2)
+
+O que estava a acontecer: quando entravas no perfil de um caixista pelo Hub,
+(a) a tua sessao de dono era TROCADA pela do caixista (porque o codigo fazia
+login com a senha dele), (b) o fecho de turno ficava em teu nome em vez do
+caixista (por isso o perfil dele nunca destravava), e (c) se o caixista
+vendesse depois de fechar o turno, o sistema nao pedia fecho de novo.
+
+O que fiz:
+1. A entrada no perfil agora valida a senha do caixista SEM trocar de sessao
+   (novo endpoint verify-password; o PC continua logado como dono).
+2. O fecho de turno, feito pelo dono no modo Hub, fica em nome do caixista
+   cujo perfil esta activo. O caixista nao consegue fechar em nome de outro.
+3. Vender depois de fechar o turno volta a exigir novo fecho para sair.
+4. BONUS descoberto ao testar: o registo de auditoria do fecho de turno
+   estava PARTIDO desde o principio (erro de tipo no campo new_value) — o
+   sistema gravava o fecho mas respondia erro 500 e nao registava auditoria.
+   Corrigido.
+
+Funcionou? SIM — prova: teste automatico real contra o backend a correr,
+16 de 16 verificacoes PASSARAM, incluindo: senha errada e certa, a sessao
+do dono intacta depois de entrar no perfil, venda em nome do caixista,
+turno aberto/fechado nos momentos certos, e bloqueio de forja. Depois disso
+limpei ficheiros temporarios e uma base de dados orfa que estava a causar
+confusao. Commit e push feitos.

@@ -215,12 +215,17 @@ router.get('/cashiers/:id/open-shift', async (req, res) => {
     if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const [salesToday, lastClosing] = await Promise.all([
-      prisma.sale.count({ where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gte: startOfDay } } }),
+    const saleWhere = { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gte: startOfDay } };
+    const [salesToday, lastSale, lastClosing] = await Promise.all([
+      prisma.sale.count({ where: saleWhere }),
+      prisma.sale.findFirst({ where: saleWhere, orderBy: { created_at: 'desc' }, select: { created_at: true } }),
       prisma.shiftClosing.findFirst({ where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' } }),
     ]);
-    const open = salesToday > 0 && (!lastClosing || new Date(lastClosing.closed_at) < startOfDay);
-    return res.json({ open, salesToday, lastClosingAt: lastClosing?.closed_at || null });
+    // Turno aberto = há venda de hoje POSTERIOR ao último fecho de turno.
+    // Não basta comparar o fecho com o início do dia: vender -> fechar ->
+    // voltar a vender tem de voltar a exigir fecho antes de sair.
+    const open = Boolean(lastSale && (!lastClosing || new Date(lastClosing.closed_at) < new Date(lastSale.created_at)));
+    return res.json({ open, salesToday, lastSaleAt: lastSale?.created_at || null, lastClosingAt: lastClosing?.closed_at || null });
   } catch (error) {
     return res.status(500).json({ error: 'Erro ao verificar turno' });
   }
@@ -246,6 +251,31 @@ router.post('/verify-password', async (req, res) => {
     return res.json({ ok: true });
   } catch (error) {
     return res.status(500).json({ error: 'Erro ao verificar senha do dono' });
+  }
+});
+
+// Entrada no perfil do caixista: valida a SENHA DO CAIXISTA SEM criar
+// sessão — o PC do balcão continua logado como OWNER (modelo quiosque).
+// Nunca usar /api/auth/login aqui: trocaria o cookie httpOnly do dono.
+router.post('/cashiers/:id/verify-password', async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (!password) return res.status(400).json({ error: 'Senha obrigatória.' });
+    const tenantId = ensureTenantScope(req);
+    const cashier = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+    });
+    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
+    if (cashier.is_active === false) return res.status(403).json({ error: 'Caixista inactivo.' });
+    const ok = await bcrypt.compare(String(password), cashier.password_hash);
+    if (!ok) {
+      await createOwnerAudit(req, 'VERIFY_CASHIER_PASSWORD_FAIL', 'user', cashier.id, {});
+      return res.status(401).json({ error: 'Senha do caixista incorrecta.' });
+    }
+    await createOwnerAudit(req, 'VERIFY_CASHIER_PASSWORD', 'user', cashier.id, {});
+    return res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name, email: cashier.email } });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao verificar senha do caixista' });
   }
 });
 

@@ -67,11 +67,9 @@ export default function Cashiers() {
   async function handleEnter(c) {
     setMessage('');
     try {
-      const login = await api.post('/api/auth/login', { email: c.email, password: enterPassword });
-      if (login.data?.user?.id !== c.id) {
-        setMessage('Essa senha nao e deste perfil.');
-        return;
-      }
+      // Valida a senha do caixista SEM criar sessão: o PC continua logado
+      // como owner (nunca chamar /api/auth/login aqui — trocaria o cookie).
+      await api.post(`/api/owner/cashiers/${c.id}/verify-password`, { password: enterPassword });
       const op = await api.post(`/api/owner/cashiers/${c.id}/operate`);
       setHubSeller(op.data.cashier);
       setEnterId(null);

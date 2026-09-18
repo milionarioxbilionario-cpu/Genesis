@@ -337,7 +337,10 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
   const closeShift = async () => {
     const payload = {
       counted_amount: mznToCents(countedAmount),
-      expected_amount: mznToCents(expectedAmount)
+      expected_amount: mznToCents(expectedAmount),
+      // Em modo Hub: o fecho fica em nome do caixista cujo perfil está activo
+      // (o backend valida; sem isto o perfil dele nunca destrava).
+      ...(hubSeller?.id ? { cashier_user_id: hubSeller.id } : {}),
     };
 
     if (!payload.counted_amount && !payload.expected_amount) {

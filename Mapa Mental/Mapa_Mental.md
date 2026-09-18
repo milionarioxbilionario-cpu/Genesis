@@ -210,3 +210,13 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, seg
 - Prova: login admin+owner com Wendy1313$ = 200 + /me correcto (curl, backend 4000).
 - Resultado: funcionou. Passwords demo estáveis em restarts.
 - Segue-se: Fase 0-C.2 Hub de Caixistas (sessão de turno + senha do caixista/owner).
+
+### [2026-09-18] — Fase 0-C.2 concluída: 3 bugs do Hub corrigidos + bug pré-existente de audit
+- Ficheiros alterados: `backend/src/routes/owner.js`, `backend/src/routes/shift_closings.js`, `frontend/src/pages/Owner/Cashiers.jsx`, `frontend/src/pages/CashierDashboard.jsx`.
+- **Bug 1 (troca de sessão):** `handleEnter` chamava `/api/auth/login` com a senha do caixista → substituía o cookie httpOnly do owner. Fix: novo `POST /api/owner/cashiers/:id/verify-password` (bcrypt, sem criar sessão, audit `VERIFY_CASHIER_PASSWORD[_FAIL]`); `handleEnter` nunca mais toca em `/api/auth/login`.
+- **Bug 2 (open-shift furável):** comparava último fecho com início do dia — venda pós-fecho no mesmo dia não reabria o turno. Fix: `open` = existe venda de hoje posterior ao último fecho (`lastSale.created_at > closed_at`).
+- **Bug 3 (deadlock de perfil):** `POST /api/shift_closings` gravava `cashier_user_id = req.user.userId` (owner em modo Hub) → `open-shift` do caixista nunca fechava. Fix: owner pode indicar `cashier_user_id` validado (caixista activo do tenant); caixista não pode forjar outro vendedor (anti-forja). Frontend `closeShift` envia `cashier_user_id: hubSeller.id`.
+- **Bug 4 (descoberto nos testes, PRÉ-EXISTENTE):** `auditLog.new_value` é String no schema mas o `shift_closings.js` passava objecto cru → o audit falhava SEMPRE e o endpoint respondia 500 mesmo gravando o fecho. Fix: `JSON.stringify` (igual ao `sales.js`).
+- Prova (teste E2E real contra backend vivo, 16/16 PASS): login owner → criar caixista → verify-password errada=401/certa=200 → **sessão continua owner** (`/api/auth/me` via cookie = role owner após operate) → venda com `seller_user_id` → open-shift true → fecho em nome do caixista (201) → open-shift false → venda pós-fecho → open-shift true (re-bloqueia) → caixista não consegue fechar em nome de outro (ignora campo) → limpeza (caixista desactivado).
+- Limpeza: `backend/dev.db` órfã + `create_superadmin.mjs`, `test_bcrypt.mjs`, `tmp_set_admin_pw.js`, `dev.db.backup.*` movidos para `~/genesis-backup-20260918/orfaos/`.
+- Segue-se: Fase 0-C.3 (banner/UX do Hub já no PosGate; a seguir Meta realtime + cascata de lucro real) — ou prioridade do fundador.
