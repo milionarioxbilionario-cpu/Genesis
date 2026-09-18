@@ -29,7 +29,7 @@ const money = (cents) => {
 
 const currencyNumber = (cents) => Number(cents || 0) / 100;
 
-export default function CashierDashboard() {
+export default function CashierDashboard({ hubSeller = null } = {}) {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -240,6 +240,7 @@ export default function CashierDashboard() {
     }
 
     const payload = {
+      ...(hubSeller?.id ? { seller_user_id: hubSeller.id } : {}),
       items: cart.map((item) => ({
         product_id: item.product_id,
         product_name: item.product_name,

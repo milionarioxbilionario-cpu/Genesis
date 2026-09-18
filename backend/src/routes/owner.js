@@ -31,6 +31,25 @@ const updateDebtStatus = (debt) => {
 
 const ensureTenantScope = (req) => req.user?.tenantId;
 
+const createOwnerAudit = async (req, action, entityType, entityId, extra = {}) => {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        tenant_id: ensureTenantScope(req),
+        user_id: req.user?.userId || 'system',
+        action,
+        entity_type: entityType,
+        entity_id: entityId || null,
+        old_value: extra.old_value ? JSON.stringify(extra.old_value) : null,
+        new_value: extra.new_value ? JSON.stringify(extra.new_value) : null,
+        ip_address: req.ip || '0.0.0.0',
+      },
+    });
+  } catch (e) {
+    console.error('Owner audit failed', action, e.message || e);
+  }
+};
+
 router.use(auth);
 router.use(requireRole('owner'));
 
@@ -102,13 +121,131 @@ router.post('/cashiers', async (req, res) => {
 
 router.put('/cashiers/:id/deactivate', async (req, res) => {
   try {
+    const tenantId = ensureTenantScope(req);
+    const check = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true, is_active: true },
+    });
+    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
     const user = await prisma.user.update({
-      where: { id: req.params.id },
+      where: { id: check.id },
       data: { is_active: false }
     });
+    await createOwnerAudit(req, 'DEACTIVATE_CASHIER', 'user', user.id, { old_value: { is_active: check.is_active }, new_value: { is_active: false } });
     res.json({ ok: true, user });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao desactivar caixista' });
+  }
+});
+
+router.put('/cashiers/:id/reactivate', async (req, res) => {
+  try {
+    const tenantId = ensureTenantScope(req);
+    const check = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true, is_active: true },
+    });
+    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
+    const user = await prisma.user.update({
+      where: { id: check.id },
+      data: { is_active: true }
+    });
+    await createOwnerAudit(req, 'REACTIVATE_CASHIER', 'user', user.id, { old_value: { is_active: check.is_active }, new_value: { is_active: true } });
+    res.json({ ok: true, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao reactivar caixista' });
+  }
+});
+
+router.put('/cashiers/:id/password', async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (!password || String(password).length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    }
+    const tenantId = ensureTenantScope(req);
+    const check = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true },
+    });
+    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
+    const hash = await bcrypt.hash(String(password), 12);
+    const user = await prisma.user.update({
+      where: { id: check.id },
+      data: { password_hash: hash }
+    });
+    await createOwnerAudit(req, 'RESET_CASHIER_PASSWORD', 'user', user.id, { new_value: { reset: true } });
+    res.json({ ok: true, user: { id: user.id, name: user.name } });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao redefinir senha do caixista' });
+  }
+});
+
+// Entrada "Vender como": o dono continua logado como owner, mas o POS
+// ganha um vendedor activo. Regista audit OPERATE_AS_CASHIER e devolve
+// o contexto. Sair do perfil exige fecho de turno (frontend impõe;
+// backend valida via /api/owner/cashiers/:id/open-shift).
+router.post('/cashiers/:id/operate', async (req, res) => {
+  try {
+    const tenantId = ensureTenantScope(req);
+    const cashier = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier', is_active: true },
+      select: { id: true, name: true, email: true, is_active: true },
+    });
+    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado ou inactivo neste estabelecimento' });
+    await createOwnerAudit(req, 'OPERATE_AS_CASHIER', 'user', cashier.id, {
+      new_value: { cashierId: cashier.id, cashierName: cashier.name, device: req.headers['user-agent'] || 'hub' },
+    });
+    return res.json({ ok: true, cashier });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao entrar no perfil do caixista' });
+  }
+});
+
+// Há turno aberto para este caixista? O Hub usa isto para bloquear a
+// troca de perfil sem fecho de turno. Regra: vendas de hoje sem fecho
+// de turno posterior = turno aberto.
+router.get('/cashiers/:id/open-shift', async (req, res) => {
+  try {
+    const tenantId = ensureTenantScope(req);
+    const cashier = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true },
+    });
+    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const [salesToday, lastClosing] = await Promise.all([
+      prisma.sale.count({ where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gte: startOfDay } } }),
+      prisma.shiftClosing.findFirst({ where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' } }),
+    ]);
+    const open = salesToday > 0 && (!lastClosing || new Date(lastClosing.closed_at) < startOfDay);
+    return res.json({ open, salesToday, lastClosingAt: lastClosing?.closed_at || null });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao verificar turno' });
+  }
+});
+
+// A fechadura da porta Hub -> menu Owner: verifica a senha do owner
+// sem trocar de sessão. O PC do balcão fica logado como owner o dia
+// todo; só volta ao menu com esta senha.
+router.post('/verify-password', async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (!password) return res.status(400).json({ error: 'Senha obrigatória.' });
+    const me = await prisma.user.findUnique({ where: { id: req.user?.userId } });
+    if (!me || me.role !== 'owner' || me.tenant_id !== ensureTenantScope(req)) {
+      return res.status(403).json({ error: 'Só o dono pode usar esta verificação.' });
+    }
+    const ok = await bcrypt.compare(String(password), me.password_hash);
+    if (!ok) {
+      await createOwnerAudit(req, 'VERIFY_OWNER_PASSWORD_FAIL', 'user', me.id, {});
+      return res.status(401).json({ error: 'Senha do dono incorrecta.' });
+    }
+    await createOwnerAudit(req, 'VERIFY_OWNER_PASSWORD', 'user', me.id, {});
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao verificar senha do dono' });
   }
 });
 

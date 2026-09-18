@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 const saleSchema = z.object({
   id: z.string().uuid().optional(),
  cashier_user_id: z.string().uuid().optional(),
+  // Quando o dono opera o balcao via Hub, indica o vendedor activo.
+  // So aceite se o chamador for owner do mesmo tenant; se for cashier, ignorado (anti-forja).
+  seller_user_id: z.string().uuid().optional(),
  items: z.array(z.object({
    product_id: z.string().uuid(),
    product_name: z.string().optional(),
@@ -30,12 +33,14 @@ router.get('/', async (req, res) => {
      return res.status(400).json({ error: 'Tenant não identificado' });
    }
 
-   const sales = await prisma.sale.findMany({
-     where: { tenant_id: tenantId },
-     include: { items: true },
-     orderBy: { created_at: 'desc' },
-     take: 20
-   });
+    const cashierId = typeof req.query.cashier_id === 'string' && req.query.cashier_id ? req.query.cashier_id : null;
+    const where = cashierId ? { tenant_id: tenantId, cashier_user_id: cashierId } : { tenant_id: tenantId };
+    const sales = await prisma.sale.findMany({
+      where,
+      include: { items: true, cashier: { select: { id: true, name: true } } },
+      orderBy: { created_at: 'desc' },
+      take: 20
+    });
 
    return res.json(sales);
  } catch (err) {
@@ -96,7 +101,11 @@ router.post('/', async (req, res) => {
    const data = saleSchema.parse(req.body);
    // Require authenticated user and tenant for production-safe behavior
    const tenantId = (req.user && req.user.tenantId) ? req.user.tenantId : null;
-   const cashierUserId = (req.user && req.user.userId) ? req.user.userId : null;
+   const callerUserId = (req.user && req.user.userId) ? req.user.userId : null;
+   const callerRole = (req.user && req.user.role) ? req.user.role : null;
+   // Vendedor efectivo: owner via Hub pode indicar seller_user_id; cashier vende em nome proprio (anti-forja).
+   let sellerUserId = callerUserId;
+   if (callerRole === 'owner' && data.seller_user_id) { sellerUserId = data.seller_user_id; }
 
    if (!tenantId) {
      return res.status(400).json({ error: 'Tenant não identificado na sessão' });
@@ -129,12 +138,19 @@ router.post('/', async (req, res) => {
        if (product.stock_qty < item.quantity) throw new Error(`Stock insuficiente para ${product.name}`);
      }
 
+      // Se o dono indicou um vendedor, ele tem de ser caixista activo do mesmo tenant.
+      if (callerRole === 'owner' && data.seller_user_id) {
+        const seller = await tx.user.findFirst({ where: { id: data.seller_user_id, tenant_id: tenantId, role: 'cashier', is_active: true }, select: { id: true } });
+        if (!seller) throw new Error('Vendedor indicado nao pertence a este estabelecimento');
+        sellerUserId = seller.id;
+      }
+
      const saleId = data.id || require('crypto').randomUUID();
      const sale = await tx.sale.create({
        data: {
          id: saleId,
          tenant_id: tenantId,
-         cashier_user_id: cashierUserId,
+         cashier_user_id: sellerUserId,
          total_amount: data.total_amount,
          total_cost: data.total_cost,
          payment_method: data.payment_method,
@@ -168,7 +184,7 @@ router.post('/', async (req, res) => {
      await tx.auditLog.create({
        data: {
          tenant_id: tenantId,
-         user_id: cashierUserId,
+         user_id: callerUserId,
          action: 'CREATE_SALE',
          entity_type: 'sale',
          entity_id: sale.id,
@@ -178,6 +194,8 @@ router.post('/', async (req, res) => {
            total_cost: data.total_cost,
            payment_method: data.payment_method,
            item_count: data.items.length,
+           cashier_user_id: sellerUserId,
+            operated_by: callerUserId,
          }),
          ip_address: req.ip || '0.0.0.0'
        }
