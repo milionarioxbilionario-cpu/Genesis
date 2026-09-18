@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import api from '../utils/api';
 import '../ui/components.css';
 import '../ui/animations.css';
 import '../ui/main.css';
@@ -7,8 +8,12 @@ import '../ui/main.css';
 export default function CRMLayout({ children, title = 'Genesis CRM' }) {
   const [collapsed, setCollapsed] = useState(false);
   const [tenant, setTenant] = useState(null);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
+    api.get('/api/auth/me')
+      .then((res) => setRole(res.data?.user?.role || null))
+      .catch(() => setRole(null));
     try {
       const data = window.GENESIS_DATA || {};
       const t = data.tenants ? data.tenants.find((x) => x.id === data.activeTenantId) : null;
@@ -54,15 +59,24 @@ export default function CRMLayout({ children, title = 'Genesis CRM' }) {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section-title">Principal</div>
-          {navItem('/owner', 'Visão Geral')}
-          {navItem('/pos', 'Vendas / POS')}
-          {navItem('/onboarding', 'Onboarding')}
-          {navItem('/owner', 'Stock')}
+          {role === 'cashier' ? (
+            <>
+              <div className="nav-section-title">Caixa</div>
+              {navItem('/pos', 'Vendas / POS')}
+            </>
+          ) : (
+            <>
+              <div className="nav-section-title">Principal</div>
+              {navItem('/owner', 'Visão Geral')}
+              {navItem('/owner/cashiers', 'Caixistas (Hub do Balcão)')}
+              {navItem('/owner/stock', 'Stock')}
+              {navItem('/onboarding', 'Onboarding')}
 
-          <div className="nav-section-title">Gestão</div>
-          {navItem('/owner', 'Painel do Dono')}
-          {navItem('/owner/device-keys', 'Chaves de Dispositivo')}
+              <div className="nav-section-title">Gestão</div>
+              {navItem('/owner', 'Painel do Dono')}
+              {navItem('/owner/device-keys', 'Chaves de Dispositivo')}
+            </>
+          )}
         </nav>
 
         <div className="sidebar-footer" style={{ padding: 12, borderTop: '1px solid rgba(148, 163, 184, 0.12)' }}>

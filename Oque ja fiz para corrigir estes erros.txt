@@ -225,3 +225,20 @@ Data: 18 de Setembro de 2026 — Fase 0-B.2: separação do painel de admin.
   testar a sério o cancelamento de venda com PIN.
 
   (Actualização: commit e push feitos com sucesso — confirmado no GitHub.)
+
+Data: 18 de Setembro de 2026 — Fase 0-C.1: PC do balcão estacionado no Hub.
+- O bug que reportaste (entrar como dono e clicar Vendas/POS voltar à Visão
+  Geral) não era da senha nova. Era o guarda de acesso a funcionar como foi
+  escrito: a barra lateral mostrava "Vendas / POS" a toda a gente, mas a
+  rota só deixava entrar caixistas, por isso mandava o dono de volta.
+- Mudei o comportamento: agora quem é caixista vê só "Vendas / POS" e entra
+  directo; quem é dono vê "Caixistas (Hub do Balcão)" e é levado para o Hub,
+  onde vai escolher o perfil do caixista com a senha antes de vender (o Hub
+  completo, estilo Netflix, é a próxima fase). Também corrigi o link "Stock"
+  que apontava para a página errada.
+- Provei que resultou: o site compila, o login como dono funciona e a regra
+  de decisão foi testada para os 4 casos (dono->Hub, caixista->POS, sem
+  sessão->login, admin->login). O servidor de desenvolvimento já serve o
+  código novo sem precisar reiniciar.
+- Próximo: o Hub de Caixistas completo (criar caixista, entrar com senha,
+  sair só com fecho de turno, voltar ao menu só com senha do dono).

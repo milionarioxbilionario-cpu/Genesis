@@ -20,6 +20,7 @@ import MonthlyReport from './pages/Owner/Reports/MonthlyReport';
 import OnboardingWizard from './pages/OnboardingWizard';
 import CashierDashboard from './pages/CashierDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import PosGate from './components/PosGate';
 
 // CRM layout and demo UI assets
 import CRMLayout from './layouts/CRMLayout';
@@ -118,11 +119,7 @@ function App() {
             <CRMLayout><CashierDashboard /></CRMLayout>
           </ProtectedRoute>
         } />
-        <Route path="/pos" element={
-          <ProtectedRoute requiredRole="cashier">
-            <CRMLayout><CashierDashboard /></CRMLayout>
-          </ProtectedRoute>
-        } />
+        <Route path="/pos" element={<PosGate />} />
 
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
