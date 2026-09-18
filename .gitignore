@@ -1,6 +1,7 @@
 # Ambiente e credenciais (MUITO IMPORTANTE)
 .env
 .env.*
+!.env.example
 *.env
 *.pem
 
