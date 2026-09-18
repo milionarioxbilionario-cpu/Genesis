@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
+const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('../services/monthlyDeductions');
 
 const normalizeRole = (role) => String(role || '').trim();
 const money = (v) => Number(v || 0);
@@ -401,17 +402,27 @@ router.get('/reports/monthly', async (req, res) => {
     const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
     const end = new Date(year, month, 0, 23, 59, 59, 999);
 
-    const report = await buildReportSummary(ensureTenantScope(req), start, end);
-    const employees = await prisma.employee.findMany({ where: { tenant_id: ensureTenantScope(req), is_active: true } });
-    const fixedCosts = await prisma.fixedCost.findMany({ where: { tenant_id: ensureTenantScope(req) } });
-    const suppliers = await prisma.supplier.findMany({ where: { tenant_id: ensureTenantScope(req), is_active: true } });
-    const total_salaries = employees.reduce((sum, emp) => sum + money(emp.monthly_salary), 0);
-    const total_fixed = fixedCosts.reduce((sum, fc) => sum + money(fc.amount), 0);
-    const total_supplier_delivery = suppliers.reduce((sum, supplier) => sum + money(supplier.delivery_cost_per_visit), 0);
-    const total_rent = 0;
-    const total_other_fixed = total_fixed;
-    const operating_expenses = total_salaries + total_fixed + total_supplier_delivery;
-    const net_profit = report.gross_profit - operating_expenses;
+    const tenantId = ensureTenantScope(req);
+    const report = await buildReportSummary(tenantId, start, end);
+    const [employees, fixedCosts, suppliers, stockEntries] = await Promise.all([
+      prisma.employee.findMany({ where: { tenant_id: tenantId, is_active: true } }),
+      prisma.fixedCost.findMany({ where: { tenant_id: tenantId } }),
+      prisma.supplier.findMany({ where: { tenant_id: tenantId } }),
+      prisma.stockEntry.findMany({
+        where: { tenant_id: tenantId, created_at: { gte: start, lte: end } },
+        select: { supplier_id: true, created_at: true },
+      }),
+    ]);
+    const deductionsCalc = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries });
+    const {
+      total_salaries,
+      total_fixed,
+      total_supplier_delivery,
+      total_rent,
+      total_other_fixed,
+      operating_expenses,
+    } = deductionsCalc;
+    const net_profit = computeMonthlyNetProfit(report.gross_profit, deductionsCalc);
 
     res.json({
       period: { year, month },

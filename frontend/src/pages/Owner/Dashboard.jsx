@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api from '../../utils/api';
+import { centsToMznInput, mznToCents } from '../../utils/money';
 
 const formatMoney = (value) => `MZN ${(Number(value || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -152,7 +153,7 @@ export default function OwnerDashboard() {
     setStockForm({
       product_id: products[0]?.id || '',
       quantity: 1,
-      unit_cost: Number(products[0]?.cost_price || 0),
+      unit_cost: centsToMznInput(products[0]?.cost_price),
       supplier_id: ''
     });
   };
@@ -175,7 +176,7 @@ export default function OwnerDashboard() {
       setStockForm((prev) => ({
         ...prev,
         product_id: products[0].id,
-        unit_cost: Number(products[0].cost_price || 0)
+        unit_cost: centsToMznInput(products[0].cost_price)
       }));
     }
   }, [products, stockForm.product_id]);
@@ -199,8 +200,8 @@ export default function OwnerDashboard() {
     try {
       const payload = {
         ...form,
-        sell_price: Number(form.sell_price),
-        cost_price: Number(form.cost_price),
+        sell_price: mznToCents(form.sell_price),
+        cost_price: mznToCents(form.cost_price),
         stock_qty: Number(form.stock_qty),
         min_stock: Number(form.min_stock),
         is_active: form.is_active !== false
@@ -227,8 +228,8 @@ export default function OwnerDashboard() {
       name: product.name,
       category: product.category || 'Geral',
       barcode: product.barcode || '',
-      sell_price: Number(product.sell_price || 0),
-      cost_price: Number(product.cost_price || 0),
+      sell_price: centsToMznInput(product.sell_price),
+      cost_price: centsToMznInput(product.cost_price),
       stock_qty: Number(product.stock_qty || 0),
       min_stock: Number(product.min_stock || 5),
       is_active: product.is_active !== false
@@ -250,7 +251,7 @@ export default function OwnerDashboard() {
     try {
       await api.post('/api/inventory/suppliers', {
         ...supplierForm,
-        delivery_cost_per_visit: Number(supplierForm.delivery_cost_per_visit || 0)
+        delivery_cost_per_visit: mznToCents(supplierForm.delivery_cost_per_visit)
       });
       setMessage('Fornecedor registado com sucesso');
       resetSupplierForm();
@@ -266,7 +267,7 @@ export default function OwnerDashboard() {
       await api.post('/api/inventory/stock', {
         product_id: stockForm.product_id,
         quantity: Number(stockForm.quantity || 0),
-        unit_cost: Number(stockForm.unit_cost || 0),
+        unit_cost: mznToCents(stockForm.unit_cost),
         supplier_id: stockForm.supplier_id || null
       });
       setMessage('Entrada de stock registada com sucesso');
@@ -555,8 +556,8 @@ export default function OwnerDashboard() {
               <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none" placeholder="Categoria" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
               <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 focus:border-sky-500 focus:outline-none" placeholder="Código de barras" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Preço venda" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
-                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
+                <input type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Preço venda (MZN)" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
+                <input type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo (MZN)" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Stock" value={form.stock_qty} onChange={(e) => setForm({ ...form, stock_qty: e.target.value })} />
@@ -616,7 +617,7 @@ export default function OwnerDashboard() {
               </select>
               <div className="grid grid-cols-2 gap-3">
                 <input type="number" min="1" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Quantidade" value={stockForm.quantity} onChange={(e) => setStockForm({ ...stockForm, quantity: e.target.value })} />
-                <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo unitário" value={stockForm.unit_cost} onChange={(e) => setStockForm({ ...stockForm, unit_cost: e.target.value })} />
+                <input type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo unitário (MZN)" value={stockForm.unit_cost} onChange={(e) => setStockForm({ ...stockForm, unit_cost: e.target.value })} />
               </div>
               <select className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" value={stockForm.supplier_id} onChange={(e) => setStockForm({ ...stockForm, supplier_id: e.target.value })}>
                 <option value="">Fornecedor (opcional)</option>
@@ -656,7 +657,7 @@ export default function OwnerDashboard() {
             <input className="rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Nome" value={supplierForm.name} onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })} required />
             <input className="rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Telefone" value={supplierForm.phone} onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })} />
             <div className="flex gap-2">
-              <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo visita" value={supplierForm.delivery_cost_per_visit} onChange={(e) => setSupplierForm({ ...supplierForm, delivery_cost_per_visit: e.target.value })} />
+              <input type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Custo visita (MZN)" value={supplierForm.delivery_cost_per_visit} onChange={(e) => setSupplierForm({ ...supplierForm, delivery_cost_per_visit: e.target.value })} />
               <button type="submit" className="rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white">Guardar</button>
             </div>
           </form>

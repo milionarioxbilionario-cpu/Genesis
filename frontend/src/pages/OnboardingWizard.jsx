@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
+import { mznToCents } from '../utils/money';
 
 const businessOptions = [
   { value: 'bottle_store', label: 'Bottle Store', description: 'Cervejas, bebidas, água e snacks' },
@@ -111,8 +112,8 @@ export default function OnboardingWizard() {
       const products = template.products.map((p) => ({
         name: (p.name || '').trim(),
         sku: p.sku || undefined,
-        sell_price: Math.round(Number(p.price_mzn || 0) * 100),
-        cost_price: Math.round(Number(p.cost_mzn || 0) * 100),
+        sell_price: mznToCents(p.price_mzn),
+        cost_price: mznToCents(p.cost_mzn),
         stock: Number(p.stock),
         category: p.category || undefined,
         is_active: true

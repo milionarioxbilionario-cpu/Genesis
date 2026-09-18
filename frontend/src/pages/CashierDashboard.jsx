@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import api from '../utils/api';
 import db from '../db/localDb';
 import { printReceipt } from '../utils/receiptPrinter';
+import { centsToMznInput, mznToCents } from '../utils/money';
 
 const demoProducts = [
   // Prices in centavos; use UUID-like ids so offline sales won't fail schema validation on sync
@@ -227,7 +228,7 @@ export default function CashierDashboard() {
   }, [products, searchTerm]);
 
   const currentReceived = paymentMethod === 'cash'
-    ? Number(amountReceived || totals.totalAmount) || 0
+    ? (amountReceived === '' ? totals.totalAmount : mznToCents(amountReceived))
     : totals.totalAmount;
 
   const changeGiven = Math.max(0, currentReceived - totals.totalAmount);
@@ -297,7 +298,7 @@ export default function CashierDashboard() {
   }
 
   useEffect(() => {
-    setExpectedAmount(String(Math.round(totals.totalAmount || 0)));
+    setExpectedAmount(String(centsToMznInput(totals.totalAmount)));
   }, [totals.totalAmount]);
 
   useEffect(() => {
@@ -334,8 +335,8 @@ export default function CashierDashboard() {
 
   const closeShift = async () => {
     const payload = {
-      counted_amount: Number(countedAmount || 0),
-      expected_amount: Number(expectedAmount || 0)
+      counted_amount: mznToCents(countedAmount),
+      expected_amount: mznToCents(expectedAmount)
     };
 
     if (!payload.counted_amount && !payload.expected_amount) {
@@ -348,7 +349,7 @@ export default function CashierDashboard() {
       const res = await api.post('/api/shift_closings', payload);
       setClosingOpen(false);
       setCountedAmount('');
-      setExpectedAmount(String(Math.round(totals.totalAmount || 0)));
+      setExpectedAmount(String(centsToMznInput(totals.totalAmount)));
       setMessage(`Fecho de turno registado com sucesso. Diferença: ${money(res.data.difference || 0)}`);
     } catch (err) {
       console.error(err);
@@ -434,20 +435,20 @@ export default function CashierDashboard() {
               <span>Valor contado no caixa</span>
               <input
                 type="number"
-                step="1"
+                step="0.01"
                 value={countedAmount}
                 onChange={(e) => setCountedAmount(e.target.value)}
-                placeholder="Ex.: 150000"
+                placeholder="Ex.: 1500.00"
               />
             </label>
             <label className="shift-field">
               <span>Valor esperado</span>
               <input
                 type="number"
-                step="1"
+                step="0.01"
                 value={expectedAmount}
                 onChange={(e) => setExpectedAmount(e.target.value)}
-                placeholder="Ex.: 150000"
+                placeholder="Ex.: 1500.00"
               />
             </label>
           </div>
@@ -549,10 +550,10 @@ export default function CashierDashboard() {
                 <input
                   type="number"
                   min="0"
-                  step="1"
+                  step="0.01"
                   value={amountReceived}
                   onChange={(e) => setAmountReceived(e.target.value)}
-                  placeholder="0"
+                  placeholder="MZN"
                 />
               </label>
             )}

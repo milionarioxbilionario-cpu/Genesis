@@ -223,12 +223,8 @@ router.post('/:id/cancel', async (req, res) => {
 
       if (sale.status === 'cancelled') throw new Error('Venda já se encontra cancelada');
 
-      // Check number of recent failed attempts for this sale
-      const attemptsResult = await tx.$queryRawUnsafe(
-        `SELECT COUNT(*)::int as cnt FROM "AuditLog" WHERE action = $1 AND entity_id = $2`,
-        'CANCEL_ATTEMPT', id
-      );
-      const attempts = (attemptsResult && attemptsResult[0] && attemptsResult[0].cnt) ? attemptsResult[0].cnt : 0;
+      // Check number of recent failed attempts for this sale using ORM
+      const attempts = await tx.auditLog.count({ where: { action: 'CANCEL_ATTEMPT', entity_id: id } });
       if (attempts >= 3) throw new Error('Bloqueado devido a múltiplas tentativas falhadas');
 
       // Fetch tenant to read cancel_pin_hash
@@ -239,37 +235,45 @@ router.post('/:id/cancel', async (req, res) => {
       // Verify PIN
       const pinOk = await bcrypt.compare(body.pin, tenant.cancel_pin_hash);
       if (!pinOk) {
-        // record failed attempt
-        await tx.$executeRawUnsafe(
-          `INSERT INTO "AuditLog" (id, tenant_id, user_id, action, entity_type, entity_id, ip_address, created_at)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
-          require('crypto').randomUUID(), tenantId, userId || 'unknown', 'CANCEL_ATTEMPT', 'sale', id, req.ip || '0.0.0.0'
-        );
+        // record failed attempt via ORM
+        await tx.auditLog.create({
+          data: {
+            id: require('crypto').randomUUID(),
+            tenant_id: tenantId,
+            user_id: userId || 'unknown',
+            action: 'CANCEL_ATTEMPT',
+            entity_type: 'sale',
+            entity_id: id,
+            ip_address: req.ip || '0.0.0.0'
+          }
+        });
         throw new Error('PIN inválido');
       }
 
-      // Fetch sale items
-      const items = await tx.$queryRawUnsafe(`SELECT * FROM "SaleItem" WHERE sale_id = $1`, id);
+      // Fetch sale items via ORM
+      const items = await tx.saleItem.findMany({ where: { sale_id: id } });
 
-      // Update sale status and restore stock
-      await tx.$executeRawUnsafe(
-        `UPDATE "Sale" SET status = $1, cancelled_by = $2, cancel_reason = $3 WHERE id = $4`,
-        'cancelled', userId || 'system', body.reason || null, id
-      );
+      // Update sale status and restore stock via ORM
+      await tx.sale.update({ where: { id }, data: { status: 'cancelled', cancelled_by: userId || 'system', cancel_reason: body.reason || null } });
 
       for (const it of items) {
-        await tx.$executeRawUnsafe(
-          `UPDATE "Product" SET stock_qty = stock_qty + $1 WHERE id = $2 AND tenant_id = $3`,
-          it.quantity, it.product_id, tenantId
-        );
+        await tx.product.update({ where: { id: it.product_id }, data: { stock_qty: { increment: it.quantity } } });
       }
 
-      // Record audit log for cancellation
-      await tx.$executeRawUnsafe(
-        `INSERT INTO "AuditLog" (id, tenant_id, user_id, action, entity_type, entity_id, old_value, new_value, ip_address, created_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())`,
-        require('crypto').randomUUID(), tenantId, userId || 'system', 'CANCEL_SALE', 'sale', id, null, null, req.ip || '0.0.0.0'
-      );
+      // Record audit log for cancellation via ORM
+      await tx.auditLog.create({
+        data: {
+          id: require('crypto').randomUUID(),
+          tenant_id: tenantId,
+          user_id: userId || 'system',
+          action: 'CANCEL_SALE',
+          entity_type: 'sale',
+          entity_id: id,
+          old_value: null,
+          new_value: null,
+          ip_address: req.ip || '0.0.0.0'
+        }
+      });
 
     }); // end transaction
 

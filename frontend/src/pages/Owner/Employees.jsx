@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../utils/api';
+import { mznToCents } from '../../utils/money';
 
 const currency = (value) => `MZN ${(Number(value || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -9,7 +10,7 @@ export default function Employees() {
   const [form, setForm] = useState({
     name: '',
     role: 'Vendedor',
-    monthly_salary: 250000,
+    monthly_salary: 2500,
     phone: '',
     start_date: new Date().toISOString().slice(0, 10)
   });
@@ -40,9 +41,9 @@ export default function Employees() {
     try {
       await api.post('/api/owner/employees', {
         ...form,
-        monthly_salary: Number(form.monthly_salary || 0),
+        monthly_salary: mznToCents(form.monthly_salary),
       });
-      setForm({ name: '', role: 'Vendedor', monthly_salary: 250000, phone: '', start_date: new Date().toISOString().slice(0, 10) });
+      setForm({ name: '', role: 'Vendedor', monthly_salary: 2500, phone: '', start_date: new Date().toISOString().slice(0, 10) });
       setMessage('Trabalhador registado com sucesso.');
       await load();
     } catch (e) {
@@ -91,7 +92,7 @@ export default function Employees() {
             <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Função" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} required />
             <div className="grid grid-cols-2 gap-3">
-              <input type="number" min="0" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Salário mensal" value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} />
+              <input type="number" min="0" step="0.01" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Salário mensal (MZN)" value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} />
               <input type="date" className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
             </div>
             <input className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Telefone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
