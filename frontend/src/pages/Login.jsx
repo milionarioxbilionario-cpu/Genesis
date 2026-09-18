@@ -13,15 +13,11 @@ const rolePresets = {
   cashier: {
     label: 'Caixista',
     email: 'cashier@genesis.local'
-  },
-  super_admin: {
-    label: 'Super Admin',
-    email: 'admin@genesis.co.mz'
   }
 };
 
 const Login = ({ mode = 'owner' }) => {
-  const activeMode = ['owner', 'cashier', 'super_admin'].includes(mode) ? mode : 'owner';
+  const activeMode = ['owner', 'cashier'].includes(mode) ? mode : 'owner';
   const preset = rolePresets[activeMode];
   const [email, setEmail] = useState(preset.email);
   const [password, setPassword] = useState('');
@@ -29,8 +25,14 @@ const Login = ({ mode = 'owner' }) => {
   const [loading, setLoading] = useState(false);
 
   const redirectByRole = (role, tenant) => {
-    if (role === 'super_admin') window.location.href = '/admin/login';
-    else if (role === 'owner') {
+    // O Super Admin usa o admin-frontend (porta 5175). Se uma conta
+    // super_admin fizer login aqui por engano, recusa-se com mensagem
+    // em vez de a enviar para uma rota admin dentro deste bundle.
+    if (role === 'super_admin') {
+      setError('A conta de Super Admin usa o painel dedicado (admin-frontend).');
+      return;
+    }
+    if (role === 'owner') {
       const onboardingComplete = tenant?.onboarding_completed !== false;
       window.location.href = onboardingComplete ? '/owner' : '/onboarding';
     } else window.location.href = '/cashier';
@@ -51,10 +53,8 @@ const Login = ({ mode = 'owner' }) => {
     }
   };
 
-  const modeTitle = activeMode === 'super_admin' ? 'Acesso do Super Admin' : activeMode === 'cashier' ? 'Acesso do Caixista' : 'Acesso do Gestor da Loja';
-  const modeDescription = activeMode === 'super_admin'
-    ? 'Painel da plataforma e gestão dos tenants.'
-    : activeMode === 'cashier'
+  const modeTitle = activeMode === 'cashier' ? 'Acesso do Caixista' : 'Acesso do Gestor da Loja';
+  const modeDescription = activeMode === 'cashier'
       ? 'Operação do caixa e vendas do dia.'
       : 'Gestão de stock, vendas, relatórios e subscrição do negócio.';
 

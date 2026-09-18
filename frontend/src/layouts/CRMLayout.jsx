@@ -63,7 +63,6 @@ export default function CRMLayout({ children, title = 'Genesis CRM' }) {
           <div className="nav-section-title">Gestão</div>
           {navItem('/owner', 'Painel do Dono')}
           {navItem('/owner/device-keys', 'Chaves de Dispositivo')}
-          {navItem('/admin', 'Super Admin')}
         </nav>
 
         <div className="sidebar-footer" style={{ padding: 12, borderTop: '1px solid rgba(148, 163, 184, 0.12)' }}>

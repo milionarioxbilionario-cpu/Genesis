@@ -6,24 +6,24 @@ Fonte única de verdade do estado real do repositório. Actualizado em cada sess
 
 ## Parte A — ESTADO ACTUAL
 
-Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de histórico, segredos e `.gitignore`)
+Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, segredos e separação do admin)
 
 ### Identidade
 | Item | Valor | Estado |
 |---|---|---|
 | Nome do produto | Genesis | ✅ CONFIRMADO (regra; grep de resíduos LucroCerto/GESTÃO INTELIGENTE MZ ainda ⚠️ NÃO VERIFICADO nesta sessão) |
 | Moeda interna | centavos inteiros (MZN) | ✅ CONFIRMADO nos formulários que **enviam** dinheiro (`frontend/src/utils/money.js`). Debts/Goals/Suppliers.jsx não POST-am valores. `setup.fixedCosts` no onboarding ainda não vai para a API. |
-| Frontends | `frontend/` (Owner/Cashier) + `admin-frontend/` (Super Admin) | 🔴 Separação física incompleta (ficheiros admin ainda em `frontend/`) |
+| Frontends | `frontend/` (Owner/Cashier) + `admin-frontend/` (Super Admin, porta 5175) | ✅ separação física concluída 18/09 (ficheiros admin apagados do bundle principal; rotas `/admin*` redireccionam para `/login`) |
 
 ### Frontend — arranque e rotas
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | `frontend/src/main.jsx` | Ponto de entrada Vite. Importa `./App.jsx` (não `pages/App.jsx`). | ✅ CONFIRMADO FUNCIONAL | 13/09/2026 — leitura directa do ficheiro: `import App from './App.jsx';` |
-| `frontend/src/App.jsx` | Router único da app Owner/Cashier. Envolve `/owner/*`, `/onboarding`, `/cashier`, `/pos` em `ProtectedRoute`. Redirecciona `/admin` e `/super-admin` para `/login`. Ainda importa `AdminLogin` e `AdminDashboard` (código admin no bundle). | ✅ CONFIRMADO FUNCIONAL para protecção de rotas; 🔴 ainda contém rotas/imports de admin (Fase 1) | 13/09/2026 — leitura integral do ficheiro |
+| `frontend/src/App.jsx` | Router único da app Owner/Cashier. Envolve `/owner/*`, `/onboarding`, `/cashier`, `/pos` em `ProtectedRoute`. `/admin`, `/super-admin` e `/admin/login` redireccionam para `/login`. **Sem imports admin** (removidos 18/09). | ✅ CONFIRMADO FUNCIONAL para protecção de rotas e separação | 18/09/2026 — leitura integral + `vite build` OK + varredura do bundle compilado: `SuperAdminDashboard`/`/api/admin/*` = 0 |
 | `frontend/src/pages/App.jsx` | Cópia residual. No último commit (`HEAD`) era a versão **sem** ProtectedRoute (`/admin`, `/owner`, `/pos` abertos). Na working tree tinha sido copiado por cima da versão protegida, o que mascarava o problema. | ❌ NÃO EXISTE AINDA (apagado nesta sessão; era o objectivo) | 13/09/2026 — `test ! -f frontend/src/pages/App.jsx` + `git show HEAD:frontend/src/pages/App.jsx` mostrou rotas sem ProtectedRoute |
 | `frontend/src/components/ProtectedRoute.jsx` | Verifica `/api/auth/me`, loading/unauthorized/wrong-role | ✅ CONFIRMADO (auditoria 13/09; não reaberto nesta sessão) | auditoria ficheiro a ficheiro 13/09 |
-| `frontend/src/pages/AdminLogin.jsx` | Login Super Admin no bundle principal | 🔴 CONHECIDO COMO QUEBRADO (violação de separação física) | auditoria 13/09 |
-| `frontend/src/pages/SuperAdmin/Dashboard.jsx` | Dashboard Super Admin no bundle principal | 🔴 CONHECIDO COMO QUEBRADO (violação de separação física) | auditoria 13/09 |
+| `frontend/src/pages/AdminLogin.jsx` | Login Super Admin no bundle principal | ❌ APAGADO 18/09 (separação física; vive só em `admin-frontend/`) | 18/09/2026 — `ls` = inexistente; `grep` no bundle = 0 refs |
+| `frontend/src/pages/SuperAdmin/Dashboard.jsx` (188 linhas) | Dashboard Super Admin no bundle principal | ❌ APAGADO 18/09 (separação física; vive só em `admin-frontend/src/App.jsx`) | 18/09/2026 — `ls` = inexistente; `SuperAdminDashboard` no bundle compilado = 0 |
 | `frontend/src/pages/Owner/POS.jsx` | POS dentro da pasta Owner | 🔴 CONHECIDO COMO QUEBRADO (Owner não deve ter UI de vendas) | auditoria 13/09 — existência reportada; não reaberto nesta sessão |
 | `frontend/src/utils/money.js` | `mznToCents` / `centsToMznInput` | ✅ CONFIRMADO FUNCIONAL | 13/09/2026 — node 8/8 PASS (150.50→15050, 95→9500, 2500→250000) |
 | `frontend/src/pages/OnboardingWizard.jsx` | Catálogo em MZN; envia `mznToCents`. Passo custos **não** chama API. | ✅ produtos; ⚠️ fixedCosts não persistidos | 13/09/2026 — linhas 115-116 |
@@ -61,11 +61,14 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de históri
 | `backend/src/routes/.auth.js.swp`, `backend/src/.index.js.swp` | 🔴 Swap files do Vim **versionados**; o primeiro continha uma comparação directa da password do super_admin com um literal escrito no código (estado antigo do `auth.js`). O `auth.js` actual usa `bcrypt.compare` — sem backdoor activo | ✅ REMOVIDOS 18/09 (git + disco; backup) e `*.swp` no `.gitignore` | 18/09/2026 — varredura a todos os objectos = 0 literais |
 | `backend/.env.example` | Template das variáveis (inclui `SEED_DEMO_DATA`, `DEMO_*_PASSWORD`) | ✅ versionado (negado `!.env.example`) | 18/09/2026 — `git ls-files` + `git check-ignore` |
 | `backend/.env` | Credenciais locais reais | ✅ nunca versionado nem presente na história | 18/09/2026 — varredura ampla: só placeholders |
-| `frontend/src/pages/Login.jsx` | 🔴 Tinha as **passwords pré-preenchidas** no formulário do site principal (owner, cashier e super_admin) | ✅ CORRIGIDO 18/09 (password começa vazia) | 18/09/2026 — `git grep` = 0 |
+| `frontend/src/pages/Login.jsx` | 🔴 Tinha as **passwords pré-preenchidas** no formulário do site principal (owner, cashier e super_admin) | ✅ CORRIGIDO 18/09 (password começa vazia; preset `super_admin` removido; login super_admin aqui recusado com mensagem para o painel dedicado) | 18/09/2026 — `git grep` = 0 + leitura integral na Fase 0-B.2 |
 | `admin-frontend/src/App.jsx` | 🔴 Tinha a password do Super Admin pré-preenchida no formulário | ✅ CORRIGIDO 18/09 | 18/09/2026 — `git grep` = 0 |
 | `test.sh`, `backend/scripts/*` (6), `docs/curl_collection.sh`, `docs/postman_genesis_collection.json` | Usam a mesma password demo em texto claro | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — grep: 11 ficheiros |
-| `frontend/src/App.jsx` (linhas 4 e 8) | Importa `AdminLogin` e `AdminDashboard` → código admin **compilado no bundle principal** | 🔴 CONHECIDO COMO QUEBRADO (violação SECÇÃO 12.2.4) | 18/09/2026 — grep no `App.jsx`; `SuperAdmin/Dashboard.jsx` = 188 linhas |
-| `admin-frontend/` | Projecto Super Admin separado, porta 5175, **auto-contido** (`src/App.jsx` 344 linhas, sem imports do `frontend/`) | ✅ CONFIRMADO FUNCIONAL (estrutura) | 18/09/2026 — leitura integral de `App.jsx`, `main.jsx`, `vite.config.js` |
+| `frontend/src/App.jsx` (linhas 4 e 8) | Importava `AdminLogin` e `AdminDashboard` → código admin **compilado no bundle principal** | ❌ REMOVIDO 18/09 (imports apagados; `/admin*` redirecciona para `/login`; bundle varrido: 0) | 18/09/2026 — `vite build` + grep no `dist/assets/index-*.js` |
+| `frontend/src/utils/auth.js` (`getPortalRoute`) | Devolvia `/admin` para `super_admin` neste bundle | ✅ CORRIGIDO 18/09 (super_admin cai em `/login`; nota no código) | 18/09/2026 — leitura directa |
+| `frontend/src/components/ProtectedRoute.jsx` (`roleRedirects`) | Tinha entrada `super_admin: '/admin-forbidden'` (rota inexistente) | ✅ CORRIGIDO 18/09 (super_admin cai em `/login` por omissão) | 18/09/2026 — leitura directa |
+| `frontend/src/layouts/CRMLayout.jsx` | Barra lateral tinha item `Super Admin` → `/admin` visível a Owner/Cashier | ✅ CORRIGIDO 18/09 (item removido) | 18/09/2026 — leitura directa |
+| `admin-frontend/` | Projecto Super Admin separado, porta 5175, **auto-contido** (`src/App.jsx` 344 linhas, sem imports do `frontend/`) | ✅ CONFIRMADO FUNCIONAL (estrutura + build OK 18/09) | 18/09/2026 — leitura integral de `App.jsx`, `main.jsx`, `vite.config.js` + `vite build` 1.63s + `node --check` em `routes/admin.js` e `adminOriginCheck.js` |
 | `backend/src/routes/sales.js` | Cancelamento com PIN + restauro de stock, reescrito de SQL cru → ORM | ⚠️ NÃO VERIFICADO (sintaxe OK; **sem prova funcional**) | 18/09/2026 — `node --check` OK; commitado por outro agente sem registo no Mapa |
 
 ### Roadmap — o que falta (não fazer nesta sessão)
@@ -73,8 +76,9 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de históri
 - **Fase 0.2** — conversão ×100 nos forms que enviam dinheiro → feita (commitada em `f58b30b`).
 - **Fase 0.3** — fórmula relatório mensal → feita; testes 6/6 PASS (commitada em `f58b30b`).
 - **Fase 0.4-H** — resíduos + `.gitignore` + expurgo de histórico → feita localmente; **`force-push` pendente de autenticação** (o credential helper do VS Code não resolve fora da UI).
-- **Fase 0-B.1** — passwords demo fora do código + seed opt-in + expurgo dos literais e dos `.swp` → feita e verificada (ver Parte B).
-- **Pendente: `force-push` + rotação** — `origin/main` continua na história antiga (dev.db, logs, passwords).
+- **Fase 0-B.1** — passwords demo fora do código + seed opt-in + expurgo dos literais e dos `.swp` → feita, verificada, **publicada** (`ab684a7`) e passwords **rodadas** (ver Parte B).
+- **Fase 0-B.2** — separação física do admin (apagar `AdminLogin` + `SuperAdmin/Dashboard` do bundle principal; limpar referências em `Login`/`auth`/`ProtectedRoute`/`CRMLayout`) → feita e verificada (ver Parte B). **Pendente: commit + push desta fase.**
+- **Segue-se: Fase 0-B.3** — prova funcional do cancelamento com PIN (`backend/src/routes/sales.js`, reescrito para ORM sem prova).
 - **Pendente (SECÇÃO 11)** — `Mapa Mental/mapa_mental_3d.html` não existe ainda.
 - Fases 1–7 conforme Prompt Mestre.
 
@@ -177,3 +181,10 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de históri
 - **Push:** `git push --force-with-lease origin main` → exit 0; `git ls-remote` confirma `origin/main = ab684a7` (igual ao local). A história antiga com `dev.db`, logs e literais saiu do GitHub. Repositório **privado** (confirmado via API: `private: true`, 0 forks) — exposição limitada a quem já tivesse clonado.
 - **Rotação das 3 demo passwords:** novos valores de 20 caracteres escritos em `backend/.env` (backup do anterior em `~/genesis-backup-20260918/`). Verificação directa na BD: `bcrypt.compare` das **novas = MATCH** e das **antigas = NO** para owner, cashier e admin — as antigas deixaram de funcionar. (Nota: o teste via HTTP deu 429 por rate-limit após os logins repetidos; a prova por bcrypt directo na BD é equivalente e não toca no limiter.)
 - Estado: Fase 0-B.1 **encerrada**. Segue-se a Fase 0-B.2.
+
+### [2026-09-18] — Fase 0-B.2: separação física do Super Admin (código admin fora do bundle principal)
+- Ficheiros apagados: `frontend/src/pages/AdminLogin.jsx`, `frontend/src/pages/SuperAdmin/Dashboard.jsx` (188 linhas) + directório `SuperAdmin/`. Ficheiros alterados: `frontend/src/App.jsx` (imports admin removidos; `/admin/login` passa a redireccionar para `/login`), `frontend/src/pages/Login.jsx` (preset `super_admin` removido; `activeMode` só aceita owner/cashier; login com role super_admin recusado com mensagem para o painel dedicado; textos do modo admin removidos), `frontend/src/utils/auth.js` (`getPortalRoute` já não devolve `/admin`), `frontend/src/components/ProtectedRoute.jsx` (entrada `super_admin: '/admin-forbidden'` removida — cai em `/login`), `frontend/src/layouts/CRMLayout.jsx` (item `Super Admin` → `/admin` removido da barra lateral).
+- Porquê (SECÇÃO 12.2.4 do Prompt Mestre): mesmo com as rotas `/admin` desactivadas, o código de admin era **compilado e servido no JS de qualquer Owner/Cashier**, inspeccionável no browser — falha de segurança arquitectural, não estética.
+- Verificação (output real): `vite build` do `frontend/` OK (3.77s); varredura do bundle compilado `dist/assets/index-*.js` → `SuperAdminDashboard` = 0, `/api/admin/requests` = 0, `/api/admin/tenants` = 0; as únicas ocorrências restantes são benignas e intencionais — 1× `super_admin` (mensagem de recusa no `Login.jsx`) e 1× `"/admin"` (rota que redirecciona para `/login`). Armadilha evitada: o primeiro `grep -l` deu falso positivo (`Super Admin` aparece em 3 sítios do bundle ANTIGO em cache); o rebuild confirma que o bundle actual ainda era o antigo — a varredura válida foi feita após rebuild com `touch` forçado. `vite build` do `admin-frontend/` OK (1.63s); `node --check` em `backend/src/routes/admin.js` e `adminOriginCheck.js` OK; `backend/src/routes/admin.js` intacto (12 `router.*`) — a API de admin não foi tocada.
+- Nota: `git stash`/`pop` usado a meio para comparar bundle antigo vs novo correu sem perda (working tree restaurada, 7 ficheiros); `frontend/dist/` continua fora do git (ignorado) — o grep foi feito no disco, não no histórico.
+- Segue-se: commit + push desta fase; depois Fase 0-B.3 (prova funcional do cancelamento com PIN).

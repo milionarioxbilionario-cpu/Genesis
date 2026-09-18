@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import api from '../utils/api';
 
-// roleRedirects: where to redirect when role mismatch
+// roleRedirects: where to redirect when role mismatch. super_admin não tem
+// rota neste bundle — cai em /login com mensagem (ver Login.jsx).
 const roleRedirects = {
-  super_admin: '/admin-forbidden',
   owner: '/owner',
   cashier: '/pos',
 };

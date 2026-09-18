@@ -208,3 +208,18 @@ Data: 18 de Setembro de 2026 — Push e rotação das passwords (fim da Fase 0-B
   deixaram de funcionar para as 3 contas (dono, caixista e admin).
 - Com isto, a Fase 0-B.1 está encerrada. O próximo passo é a Fase 0-B.2:
   tirar as páginas de admin (188 linhas) de dentro do site principal.
+
+Data: 18 de Setembro de 2026 — Fase 0-B.2: separação do painel de admin.
+- Apaguei as duas páginas de administração que viviam dentro do site dos
+  lojistas (o login de admin e o painel com 188 linhas). Qualquer conta de
+  Super Admin que tente entrar pelo site principal recebe agora uma
+  mensagem a indicar o painel dedicado, em vez de ser enviada para uma
+  página de admin dentro do site. As rotas /admin redireccionam para o
+  login normal, e tirei também o botão "Super Admin" da barra lateral.
+- Provei que resultou: o site compila sem erros e inspeccionei o ficheiro
+  final que é servido aos lojistas — não contém nenhuma página de admin
+  nem nenhuma chamada à API de administração. O painel separado
+  (admin-frontend) compila bem e a API de admin no servidor não foi
+  tocada.
+- Falta fazer o commit e o push desta fase. Depois segue-se a Fase 0-B.3:
+  testar a sério o cancelamento de venda com PIN.

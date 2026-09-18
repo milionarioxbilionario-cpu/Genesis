@@ -34,7 +34,7 @@ export function getAuthToken() {
 }
 
 export function getPortalRoute(role) {
-  if (role === 'super_admin') return '/admin';
+  // Nota: super_admin intencionalmente sem rota neste bundle — vive no admin-frontend.
   if (role === 'cashier') return '/cashier';
   if (role === 'owner') return '/owner';
   return '/login';
