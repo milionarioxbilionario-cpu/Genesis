@@ -6,7 +6,12 @@ const prisma = new PrismaClient();
 
 async function main() {
   const email = 'admin@genesis.co.mz';
-  const testPassword = '<password-demo-removida-do-historico>';
+  const testPassword = process.env.DEMO_ADMIN_PASSWORD;
+  if (!testPassword) {
+    console.log('⚠️  DEMO_ADMIN_PASSWORD não definida (ver backend/.env.example)');
+    await prisma.$disconnect();
+    return;
+  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return console.log('🔎 Utilizador não encontrado');

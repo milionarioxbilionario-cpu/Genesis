@@ -54,10 +54,12 @@ Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gi
 | Caminho | O que faz / problema | Estado | Última verificação |
 |---|---|---|---|
 | `backend/prisma/dev.db` | Base SQLite local (33 users / 29 tenants, hashes bcrypt `$2b$12$`) | ✅ fora do git e do histórico; existe só no disco e está ignorada | 18/09/2026 — `git log --all -- <f>` = 0 commits; `git check-ignore -v` → regra `.gitignore:27` |
-| `logs/` | Logs locais — continham credenciais em **texto claro** (`Demo data ensured: owner@genesis.local / <password-demo-removida-do-historico>`) | ✅ fora do git e do histórico | 18/09/2026 — `git log --all -- logs/backend.log` = 0 |
+| `logs/` | Logs locais — continham credenciais de demonstração em **texto claro** (linha `Demo data ensured: …`) | ✅ fora do git e do histórico | 18/09/2026 — `git log --all -- logs/backend.log` = 0 |
 | `Desktop.zip`, `Genesis.txt`, `Genesis - SaaS`, `ConteudoDentro…txt`, `tree*`, `backend_server.log` | Dumps e resíduos | ✅ removidos do git e do histórico | 18/09/2026 — `git ls-files` sem ocorrências |
 | `.gitignore` | Exclusões consolidadas (`*.db`, `logs/`, `*.zip`, `backend/prisma/dev.db`) | ✅ CONFIRMADO FUNCIONAL | 18/09/2026 — `git check-ignore -v` OK; ficheiros essenciais **não** ignorados (verificado) |
-| `backend/src/index.js` (seed demo) | 🔴 **Cria contas reais com passwords hardcoded** — linhas 58 (`<password-demo-removida-do-historico>`), 101 (`<password-demo-removida-do-historico>`), 147 (`<password-demo-removida-do-historico>`) | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — `git grep -n <prefixo-password-demo-removido>` |
+| `backend/src/index.js` (seed demo) | ✅ **CORRIGIDO 18/09**: `ensureDemoData()` é agora opt-in (`SEED_DEMO_DATA=true`) e lê `DEMO_*_PASSWORD` do `.env`; já não imprime credenciais | ✅ CONFIRMADO FUNCIONAL | 18/09/2026 — ver Fase 0-B.1 na Parte B |
+| `frontend/src/pages/Login.jsx` | 🔴 Tinha as **passwords pré-preenchidas** no formulário do site principal (owner, cashier e super_admin) | ✅ CORRIGIDO 18/09 (password começa vazia) | 18/09/2026 — `git grep` = 0 |
+| `admin-frontend/src/App.jsx` | 🔴 Tinha a password do Super Admin pré-preenchida no formulário | ✅ CORRIGIDO 18/09 | 18/09/2026 — `git grep` = 0 |
 | `test.sh`, `backend/scripts/*` (6), `docs/curl_collection.sh`, `docs/postman_genesis_collection.json` | Usam a mesma password demo em texto claro | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — grep: 11 ficheiros |
 | `frontend/src/App.jsx` (linhas 4 e 8) | Importa `AdminLogin` e `AdminDashboard` → código admin **compilado no bundle principal** | 🔴 CONHECIDO COMO QUEBRADO (violação SECÇÃO 12.2.4) | 18/09/2026 — grep no `App.jsx`; `SuperAdmin/Dashboard.jsx` = 188 linhas |
 | `admin-frontend/` | Projecto Super Admin separado, porta 5175, **auto-contido** (`src/App.jsx` 344 linhas, sem imports do `frontend/`) | ✅ CONFIRMADO FUNCIONAL (estrutura) | 18/09/2026 — leitura integral de `App.jsx`, `main.jsx`, `vite.config.js` |

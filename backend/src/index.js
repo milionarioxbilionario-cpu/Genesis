@@ -28,6 +28,27 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 async function ensureDemoData() {
+  // O seed de demonstração é OPT-IN e NUNCA deve correr em produção:
+  // cria contas (incluindo super_admin) com password conhecida.
+  if (process.env.SEED_DEMO_DATA !== 'true') {
+    return;
+  }
+
+  const demoOwnerPassword = process.env.DEMO_OWNER_PASSWORD;
+  const demoCashierPassword = process.env.DEMO_CASHIER_PASSWORD;
+  const demoAdminPassword = process.env.DEMO_ADMIN_PASSWORD;
+  const missing = [
+    ['DEMO_OWNER_PASSWORD', demoOwnerPassword],
+    ['DEMO_CASHIER_PASSWORD', demoCashierPassword],
+    ['DEMO_ADMIN_PASSWORD', demoAdminPassword],
+  ].filter(([, value]) => !value).map(([name]) => name);
+
+  if (missing.length) {
+    throw new Error(
+      `SEED_DEMO_DATA=true exige as variáveis ${missing.join(', ')} (ver backend/.env.example)`
+    );
+  }
+
   const demoTenantId = '44444444-4444-4444-4444-444444444444';
 
   const tenant = await prisma.tenant.upsert({
@@ -55,7 +76,7 @@ async function ensureDemoData() {
     }
   });
 
-  const ownerPasswordHash = await bcrypt.hash('<password-demo-removida-do-historico>', 12);
+  const ownerPasswordHash = await bcrypt.hash(demoOwnerPassword, 12);
   await prisma.user.upsert({
     where: { email: 'owner@genesis.local' },
     update: {
@@ -77,7 +98,7 @@ async function ensureDemoData() {
     }
   });
 
-  const adminPasswordHash = await bcrypt.hash('<password-demo-removida-do-historico>', 12);
+  const adminPasswordHash = await bcrypt.hash(demoAdminPassword, 12);
   await prisma.user.upsert({
     where: { email: 'admin@genesis.co.mz' },
     update: {
@@ -98,7 +119,7 @@ async function ensureDemoData() {
   });
 
   // Create a cashier user for POS testing
-  const cashierPasswordHash = await bcrypt.hash('<password-demo-removida-do-historico>', 12);
+  const cashierPasswordHash = await bcrypt.hash(demoCashierPassword, 12);
   await prisma.user.upsert({
     where: { email: 'cashier@genesis.local' },
     update: {
@@ -144,7 +165,7 @@ async function ensureDemoData() {
     }
   }
 
-  console.log('Demo data ensured: owner@genesis.local / <password-demo-removida-do-historico>, cashier@genesis.local / <password-demo-removida-do-historico>, admin@genesis.co.mz / <password-demo-removida-do-historico>');
+  console.log('Demo data ensured: owner@genesis.local, cashier@genesis.local, admin@genesis.co.mz (passwords lidas de DEMO_*_PASSWORD; não são impressas)');
 }
 
 // CORS: allow credentials (cookies) and accept requests from frontend (origin can be tightened)

@@ -12,7 +12,7 @@
         "header": [
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode": "raw", "raw": "{\n  \"email\": \"owner@example.test\",\n  \"password\": \"<password-demo-removida-do-historico>\"\n}" },
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{OWNER_EMAIL}}\",\n  \"password\": \"{{OWNER_PASSWORD}}\"\n}" },
         "url": { "raw": "{{API_BASE}}/api/auth/login", "host": ["{{API_BASE}}"], "path": ["api","auth","login"] }
       }
     },

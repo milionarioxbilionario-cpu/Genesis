@@ -34,7 +34,7 @@
   - Backend: http://localhost:4000/
 
 ## Credenciais de demonstração
-- Owner de teste: `owner@genesis.local` / `<password-demo-removida-do-historico>`
+- Owner de teste: `owner@genesis.local` (password definida localmente em `backend/.env` através de `DEMO_OWNER_PASSWORD`; nunca versionada)
 
 ## Observações finais
 - O sistema está em estado pronto para uso e validação em produção de prova de conceito / primeira entrega.

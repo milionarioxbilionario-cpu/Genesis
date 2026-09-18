@@ -24,7 +24,8 @@ async function run() {
 
   const tenantName = `SMOKE Tenant ${Date.now()}`;
   const ownerEmail = `smoke+${Date.now()}@example.test`;
-  const ownerPassword = '<password-demo-removida-do-historico>';
+  const ownerPassword = process.env.DEMO_OWNER_PASSWORD;
+  if (!ownerPassword) throw new Error('DEMO_OWNER_PASSWORD não definida (ver backend/.env.example)');
 
   const passwordHash = await bcrypt.hash(ownerPassword, 12);
   const tenant = await prisma.tenant.create({ data: { name: tenantName, owner_name: 'Smoke Owner', business_type: 'mercearia', location: 'Test', phone: '+000000001', status: 'trial' } });

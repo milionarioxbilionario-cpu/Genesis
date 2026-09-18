@@ -6,7 +6,7 @@ const api = axios.create({ baseURL: 'http://localhost:4000', withCredentials: tr
 
 function AdminLogin() {
   const [email, setEmail] = useState('admin@genesis.co.mz');
-  const [password, setPassword] = useState('<password-demo-removida-do-historico>');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

@@ -3,21 +3,20 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import axios from '../utils/api';
 import { getAuthSession, getPortalRoute, saveAuthSession } from '../utils/auth';
 
+// Credenciais de demonstração NUNCA são pré-preenchidas no formulário.
+// O email é apenas uma sugestão; a password começa sempre vazia.
 const rolePresets = {
   owner: {
     label: 'Gestor da loja',
-    email: 'owner@genesis.local',
-    password: '<password-demo-removida-do-historico>'
+    email: 'owner@genesis.local'
   },
   cashier: {
     label: 'Caixista',
-    email: 'cashier@genesis.local',
-    password: '<password-demo-removida-do-historico>'
+    email: 'cashier@genesis.local'
   },
   super_admin: {
     label: 'Super Admin',
-    email: 'admin@genesis.co.mz',
-    password: '<password-demo-removida-do-historico>'
+    email: 'admin@genesis.co.mz'
   }
 };
 
@@ -25,7 +24,7 @@ const Login = ({ mode = 'owner' }) => {
   const activeMode = ['owner', 'cashier', 'super_admin'].includes(mode) ? mode : 'owner';
   const preset = rolePresets[activeMode];
   const [email, setEmail] = useState(preset.email);
-  const [password, setPassword] = useState(preset.password);
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

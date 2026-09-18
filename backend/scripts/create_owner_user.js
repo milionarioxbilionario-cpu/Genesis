@@ -11,7 +11,8 @@ async function main() {
   }
 
   const email = 'owner@genesis.local';
-  const password = '<password-demo-removida-do-historico>';
+  const password = process.env.DEMO_OWNER_PASSWORD;
+  if (!password) throw new Error('DEMO_OWNER_PASSWORD não definida (ver backend/.env.example)');
   const hash = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.upsert({
@@ -28,7 +29,7 @@ async function main() {
   });
 
   console.log('Owner created/updated:', email);
-  console.log('Password (plaintext for test):', password);
+  console.log('Password definida via DEMO_OWNER_PASSWORD (não impressa por segurança).');
   await prisma.$disconnect();
 }
 

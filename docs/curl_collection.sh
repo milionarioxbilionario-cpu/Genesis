@@ -4,8 +4,8 @@
 
 API_BASE=${API_BASE:-http://localhost:4000}
 
-# 1) Login (replace with owner credentials created in DB or by admin flow)
-# curl -X POST "$API_BASE/api/auth/login" -H "Content-Type: application/json" -d '{"email":"owner@example.test","password":"<password-demo-removida-do-historico>"}'
+# 1) Login (define OWNER_EMAIL e OWNER_PASSWORD no ambiente; ver backend/.env)
+# curl -X POST "$API_BASE/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$OWNER_EMAIL\",\"password\":\"$OWNER_PASSWORD\"}"
 
 # Example sequence (assumes JWT token is available in TOKEN variable)
 # TOKEN="<paste token here>"

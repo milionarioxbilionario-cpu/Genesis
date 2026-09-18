@@ -65,7 +65,7 @@ O que descobri (e que ninguém tinha registado):
 
 Porque isto era grave:
 - A base de dados e os logs estavam PUBLICADOS no GitHub. As credenciais que
-  apareciam no log (owner@genesis.local / <password-demo-removida-do-historico>) funcionam de verdade —
+  apareciam no log (a conta de demonstração do owner) funcionam de verdade —
   o próprio script de testes do projecto faz login com elas. Ou seja, qualquer
   pessoa que visse o repositório podia entrar no sistema.
 

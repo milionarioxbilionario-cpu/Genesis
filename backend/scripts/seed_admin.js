@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 
 async function createSuperAdmin() {
   const email = 'admin@genesis.co.mz';
-  const password = '<password-demo-removida-do-historico>';
+  const password = process.env.DEMO_ADMIN_PASSWORD;
+  if (!password) throw new Error('DEMO_ADMIN_PASSWORD não definida (ver backend/.env.example)');
   const hash = await bcrypt.hash(password, 12);
 
   try {

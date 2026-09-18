@@ -27,7 +27,8 @@ async function run() {
   // 1) Create tenant and owner user directly using Prisma
   const tenantName = `E2E Test Tenant ${Date.now()}`;
   const ownerEmail = `owner+${Date.now()}@example.test`;
-  const ownerPassword = '<password-demo-removida-do-historico>';
+  const ownerPassword = process.env.DEMO_OWNER_PASSWORD;
+  if (!ownerPassword) throw new Error('DEMO_OWNER_PASSWORD não definida (ver backend/.env.example)');
 
   console.log('Creating tenant and owner user via Prisma...');
   const passwordHash = await bcrypt.hash(ownerPassword, 12);
