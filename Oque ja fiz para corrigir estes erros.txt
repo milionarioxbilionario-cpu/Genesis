@@ -242,3 +242,46 @@ Data: 18 de Setembro de 2026 — Fase 0-C.1: PC do balcão estacionado no Hub.
   código novo sem precisar reiniciar.
 - Próximo: o Hub de Caixistas completo (criar caixista, entrar com senha,
   sair só com fecho de turno, voltar ao menu só com senha do dono).
+
+Data: 18 de Setembro de 2026 — Fase 0-C.2: Hub de Caixistas pronto e provado.
+- O Hub estilo Netflix está feito: o dono vê a grelha de perfis, clica
+  "Entrar" e digita a senha daquele caixista; o POS abre com banner "A
+  operar como X". Para sair do perfil, o sistema verifica se há vendas sem
+  fecho de turno e bloqueia se houver. Para voltar ao menu do dono, pede a
+  senha do dono. Os caixistas ficam sempre no Hub.
+- Cada venda feita pelo dono em nome de um caixista fica gravada em nome do
+  caixista (para os relatórios por vendedor), mas a auditoria regista que
+  foi o dono quem operou. Provei com venda real: ficou em nome do vendedor
+  certo. Provei também que um caixista não consegue forjar vendas em nome
+  de outro (o sistema ignorou a tentativa e gravou em nome próprio).
+- Também fechei uma falha de segurança: desactivar caixista agora só mexe
+  no próprio estabelecimento (antes, um dono podia desactivar o caixista
+  de outra loja). E o dono pode reactivar, trocar a senha do caixista e
+  ver tudo na auditoria.
+- Tudo limpo depois dos testes: vendas de teste apagadas, stock reposto,
+  vendedor de teste desactivado. Site compila sem erros.
+- Nota importante: a tua senha "Wendy1313$" deixou de funcionar porque ao
+  reiniciar o servidor o sistema repôs a senha que está no ficheiro .env
+  (da rotação que fizemos). Não é bug — usa a senha actual do .env, ou
+  diz-me e trocamos de novo.
+- Próximo: prova do cancelamento com PIN, ou a barra de meta em tempo real
+  + relatório mensal em cascata (o lucro real com todas as deduções).
+
+2026-09-18 — Password do Super Admin = Wendy1313$ (estavel em restarts)
+O que foi feito:
+- Mudaste a senha do owner@genesis.local pelo fluxo de reset (OTP). Mais tarde
+  o login deixou de funcionar. Descobri porque: o backend, ao arrancar, corre o
+  seed demo (SEED_DEMO_DATA=true) que faz UPSERT das contas demo (owner, cashier,
+  admin) usando as passwords DEMO_*_PASSWORD do backend/.env — ou seja, a cada
+  arranque as passwords dessas contas sao repostas e qualquer reset manual se perde.
+- Corrigi alinhando o backend/.env: DEMO_ADMIN_PASSWORD e DEMO_OWNER_PASSWORD
+  passaram a ser Wendy1313$. Assim o seed passa a garantir exactamente essa
+  password em cada arranque, e deixa de brigar com resets manuais.
+Porque: para teres login estavel de admin e owner sem surpresas.
+Prova real:
+- POST /api/auth/login admin@genesis.co.mz + Wendy1313$ -> 200 token
+- POST /api/auth/login owner@genesis.local + Wendy1313$ -> 200 token
+- GET /api/auth/me -> admin: super_admin, owner: owner, ambos activos
+Nota importante: DEMO_CASHIER_PASSWORD (cashier@genesis.local) ficou com a
+password aleatoria anterior no .env — se precisares do caixista demo, pede-me
+que tambem a alinho. Contas reais (criadas pelo Owner) NAO sao tocadas pelo seed.
