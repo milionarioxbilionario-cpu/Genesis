@@ -6,7 +6,7 @@ Fonte única de verdade do estado real do repositório. Actualizado em cada sess
 
 ## Parte A — ESTADO ACTUAL
 
-Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gitignore`)
+Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de histórico, segredos e `.gitignore`)
 
 ### Identidade
 | Item | Valor | Estado |
@@ -58,6 +58,9 @@ Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gi
 | `Desktop.zip`, `Genesis.txt`, `Genesis - SaaS`, `ConteudoDentro…txt`, `tree*`, `backend_server.log` | Dumps e resíduos | ✅ removidos do git e do histórico | 18/09/2026 — `git ls-files` sem ocorrências |
 | `.gitignore` | Exclusões consolidadas (`*.db`, `logs/`, `*.zip`, `backend/prisma/dev.db`) | ✅ CONFIRMADO FUNCIONAL | 18/09/2026 — `git check-ignore -v` OK; ficheiros essenciais **não** ignorados (verificado) |
 | `backend/src/index.js` (seed demo) | ✅ **CORRIGIDO 18/09**: `ensureDemoData()` é agora opt-in (`SEED_DEMO_DATA=true`) e lê `DEMO_*_PASSWORD` do `.env`; já não imprime credenciais | ✅ CONFIRMADO FUNCIONAL | 18/09/2026 — ver Fase 0-B.1 na Parte B |
+| `backend/src/routes/.auth.js.swp`, `backend/src/.index.js.swp` | 🔴 Swap files do Vim **versionados**; o primeiro continha uma comparação directa da password do super_admin com um literal escrito no código (estado antigo do `auth.js`). O `auth.js` actual usa `bcrypt.compare` — sem backdoor activo | ✅ REMOVIDOS 18/09 (git + disco; backup) e `*.swp` no `.gitignore` | 18/09/2026 — varredura a todos os objectos = 0 literais |
+| `backend/.env.example` | Template das variáveis (inclui `SEED_DEMO_DATA`, `DEMO_*_PASSWORD`) | ✅ versionado (negado `!.env.example`) | 18/09/2026 — `git ls-files` + `git check-ignore` |
+| `backend/.env` | Credenciais locais reais | ✅ nunca versionado nem presente na história | 18/09/2026 — varredura ampla: só placeholders |
 | `frontend/src/pages/Login.jsx` | 🔴 Tinha as **passwords pré-preenchidas** no formulário do site principal (owner, cashier e super_admin) | ✅ CORRIGIDO 18/09 (password começa vazia) | 18/09/2026 — `git grep` = 0 |
 | `admin-frontend/src/App.jsx` | 🔴 Tinha a password do Super Admin pré-preenchida no formulário | ✅ CORRIGIDO 18/09 | 18/09/2026 — `git grep` = 0 |
 | `test.sh`, `backend/scripts/*` (6), `docs/curl_collection.sh`, `docs/postman_genesis_collection.json` | Usam a mesma password demo em texto claro | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — grep: 11 ficheiros |
@@ -70,7 +73,8 @@ Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gi
 - **Fase 0.2** — conversão ×100 nos forms que enviam dinheiro → feita (commitada em `f58b30b`).
 - **Fase 0.3** — fórmula relatório mensal → feita; testes 6/6 PASS (commitada em `f58b30b`).
 - **Fase 0.4-H** — resíduos + `.gitignore` + expurgo de histórico → feita localmente; **`force-push` pendente de autenticação** (o credential helper do VS Code não resolve fora da UI).
-- **Pendente (novo, crítico)** — credenciais demo hardcoded em `backend/src/index.js` + scripts/docs.
+- **Fase 0-B.1** — passwords demo fora do código + seed opt-in + expurgo dos literais e dos `.swp` → feita e verificada (ver Parte B).
+- **Pendente: `force-push` + rotação** — `origin/main` continua na história antiga (dev.db, logs, passwords).
 - **Pendente (SECÇÃO 11)** — `Mapa Mental/mapa_mental_3d.html` não existe ainda.
 - Fases 1–7 conforme Prompt Mestre.
 
@@ -149,3 +153,22 @@ Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gi
 - **Não são uma exposição:** `git ls-remote origin` devolve **apenas 2 refs** (`HEAD`, `refs/heads/main`) — nenhuma `refs/agents/*` foi publicada, e a `dev.db` já existe no disco local por desenho. Não foram removidas (pertencem ao estado de ferramentas de agente; removê-las quebraria o restauro de checkpoints e não reduz exposição externa).
 - **Risco a evitar:** nunca usar `git push --all` ou `--mirror` neste repositório enquanto essas refs existirem — isso publicaria os snapshots locais.
 - Pós-push esperado: `git log --all -- <caminho>` passa a **0** depois de `git fetch --prune` trazer o `origin/main` reescrito.
+
+### [2026-09-18] — Fase 0-B.1: passwords demo fora do código + expurgo do histórico
+- Ficheiros alterados: `backend/src/index.js`, `frontend/src/pages/Login.jsx`, `admin-frontend/src/App.jsx`, 8 scripts (`create_owner_user.js`, `e2e_test.js`, `e2e_test2.js`, `e2e_test2.fixed.js`, `e2e_test2 (copy 1).js`, `seed_admin.js`, `smoke_tests.js`, `verify_hash.js`), `test.sh`, `docs/curl_collection.sh`, `docs/postman_genesis_collection.json`, `plan.md`, `backend/.env.example`, `.gitignore`, `Mapa Mental/Mapa_Mental.md`, `Oque ja fiz…txt`.
+- Porquê: `ensureDemoData()` corria **incondicionalmente** (linha 201, sem `NODE_ENV` nem flag) e fazia `upsert` de um **super_admin com password conhecida** — no dia do deploy num VPS (SECÇÃO 5.1) qualquer pessoa entrava como Super Admin. Não era só lixo de repo: era vulnerabilidade latente de produção.
+- Alterações: seed passou a **opt-in** (`SEED_DEMO_DATA=true`) e lê `DEMO_OWNER_PASSWORD` / `DEMO_CASHIER_PASSWORD` / `DEMO_ADMIN_PASSWORD` do `.env`; falha com mensagem clara se faltarem; **deixa de imprimir credenciais**. Os literais saíram de todo o código, scripts e docs.
+- **Achado adicional 1:** `frontend/src/pages/Login.jsx` tinha as passwords **pré-preenchidas** no formulário do site principal (`rolePresets`), incluindo a do super_admin — pior que o seed, porque as entregava na UI a qualquer visitante. O `admin-frontend/src/App.jsx` idem. Ambos corrigidos (password começa vazia).
+- **Achado adicional 2 (grave, só detectado por mudar de método):** `git ls-tree HEAD` revelou **dois ficheiros de swap do Vim versionados** — `backend/src/routes/.auth.js.swp` e `backend/src/.index.js.swp`. O primeiro continha uma comparação directa da password do super_admin com um literal escrito no código (estado antigo do `auth.js`, `passwordMatch = (password === "<literal>")`). O `auth.js` **actual está correcto** (`bcrypt.compare(password, user.password_hash)`, linha 104) — não há backdoor activo. Removidos do git e do disco (backup em `~/genesis-backup-20260918/swp/`) e `*.swp/*.swo/*.swx/*.orig/*.rej` adicionados ao `.gitignore`.
+- **Lição de método (importante para a SECÇÃO 9):** a primeira verificação usou `git grep -I`, que **ignora ficheiros binários** — por isso os `.swp` nunca apareceram e a conclusão "0 ocorrências" estava errada. A varredura que encontrou o problema foi `git cat-file --batch-all-objects` sem `-I`. Conclusão: greps de segurança **não devem usar `-I`**.
+- Procedimento de expurgo (4 passes de `filter-repo`, cada um com verificação própria):
+  1. `--invert-paths` (dev.db, logs/, Desktop.zip, dumps, tree*, backend_server.log) — Fase 0.4-H.
+  2. `--replace-text` dos literais com `!` (721 → 2 blobs).
+  3. `--replace-text` dos prefixos nus (resíduo em documentação minha).
+  4. `--invert-paths` dos dois `.swp`.
+- Verificação (output real): `node --check` 9/9 OK e `bash -n test.sh` OK; `git grep -I` = 0; varredura a **todos os objectos** (303 blobs, inclui binários e soltos, sem `-I`) → **0 com literais**; varredura ampla de outros segredos (`JWT_SECRET=`, `SUPABASE_SERVICE_ROLE`, `TWILIO_TOKEN=`, `AC[0-9a-f]{32}`, `sk-…`, `ghp_…`, `postgresql://`) → **apenas placeholders** do `.env.example` e do `run_phase0.sh`, nenhum segredo real.
+- Teste funcional do gate: sem a flag → log só mostra "Genesis backend running", **sem seed**; com a flag → "Demo data ensured … (passwords lidas de DEMO_*_PASSWORD; não são impressas)"; flag sem password → erro claro `SEED_DEMO_DATA=true exige as variáveis DEMO_OWNER_PASSWORD`; **login real → HTTP 200, role=owner, token emitido**.
+- Preservação: `backend/prisma/dev.db` sobreviveu a todos os rewrites com sha256 idêntico (`3aa63cce…`, 33 users / 29 tenants); `backend/.env` intacto; `.git` reduziu de 11M para 3.5M.
+- `.gitignore`: negado `!.env.example` (a regra `.env.*` estava a excluir o template, deixando `SEED_DEMO_DATA`/`DEMO_*` sem documentação versionada); `backend/.env` continua fora do git.
+- ️ **Push continua pendente de autenticação** — `origin/main` ainda é a história antiga com `dev.db`, logs e passwords. Enquanto não for feito, o vazamento mantém-se visível no GitHub.
+- Segue-se: parar. Ordem proposta — (1) `force-push` + rotação das passwords; (2) Fase 0-B.2 (remover `AdminLogin`/`SuperAdmin` do bundle principal, 188 linhas); (3) Fase 0-B.3 (prova funcional do cancelamento com PIN).

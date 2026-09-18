@@ -122,3 +122,78 @@ Ordem que sugiro para a próxima sessão:
 3. Apagar o código de admin do site principal (Fase 1).
 4. Testar a sério o cancelamento de venda com PIN (foi mexido por outro agente
    sem prova nenhuma).
+
+================================================================================
+ACTUALIZAÇÃO DE 18 DE SETEMBRO DE 2026 (2.ª parte) — Passwords fora do código
+================================================================================
+
+O problema que encontrei (mais grave do que o lixo do repositório):
+- O backend tinha um bloco de código que corria SEMPRE que o servidor arrancava
+  (sem qualquer interruptor) e que criava três contas de demonstração — incluindo
+  uma conta de SUPER ADMIN, a mais poderosa do sistema — com uma password escrita
+  dentro do próprio código.
+- Isto não era só um problema do computador local: no dia em que pusermos isto
+  num servidor ligado à internet (que é o plano), qualquer pessoa que conhecesse
+  aquele endereço e a password entrava como Super Admin e via os dados de TODOS
+  os clientes. Era a porta da frente aberta.
+- Encontrei também duas coisas que ninguém tinha visto:
+  * O ecrã de login do site tinha as passwords JÁ PREENCHIDAS nas caixas —
+    incluindo a do Super Admin. Bastava clicar em "Entrar".
+  * Havia dois ficheiros "escondidos" do editor de código (os chamados ficheiros
+    de swap, do Vim) que tinham sido enviados para o GitHub. Um deles continha
+    uma versão antiga do código de login onde a password era comparada com um
+    texto fixo escrito no código.
+- Importante: confirmei que o código de login ACTUAL está correcto (usa
+  comparação segura com bcrypt). O que estava mal era a versão antiga guardada
+  naquele ficheiro escondido. Não há porta secreta activa.
+
+O que fiz:
+1. Transformei a criação das contas de demonstração num interruptor que está
+   DESLIGADO por defeito: sem ligar esse interruptor, o sistema não cria contas
+   nenhumas. Nunca será possível isto acontecer por acidente num servidor real.
+2. As passwords da demonstração passaram para o ficheiro privado de configuração
+   (.env), que nunca vai para o GitHub. O código deixou de as conter.
+3. Tirei as passwords de TODOS os sítios: os 8 scripts de teste, o test.sh, os
+   exemplos de comandos, os documentos, e os ficheiros do Postman.
+4. Corrigi os ecrãs de login (principal e do painel de administração) para
+   NUNCA virem com a password preenchida.
+5. Apaguei os dois ficheiros escondidos do editor e passei a bloquear esse tipo
+   de ficheiros, para não voltarem a entrar.
+6. Limpei as passwords de TODO o histórico do projecto (não só da última
+   versão), com a mesma técnica de antes, para que ninguém as possa encontrar
+   olhando para versões antigas.
+
+Resultado (com prova):
+- FUNCIONOU. Verifiquei os 303 ficheiros guardados na base de dados do
+  repositório — incluindo os binários e os "soltos" — e NENHUM contém já
+  qualquer forma dessas passwords. Apenas restam textos de exemplo do tipo
+  "<twilio-token>", que não são secretos.
+- Testei o interruptor a sério: desligado → o servidor arranca sem criar contas;
+  ligado → cria, e já NÃO mostra as passwords no registo de arranque; ligado sem
+  a password definida → dá uma mensagem de erro clara em vez de criar algo
+  inseguro.
+- Testei o login real: funciona (resposta 200, perfil de gestor).
+- A tua base de dados (33 utilizadores, 29 lojas) e o teu ficheiro .env
+  sobreviveram intactos a toda a operação. Guardei cópias de segurança.
+- O repositório ficou mais leve: de 11 MB para 3,5 MB.
+
+O que DESCULPASTE que ainda falta (por ordem):
+1. O ENVIO PARA O GITHUB CONTINUA POR FAZER — preciso da tua autenticação:
+      cd /home/kali/Genesis && git push --force-with-lease origin main
+   Enquanto não fizeres isto, a base de dados, os registos e as passwords
+   continuam visíveis no GitHub. É a prioridade número um.
+2. TROCAR AS PASSWORDS DE DEMONSTRAÇÃO. Como estiveram expostas, o correcto é
+   mudá-las: altera no ficheiro backend/.env as três linhas que começam com
+   DEMO_ (DEMO_OWNER_PASSWORD, DEMO_CASHIER_PASSWORD, DEMO_ADMIN_PASSWORD) e
+   reinicia o backend. O sistema actualiza as contas sozinho no arranque.
+3. Limpar o código de administração que ainda vive dentro do site principal
+   (Fase 0-B.2) — a pasta admin-frontend/ já está bem feita e separada.
+4. Testar a sério o cancelamento de venda com PIN (Fase 0-B.3).
+
+Nota de método que quero registar (para não repetir erros):
+- A minha primeira verificação dizia "0 ocorrências" e estava ERRADA. O comando
+  que usei ignora ficheiros binários por defeito, e foi exactamente num ficheiro
+  binário (o ficheiro escondido do editor) que estava o problema. Só descobri
+  porque mudei de método e inspeccionei TODOS os ficheiros, um a um, sem
+  filtros. Fica registado como regra: nas verificações de segurança, não se
+  filtram ficheiros.
