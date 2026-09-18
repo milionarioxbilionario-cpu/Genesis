@@ -197,3 +197,14 @@ Nota de método que quero registar (para não repetir erros):
   porque mudei de método e inspeccionei TODOS os ficheiros, um a um, sem
   filtros. Fica registado como regra: nas verificações de segurança, não se
   filtram ficheiros.
+
+Data: 18 de Setembro de 2026 — Push e rotação das passwords (fim da Fase 0-B.1).
+- O force-push que estava bloqueado foi feito com sucesso. O GitHub tem agora
+  a história limpa, sem a base de dados, sem os logs e sem as passwords
+  antigas. Confirmei que o repositório é privado e não tem cópias (forks),
+  por isso o risco ficou limitado a quem já tivesse descarregado o código.
+- As 3 passwords de demonstração foram trocadas por novas (20 caracteres
+  cada). Provei na base de dados que as novas funcionam e que as antigas
+  deixaram de funcionar para as 3 contas (dono, caixista e admin).
+- Com isto, a Fase 0-B.1 está encerrada. O próximo passo é a Fase 0-B.2:
+  tirar as páginas de admin (188 linhas) de dentro do site principal.

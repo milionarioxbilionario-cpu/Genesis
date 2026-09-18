@@ -172,3 +172,8 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H e 0-B.1 — expurgo de históri
 - `.gitignore`: negado `!.env.example` (a regra `.env.*` estava a excluir o template, deixando `SEED_DEMO_DATA`/`DEMO_*` sem documentação versionada); `backend/.env` continua fora do git.
 - ️ **Push continua pendente de autenticação** — `origin/main` ainda é a história antiga com `dev.db`, logs e passwords. Enquanto não for feito, o vazamento mantém-se visível no GitHub.
 - Segue-se: parar. Ordem proposta — (1) `force-push` + rotação das passwords; (2) Fase 0-B.2 (remover `AdminLogin`/`SuperAdmin` do bundle principal, 188 linhas); (3) Fase 0-B.3 (prova funcional do cancelamento com PIN).
+
+### [2026-09-18] — Push 0-B.1 concluído + rotação de passwords provada
+- **Push:** `git push --force-with-lease origin main` → exit 0; `git ls-remote` confirma `origin/main = ab684a7` (igual ao local). A história antiga com `dev.db`, logs e literais saiu do GitHub. Repositório **privado** (confirmado via API: `private: true`, 0 forks) — exposição limitada a quem já tivesse clonado.
+- **Rotação das 3 demo passwords:** novos valores de 20 caracteres escritos em `backend/.env` (backup do anterior em `~/genesis-backup-20260918/`). Verificação directa na BD: `bcrypt.compare` das **novas = MATCH** e das **antigas = NO** para owner, cashier e admin — as antigas deixaram de funcionar. (Nota: o teste via HTTP deu 429 por rate-limit após os logins repetidos; a prova por bcrypt directo na BD é equivalente e não toca no limiter.)
+- Estado: Fase 0-B.1 **encerrada**. Segue-se a Fase 0-B.2.
