@@ -42,3 +42,10 @@ Thumbs.db
 .npm
 .eslintcache
 .aider*
+
+# Ficheiros temporários de editores (podem conter segredos não guardados)
+*.swp
+*.swo
+*.swx
+*.orig
+*.rej
