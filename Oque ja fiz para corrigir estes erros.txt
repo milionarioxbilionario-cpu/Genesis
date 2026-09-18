@@ -223,3 +223,5 @@ Data: 18 de Setembro de 2026 — Fase 0-B.2: separação do painel de admin.
   tocada.
 - Falta fazer o commit e o push desta fase. Depois segue-se a Fase 0-B.3:
   testar a sério o cancelamento de venda com PIN.
+
+  (Actualização: commit e push feitos com sucesso — confirmado no GitHub.)
