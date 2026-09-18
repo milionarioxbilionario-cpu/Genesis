@@ -47,3 +47,78 @@ Atualização final de acabamento:
 - Adicionei persistência simples de horário de funcionamento por tenant no backend, com leitura e escrita via /api/owner/settings/hours.
 - O frontend Settings agora carrega o horário guardado ao abrir a página, mantendo o valor atualizado no formulário.
 - Revalidado em produção: frontend e admin-frontend compilam com sucesso; o backend continua a responder corretamente aos smoke tests de autenticação e origem admin.
+
+================================================================================
+ACTUALIZAÇÃO DE 18 DE SETEMBRO DE 2026 — Limpeza de segurança no GitHub
+================================================================================
+
+O que descobri (e que ninguém tinha registado):
+- Enquanto eu estava a analisar o projecto, outro agente de IA (Copilot) fez dois
+  commits e enviou-os para o GitHub sem o teu conhecimento: "Melhoria na
+  arquitetura" e "Prompt". Esses commits levaram para o GitHub coisas que nunca
+  deviam lá estar:
+  * A base de dados local (backend/prisma/dev.db), que tem 33 utilizadores e 29
+    lojas, com as passwords guardadas em hash.
+  * Os ficheiros de log, e um deles tinha uma linha com as credenciais de
+    demonstração escritas em texto normal, à vista de qualquer pessoa.
+  * Um ficheiro ZIP, dumps de ficheiros e vários ficheiros de "árvore" antigos.
+
+Porque isto era grave:
+- A base de dados e os logs estavam PUBLICADOS no GitHub. As credenciais que
+  apareciam no log (owner@genesis.local / <password-demo-removida-do-historico>) funcionam de verdade —
+  o próprio script de testes do projecto faz login com elas. Ou seja, qualquer
+  pessoa que visse o repositório podia entrar no sistema.
+
+O que fiz:
+1. Fiz um backup completo e verifiquei-o (cópia do repositório inteiro, cópia da
+   base de dados e um "bundle" com todo o histórico). Confirmei que a cópia da
+   base de dados era exactamente igual ao original (mesma impressão digital).
+2. Usei a ferramenta oficial "git filter-repo" para APAGAR esses ficheiros de
+   TODA a história do projecto (não só do último commit) — a base de dados, os
+   logs, o ZIP, os dumps e os ficheiros de árvore.
+3. Como este processo apaga a base de dados do disco, restaurei-a logo a seguir
+   a partir do backup. Confirmei que ficou igual: 33 utilizadores e 29 lojas.
+4. Reforcei o ficheiro .gitignore para que estes ficheiros NUNCA mais possam ser
+   enviados para o GitHub (bases de dados .db, logs, ficheiros .zip).
+
+Resultado:
+- FUNCIONOU, e está provado: procurei cada um desses ficheiros em toda a história
+  e todos dão "0 commits" — desapareceram. O repositório passou de 169 para 158
+  ficheiros, e a raiz está limpa. Confirmei também que os ficheiros importantes
+  (código, esquema da base de dados, scripts) NÃO foram apagados nem ignorados.
+- Guardei tudo em segurança em: /home/kali/genesis-backup-20260918
+
+O que AINDA NÃO está feito (importante):
+- O envio para o GitHub (push) NÃO foi possível: o sistema pede autenticação da
+  tua conta GitHub e eu não tenho acesso a ela. Enquanto não fizeres esse envio,
+  as coisas más CONTINUAM visíveis no GitHub. Precisas de fazer:
+      cd /home/kali/Genesis && git push --force-with-lease origin main
+  (no terminal do VS Code, aceitando o pedido de autenticação do GitHub)
+- ATENÇÃO: o envio tem de ser "force". Se alguém tiver outra cópia do projecto
+  no computador, deve apagá-la e voltar a descarregar, senão volta a enviar o
+  lixo antigo.
+
+Problema NOVO e ainda mais grave que encontrei (precisa da tua decisão):
+- As passwords de demonstração não estavam só nos logs. Estão escritas dentro do
+  próprio código do backend (ficheiro backend/src/index.js), que é o sítio que
+  CRIA essas contas: owner@genesis.local, cashier@genesis.local e
+  admin@genesis.co.mz. Estão também repetidas em 6 scripts de teste, no test.sh
+  e em dois ficheiros da pasta docs.
+- Isto não se resolveu com a limpeza (continua no código actual) e não é uma
+  simples limpeza: para corrigir bem, a aplicação deve ler essas passwords de um
+  ficheiro de configuração secreto em vez de as ter escritas à vista, e isso
+  muda a forma como fazes login na demonstração. Por isso parei aqui e não inventei
+  uma solução sem falar contigo.
+
+Outra coisa confirmada que continua por resolver:
+- O painel de Super Admin ainda tem código dentro do site principal (o
+  frontend/src/App.jsx importa o AdminLogin e o SuperAdmin/Dashboard, que tem 188
+  linhas). A pasta admin-frontend/ já está bem feita e separada (porta 5175), mas
+  falta apagar as cópias que estão dentro do site dos lojistas.
+
+Ordem que sugiro para a próxima sessão:
+1. Faz o push (comando acima) — é a prioridade número um.
+2. Decide como queremos tratar as passwords escritas no código.
+3. Apagar o código de admin do site principal (Fase 1).
+4. Testar a sério o cancelamento de venda com PIN (foi mexido por outro agente
+   sem prova nenhuma).

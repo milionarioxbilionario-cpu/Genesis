@@ -6,7 +6,7 @@ Fonte única de verdade do estado real do repositório. Actualizado em cada sess
 
 ## Parte A — ESTADO ACTUAL
 
-Actualizado: 13 de Setembro de 2026 (mini-meta 0.3 — fórmula relatório mensal)
+Actualizado: 18 de Setembro de 2026 (Fase 0.4-H — expurgo de histórico + `.gitignore`)
 
 ### Identidade
 | Item | Valor | Estado |
@@ -50,11 +50,26 @@ Actualizado: 13 de Setembro de 2026 (mini-meta 0.3 — fórmula relatório mensa
 - Routes-com-lógica vs controllers/services separados.
 - `ADMIN_ORIGINS` em produção.
 
+### Repositório / higiene de credenciais (verificado 18/09/2026)
+| Caminho | O que faz / problema | Estado | Última verificação |
+|---|---|---|---|
+| `backend/prisma/dev.db` | Base SQLite local (33 users / 29 tenants, hashes bcrypt `$2b$12$`) | ✅ fora do git e do histórico; existe só no disco e está ignorada | 18/09/2026 — `git log --all -- <f>` = 0 commits; `git check-ignore -v` → regra `.gitignore:27` |
+| `logs/` | Logs locais — continham credenciais em **texto claro** (`Demo data ensured: owner@genesis.local / <password-demo-removida-do-historico>`) | ✅ fora do git e do histórico | 18/09/2026 — `git log --all -- logs/backend.log` = 0 |
+| `Desktop.zip`, `Genesis.txt`, `Genesis - SaaS`, `ConteudoDentro…txt`, `tree*`, `backend_server.log` | Dumps e resíduos | ✅ removidos do git e do histórico | 18/09/2026 — `git ls-files` sem ocorrências |
+| `.gitignore` | Exclusões consolidadas (`*.db`, `logs/`, `*.zip`, `backend/prisma/dev.db`) | ✅ CONFIRMADO FUNCIONAL | 18/09/2026 — `git check-ignore -v` OK; ficheiros essenciais **não** ignorados (verificado) |
+| `backend/src/index.js` (seed demo) | 🔴 **Cria contas reais com passwords hardcoded** — linhas 58 (`<password-demo-removida-do-historico>`), 101 (`<password-demo-removida-do-historico>`), 147 (`<password-demo-removida-do-historico>`) | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — `git grep -n <prefixo-password-demo-removido>` |
+| `test.sh`, `backend/scripts/*` (6), `docs/curl_collection.sh`, `docs/postman_genesis_collection.json` | Usam a mesma password demo em texto claro | 🔴 CONHECIDO COMO QUEBRADO | 18/09/2026 — grep: 11 ficheiros |
+| `frontend/src/App.jsx` (linhas 4 e 8) | Importa `AdminLogin` e `AdminDashboard` → código admin **compilado no bundle principal** | 🔴 CONHECIDO COMO QUEBRADO (violação SECÇÃO 12.2.4) | 18/09/2026 — grep no `App.jsx`; `SuperAdmin/Dashboard.jsx` = 188 linhas |
+| `admin-frontend/` | Projecto Super Admin separado, porta 5175, **auto-contido** (`src/App.jsx` 344 linhas, sem imports do `frontend/`) | ✅ CONFIRMADO FUNCIONAL (estrutura) | 18/09/2026 — leitura integral de `App.jsx`, `main.jsx`, `vite.config.js` |
+| `backend/src/routes/sales.js` | Cancelamento com PIN + restauro de stock, reescrito de SQL cru → ORM | ⚠️ NÃO VERIFICADO (sintaxe OK; **sem prova funcional**) | 18/09/2026 — `node --check` OK; commitado por outro agente sem registo no Mapa |
+
 ### Roadmap — o que falta (não fazer nesta sessão)
-- **Fase 0.1** — dois `App.jsx` → feita.
-- **Fase 0.2** — conversão ×100 nos forms que enviam dinheiro → feita (ver Parte B).
-- **Fase 0.3** — fórmula relatório mensal → feita (ver Parte B).
-- **Fase 0.4** — resíduos e `.gitignore`.
+- **Fase 0.1** — dois `App.jsx` → feita (commitada em `f58b30b` por outro agente).
+- **Fase 0.2** — conversão ×100 nos forms que enviam dinheiro → feita (commitada em `f58b30b`).
+- **Fase 0.3** — fórmula relatório mensal → feita; testes 6/6 PASS (commitada em `f58b30b`).
+- **Fase 0.4-H** — resíduos + `.gitignore` + expurgo de histórico → feita localmente; **`force-push` pendente de autenticação** (o credential helper do VS Code não resolve fora da UI).
+- **Pendente (novo, crítico)** — credenciais demo hardcoded em `backend/src/index.js` + scripts/docs.
+- **Pendente (SECÇÃO 11)** — `Mapa Mental/mapa_mental_3d.html` não existe ainda.
 - Fases 1–7 conforme Prompt Mestre.
 
 ---
@@ -108,3 +123,19 @@ Actualizado: 13 de Setembro de 2026 (mini-meta 0.3 — fórmula relatório mensa
 ```
 - Resultado: funcionou nos testes unitários. Não foi chamado `GET /api/owner/reports/monthly` autenticado contra a API nesta sessão. Grep: `total_rent = 0` já não existe.
 - Segue-se: parar. Próxima mini-meta proposta: Fase 0.4 (ficheiros residuais e `.gitignore`).
+
+### [2026-09-18] — Fase 0.4-H: expurgo de dev.db/logs/dumps do histórico + `.gitignore`
+- Contexto/incidente: um segundo agente (Copilot CLI, pid 40748) commitou e **já publicou** enquanto esta sessão investigava: `f58b30b "Melhoria na arquitetura"` (03:33) engoliu todo o trabalho pendente das Fases 0.1–0.3 **e** arrastou para o git `backend/prisma/dev.db`, `logs/*.log`, `tree (copy 1)`; `ac104e5 "Prompt"` (03:35) adicionou `Desktop.zip`. O prompt mestre não registava nada disto. O fundador confirmou ter parado esse agente.
+- Motivo da urgência: `backend/prisma/dev.db` (34 commits de histórico) contém 33 users / 29 tenants com hashes bcrypt; `logs/backend.log` continha **credenciais em texto claro** e essas credenciais **funcionam** (o próprio `test.sh` faz login com elas).
+- Ficheiros alterados: `.gitignore` (consolidado); história do git reescrita; `backend/prisma/dev.db` restaurada do backup.
+- Procedimento (prova):
+  1. Backup verificado: `git bundle create ~/genesis-backup-20260918/genesis-full.bundle --all` → "The bundle records a complete history"; `dev.db` com sha256 `cd13aa77…d00d4e83` **idêntico** ao original; cópia integral do `.git`.
+  2. `git-filter-repo` (script autónomo; o `pip3` falhou por PEP 668) `--force --invert-paths` sobre `backend/prisma/dev.db`, `logs/`, `Desktop.zip`, `Genesis.txt`, `treeSaaS.txt`, `Genesis - SaaS`, `ConteudoDentroDosArquivosDoMeuSaaS.txt`, `tree`, `tree (copy 1)`, `tree.txt.save`, `backend_server.log` → "Parsed 70 commits … Completely finished after 0.56 seconds".
+  3. Como previsto, o `reset --hard` do filter-repo **apagou `dev.db` do disco** → restaurada do backup, sha256 idêntico, `users=33 tenants=29` reconfirmados.
+  4. `git remote add origin` (o filter-repo remove o remoto por segurança).
+- Verificação (output real): todos os resíduos com `git log --all --oneline -- <f>` = **0 commits**; `git ls-files` = 158 ficheiros, sem resíduos na raiz; `git check-ignore -v` devolve a regra correcta para `dev.db`/`logs/`/`.zip` e **não** ignora `schema.prisma`, `App.jsx`, `run-local.sh`; `node --check backend/src/index.js` OK; ficheiros críticos presentes.
+- Commits: `08d1536 chore(security): purgar da historia dev.db, logs e dumps; reforcar .gitignore` (local).
+- ⚠️ **NÃO COMPLETO — push pendente:** `git push --force-with-lease origin main` **falhou por falta de credenciais** (sem credential helper, sem `~/.git-credentials`, `gh` não autenticado; o askpass do VS Code exige a UI). `origin/main` continua em `ac104e5` — ou seja, **o vazamento ainda está visível no GitHub** até este push ser feito. Rollback disponível: `git clone ~/genesis-backup-20260918/genesis-full.bundle`.
+- Descoberta nova (mais grave que o lixo): as passwords demo **não** estavam só nos logs — estão hardcoded em `backend/src/index.js` linhas 58/101/147, que **cria** as contas reais `owner@genesis.local`, `cashier@genesis.local` e `admin@genesis.co.mz`; e repetidas em 6 scripts, `test.sh` e `docs/`. O expurgo de histórico **não** resolve isto: continua no HEAD e na história, e corrigi-lo muda comportamento da aplicação (exige decisão do fundador).
+- Resultado: limpeza local **funcionou e está provada**; publicação **não concluída**.
+- Segue-se: parar. Itens propostos por ordem — (1) o fundador autenticar e fazer o `force-push`; (2) decidir como remover as credenciais hardcoded do seed demo; (3) Fase 1 restante (remover `AdminLogin`/`SuperAdmin` do bundle principal, 188 linhas confirmadas); (4) prova funcional do cancelamento com PIN em `sales.js`.
