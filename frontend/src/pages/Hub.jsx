@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { setHubSeller } from '../utils/hubSession';
+import { useIsolatedScreen } from '../hooks/useIsolatedScreen';
 
 // HUB DEDICADO — pagina propria do balcao (estilo Netflix, SEM sidebar).
 // O caixista nunca ve o menu do dono: so perfis + senha.
@@ -32,6 +33,13 @@ export default function Hub() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', password: '' });
+
+  // Ecra isolado: o botao "voltar" do browser nao sai do Hub sem a senha
+  // do dono — abre o gate de acesso em vez de navegar para tras.
+  useIsolatedScreen(() => {
+    setMsg('Saida do Hub exige a senha do dono. Introduz a senha para abrir o painel de gestao.');
+    openGate('owner');
+  });
 
   async function load() {
     try { const r = await api.get('/api/owner/cashiers'); setCashiers(r.data || []); }

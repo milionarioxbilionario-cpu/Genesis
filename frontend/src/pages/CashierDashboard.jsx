@@ -5,6 +5,7 @@ import { printReceipt } from '../utils/receiptPrinter';
 import { centsToMznInput, mznToCents } from '../utils/money';
 import { useNavigate } from 'react-router-dom';
 import { clearHubSeller } from '../utils/hubSession';
+import { useIsolatedScreen } from '../hooks/useIsolatedScreen';
 
 const demoProducts = [
   // Prices in centavos; use UUID-like ids so offline sales won't fail schema validation on sync
@@ -31,7 +32,7 @@ const money = (cents) => {
 
 const currencyNumber = (cents) => Number(cents || 0) / 100;
 
-export default function CashierDashboard({ hubSeller = null, onRequestLeave = null, leaving = false, leaveMsg = '' } = {}) {
+export default function CashierDashboard({ hubSeller = null, onRequestLeave = null, leaving = false, leaveMsg = '', onBackAttempt = null } = {}) {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -45,6 +46,13 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
   const [lockAttempts, setLockAttempts] = useState(0);
   const [operatorName, setOperatorName] = useState('');
   const navigate = useNavigate();
+  // POS e ecra isolado: o botao "voltar" do browser nao sai sem fechar o
+  // turno. Sem PosGate (caixista directo) mostra erro local; com PosGate o
+  // callback escreve em `leaveMsg` por baixo do botao "Sair do perfil".
+  useIsolatedScreen(() => {
+    if (typeof onBackAttempt === 'function') { onBackAttempt(); return; }
+    setMessage('Termina o turno (fecho cego) antes de sair do caixa. O botao "voltar" do browser esta bloqueado neste ecra.');
+  });
   const [blindOpen, setBlindOpen] = useState(false);
   const [blindDeclared, setBlindDeclared] = useState('');
   const [blindErr, setBlindErr] = useState('');

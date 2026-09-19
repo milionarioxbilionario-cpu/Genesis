@@ -73,6 +73,7 @@ export default function PosGate() {
         onRequestLeave={handleLeave}
         leaving={leaving}
         leaveMsg={leaveMsg}
+        onBackAttempt={() => setLeaveMsg('Fecha o turno antes de sair do perfil. Usa o botao "Sair do perfil" — o botao "voltar" do browser esta bloqueado neste ecra.')}
       />
     );
   }
