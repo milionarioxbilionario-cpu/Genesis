@@ -18,10 +18,10 @@ import DailyReport from './pages/Owner/Reports/DailyReport';
 import WeeklyReport from './pages/Owner/Reports/WeeklyReport';
 import MonthlyReport from './pages/Owner/Reports/MonthlyReport';
 import OnboardingWizard from './pages/OnboardingWizard';
-import CashierDashboard from './pages/CashierDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import PosGate from './components/PosGate';
 import Hub from './pages/Hub';
+import { ToastProvider } from './components/ui';
 
 // CRM layout and demo UI assets
 import CRMLayout from './layouts/CRMLayout';
@@ -30,6 +30,7 @@ import './ui/mockData.js';
 function App() {
   return (
     <Router>
+      <ToastProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/cashier/login" element={<CashierLogin />} />
@@ -116,16 +117,13 @@ function App() {
             <CRMLayout><OnboardingWizard /></CRMLayout>
           </ProtectedRoute>
         } />
-        <Route path="/cashier" element={
-          <ProtectedRoute requiredRole="cashier">
-            <CRMLayout><CashierDashboard /></CRMLayout>
-          </ProtectedRoute>
-        } />
+        <Route path="/cashier" element={<Navigate to="/pos" replace />} />
         <Route path="/pos" element={<PosGate />} />
         <Route path="/hub" element={<ProtectedRoute requiredRole="owner"><Hub /></ProtectedRoute>} />
 
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
+      </ToastProvider>
     </Router>
   );
 }

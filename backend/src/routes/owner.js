@@ -54,6 +54,34 @@ const createOwnerAudit = async (req, action, entityType, entityId, extra = {}) =
 router.use(auth);
 router.use(requireRole('owner'));
 
+// Perfil do estabelecimento — o NOME REAL da loja para a sidebar (antes
+// vinha de dados de demonstracao em window.GENESIS_DATA). Serve tambem as
+// Definicoes e a futura pagina de perfil do Super Admin.
+// Nunca devolver cancel_pin_hash.
+router.get('/tenant', async (req, res) => {
+  try {
+    const tenant = await prisma.tenant.findUnique({ where: { id: ensureTenantScope(req) } });
+    if (!tenant) return res.status(404).json({ error: 'Estabelecimento nao encontrado' });
+    res.json({
+      id: tenant.id,
+      name: tenant.name,
+      owner_name: tenant.owner_name,
+      business_type: tenant.business_type,
+      location: tenant.location,
+      phone: tenant.phone,
+      email: tenant.email,
+      status: tenant.status,
+      trial_ends_at: tenant.trial_ends_at,
+      subscription_price: tenant.subscription_price,
+      onboarding_completed: tenant.onboarding_completed,
+      created_at: tenant.created_at,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao carregar o estabelecimento' });
+  }
+});
+
 router.get('/audit', async (req, res) => {
   try {
     const logs = await prisma.auditLog.findMany({

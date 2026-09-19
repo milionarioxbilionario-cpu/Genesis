@@ -394,3 +394,69 @@ FALTA AINDA (proximos lotes, ja combinados)
     ou faz fecho correcto; e ver/reimprimir recibos antigos so com a tua senha.
   - Lote D: o visual de todas as interfaces (a Visao Geral e as restantes
     abas), ao estilo CRM profissional, com graficos e popups bonitos.
+
+================================================================================
+[DATA: 19-09-2026] — LOTE D1: a base visual e o nome verdadeiro da loja
+================================================================================
+
+O QUE FIZ
+
+1. Criei a FUNDACAO visual que faltava. Antes, cada pagina escrevia as cores
+a mao e havia 48 sitios com cartoes BRANCOS no meio de um fundo escuro. Isso
+era a razao de parecer "feito por amador": era o estilo de demonstracao do
+Tailwind misturado com o tema escuro. Agora ha uma paleta unica (tokens) com
+o preto profundo + vermelho Genesis que escolheste, e VERDE = dinheiro,
+VERMELHO = alerta, AZUL = meta.
+
+2. Criei pecas de interface reutilizaveis: cartoes, cartoes de numeros (KPI),
+   botoes, etiquetas, campos, JANELAS FLUTUANTES (popups) com animacao,
+avisos que aparecem no canto (toasts), tabelas, estados vazios, esqueletos
+de carregamento e a BARRA DE METAS com a barra de bonus azul por cima dos
+100%.
+
+3. CORRIGI UM PROBLEMA GRAVE QUE NAO SABIAMOS: a barra lateral mostrava o
+   nome de uma loja FALSA ("Bottle Store Motla"). Esse nome vinha de um
+ficheiro de dados de demonstracao, nunca existiu na tua base de dados. As
+tuas lojas reais chamam-se "Loja Teste", "Genesis Demo Store", etc. Agora a
+barra lateral vai buscar o nome VERDADEIRO a base de dados.
+
+4. CORRIGI OUTRO PROBLEMA: NAO HAVIA BOTAO DE SAIR. O servidor tinha a
+   funcao de terminar sessao, mas nenhum ecra a chamava. Agora tens o botao
+   de sair no fundo da barra lateral.
+
+5. A pesquisa "Ctrl+K" agora funciona a serio: abre uma janela flutuante
+   onde escreves e salta directamente para a pagina (produtos, metas,
+chenecas, relatorios...).
+
+6. Apaguei codigo morto: uma pagina de POS dentro da pasta do DONO (que nem
+   estava ligada a nada, e o dono nao deve ter POS) e dois componentes que
+   so serviam essa pagina.
+
+PORQUE
+Porque o fundador mostrou imagens e disse claramente que a Visao Geral e as
+outras abas estavam "com textos todos colados, uma salada, nada separado,
+cores feias". A raiz era nao existir uma base visual partilhada.
+
+O QUE ISSO RESOLVEU (com prova real)
+  - O novo endereco do nome da loja foi testado: 5 testes passados, 0 falhados.
+    O nome devolvido e "Genesis Demo Store" (real) e confirmou-se que NAO e
+    o falso "Bottle Store Motla".
+  - A base de dados nao expoe o PIN secreto do dono no perfil da loja.
+  - O programa compila sem erros; a paleta e as pecas novas estao no pacote
+    final; o botao de sair esta no pacote final.
+  - As paginas 4000, 5173 e 5175 respondem.
+
+FUNCIONOU? Sim — provado pelos testes acima.
+
+FALTA AINDA NO LOTE D
+  - D2: refazer a VISAO GERAL (o ecra que mais incomodou) com cartoes de
+    numeros, graficos a serio (receita por dia, produtos mais vendidos,
+    formas de pagamento, barra da meta) e separar aquele ficheiro gigante
+    de 696 linhas que tem tudo misturado.
+  - D3: aplicar o mesmo visual aos restantes ecras (Produtos, Stock,
+    Fornecedores, Trabalhadores, Chenecas, Metas, Definicoes, Relatorios...)
+    e o relatorio mensal em forma de cascata (receita -> descontos -> LUCRO
+    REAL). Restam 46 sitios com cartoes brancos a corrigir.
+  - D4: polir o Hub e o POS (efeitos, hover, popups).
+Depois disto: Lote B (desconto + recibo bonito + numeracao diaria) e Lote C
+(avisos para o dono + reimprimir recibos antigos).

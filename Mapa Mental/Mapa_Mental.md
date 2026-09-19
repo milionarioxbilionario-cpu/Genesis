@@ -251,3 +251,35 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, seg
 - Lote B: desconto (manual + regras condicionais) — exige migracao `discount_amount` em `Sale`; recibo redesenhado (nome loja, localizacao, caixista, QR local sem CDN); numeracao diaria `VendaN-DD-MM-AAAA+HH:MM:SS` com reset a meia-noite.
 - Lote C: notificacoes do dono (derivadas de AuditLog — sem migracao) + reimpressao de recibos antigos so com senha do dono.
 - Lote D: redesign visual (Visao Geral/CRM enterprise, graficos Recharts, popups flutuantes).
+
+### [2026-09-19] — Lote D1: fundacao de design (tokens + primitivas) + nome real da loja
+
+**Causa raiz do "visual amador"**
+- `frontend/src/index.css` tinha **ZERO variaveis CSS** (`grep -c '--'` = 0). Todas as 16 paginas do dono escreviam cores a mao e existiam **48 ocorrencias de `bg-white`** — cartoes BRANCOS num tema escuro. Padrao Tailwind de demonstracao misturado com tema escuro.
+
+**Bug novo 1 — a sidebar mostrava uma loja FALSA.**
+- `App.jsx` importava `ui/mockData.js` que injecta `window.GENESIS_DATA`; o `CRMLayout` lia dai o nome da loja -> aparecia "Bottle Store Motla", que NAO existe na base de dados (os tenants reais sao "Loja Teste", "Genesis Demo Store", etc.). `GET /api/auth/me` nao devolvia o nome do tenant, logo nao havia de onde vir o nome verdadeiro.
+
+**Bug novo 2 — sem botao de SAIR.** `POST /api/auth/logout` existia no backend mas NUNCA era chamado pelo frontend. Nao havia logout em lado nenhum.
+
+**Bug novo 3 — codigo morto + arquitectura errada.** `pages/Owner/POS.jsx` (219 linhas) nao estava roteado e o dono nao deve ter POS. `PosCart.jsx`, `PosProductList.jsx` so serviam esse ficheiro.
+
+**Alteracoes**
+- NOVO `frontend/src/ui/tokens.css` — paleta near-black + vermelho Genesis (aprovada pelo fundador): `--bg-base #0a0a0c`, `--brand #e50914`, `--ok/--warn/--danger/--info`, `--goal/--goal-bonus`, niveis de stock, `--text/--text-muted/--text-dim`, raios, sombras, espacamentos, transicoes e z-index.
+- NOVO `frontend/src/ui/primitives.css` — classes `.g-*` (card, stat, btn, badge, input, backdrop/modal com animacao, toast, table, empty, skeleton, goal track/bonus, alert).
+- NOVO `frontend/src/components/ui/index.jsx` — primitivas React: `Card`, `CardHead`, `StatCard`, `Button`, `Badge`, `Input`, `Modal` (popup flutuante animado), `ToastProvider`/`useToast`, `Table`, `EmptyState`, `Skeleton`, `PageHead`, `Alert`, `GoalBar` (cores progressivas + barra de bonus azul >100%).
+- `frontend/src/main.jsx` — importa `tokens.css` e `primitives.css`.
+- `backend/src/routes/owner.js` — NOVO `GET /api/owner/tenant` (nome real, business_type, location, status, trial, subscription_price; nao expoe `cancel_pin_hash`).
+- `frontend/src/layouts/CRMLayout.jsx` — REESCRITO: usa tokens; nome/plano da loja vindos da API; menu com icones e seccoes; **paleta de comandos Ctrl+K** real (Modal flutuante); **botao de logout** (novo); chip de utilizador com nome real e role. Deixou de ler `window.GENESIS_DATA`.
+- `frontend/src/App.jsx` — `ToastProvider` a envolver as rotas; `/cashier` -> redirect `/pos` (o POS ja nao e embrulhado no shell do dono); import de `CashierDashboard` removido.
+- REMOVIDOS: `pages/Owner/POS.jsx`, `components/PosCart.jsx`, `components/PosProductList.jsx`.
+
+**Prova (REGRA 3)**
+- E2E `/tmp/d1_test.mjs`: **5 PASS / 0 FAIL** — `GET /api/owner/tenant` devolve `name=Genesis Demo Store`, `business_type=mercearia`, `location=Maputo`, nao expoe `cancel_pin_hash`, e o nome **nao e** o falso `Bottle Store Motla`.
+- `npm run build`: OK. Bundle CSS contem `--brand`, `--bg-base`, `g-goal-bonus`, `g-modal`, `g-toast`. Bundle JS contem `api/auth/logout`.
+- `grep GENESIS_DATA` em CRMLayout = 0.
+- 4 ficheiros confirmados apagados. Portas 4000/5173/5175 = 200.
+
+**Adiado para D2 (com prova)**
+- `ui/mockData.js`, `components/StatsGrid.jsx`, `components/Pipeline.jsx` ainda existem porque o `Dashboard.jsx` (696 linhas) os usa com `require(...)`. Sao removidos quando o Dashboard for dividido no D2.
+- Restam **46 ocorrencias de `bg-white`** em 14 paginas -> D2 (Dashboard) e D3 (restantes ecras).

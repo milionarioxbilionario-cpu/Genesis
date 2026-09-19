@@ -1,0 +1,87 @@
+/* ==========================================================================
+   GENESIS — TOKENS DE DESIGN (fonte unica de verdade visual)
+   Paleta aprovada: near-black + acento vermelho Genesis + superficies
+   translucidas. Verde = dinheiro, Vermelho = alerta, Azul = meta.
+   Nenhum ecra deve voltar a escrever cores a mao (hex) — usar var(--x).
+   ========================================================================== */
+:root {
+  /* --- Fundos --- */
+  --bg-base: #0a0a0c;
+  --bg-deep: #08090b;
+  --bg-elev: #121216;
+  --bg-elev2: #17171d;
+
+  /* --- Superficies (cartoes, paineis) --- */
+  --surface: rgba(255, 255, 255, 0.032);
+  --surface-2: rgba(255, 255, 255, 0.052);
+  --surface-hover: rgba(255, 255, 255, 0.075);
+  --surface-solid: #121216;
+
+  /* --- Bordas --- */
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* --- Marca --- */
+  --brand: #e50914;
+  --brand-hi: #ff2b36;
+  --brand-weak: rgba(229, 9, 20, 0.16);
+  --brand-text: #ff6b72;
+
+  /* --- Semanticas --- */
+  --ok: #22c55e;
+  --ok-weak: rgba(34, 197, 94, 0.14);
+  --warn: #f59e0b;
+  --warn-weak: rgba(245, 158, 11, 0.14);
+  --danger: #f43f5e;
+  --danger-weak: rgba(244, 63, 94, 0.14);
+  --info: #60a5fa;
+  --info-weak: rgba(96, 165, 250, 0.14);
+
+  /* --- Meta / bonus (barra de metas) --- */
+  --goal: #3b82f6;
+  --goal-bonus: #38bdf8;
+
+  /* --- Niveis de stock (normal / severa / critica) --- */
+  --stock-normal: #22c55e;
+  --stock-severe: #f59e0b;
+  --stock-critical: #f43f5e;
+
+  /* --- Texto --- */
+  --text: #f5f7fa;
+  --text-muted: #9aa4b2;
+  --text-dim: #5c6675;
+
+  /* --- Raios --- */
+  --r-xs: 8px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-full: 999px;
+
+  /* --- Sombras --- */
+  --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sh-md: 0 8px 24px rgba(0, 0, 0, 0.42);
+  --sh-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --sh-brand: 0 10px 30px rgba(229, 9, 20, 0.28);
+
+  /* --- Espacamento --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 44px;
+
+  /* --- Transicoes (suaves, nunca agressivas) --- */
+  --t: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-slow: 420ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Camadas --- */
+  --z-base: 1;
+  --z-header: 20;
+  --z-dropdown: 40;
+  --z-modal: 60;
+  --z-toast: 80;
+  --z-lock: 100;
+}

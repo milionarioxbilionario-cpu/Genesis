@@ -1,134 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { Modal, Badge } from '../components/ui';
 import '../ui/components.css';
 import '../ui/animations.css';
 import '../ui/main.css';
 
-export default function CRMLayout({ children, title = 'Genesis CRM' }) {
+/* ==========================================================================
+   SHELL DO GENESIS (donos).
+   - Todos os valores visuais vem de tokens.css (var(--x)).
+   - O nome da loja vem da BASE DE DADOS (/api/owner/tenant), nunca de dados
+     de demonstracao.
+   - Paleta de comandos (Ctrl+K) e botao de SAIR (antes nao existia logout).
+   ========================================================================== */
+const BUSINESS_LABEL = {
+  bottle_store: 'Bottle Store',
+  mercearia: 'Mercearia',
+  padaria: 'Padaria',
+  talho: 'Talho',
+  supermercado: 'Supermercado',
+  restaurante: 'Restaurante',
+  boutique: 'Boutique',
+  outro: 'Negocio',
+};
+
+const OWNER_NAV = [
+  { section: 'Principal', items: [
+    { to: '/owner', label: 'Visao Geral', icon: '\uD83D\uDCCA', end: true },
+    { to: '/hub', label: 'Caixistas - Hub do Balcao', icon: '\uD83D\uDC65' },
+    { to: '/owner/products', label: 'Produtos', icon: '\uD83D\uDCE6' },
+    { to: '/owner/stock', label: 'Stock', icon: '\uD83C\uDFF7\uFE0F' },
+    { to: '/owner/suppliers', label: 'Fornecedores', icon: '\uD83D\uDE9A' },
+    { to: '/owner/employees', label: 'Trabalhadores', icon: '\uD83E\uDDD1' },
+    { to: '/owner/debts', label: 'Chenecas', icon: '\uD83D\uDCD2' },
+  ] },
+  { section: 'Analise', items: [
+    { to: '/owner/reports', label: 'Relatorios', icon: '\uD83D\uDCC8' },
+    { to: '/owner/goals', label: 'Metas', icon: '\uD83C\uDFAF' },
+  ] },
+  { section: 'Sistema', items: [
+    { to: '/onboarding', label: 'Onboarding', icon: '\uD83D\uDE80' },
+    { to: '/owner/device-keys', label: 'Chaves de Dispositivo', icon: '\uD83D\uDD11' },
+    { to: '/owner/audit', label: 'Auditoria', icon: '\uD83D\uDEE1\uFE0F' },
+    { to: '/owner/settings', label: 'Definicoes', icon: '\u2699\uFE0F' },
+  ] },
+];
+
+const CASHIER_NAV = [
+  { section: 'Caixa', items: [{ to: '/pos', label: 'Vendas / POS', icon: '\uD83E\uDDFE' }] },
+];
+
+export default function CRMLayout({ children, title }) {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
   const [tenant, setTenant] = useState(null);
-  const [role, setRole] = useState(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const role = user?.role || null;
+  const nav = role === 'cashier' ? CASHIER_NAV : OWNER_NAV;
 
   useEffect(() => {
     api.get('/api/auth/me')
-      .then((res) => setRole(res.data?.user?.role || null))
-      .catch(() => setRole(null));
-    try {
-      const data = window.GENESIS_DATA || {};
-      const t = data.tenants ? data.tenants.find((x) => x.id === data.activeTenantId) : null;
-      setTenant(t || (data.tenants && data.tenants[0]) || { name: 'Genesis Demo', color: '#dfe7ef', logoText: 'G' });
-    } catch (e) {
-      setTenant({ name: 'Genesis Demo', color: '#dfe7ef', logoText: 'G' });
-    }
+      .then((res) => setUser(res.data?.user || null))
+      .catch(() => setUser(null));
+    api.get('/api/owner/tenant')
+      .then((res) => setTenant(res.data || null))
+      .catch(() => setTenant(null));
+  }, []);
 
+  useEffect(() => {
     const onKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        const el = document.getElementById('global-search-trigger');
-        if (el) el.click();
-        const input = document.querySelector('.search-trigger input');
-        if (input) input.focus();
-        else alert('Abrir pesquisa (demo)');
+        setQuery('');
+        setPaletteOpen(true);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const navItem = (to, label) => (
-    <NavLink to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-      <span>{label}</span>
-    </NavLink>
-  );
+  const commands = useMemo(() => {
+    const all = nav.flatMap((g) => g.items.map((i) => ({ ...i, section: g.section })));
+    if (!query.trim()) return all;
+    const q = query.trim().toLowerCase();
+    return all.filter((i) => i.label.toLowerCase().includes(q));
+  }, [nav, query]);
+
+  async function handleLogout() {
+    try { await api.post('/api/auth/logout'); } catch { /* sessao ja invalida */ }
+    window.location.href = '/login';
+  }
+
+  function runCommand(item) {
+    setPaletteOpen(false);
+    navigate(item.to);
+  }
+
+  const tenantName = tenant?.name || 'Genesis';
+  const planLabel = tenant?.business_type ? (BUSINESS_LABEL[tenant.business_type] || tenant.business_type) : 'Demo';
+  const initials = String(user?.name || 'Genesis').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(180deg, #0a1220 0%, #111c2b 100%)' }}>
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`} style={{ background: 'rgba(17, 28, 43, 0.96)', borderRight: '1px solid rgba(148, 163, 184, 0.12)' }}>
-        <div className="sidebar-header" style={{ padding: '18px 16px' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div className="tenant-logo" style={{ background: 'linear-gradient(135deg, #dfe7ef 0%, #a7bdd8 100%)', color: '#111c2b' }}>{tenant?.logoText}</div>
-            <div className="tenant-info">
-              <div className="tenant-name">{tenant?.name}</div>
-              <div className="tenant-plan">Demo</div>
-            </div>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <aside style={{ width: collapsed ? 78 : 262, flexShrink: 0, background: 'var(--bg-elev2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', transition: 'width var(--t)' }}>
+        <div style={{ padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 'var(--r-md)', background: 'linear-gradient(135deg, var(--brand), #7a1017)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 19 }}>
+            {initials[0] || 'G'}
           </div>
-          <button onClick={() => setCollapsed((c) => !c)} aria-label="Toggle sidebar" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            <span className="tenant-chevron">{collapsed ? '»' : '«'}</span>
+          {!collapsed && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: 'var(--text)', fontWeight: 800, fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tenantName}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{planLabel}</div>
+            </div>
+          )}
+          <button type="button" onClick={() => setCollapsed((c) => !c)} aria-label="Alternar menu"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 15 }}>
+            {collapsed ? '\u00BB' : '\u00AB'}
           </button>
         </div>
 
-        <nav className="sidebar-nav">
-          {role === 'cashier' ? (
-            <>
-              <div className="nav-section-title">Caixa</div>
-              {navItem('/pos', 'Vendas / POS')}
-            </>
-          ) : (
-            <>
-              <div className="nav-section-title">Principal</div>
-              {navItem('/owner', 'Visao Geral')}
-              {navItem('/hub', 'Caixistas - Hub do Balcao')}
-              {navItem('/owner/products', 'Produtos')}
-              {navItem('/owner/stock', 'Stock')}
-              {navItem('/owner/suppliers', 'Fornecedores')}
-              {navItem('/owner/employees', 'Trabalhadores')}
-              {navItem('/owner/debts', 'Chenecas')}
-
-              <div className="nav-section-title">Analise</div>
-              {navItem('/owner/reports', 'Relatorios')}
-              {navItem('/owner/goals', 'Metas')}
-
-              <div className="nav-section-title">Sistema</div>
-              {navItem('/onboarding', 'Onboarding')}
-              {navItem('/owner/device-keys', 'Chaves de Dispositivo')}
-              {navItem('/owner/settings', 'Definicoes')}
-            </>
-          )}
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '6px 10px 16px' }}>
+          {nav.map((group) => (
+            <div key={group.section}>
+              {!collapsed && <div style={{ color: 'var(--text-dim)', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', padding: '16px 10px 7px' }}>{group.section}</div>}
+              {group.items.map((item) => (
+                <NavLink key={item.to} to={item.to} end={item.end}
+                  title={collapsed ? item.label : undefined}
+                  style={({ isActive }) => ({
+                    display: 'flex', alignItems: 'center', gap: 11,
+                    padding: collapsed ? '11px 0' : '10px 12px',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    borderRadius: 'var(--r-sm)', marginBottom: 3,
+                    textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
+                    color: isActive ? 'var(--text)' : 'var(--text-muted)',
+                    background: isActive ? 'var(--brand-weak)' : 'transparent',
+                    borderLeft: isActive ? '3px solid var(--brand)' : '3px solid transparent',
+                    transition: 'background var(--t), color var(--t)',
+                  })}>
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>{item.icon}</span>
+                  {!collapsed && <span>{item.label}</span>}
+                </NavLink>
+              ))}
+            </div>
+          ))}
         </nav>
 
-        <div className="sidebar-footer" style={{ padding: 12, borderTop: '1px solid rgba(148, 163, 184, 0.12)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="user-avatar" style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #dfe7ef 0%, #7aa5d6 100%)', color: '#111c2b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>AD</div>
-            <div style={{ fontSize: 12.5 }}>
-              <div style={{ fontWeight: 700, color: '#edf2f7' }}>Admin</div>
-              <div style={{ color: 'var(--text-subtle)', fontSize: 12 }}>{tenant?.code || 'GEN-DEMO'}</div>
+        <div style={{ padding: 12, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 'var(--r-sm)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem' }}>{initials || 'G'}</div>
+          {!collapsed && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'A carregar...'}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>{role === 'cashier' ? 'Caixista' : 'Dono'}</div>
             </div>
-          </div>
+          )}
+          <button type="button" onClick={handleLogout} title="Sair" aria-label="Sair" style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 15 }} >⏻</button>
         </div>
       </aside>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header className="top-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid rgba(148, 163, 184, 0.12)', background: 'rgba(17, 28, 43, 0.72)', backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <button className="search-trigger" id="global-search-trigger" style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(148, 163, 184, 0.12)', borderRadius: 12, padding: '8px 12px', color: '#c6d0df', cursor: 'pointer' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <span style={{ color: '#9fb0c6' }}>Buscar no Genesis (Ctrl+K)</span>
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn btn-ghost" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(148, 163, 184, 0.18)', color: '#edf2f7' }}>PT</button>
-              <button className="btn btn-ghost" style={{ background: 'transparent', borderColor: 'rgba(148, 163, 184, 0.18)', color: '#c6d0df' }}>Tema</button>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, color: '#edf2f7' }}>{tenant?.name}</div>
-                <div style={{ fontSize: 12, color: '#8ca0b8' }}>{tenant?.plan || 'Demo'}</div>
-              </div>
-            </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'rgba(10, 10, 12, 0.72)', backdropFilter: 'blur(14px)', position: 'sticky', top: 0, zIndex: 'var(--z-header)' }}>
+          <button type="button" onClick={() => { setQuery(''); setPaletteOpen(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--surface)', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '9px 14px', color: 'var(--text-muted)', cursor: 'pointer', minWidth: 250 }}>
+            <span>🔍</span>
+            <span style={{ flex: 1, textAlign: 'left', fontSize: '0.85rem' }}>Buscar no Genesis</span>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', border: '1px solid var(--border-strong)', borderRadius: 5, padding: '1px 6px' }}>Ctrl K</span>
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Badge tone={tenant?.status === 'active' ? 'ok' : tenant?.status === 'trial' ? 'info' : 'neutral'}>{tenant?.status || 'demo'}</Badge>
+            <div style={{ textAlign: 'right', display: 'none' }}>{tenantName}</div>
           </div>
         </header>
 
-        <main style={{ padding: 24, background: 'radial-gradient(circle at top, rgba(122,165,214,0.12), transparent 28%), #0a1220', minHeight: 'calc(100vh - 64px)' }}>
-          <div className="page-header" style={{ marginBottom: 18 }}>
-            <h1 style={{ margin: 0, color: '#edf2f7', fontSize: '2rem', letterSpacing: '-0.05em' }}>{title}</h1>
-          </div>
-
-          <div className="page-content">{children}</div>
+        <main style={{ flex: 1, minHeight: 0, background: 'radial-gradient(circle at 30% -10%, rgba(229, 9, 20, 0.07), transparent 45%), var(--bg-base)' }}>
+          {title && (
+            <div style={{ padding: '22px 24px 0' }}>
+              <h1 style={{ margin: 0, color: 'var(--text)', fontSize: '1.5rem', letterSpacing: '-0.035em', fontWeight: 800 }}>{title}</h1>
+            </div>
+          )}
+          <div>{children}</div>
         </main>
       </div>
+
+      <Modal open={paletteOpen} title="Buscar no Genesis" hint="Escreve para filtrar; Enter abre o primeiro resultado." onClose={() => setPaletteOpen(false)} width={520}>
+        <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && commands[0]) runCommand(commands[0]); }}
+          placeholder="Ex: produtos, metas, chenecas..." className="g-input" />
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 320, overflow: 'auto' }}>
+          {commands.length === 0 && <div style={{ color: 'var(--text-dim)', padding: 12, textAlign: 'center' }}>Nada encontrado.</div>}
+          {commands.map((item) => (
+            <button key={item.to} type="button" onClick={() => runCommand(item)}
+              style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', borderRadius: 'var(--r-sm)', background: 'transparent', border: '1px solid transparent', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontWeight: 600, fontSize: '0.88rem' }}>
+              <span>{item.icon}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ color: 'var(--text-dim)', fontSize: '0.72rem' }}>{item.section}</span>
+            </button>
+          ))}
+        </div>
+      </Modal>
     </div>
   );
 }
