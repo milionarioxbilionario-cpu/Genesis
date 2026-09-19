@@ -8,7 +8,7 @@ import OwnerDashboard from './pages/Owner/Dashboard';
 import Products from './pages/Owner/Products';
 import Stock from './pages/Owner/Stock';
 import Suppliers from './pages/Owner/Suppliers';
-import Cashiers from './pages/Owner/Cashiers';
+import DeviceKeys from './pages/Owner/DeviceKeys';
 import Employees from './pages/Owner/Employees';
 import Debts from './pages/Owner/Debts';
 import Goals from './pages/Owner/Goals';
@@ -21,6 +21,7 @@ import OnboardingWizard from './pages/OnboardingWizard';
 import CashierDashboard from './pages/CashierDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import PosGate from './components/PosGate';
+import Hub from './pages/Hub';
 
 // CRM layout and demo UI assets
 import CRMLayout from './layouts/CRMLayout';
@@ -59,9 +60,10 @@ function App() {
             <CRMLayout><Suppliers /></CRMLayout>
           </ProtectedRoute>
         } />
-        <Route path="/owner/cashiers" element={
+        <Route path="/owner/cashiers" element={<Navigate to="/hub" replace />} />
+        <Route path="/owner/device-keys" element={
           <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Cashiers /></CRMLayout>
+            <CRMLayout><DeviceKeys /></CRMLayout>
           </ProtectedRoute>
         } />
         <Route path="/owner/employees" element={
@@ -120,6 +122,7 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/pos" element={<PosGate />} />
+        <Route path="/hub" element={<ProtectedRoute requiredRole="owner"><Hub /></ProtectedRoute>} />
 
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>

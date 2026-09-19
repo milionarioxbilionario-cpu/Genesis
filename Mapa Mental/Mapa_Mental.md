@@ -220,3 +220,34 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, seg
 - Prova (teste E2E real contra backend vivo, 16/16 PASS): login owner → criar caixista → verify-password errada=401/certa=200 → **sessão continua owner** (`/api/auth/me` via cookie = role owner após operate) → venda com `seller_user_id` → open-shift true → fecho em nome do caixista (201) → open-shift false → venda pós-fecho → open-shift true (re-bloqueia) → caixista não consegue fechar em nome de outro (ignora campo) → limpeza (caixista desactivado).
 - Limpeza: `backend/dev.db` órfã + `create_superadmin.mjs`, `test_bcrypt.mjs`, `tmp_set_admin_pw.js`, `dev.db.backup.*` movidos para `~/genesis-backup-20260918/orfaos/`.
 - Segue-se: Fase 0-C.3 (banner/UX do Hub já no PosGate; a seguir Meta realtime + cascata de lucro real) — ou prioridade do fundador.
+
+### [2026-09-19] — Lote A: POS dedicado (sem sidebar do dono) + bloqueio REAL do perfil
+
+**Causa raiz dos 4 bugs reportados pelo fundador**
+- R1 Botao do Hub: `CRMLayout.jsx:71` apontava para `/owner/cashiers` (tabela feia). A pagina `Hub.jsx` (Netflix, dedicada) existia mas NAO estava ligada a nada.
+- R2 Caixista ia a "Visao Geral": `PosGate.jsx` embrulhava o POS em `<CRMLayout>`. Em modo Hub o autenticado e o OWNER, logo o CRMLayout desenhava o menu completo do dono.
+- R3 Bloqueio nao bloqueava: (a) o ecra de bloqueio era um modal SOBREPOSTO com o POS activo por baixo; (b) so aparecia ao clicar em "Fechar turno"; (c) tinha botao "Voltar ao Hub" (fuga); (d) `POST /api/sales` nao consultava o bloqueio -> continuava a vender.
+- R4 "Valor esperado" a aumentar: `closingOpen/countedAmount/expectedAmount` (l.42-44) eram ESTADO MORTO. O valor a subir era o Troco (`changeGiven`).
+
+**Alteracoes**
+- NOVO `backend/src/utils/shiftLock.js` — `getShiftLock()`: 3 falhas apos ultimo `CASHIER_UNLOCKED` => bloqueado. Fonte unica de verdade.
+- `backend/src/routes/sales.js` — bloqueia a venda (403 `statusCode`) quando o vendedor efectivo esta bloqueado. Import + `getShiftLock(tx, ...)` dentro da transaccao + tratamento de `err.statusCode` no catch.
+- `backend/src/routes/owner.js` — `GET /cashiers` passa a devolver `locked/attempts/maxAttempts` e a NAO expor `password_hash` (a versao anterior devolvia o user completo, incluindo o hash).
+- `frontend/src/layouts/CRMLayout.jsx` — "Caixistas - Hub do Balcao" -> `/hub`; menu completo do dono reposto (Produtos, Fornecedores, Trabalhadores, Chenecas, Relatorios, Metas, Definicoes, Chaves de Dispositivo); removido o duplicado "Painel do Dono".
+- `frontend/src/components/PosGate.jsx` — REESCRITO: POS em ecra proprio, **sem `<CRMLayout>`** para `hub-seller` e `cashier`. `handleLeave` passa a checar `shift-state` (bloqueado / hasOpenSales).
+- `frontend/src/pages/CashierDashboard.jsx` — estado morto removido; `locked/lockAttempts/operatorName`; verifica `shift-state` AO MONTAR (nao so ao clicar em Fechar turno); `submitSale` recusa quando bloqueado; overlay full-screen sem qualquer saida (so senha do dono); removido o botao "Voltar ao Hub" do ecra de bloqueio; botao "Sair do perfil"; header deixa de mostrar "Sergio Bila" hardcoded.
+- `frontend/src/pages/Hub.jsx` — badge BLOQUEADO + contagem de erros; clicar num perfil bloqueado abre o gate do dono e desbloqueia; "+ Novo caixista" atras do gate do dono; inactivos nao entram.
+- `frontend/src/App.jsx` — `/owner/cashiers` -> redirect `/hub`; rota em falta `/owner/device-keys` adicionada (antes dava ecra vazio).
+- REMOVIDO `frontend/src/pages/Owner/Cashiers.jsx` (pagina feia) — decisao do fundador.
+
+**Prova (REGRA 3)**
+- E2E `/tmp/huba_test.mjs` contra backend vivo: **13 PASS / 0 FAIL**
+  login owner -> criar caixista -> lista locked=false -> operate -> venda em dinheiro -> 3 falhas (locked=false,false,true) -> Hub ve BLOQUEADO(attempts=3) -> **venda RECUSADA 403** -> desbloqueio com senha do dono -> venda ACEITE 201.
+- `npm run build` frontend: OK. Bundle contem `PERFIL BLOQUEADO`, `Hub do Balcao`, `Novo caixista`, `Sair do perfil`.
+- `node --check` OK nos 3 ficheiros backend. `grep pages/Owner/Cashiers` = 0 referencias. PosGate sem import de CRMLayout.
+- Portas 5173/5175/4000 -> 200.
+
+**Pendente (Lotes B/C/D)**
+- Lote B: desconto (manual + regras condicionais) — exige migracao `discount_amount` em `Sale`; recibo redesenhado (nome loja, localizacao, caixista, QR local sem CDN); numeracao diaria `VendaN-DD-MM-AAAA+HH:MM:SS` com reset a meia-noite.
+- Lote C: notificacoes do dono (derivadas de AuditLog — sem migracao) + reimpressao de recibos antigos so com senha do dono.
+- Lote D: redesign visual (Visao Geral/CRM enterprise, graficos Recharts, popups flutuantes).

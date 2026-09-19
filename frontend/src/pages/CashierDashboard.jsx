@@ -3,6 +3,8 @@ import api from '../utils/api';
 import db from '../db/localDb';
 import { printReceipt } from '../utils/receiptPrinter';
 import { centsToMznInput, mznToCents } from '../utils/money';
+import { useNavigate } from 'react-router-dom';
+import { clearHubSeller } from '../utils/hubSession';
 
 const demoProducts = [
   // Prices in centavos; use UUID-like ids so offline sales won't fail schema validation on sync
@@ -29,7 +31,7 @@ const money = (cents) => {
 
 const currencyNumber = (cents) => Number(cents || 0) / 100;
 
-export default function CashierDashboard({ hubSeller = null } = {}) {
+export default function CashierDashboard({ hubSeller = null, onRequestLeave = null, leaving = false, leaveMsg = '' } = {}) {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -37,9 +39,21 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
   const [message, setMessage] = useState('');
   const [recentSales, setRecentSales] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [closingOpen, setClosingOpen] = useState(false);
-  const [countedAmount, setCountedAmount] = useState('');
-  const [expectedAmount, setExpectedAmount] = useState('0');
+  // Bloqueio do perfil (fecho cego). Quando bloqueado o POS fica
+  // TOTALMENTE inutilizavel ate o dono desbloquear com a senha dele.
+  const [locked, setLocked] = useState(false);
+  const [lockAttempts, setLockAttempts] = useState(0);
+  const [operatorName, setOperatorName] = useState('');
+  const navigate = useNavigate();
+  const [blindOpen, setBlindOpen] = useState(false);
+  const [blindDeclared, setBlindDeclared] = useState('');
+  const [blindErr, setBlindErr] = useState('');
+  const [blindInfo, setBlindInfo] = useState({ attempts: 0, remaining: 3, locked: false });
+  const [blindLoading, setBlindLoading] = useState(false);
+  const [ownerUnlockPw, setOwnerUnlockPw] = useState('');
+  const [unlockErr, setUnlockErr] = useState('');
+  const [unlockLoading, setUnlockLoading] = useState(false);
+  const activeCashierId = hubSeller?.id || null;
   const [cancelPinConfigured, setCancelPinConfigured] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -160,7 +174,25 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
     loadRecentSales();
     syncPendingSales();
     loadCancelPinStatus();
+    api.get('/api/auth/me')
+      .then((res) => setOperatorName(res.data?.user?.name || ''))
+      .catch(() => {});
   }, []);
+
+  // O perfil bloqueado tranca logo na entrada do POS — antes bastava nao
+  // clicar em "Fechar turno" para continuar a vender.
+  useEffect(() => {
+    if (!activeCashierId) return undefined;
+    let alive = true;
+    api.get(`/api/owner/cashiers/${activeCashierId}/shift-state`)
+      .then((res) => {
+        if (!alive) return;
+        setLockAttempts(res.data?.attempts || 0);
+        setLocked(Boolean(res.data?.locked));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [activeCashierId]);
 
   const addToCart = (product) => {
     setCart((current) => {
@@ -234,6 +266,10 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
   const changeGiven = Math.max(0, currentReceived - totals.totalAmount);
 
   async function submitSale() {
+    if (locked) {
+      setMessage('Perfil bloqueado: nao e possivel vender ate o dono desbloquear com a senha dele.');
+      return;
+    }
     if (!cart.length) {
       setMessage('Adicione pelo menos um produto ao carrinho.');
       return;
@@ -299,10 +335,6 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
   }
 
   useEffect(() => {
-    setExpectedAmount(String(centsToMznInput(totals.totalAmount)));
-  }, [totals.totalAmount]);
-
-  useEffect(() => {
     const handleKeyDown = (event) => {
       const tagName = event.target?.tagName;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) {
@@ -334,32 +366,48 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [filteredProducts, cart.length, addToCart]);
 
-  const closeShift = async () => {
-    const payload = {
-      counted_amount: mznToCents(countedAmount),
-      expected_amount: mznToCents(expectedAmount),
-      // Em modo Hub: o fecho fica em nome do caixista cujo perfil está activo
-      // (o backend valida; sem isto o perfil dele nunca destrava).
-      ...(hubSeller?.id ? { cashier_user_id: hubSeller.id } : {}),
-    };
-
-    if (!payload.counted_amount && !payload.expected_amount) {
-      setMessage('Insira o valor contado e o valor esperado antes de fechar o turno.');
-      return;
-    }
-
+  const openBlindModal = async () => {
+    setBlindErr(''); setBlindDeclared('');
     try {
-      setLoading(true);
-      const res = await api.post('/api/shift_closings', payload);
-      setClosingOpen(false);
-      setCountedAmount('');
-      setExpectedAmount(String(centsToMznInput(totals.totalAmount)));
-      setMessage(`Fecho de turno registado com sucesso. Diferença: ${money(res.data.difference || 0)}`);
+      const res = await api.get(`/api/owner/cashiers/${activeCashierId}/shift-state`);
+      setBlindInfo({ attempts: res.data?.attempts || 0, remaining: Math.max(0, 3 - (res.data?.attempts || 0)), locked: Boolean(res.data?.locked) });
     } catch (err) {
-      console.error(err);
-      setMessage('Não foi possível registar o fecho de turno.');
+      if (!handleUnauthorized(err)) setBlindErr('Não foi possível verificar o turno.');
+    }
+    setBlindOpen(true);
+  };
+
+  const doBlindClose = async () => {
+    setBlindErr(''); setBlindLoading(true);
+    try {
+      const declared = mznToCents(blindDeclared);
+      const res = await api.post(`/api/owner/cashiers/${activeCashierId}/close-shift-blind`, { declared_amount: declared });
+      setBlindOpen(false);
+      setMessage(res.data?.message || 'Fecho registado.');
+      clearHubSeller();
+      navigate('/hub');
+    } catch (err) {
+      if (handleUnauthorized(err)) return;
+      const d = err?.response?.data || {};
+      setBlindErr(d.error || 'Erro no fecho do turno.');
+      setBlindInfo({ attempts: d.attemptNo || 0, remaining: d.remaining || 0, locked: Boolean(d.locked) });
+      if (d.locked) { setLocked(true); setLockAttempts(d.attemptNo || 3); }
     } finally {
-      setLoading(false);
+      setBlindLoading(false);
+    }
+  };
+
+  const doUnlock = async () => {
+    setUnlockErr(''); setUnlockLoading(true);
+    try {
+      await api.post(`/api/owner/cashiers/${activeCashierId}/unlock-shift`, { password: ownerUnlockPw });
+      setUnlockErr(''); setBlindInfo({ attempts: 0, remaining: 3, locked: false });
+      setLocked(false); setLockAttempts(0);
+      setOwnerUnlockPw('');
+    } catch (err) {
+      setUnlockErr(err?.response?.data?.error || 'Senha do dono incorrecta.');
+    } finally {
+      setUnlockLoading(false);
     }
   };
 
@@ -393,6 +441,27 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
 
   return (
     <div className="pos-shell">
+      {locked && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(2,6,23,0.985)', backdropFilter: 'blur(12px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24 }}>
+          <div style={{ fontSize: 64, marginBottom: 8 }}>🔒</div>
+          <div style={{ color: '#fb7185', fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em' }}>PERFIL BLOQUEADO</div>
+          <p style={{ color: '#94a3b8', maxWidth: 560, margin: '14px 0 4px', lineHeight: 1.6 }}>
+            <strong style={{ color: '#edf2f7' }}>{hubSeller?.name || operatorName || 'Este caixista'}</strong> falhou 3 vezes o fecho de turno,
+            declarando valores inferiores ao dinheiro real. O perfil fica trancado e o dono foi avisado.
+          </p>
+          <p style={{ color: '#475569', fontSize: 13, marginBottom: 22 }}>
+            Tentativas falhadas: {lockAttempts} de 3 - todas registadas na auditoria do dono
+          </p>
+          <input autoFocus type="password" value={ownerUnlockPw} onChange={(e) => setOwnerUnlockPw(e.target.value)}
+            placeholder="Senha do dono"
+            style={{ width: 320, padding: '15px 18px', borderRadius: 14, background: '#111c2b', border: '1px solid #30455f', color: '#edf2f7', textAlign: 'center', fontSize: 16 }} />
+          {unlockErr && <div style={{ marginTop: 12, color: '#fb7185', fontWeight: 800 }}>{unlockErr}</div>}
+          <button type="button" disabled={unlockLoading} onClick={doUnlock}
+            style={{ marginTop: 20, padding: '14px 42px', borderRadius: 16, background: unlockLoading ? '#166534' : '#22c55e', color: '#052e16', fontWeight: 900, border: 'none', cursor: unlockLoading ? 'wait' : 'pointer', fontSize: 16 }}>
+            {unlockLoading ? 'A desbloquear...' : 'Desbloquear perfil'}
+          </button>
+        </div>
+      )}
       <div className="pos-header-bar">
         <div className="pos-searchbar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -410,9 +479,8 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
         </div>
 
         <div className="pos-top-actions">
-          <button type="button" className="demo-chip">Dados de demonstração</button>
-          <div className="user-pill">SB</div>
-          <div className="user-name">Sérgio Bila</div>
+          <div className="user-pill">{(hubSeller?.name || operatorName || 'C')[0].toUpperCase()}</div>
+          <div className="user-name">{hubSeller?.name || operatorName || 'Caixa'}</div>
         </div>
       </div>
 
@@ -421,47 +489,69 @@ export default function CashierDashboard({ hubSeller = null } = {}) {
           <h1>Caixa</h1>
           <p>Venda rápida, em poucos cliques.</p>
         </div>
-        <button type="button" onClick={() => setClosingOpen(true)} className="cashier-close-shift">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M7 7h10v10H7z" />
-            <path d="M9 7V5h6v2" />
-          </svg>
-          Fechar turno
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {hubSeller && onRequestLeave && (
+            <button type="button" onClick={onRequestLeave} disabled={leaving} className="cashier-close-shift"
+              style={{ background: 'rgba(148,163,184,0.14)', color: '#cbd5e1' }}>
+              {leaving ? 'A verificar...' : 'Sair do perfil'}
+            </button>
+          )}
+          <button type="button" onClick={openBlindModal} className="cashier-close-shift">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M7 7h10v10H7z" />
+              <path d="M9 7V5h6v2" />
+            </svg>
+            Fechar turno
+          </button>
+        </div>
       </div>
 
       {message && <div className="pos-message">{message}</div>}
 
-      {closingOpen && (
-        <div className="shift-modal">
-          <div className="shift-form-grid">
-            <label className="shift-field">
-              <span>Valor contado no caixa</span>
-              <input
-                type="number"
-                step="0.01"
-                value={countedAmount}
-                onChange={(e) => setCountedAmount(e.target.value)}
-                placeholder="Ex.: 1500.00"
-              />
-            </label>
-            <label className="shift-field">
-              <span>Valor esperado</span>
-              <input
-                type="number"
-                step="0.01"
-                value={expectedAmount}
-                onChange={(e) => setExpectedAmount(e.target.value)}
-                placeholder="Ex.: 1500.00"
-              />
-            </label>
-          </div>
-          <div className="shift-actions">
-            <button type="button" onClick={() => setClosingOpen(false)} className="secondary-btn">Cancelar</button>
-            <button type="button" onClick={closeShift} className="primary-btn">Registar fecho de turno</button>
-          </div>
+      {hubSeller && (
+        <div className="pos-message" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span>A operar como <strong>{hubSeller.name}</strong> (perfil de caixista). As vendas ficam em nome dele; a operacao fica auditada ao dono.</span>
+          <span style={{ opacity: 0.75 }}>Sair exige fecho de turno.</span>
         </div>
       )}
+      {leaveMsg && (
+        <div className="pos-message" style={{ borderColor: 'rgba(244,63,94,0.45)', color: '#fda4af' }}>{leaveMsg}</div>
+      )}
+
+      {blindOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{background:'rgba(2,6,23,0.97)',backdropFilter:'blur(10px)'}}>
+          {blindInfo.locked ? (
+            <div style={{textAlign:'center',maxWidth:460,padding:24}}>
+              <div style={{fontSize:56,marginBottom:12}}>🔒</div>
+              <div style={{color:'#fb7185',fontSize:26,fontWeight:900,marginBottom:10}}>Perfil bloqueado</div>
+              <p style={{color:'#cbd5e1',marginBottom:22}}>Erros repetidos no fecho do turno. Só o dono pode desbloquear com a senha dele.</p>
+              <input autoFocus type="password" value={ownerUnlockPw} onChange={(e)=>setOwnerUnlockPw(e.target.value)}
+                placeholder="Senha do dono" style={{width:280,padding:'12px 16px',borderRadius:12,background:'#111c2b',border:'1px solid #30455f',color:'#edf2f7',textAlign:'center'}} />
+              {unlockErr && <div style={{marginTop:10,color:'#fb7185',fontWeight:700}}>{unlockErr}</div>}
+              <div style={{display:'flex',gap:12,marginTop:18,justifyContent:'center'}}>
+                <button type="button" disabled={unlockLoading} onClick={doUnlock} style={{padding:'12px 26px',borderRadius:14,background:'#22c55e',color:'#052e16',fontWeight:900,border:'none'}}>{unlockLoading?'A desbloquear…':'Desbloquear'}</button>
+
+              </div>
+            </div>
+          ) : (
+            <div style={{textAlign:'center',maxWidth:520,padding:24}}>
+              <div style={{fontSize:44,marginBottom:10}}>💰</div>
+              <div style={{color:'#edf2f7',fontSize:30,fontWeight:900,letterSpacing:'-0.03em'}}>Quanto dinheiro foi feito hoje?</div>
+              <p style={{color:'#64748b',margin:'10px 0 26px'}}>Escreve o valor que contaste no caixa. O sistema vai comparar.</p>
+              <input autoFocus type="number" step="0.01" min="0" value={blindDeclared} onChange={(e)=>setBlindDeclared(e.target.value)}
+                placeholder="0,00"
+                style={{width:280,padding:'14px 18px',fontSize:30,fontWeight:900,textAlign:'center',background:'transparent',border:'none',borderBottom:'4px solid #7aa5d6',color:'#edf2f7',outline:'none'}} />
+              {blindErr && <div style={{marginTop:22,padding:'12px 20px',borderRadius:14,background:'rgba(244,63,94,0.12)',border:'1px solid rgba(244,63,94,0.4)',color:'#fb7185',fontWeight:800}}>{blindErr}</div>}
+              <div style={{marginTop:10,color:'#475569',fontSize:13}}>Tentativas restantes: {blindInfo.remaining} de 3</div>
+              <button type="button" disabled={blindLoading||blindDeclared===''} onClick={doBlindClose}
+                style={{marginTop:30,padding:'16px 46px',borderRadius:16,background:'#e50914',color:'#fff',fontSize:17,fontWeight:900,border:'none',cursor:blindLoading?'wait':'pointer'}}>
+                {blindLoading?'A comparar…':'Confirmar fecho de turno'}</button>
+              <div style={{marginTop:16}}><button type="button" onClick={()=>setBlindOpen(false)} style={{background:'transparent',border:'none',color:'#475569',fontSize:13,cursor:'pointer'}}>Cancelar</button></div>
+            </div>
+          )}
+        </div>
+      )}
+
 
       <div className="pos-layout">
         <div className="product-panel">

@@ -311,3 +311,86 @@ do dono intacta depois de entrar no perfil, venda em nome do caixista,
 turno aberto/fechado nos momentos certos, e bloqueio de forja. Depois disso
 limpei ficheiros temporarios e uma base de dados orfa que estava a causar
 confusao. Commit e push feitos.
+
+================================================================================
+[DATA: 19-09-2026] — LOTE A: a pagina do Hub e o POS, agora a serio
+================================================================================
+
+O QUE FIZ
+
+1. O botao "Caixistas (Hub do Balcao)" agora abre a pagina dedicada /hub
+   (aquela de escolher perfil, estilo Netflix), e nao mais aquela tabela feia.
+   A pagina feia foi APAGADA do sistema.
+
+2. O POS deixou de ser "uma aba dentro do painel do dono". Agora e um ecra
+   proprio, sem o menu lateral (Visao Geral, Stock, etc.). Isso era o motivo
+   pelo qual o caixista conseguia clicar em tudo e ir ver o painel do dono.
+
+3. O BLOQUEIO agora bloqueia mesmo. Antes ele nao bloqueava nada:
+   - o aviso de bloqueio aparecia POR CIMA do POS, com os produtos todos
+     clicaveis por baixo;
+   - so aparecia se o caixista carregasse em "Fechar turno";
+   - tinha um botao "Voltar ao Hub" que deixava sair do bloqueio;
+   - e o servidor aceitava vendas mesmo com o perfil bloqueado.
+   Agora: assim que entra no POS, o sistema verifica se o perfil esta
+   bloqueado. Se estiver, o ecra fica TODO tapado, sem nenhum botao de sair,
+   e so a tua senha (senha do dono) o desbloqueia.
+
+4. O caixista bloqueado continua a nao conseguir VENDER — o servidor recusa
+   a venda (erro 403) enquanto o perfil estiver bloqueado. Esta e a parte que
+   o fundador reportou que estava a falhar.
+
+5. Na pagina /hub, um perfil bloqueado aparece com o selo "BLOQUEADO" e a
+   contagem de erros. Se clicares nele, pede logo a TUA senha e desbloqueia-o.
+
+6. Podes criar caixistas na propria pagina do Hub, com o botao "+ Novo
+   caixista" — e so depois de pores a tua senha de dono.
+
+7. Removi o "valor esperado" fantasma. Aquilo era codigo morto: NUNCA era
+   mostrado. O valor que estava a subir enquanto se adicionava produto ao
+   carrinho era o TROCO, calculado a cada produto. O fecho de turno
+   continua cego: o sistema nao revela quanto espera.
+
+8. Tambem corrigi a lista de caixistas que estava a enviar para o browser a
+   password encriptada dos caixistas. Agora so vai o necessario (nome,
+   contacto, estado, bloqueio).
+
+9. O nome "Sergio Bila" que aparecia fixo no canto do POS foi removido
+   (era dado de demonstracao enganador). Agora mostra o nome real de quem
+   esta a operar.
+
+10. O menu lateral do dono foi reposto como deve ser, com Produtos,
+    Fornecedores, Trabalhadores, Chenecas, Relatorios, Metas, Definicoes e
+    Chaves de Dispositivo. Havia tambem um botao "Chaves de Dispositivo"
+    que nao abria nada (faltava a rota) — tambem foi corrigido.
+
+PORQUE
+Porque o fundador testou e mostrou em imagens que: o caixista continuava a
+vender depois de bloqueado, conseguia sair do bloqueio sozinho, conseguia
+entrar no painel do dono, e o botao do Hub abria uma pagina mal feita.
+
+O QUE ISSO RESOLVEU (com prova real)
+Corri um teste automatico contra o servidor a funcionar (nada de "parece
+que funciona"):
+  - entrar no sistema como dono             -> OK
+  - criar caixista                          -> OK
+  - vender em dinheiro em nome dele         -> OK
+  - errar o fecho 3 vezes                   -> 1a e 2a sem bloqueio, 3a BLOQUEIA
+  - a pagina do Hub mostra BLOQUEADO        -> OK (3 erros)
+  - TENTAR VENDER BLOQUEADO                 -> RECUSADO pelo servidor (403)
+  - desbloquear com a senha do dono         -> OK
+  - vender outra vez                        -> ACEITE
+Resultado: 13 testes passados, 0 falhados. As paginas 5173, 5175 e 4000
+respondem 200 e o programa compila sem erros.
+
+FUNCIONOU? Sim — provado pelos 13 testes acima.
+
+FALTA AINDA (proximos lotes, ja combinados)
+  - Lote B: opcao de DESCONTO no caixa (manual e regras com condicoes, ex:
+    "terca-feira" ou "mais de 3 arroz"), e o RECIBO bonito com nome da loja,
+    localizacao, nome do caixista e QR real, com o nome do ficheiro
+    "Venda1-19-09-2026+00:21:53" (o contador volta a 1 quando muda o dia).
+  - Lote C: avisos para o dono (sino) quando o caixista erra/queda bloqueado
+    ou faz fecho correcto; e ver/reimprimir recibos antigos so com a tua senha.
+  - Lote D: o visual de todas as interfaces (a Visao Geral e as restantes
+    abas), ao estilo CRM profissional, com graficos e popups bonitos.

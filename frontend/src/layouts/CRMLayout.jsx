@@ -67,14 +67,22 @@ export default function CRMLayout({ children, title = 'Genesis CRM' }) {
           ) : (
             <>
               <div className="nav-section-title">Principal</div>
-              {navItem('/owner', 'Visão Geral')}
-              {navItem('/owner/cashiers', 'Caixistas (Hub do Balcão)')}
+              {navItem('/owner', 'Visao Geral')}
+              {navItem('/hub', 'Caixistas - Hub do Balcao')}
+              {navItem('/owner/products', 'Produtos')}
               {navItem('/owner/stock', 'Stock')}
-              {navItem('/onboarding', 'Onboarding')}
+              {navItem('/owner/suppliers', 'Fornecedores')}
+              {navItem('/owner/employees', 'Trabalhadores')}
+              {navItem('/owner/debts', 'Chenecas')}
 
-              <div className="nav-section-title">Gestão</div>
-              {navItem('/owner', 'Painel do Dono')}
+              <div className="nav-section-title">Analise</div>
+              {navItem('/owner/reports', 'Relatorios')}
+              {navItem('/owner/goals', 'Metas')}
+
+              <div className="nav-section-title">Sistema</div>
+              {navItem('/onboarding', 'Onboarding')}
               {navItem('/owner/device-keys', 'Chaves de Dispositivo')}
+              {navItem('/owner/settings', 'Definicoes')}
             </>
           )}
         </nav>

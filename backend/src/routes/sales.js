@@ -3,6 +3,7 @@ const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const bcrypt = require('bcrypt');
+const { getShiftLock } = require('../utils/shiftLock');
 
 const saleSchema = z.object({
   id: z.string().uuid().optional(),
@@ -145,6 +146,24 @@ router.post('/', async (req, res) => {
         sellerUserId = seller.id;
       }
 
+      // FECHO CEGO: perfil bloqueado por 3 erros no fecho => nao pode vender.
+      // Aplica-se ao VENDEDOR EFECTIVO (caixista), tanto em modo Hub
+      // (owner a operar um perfil) como no login directo do caixista.
+      const sellerUser = await tx.user.findFirst({
+        where: { id: sellerUserId, tenant_id: tenantId, role: 'cashier' },
+        select: { id: true, name: true },
+      });
+      if (sellerUser) {
+        const lockState = await getShiftLock(tx, tenantId, sellerUser.id);
+        if (lockState.locked) {
+          const lockErr = new Error(
+            'Perfil de ' + sellerUser.name + ' bloqueado por erros no fecho de turno. O dono tem de desbloquear com a senha dele.'
+          );
+          lockErr.statusCode = 403;
+          throw lockErr;
+        }
+      }
+
      const saleId = data.id || require('crypto').randomUUID();
      const sale = await tx.sale.create({
        data: {
@@ -208,6 +227,9 @@ router.post('/', async (req, res) => {
  } catch (err) {
    if (err instanceof z.ZodError) {
      return res.status(400).json({ error: err.errors });
+   }
+   if (err.statusCode) {
+     return res.status(err.statusCode).json({ error: err.message });
    }
    console.error('Error in /api/sales', err);
    return res.status(500).json({ error: err.message || 'Erro ao registar venda' });

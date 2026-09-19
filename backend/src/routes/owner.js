@@ -7,6 +7,7 @@ const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('../services/monthlyDeductions');
+const { getShiftLock } = require('../utils/shiftLock');
 
 const normalizeRole = (role) => String(role || '').trim();
 const money = (v) => Number(v || 0);
@@ -81,12 +82,32 @@ router.get('/audit', async (req, res) => {
 
 router.get('/cashiers', async (req, res) => {
   try {
+    const tenantId = ensureTenantScope(req);
     const cashiers = await prisma.user.findMany({
-      where: { tenant_id: ensureTenantScope(req), role: 'cashier', is_active: true },
+      where: { tenant_id: tenantId, role: 'cashier' },
       orderBy: { created_at: 'desc' }
     });
-    res.json(cashiers);
+    // Estado de bloqueio (fecho cego). O Hub mostra BLOQUEADO e exige a
+    // senha do dono antes de deixar voltar a entrar nesse perfil.
+    // NB: nunca devolver password_hash (a versao anterior devolvia o user
+    // completo, incluindo o hash).
+    const withLock = await Promise.all(cashiers.map(async (c) => {
+      const lock = await getShiftLock(prisma, tenantId, c.id);
+      return {
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        is_active: c.is_active,
+        created_at: c.created_at,
+        attempts: lock.attempts,
+        maxAttempts: lock.maxAttempts,
+        locked: lock.locked,
+      };
+    }));
+    res.json(withLock);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Erro ao listar caixistas' });
   }
 });
@@ -278,6 +299,147 @@ router.post('/cashiers/:id/verify-password', async (req, res) => {
     return res.status(500).json({ error: 'Erro ao verificar senha do caixista' });
   }
 });
+
+// ESTADO DO TURNO (caixa cego): o backend sabe o valor real acumulado
+// (vendas em DINHEIRO desde o ultimo fecho deste caixista). Nao devolve o
+// valor ao frontend — o caixista nao pode ver quanto o sistema espera.
+// Devolve apenas: ha vendas sem fecho? quantas tentativas falhadas? bloqueado?
+router.get('/cashiers/:id/shift-state', async (req, res) => {
+  try {
+    const tenantId = ensureTenantScope(req);
+    const cashier = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true, name: true },
+    });
+    if (!cashier) return res.status(404).json({ error: 'Caixista nao encontrado neste estabelecimento' });
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    const lastClosing = await prisma.shiftClosing.findFirst({
+      where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' },
+    });
+    const since = lastClosing ? lastClosing.closed_at : startOfDay;
+    const salesSince = await prisma.sale.aggregate({
+      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
+      _sum: { total_amount: true },
+    });
+    const realCash = Number(salesSince._sum.total_amount || 0);
+    // Regra imutavel: contam-se falhas DEPOIS do ultimo desbloqueio (nunca se apaga audit)
+    const lastUnlock = await prisma.auditLog.findFirst({
+      where: { tenant_id: tenantId, action: 'CASHIER_UNLOCKED', entity_id: cashier.id }, orderBy: { created_at: 'desc' },
+    });
+    const failSince = lastUnlock ? lastUnlock.created_at : startOfDay;
+    const attempts = await prisma.auditLog.count({
+      where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', entity_id: cashier.id, created_at: { gt: failSince } },
+    });
+    const hasOpenSales = await prisma.sale.count({
+      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gt: since } },
+    });
+    return res.json({
+      cashier: { id: cashier.id, name: cashier.name },
+      hasOpenSales: hasOpenSales > 0,
+      attempts, maxAttempts: 3,
+      locked: attempts >= 3,
+      lastClosingAt: lastClosing?.closed_at || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao verificar turno' });
+  }
+});
+
+// FECHO CEGO: o caixista declara quanto fez; o backend compara com o real.
+// - Menor -> tentativa falhada (audit SHIFT_ATTEMPT_FAIL com valores);
+//   3 falhas = bloqueado ate o dono desbloquear com a senha dele.
+// - Igual ou a mais -> fecho aceite em nome do caixista; a diferenca fica
+//   registada para o dono (valor a mais tambem e reportado).
+router.post('/cashiers/:id/close-shift-blind', async (req, res) => {
+  try {
+    const declared = Number(req.body?.declared_amount);
+    if (!Number.isInteger(declared) || declared < 0) {
+      return res.status(400).json({ error: 'Valor invalido' });
+    }
+    const tenantId = ensureTenantScope(req);
+    const cashier = await prisma.user.findFirst({
+      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
+      select: { id: true, name: true },
+    });
+    if (!cashier) return res.status(404).json({ error: 'Caixista nao encontrado neste estabelecimento' });
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    const lastClosing = await prisma.shiftClosing.findFirst({
+      where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' },
+    });
+    const since = lastClosing ? lastClosing.closed_at : startOfDay;
+    const salesSince = await prisma.sale.aggregate({
+      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
+      _sum: { total_amount: true },
+    });
+    const realCash = Number(salesSince._sum.total_amount || 0);
+    if (declared < realCash) {
+      const lastUnlock = await prisma.auditLog.findFirst({
+        where: { tenant_id: tenantId, action: 'CASHIER_UNLOCKED', entity_id: cashier.id }, orderBy: { created_at: 'desc' },
+      });
+      const failSince = lastUnlock ? lastUnlock.created_at : startOfDay;
+      const attemptNo = (await prisma.auditLog.count({
+        where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', entity_id: cashier.id, created_at: { gt: failSince } },
+      })) + 1;
+      await createOwnerAudit(req, 'SHIFT_ATTEMPT_FAIL', 'user', cashier.id, {
+        new_value: JSON.stringify({ cashierName: cashier.name, attempt: attemptNo, declared: declared, real: realCash }),
+      });
+      const locked = attemptNo >= 3;
+      await createOwnerAudit(req, locked ? 'CASHIER_LOCKED' : 'CASHIER_ATTEMPT_ALERT', 'user', cashier.id, {
+        new_value: JSON.stringify({ cashierName: cashier.name, attempt: attemptNo, declared: declared, real: realCash }),
+      });
+      return res.status(400).json({
+        ok: false, accepted: false, locked, attemptNo, maxAttempts: 3,
+        remaining: Math.max(0, 3 - attemptNo),
+        error: locked
+          ? 'Valor incorrecto 3 vezes. Perfil bloqueado — o dono tem de desbloquear com a senha dele.'
+          : 'Valor incorrecto: e MENOR do que o dinheiro feito hoje. Restam ' + (3 - attemptNo) + ' tentativa(s).',
+      });
+    }
+    const difference = declared - realCash;
+    const record = await prisma.shiftClosing.create({
+      data: {
+        tenant_id: tenantId, cashier_user_id: cashier.id,
+        counted_amount: declared, expected_amount: realCash, difference,
+      }
+    });
+    await createOwnerAudit(req, 'SHIFT_CLOSING_OK', 'user', cashier.id, {
+      new_value: JSON.stringify({ cashierName: cashier.name, declared: declared, real: realCash, difference, exact: difference === 0 }),
+    });
+    return res.status(201).json({
+      ok: true, accepted: true, exact: difference === 0, difference,
+      closed_at: record.closed_at,
+      message: difference === 0
+        ? 'Fecho correcto — valor exacto.'
+        : 'Fecho aceite. Registaste um valor SUPERIOR ao real; a diferenca ficou registada para o dono.',
+    });
+  } catch (err) {
+    console.error('Blind close error', err);
+    return res.status(500).json({ error: 'Erro ao fechar turno' });
+  }
+});
+
+// Desbloqueio pelo dono (senha do owner). Nao apaga auditoria — apenas
+// regista CASHIER_UNLOCKED; a contagem de falhas passa a valer a partir dele.
+router.post('/cashiers/:id/unlock-shift', async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    if (!password) return res.status(400).json({ error: 'Senha do dono obrigatoria.' });
+    const me = await prisma.user.findUnique({ where: { id: req.user?.userId } });
+    if (!me || me.role !== 'owner') return res.status(403).json({ error: 'So o dono pode desbloquear.' });
+    const ok = await bcrypt.compare(String(password), me.password_hash);
+    if (!ok) {
+      await createOwnerAudit(req, 'CASHIER_UNLOCK_FAIL', 'user', req.params.id, {});
+      return res.status(401).json({ error: 'Senha do dono incorrecta.' });
+    }
+    await createOwnerAudit(req, 'CASHIER_UNLOCKED', 'user', req.params.id, {
+      new_value: JSON.stringify({ cashierId: req.params.id }),
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao desbloquear' });
+  }
+});
+
 
 router.get('/employees', async (req, res) => {
   try {
