@@ -309,8 +309,8 @@ button, input, select {
 .pos-shell {
   width: 100%;
   min-height: calc(100vh - 70px);
-  background: #0c1624;
-  color: #edf2f7;
+  background: radial-gradient(circle at 30% -10%, rgba(229,9,20,0.07), transparent 45%), var(--bg-base);
+  color: var(--text);
   padding: 16px 18px 24px;
 }
 
@@ -319,7 +319,7 @@ button, input, select {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid rgba(148,163,184,0.16);
+  border-bottom: 1px solid var(--border);
   padding: 0 0 14px;
 }
 
@@ -328,11 +328,11 @@ button, input, select {
   align-items: center;
   gap: 10px;
   width: min(100%, 620px);
-  background: rgba(18, 31, 46, 0.9);
-  border: 1px solid rgba(148,163,184,0.18);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 9px 12px;
-  color: #9aa9bc;
+  color: var(--text-dim);
 }
 
 .pos-searchbar svg {
@@ -344,14 +344,14 @@ button, input, select {
 .pos-searchbar input {
   background: transparent;
   border: none;
-  color: #edf2f7;
+  color: var(--text);
   flex: 1;
   outline: none;
   font-size: 0.96rem;
 }
 
 .pos-searchbar input::placeholder {
-  color: #8ea0b5;
+  color: var(--text-dim);
 }
 
 .shortcut {
@@ -521,8 +521,8 @@ button, input, select {
 
 .product-panel,
 .cart-panel {
-  background: rgba(17, 28, 43, 0.58);
-  border: 1px solid rgba(148,163,184,0.12);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 18px;
   padding: 16px;
 }
@@ -562,11 +562,11 @@ button, input, select {
 .product-card {
   position: relative;
   text-align: left;
-  background: rgba(30, 43, 60, 0.96);
-  border: 1px solid rgba(148,163,184,0.12);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 14px 12px;
-  color: #edf2f7;
+  color: var(--text);
   min-height: 130px;
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease;
@@ -574,7 +574,7 @@ button, input, select {
 
 .product-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(122,165,214,0.45);
+  border-color: rgba(229,9,20,0.55);
 }
 
 .product-card-head {
@@ -783,8 +783,9 @@ button, input, select {
 }
 
 .method-btn.selected {
-  background: rgba(223,231,239,0.92);
-  color: #111c2b;
+  background: rgba(229,9,20,0.16);
+  border-color: rgba(229,9,20,0.6);
+  color: #fca5a5;
 }
 
 .cash-field {
@@ -809,12 +810,18 @@ button, input, select {
   width: 100%;
   border: none;
   border-radius: 12px;
-  background: rgba(223,231,239,0.92);
-  color: #111c2b;
+  background: var(--danger);
+  color: #fff;
   font-weight: 700;
   padding: 12px 16px;
   margin-top: 14px;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.finalize-sale:hover:not(:disabled) {
+  background: #f6121d;
+  transform: translateY(-1px);
 }
 
 .finalize-sale:disabled {
