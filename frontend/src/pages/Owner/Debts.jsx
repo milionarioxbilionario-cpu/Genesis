@@ -1,80 +1,56 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../utils/api';
+import { Card, CardHead, Button, Badge, PageHead, Table, EmptyState, Skeleton, useToast } from '../../components/ui';
 
-const formatMoney = (value) => `MZN ${(Number(value || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/* CHENECAS / FIADOS — leitura de dividas, pagamentos e vencimentos.
+   Logica intacta; so o visual passou ao padrao Genesis. */
+const MZN = (c) => `MZN ${(Number(c || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const TONE = { overdue: 'danger', paid: 'ok' };
+const LABEL = { overdue: 'VENCIDA', paid: 'PAGA', partially_paid: 'PARCIAL', active: 'ACTIVA' };
 
 export default function Debts() {
+  const toast = useToast();
   const [debts, setDebts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get('/api/owner/debts');
-        setDebts(res.data || []);
-      } catch (e) {
-        console.error('Failed to load debts', e);
-      }
-    };
+  async function load() {
+    setLoading(true);
+    try { const res = await api.get('/api/owner/debts'); setDebts(res.data || []); }
+    catch { toast.push('Nao foi possivel carregar as chenecas.', 'err'); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
 
-    load();
-  }, []);
+  const totals = useMemo(() => ({
+    open: debts.reduce((s, d) => s + Number(d.total_amount || 0) - Number(d.amount_paid || 0), 0),
+    active: debts.filter((d) => d.status !== 'paid').length,
+    overdue: debts.filter((d) => d.status === 'overdue').length,
+  }), [debts]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Chenecas / Fiados</h2>
-        <p className="text-sm text-slate-600">Acompanhe dívidas, pagamentos e vencimentos da loja.</p>
+    <div className="g-page">
+      <PageHead title="Chenecas / Fiados" sub="Dividas, pagamentos e vencimentos da loja"
+        actions={<Button variant="ghost" onClick={load}>Atualizar</Button>} />
+      <div className="g-kpis" style={{ marginBottom: 24 }}>
+        <Card tight><div className="g-stat"><span className="g-stat-label">Total em divida</span><span className="g-stat-value" style={{ color: 'var(--danger)' }}>{MZN(totals.open)}</span></div></Card>
+        <Card tight><div className="g-stat"><span className="g-stat-label">Activas</span><span className="g-stat-value">{totals.active}</span></div></Card>
+        <Card tight><div className="g-stat"><span className="g-stat-label">Vencidas</span><span className="g-stat-value" style={{ color: 'var(--warn)' }}>{totals.overdue}</span></div></Card>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Total em dívida</div>
-          <div className="mt-2 text-2xl font-black text-slate-900">{formatMoney(debts.reduce((sum, debt) => sum + Number(debt.total_amount || 0) - Number(debt.amount_paid || 0), 0))}</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Ativas</div>
-          <div className="mt-2 text-2xl font-black text-blue-600">{debts.filter((d) => d.status !== 'paid').length}</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Vencidas</div>
-          <div className="mt-2 text-2xl font-black text-red-600">{debts.filter((d) => d.status === 'overdue').length}</div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-slate-100 text-left">
-              <th className="p-2">Devedor</th>
-              <th className="p-2">Total</th>
-              <th className="p-2">Pago</th>
-              <th className="p-2">Saldo</th>
-              <th className="p-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {debts.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="p-4 text-slate-500">Sem dados de chenecas registadas.</td>
-              </tr>
-            ) : (
-              debts.map((debt) => (
-                <tr key={debt.id} className="border-t">
-                  <td className="p-2">{debt.debtor_name || '—'}</td>
-                  <td className="p-2">{formatMoney(debt.total_amount || 0)}</td>
-                  <td className="p-2">{formatMoney(debt.amount_paid || 0)}</td>
-                  <td className="p-2 font-bold">{formatMoney((Number(debt.total_amount || 0) - Number(debt.amount_paid || 0)))}</td>
-                  <td className="p-2">
-                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${debt.status === 'overdue' ? 'bg-red-100 text-red-700' : debt.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {debt.status || 'active'}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Card tight>
+        <div style={{ padding: '14px 16px 0' }}><CardHead title="Dividas registadas" /></div>
+        {loading ? <div style={{ padding: 16 }}><Skeleton height={180} /></div> : (
+          <Table rowKey={(r) => r.id} rows={debts}
+            empty={<EmptyState icon="📒" title="Sem chenecas" hint="Quando houver fiados, aparecem aqui." />}
+            columns={[
+              { key: 'debtor_name', label: 'Devedor', render: (r) => r.debtor_name || '—' },
+              { key: 'total_amount', label: 'Total', align: 'right', numeric: true, render: (r) => MZN(r.total_amount) },
+              { key: 'amount_paid', label: 'Pago', align: 'right', numeric: true, render: (r) => MZN(r.amount_paid) },
+              { key: 'saldo', label: 'Saldo', align: 'right', numeric: true, render: (r) => (<strong>{MZN(Number(r.total_amount || 0) - Number(r.amount_paid || 0))}</strong>) },
+              { key: 'status', label: 'Estado', render: (r) => <Badge tone={TONE[r.status] || 'info'}>{LABEL[r.status] || (r.status || 'ACTIVA').toUpperCase()}</Badge> },
+            ]} />
+        )}
+      </Card>
+      <div style={{ height: 28 }} />
     </div>
   );
 }

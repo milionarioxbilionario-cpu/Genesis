@@ -1,85 +1,84 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../utils/api';
+import { mznToCents } from '../../utils/money';
+import { Card, CardHead, Button, Input, PageHead, GoalBar, EmptyState, Skeleton, useToast } from '../../components/ui';
 
-const formatMoney = (value) => `MZN ${(Number(value || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/* METAS DO MES — le a meta REAL de /api/owner/goals/current (antes era um
+   valor fixo falso de 200000). Permite definir/actualizar a meta do mes. */
+const MZN = (c) => `MZN ${(Number(c || 0) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Goals() {
+  const toast = useToast();
   const [summary, setSummary] = useState(null);
-  const [goal, setGoal] = useState({ target: 200000, current: 0, projected: 0 });
+  const [goal, setGoal] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [targetInput, setTargetInput] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get('/api/dashboard/summary');
-        setSummary(res.data || {});
-      } catch (e) {
-        console.error('Failed to load dashboard summary', e);
-      }
-    };
+  async function load() {
+    setLoading(true);
+    const safe = (p) => p.then((r) => r.data).catch(() => null);
+    const [s, g] = await Promise.all([safe(api.get('/api/dashboard/summary')), safe(api.get('/api/owner/goals/current'))]);
+    setSummary(s || {});
+    setGoal(g || null);
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
 
-    load();
-  }, []);
+  const current = Number(summary?.revenueMonth || 0);
+  const target = Number(goal?.target_amount || 0);
+  const pct = target > 0 ? (current / target) * 100 : 0;
+  const daysLeft = useMemo(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate(); }, []);
+  const projected = useMemo(() => { const n = new Date(); const elapsed = Math.max(1, n.getDate()); return (current / elapsed) * new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate(); }, [current]);
 
-  const currentMonthRevenue = Number(summary?.revenueMonth || 0);
-  const target = Number(goal.target || 0);
-  const current = currentMonthRevenue;
-  const percent = target > 0 ? Math.min(100, (current / target) * 100) : 0;
-  const projected = current + Number(goal.projected || 0);
-
-  const indicator = useMemo(() => {
-    if (percent < 20) return 'from-red-500 to-red-600';
-    if (percent < 50) return 'from-orange-500 to-orange-600';
-    if (percent < 80) return 'from-yellow-400 to-yellow-500';
-    if (percent < 100) return 'from-lime-500 to-green-500';
-    return 'from-green-500 to-emerald-600';
-  }, [percent]);
+  async function save(e) {
+    e.preventDefault();
+    const cents = mznToCents(targetInput);
+    if (!cents || cents <= 0) { toast.push('Indica um valor de meta valido em MZN.', 'warn'); return; }
+    setSaving(true);
+    try {
+      await api.post('/api/owner/goals', { target_amount: cents });
+      toast.push('Meta do mes guardada.', 'ok');
+      setTargetInput('');
+      await load();
+    } catch (err) { toast.push(err?.response?.data?.error || 'Nao foi possivel guardar a meta.', 'err'); }
+    finally { setSaving(false); }
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Metas do mês</h2>
-        <p className="text-sm text-slate-600">Acompanhe o progresso da loja e a projeção final do mês.</p>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <div className="text-sm text-slate-500">Meta atual</div>
-            <div className="text-2xl font-black text-slate-900">{formatMoney(target)}</div>
+    <div className="g-page">
+      <PageHead title="Metas do mes" sub="Progresso da loja e projeccao de fecho"
+        actions={<Button variant="ghost" onClick={load}>Atualizar</Button>} />
+      {loading ? <Card><Skeleton height={180} /></Card> : !target ? (
+        <Card>
+          <CardHead title="Sem meta definida" hint="Define a meta de receita deste mes" />
+          <form onSubmit={save} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 220, flex: 1 }}><Input label="Meta do mes (MZN)" type="number" step="0.01" min="0" value={targetInput} onChange={(e) => setTargetInput(e.target.value)} placeholder="Ex: 150000" required /></div>
+            <Button variant="primary" type="submit" disabled={saving}>{saving ? 'A guardar...' : 'Definir meta'}</Button>
+          </form>
+        </Card>
+      ) : (
+        <>
+          <div className="g-kpis" style={{ marginBottom: 24 }}>
+            <Card tight><div className="g-stat"><span className="g-stat-label">Meta</span><span className="g-stat-value">{MZN(target)}</span></div></Card>
+            <Card tight><div className="g-stat"><span className="g-stat-label">Receita actual</span><span className="g-stat-value" style={{ color: 'var(--ok)' }}>{MZN(current)}</span></div></Card>
+            <Card tight><div className="g-stat"><span className="g-stat-label">Projeccao</span><span className="g-stat-value" style={{ color: 'var(--info)' }}>{MZN(Math.round(projected))}</span></div></Card>
+            <Card tight><div className="g-stat"><span className="g-stat-label">Estado</span><span className="g-stat-value" style={{ color: pct >= 100 ? 'var(--ok)' : 'var(--warn)' }}>{pct >= 100 ? 'ATINGIDA' : 'EM PROGRESSO'}</span></div></Card>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-slate-500">Projeção</div>
-            <div className="text-xl font-bold text-sky-600">{formatMoney(projected)}</div>
-          </div>
-        </div>
-
-        <div className="relative h-8 overflow-hidden rounded-full bg-slate-200">
-          <div className={`h-full bg-gradient-to-r ${indicator} transition-all duration-700`} style={{ width: `${percent}%` }} />
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white drop-shadow-sm">
-            {percent.toFixed(1)}%
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-          <span>Atual: {formatMoney(current)}</span>
-          <span>Falta: {formatMoney(Math.max(target - current, 0))}</span>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Meta</div>
-          <div className="mt-2 text-xl font-bold">{formatMoney(target)}</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Receita atual</div>
-          <div className="mt-2 text-xl font-bold text-emerald-600">{formatMoney(current)}</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-slate-500">Status</div>
-          <div className="mt-2 text-xl font-bold text-sky-600">{percent >= 100 ? 'Atingida' : 'Em progresso'}</div>
-        </div>
-      </div>
+          <Card style={{ marginBottom: 24 }}>
+            <CardHead title="Progresso" hint={daysLeft > 0 ? `Faltam ${daysLeft} dias para o fim do mes` : 'Ultimo dia do mes'} />
+            <GoalBar pct={pct} label="Receita vs meta" caption={`Actual ${MZN(current)} de ${MZN(target)} · falta ${MZN(Math.max(target - current, 0))}`} />
+          </Card>
+          <Card>
+            <CardHead title="Actualizar meta" hint="Substitui a meta do mes corrente" />
+            <form onSubmit={save} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 220, flex: 1 }}><Input label="Nova meta (MZN)" type="number" step="0.01" min="0" value={targetInput} onChange={(e) => setTargetInput(e.target.value)} placeholder={String((target / 100).toFixed(2))} required /></div>
+              <Button variant="primary" type="submit" disabled={saving}>{saving ? 'A guardar...' : 'Actualizar meta'}</Button>
+            </form>
+          </Card>
+        </>
+      )}
+      <div style={{ height: 28 }} />
     </div>
   );
 }

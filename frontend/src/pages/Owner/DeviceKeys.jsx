@@ -1,100 +1,102 @@
 import React, { useEffect, useState } from 'react';
+import api from '../../utils/api';
 import db from '../../db/localDb';
+import { Card, CardHead, Button, Badge, Input, PageHead, Table, EmptyState, Skeleton, Modal, Alert, useToast } from '../../components/ui';
+
+/* CHAVES DE DISPOSITIVO — sync offline.
+   CORRECCAO: fala com /api/device-keys (plural, o path montado no backend)
+   via axios (cookies). Antes usava fetch + alert/confirm e falhava em prod. */
+const dt = (v) => (v ? new Date(v).toLocaleString('pt-MZ') : '\u2014');
 
 export default function DeviceKeysPage() {
+  const toast = useToast();
   const [keys, setKeys] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [deviceName, setDeviceName] = useState('');
+  const [issuing, setIssuing] = useState(false);
   const [createdSecret, setCreatedSecret] = useState(null);
+  const [toRevoke, setToRevoke] = useState(null);
+  const [revoking, setRevoking] = useState(false);
 
-  useEffect(() => {
-    fetchKeys();
-  }, []);
+  async function fetchKeys() {
+    setLoading(true);
+    try { const res = await api.get('/api/device-keys'); setKeys(res.data || []); }
+    catch { toast.push('Nao foi possivel carregar as chaves.', 'err'); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { fetchKeys(); }, []);
 
-  const fetchKeys = async () => {
+  const createKey = async (e) => {
+    e?.preventDefault?.();
+    setIssuing(true);
     try {
-      const res = await fetch('/api/device-keys', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setKeys(data);
-      }
-    } catch (e) {
-      console.error('failed to fetch device keys', e);
-    }
+      const body = (await api.post('/api/device-keys', { device_name: deviceName || 'device-' + Date.now() })).data;
+      try { await db.device_keys.put({ id: body.id, device_name: deviceName || 'device', created_at: new Date().toISOString(), secret: body.secret }); } catch {}
+      setCreatedSecret(body.secret);
+      setDeviceName('');
+      toast.push('Chave emitida. Copia o segredo agora — so aparece uma vez.', 'ok');
+      await fetchKeys();
+    } catch (err) { toast.push(err?.response?.data?.error || 'Nao foi possivel emitir a chave.', 'err'); }
+    finally { setIssuing(false); }
   };
 
-  const createKey = async () => {
+  const revokeKey = async () => {
+    if (!toRevoke) return;
+    setRevoking(true);
     try {
-      const res = await fetch('/api/device-keys', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ device_name: deviceName || 'device-' + Date.now() })
-      });
-      if (res.ok) {
-        const body = await res.json();
-        // Save secret locally in IndexedDB for background sync
-        await db.device_keys.put({ id: body.id, device_name: deviceName || 'device', created_at: new Date().toISOString(), secret: body.secret });
-        setCreatedSecret(body.secret);
-        setDeviceName('');
-        fetchKeys();
-      } else {
-        const err = await res.json();
-        alert('Failed to create key: ' + (err && err.error));
-      }
-    } catch (e) {
-      console.error('create key failed', e);
-    }
+      await api.post(`/api/device-keys/${toRevoke.id}/revoke`);
+      try { await db.device_keys.delete(toRevoke.id); } catch {}
+      toast.push('Chave revogada.', 'ok');
+      setToRevoke(null);
+      await fetchKeys();
+    } catch (err) { toast.push(err?.response?.data?.error || 'Nao foi possivel revogar.', 'err'); }
+    finally { setRevoking(false); }
   };
 
-  const revokeKey = async (id) => {
-    if (!confirm('Revoke this device key?')) return;
-    try {
-      const res = await fetch(`/api/device-keys/${id}/revoke`, { method: 'POST', credentials: 'include' });
-      if (res.ok) {
-        // remove local copy if present
-        try { await db.device_keys.delete(id); } catch (e) {}
-        fetchKeys();
-      } else {
-        const err = await res.json();
-        alert('Failed to revoke: ' + (err && err.error));
-      }
-    } catch (e) {
-      console.error('revoke failed', e);
-    }
-  };
+  const active = keys.filter((k) => !k.revoked_at).length;
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Device Keys (Offline Sync)</h2>
-
-      <div className="mb-4">
-        <input placeholder="Device name" value={deviceName} onChange={e => setDeviceName(e.target.value)} className="border p-2 mr-2" />
-        <button onClick={createKey} className="bg-blue-600 text-white px-3 py-1 rounded">Issue Key</button>
+    <div className="g-page">
+      <PageHead title="Chaves de Dispositivo" sub="Sync offline do balcao — emite e revoga chaves"
+        actions={<Button variant="ghost" onClick={fetchKeys}>Atualizar</Button>} />
+      <div className="g-kpis" style={{ marginBottom: 24 }}>
+        <Card tight><div className="g-stat"><span className="g-stat-label">Chaves</span><span className="g-stat-value">{keys.length}</span></div></Card>
+        <Card tight><div className="g-stat"><span className="g-stat-label">Activas</span><span className="g-stat-value" style={{ color: 'var(--ok)' }}>{active}</span></div></Card>
       </div>
-
-      {createdSecret && (
-        <div className="mb-4 p-3 bg-yellow-50 border">
-          <p className="font-medium">New device key (shown once) — copy and store safely:</p>
-          <code className="block break-all p-2 bg-white border mt-2">{createdSecret}</code>
-        </div>
-      )}
-
-      <table className="w-full text-left">
-        <thead>
-          <tr><th>Device</th><th>Created</th><th>Last used</th><th>Revoked</th><th></th></tr>
-        </thead>
-        <tbody>
-          {keys.map(k => (
-            <tr key={k.id}>
-              <td>{k.device_name}</td>
-              <td>{k.created_at ? new Date(k.created_at).toLocaleString() : '-'}</td>
-              <td>{k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '-'}</td>
-              <td>{k.revoked_at ? new Date(k.revoked_at).toLocaleString() : '-'}</td>
-              <td><button onClick={() => revokeKey(k.id)} className="text-red-600">Revoke</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Card style={{ marginBottom: 24 }}>
+        <CardHead title="Emitir chave" hint="O segredo aparece uma unica vez" />
+        <form onSubmit={createKey} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 240, flex: 1 }}><Input label="Nome do dispositivo" placeholder="Ex: balcao-01" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} /></div>
+          <Button variant="primary" type="submit" disabled={issuing}>{issuing ? 'A emitir...' : 'Emitir chave'}</Button>
+        </form>
+        {createdSecret && (
+          <div style={{ marginTop: 16 }}>
+            <Alert tone="warn" icon="\u{1F511}">Copia o segredo agora — nao volta a aparecer.
+              <code style={{ display: 'block', marginTop: 8, wordBreak: 'break-all', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 10 }}>{createdSecret}</code>
+            </Alert>
+          </div>
+        )}
+      </Card>
+      <Card tight>
+        <div style={{ padding: '14px 16px 0' }}><CardHead title="Chaves registadas" /></div>
+        {loading ? <div style={{ padding: 16 }}><Skeleton height={160} /></div> : (
+          <Table rowKey={(r) => r.id} rows={keys}
+            empty={<EmptyState icon="\u{1F511}" title="Sem chaves" hint="Emite a primeira chave para o dispositivo do balcao." />}
+            columns={[
+              { key: 'device_name', label: 'Dispositivo', render: (r) => (<strong>{r.device_name}</strong>) },
+              { key: 'created_at', label: 'Criada', render: (r) => dt(r.created_at) },
+              { key: 'last_used_at', label: 'Ultimo uso', render: (r) => dt(r.last_used_at) },
+              { key: 'revoked_at', label: 'Estado', render: (r) => <Badge tone={r.revoked_at ? 'neutral' : 'ok'}>{r.revoked_at ? 'REVOGADA' : 'ACTIVA'}</Badge> },
+              { key: 'actions', label: '', align: 'right', render: (r) => (r.revoked_at ? <span style={{ color: 'var(--text-dim)' }}>—</span> : <Button variant="danger" small onClick={() => setToRevoke(r)}>Revogar</Button>) },
+            ]} />
+        )}
+      </Card>
+      <Modal open={Boolean(toRevoke)} title="Revogar chave" hint="O dispositivo deixa de sincronizar de imediato."
+        onClose={() => setToRevoke(null)} width={460}
+        footer={<><Button variant="ghost" onClick={() => setToRevoke(null)}>Cancelar</Button><Button variant="danger" onClick={revokeKey} disabled={revoking}>{revoking ? 'A revogar...' : 'Sim, revogar'}</Button></>}>
+        <p style={{ color: 'var(--text-muted)', margin: 0 }}>Revogar a chave de <strong style={{ color: 'var(--text)' }}>{toRevoke?.device_name}</strong>?</p>
+      </Modal>
+      <div style={{ height: 28 }} />
     </div>
   );
 }
