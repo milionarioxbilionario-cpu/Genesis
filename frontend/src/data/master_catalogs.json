@@ -1,0 +1,15 @@
+{
+  "templates": [
+    {
+      "id": "mercearia-default",
+      "name": "Mercearia - Básico",
+      "businessType": "mercearia",
+      "categories": ["Bebidas","Mercearia","Higiene","Frios"],
+      "sampleProducts": [
+        { "name": "Cerveja 500ml", "sku": "CVR-500", "price_mzn": 65.00, "cost_mzn": 40.00, "stock": 100 },
+        { "name": "Água 500ml", "sku": "AG-500", "price_mzn": 25.00, "cost_mzn": 12.00, "stock": 200 },
+        { "name": "Coca-Cola 330ml", "sku": "CC-330", "price_mzn": 35.00, "cost_mzn": 20.00, "stock": 150 }
+      ]
+    }
+  ]
+}

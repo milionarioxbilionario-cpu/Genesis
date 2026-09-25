@@ -1,0 +1,23 @@
+﻿linhas=153
+132:   );
+133: }
+134: 
+135: export function Select({ label, hint, children, className = '', ...rest }) {
+136:   return (
+137:     <label className="g-field">
+138:       {label && <span className="g-label">{label}</span>}
+139:       <select className={'g-select ' + className} {...rest}>{children}</select>
+140:       {hint && <span className="g-help">{hint}</span>}
+141:     </label>
+142:   );
+143: }
+144: 
+145: export function Field({ label, hint, children }) {
+146:   return (
+147:     <label className="g-field">
+148:       {label && <span className="g-label">{label}</span>}
+149:       {children}
+150:       {hint && <span className="g-help">{hint}</span>}
+151:     </label>
+152:   );
+153: }

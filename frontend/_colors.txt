@@ -1,0 +1,10 @@
+=== src\pages\RequestAccount.jsx ===
+text-sm x11 | text-[#dfe7ef] x9 | bg-[#182332] x8 | border-[#30455f] x8 | focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)] x8 | focus:border-[#7aa5d6] x8 | text-[#f4f7fb] x8 | hover:bg-[#eef4fb] x2 | bg-[#0a1220] x2 | text-[#111c2b] x2 | bg-[#111c2b]/95 x2 | text-center x2 | text-[#edf2f7] x2 | border-[#263548] x2 | text-[#b2bdcb] x2 | bg-[#dfe7ef] x2 | shadow-[0_25px_80px_rgba(2,6,23,0.7)] x2 | text-[#f2f6fb] x2 | text-[#bfd1e6] x1 | hover:text-[#edf2f7] x1 | text-red x1 | border-red x1 | bg-red x1
+=== src\pages\ResetPassword.jsx ===
+text-base x5 | text-sm x5 | text-[#dfe7ef] x4 | focus:border-[#7aa5d6] x3 | text-[#f4f7fb] x3 | border-[#30455f] x3 | placeholder:text-[#8ca0b8] x3 | focus:shadow-[0_0_0_3px_rgba(122,165,214,0.18)] x3 | bg-[#182332] x3 | text-[#111c2b] x2 | bg-[#dfe7ef] x2 | hover:bg-[#eef4fb] x2 | text-emerald x1 | to-preenchia x1 | bg-[#111c2b]/95 x1 | shadow-[0_25px_80px_rgba(2,6,23,0.7)] x1 | border-[#263548] x1 | bg-[#0a1220] x1 | text-[#edf2f7] x1 | text-xs x1 | border-emerald x1 | bg-emerald x1 | hover:text-[#edf2f7] x1 | text-[#f2f6fb] x1 | text-[#bfd1e6] x1
+=== src\pages\Hub.jsx ===
+border-color x3 | to-fill x1
+=== src\pages\CashierDashboard.jsx ===
+
+=== src\pages\Owner\Dashboard.jsx ===
+text-muted x5 | text-dim x2 | bg-elev x1 | border-strong x1

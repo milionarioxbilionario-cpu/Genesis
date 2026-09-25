@@ -1,0 +1,373 @@
+const express = require('express');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { z } = require('zod');
+const prisma = require('../utils/prisma');
+const rateLimit = require('express-rate-limit');
+const {
+  generateCode,
+  saveResetCode,
+  verifyResetCode,
+  clearResetCode,
+} = require('../services/passwordResetStore');
+const { sendWhatsAppAlert } = require('../utils/whatsapp');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' }
+});
+
+// O reset de password e publico e nao autenticado: sem limite, (a) qualquer
+// pessoa faz o servidor emitir codigos sem fim e (b) forca o codigo de 6
+// digitos a partir do email de outra pessoa. O login tinha limite, isto nao.
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Demasiados pedidos de recuperação. Tente novamente em 15 minutos.' }
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiadas tentativas de reposição. Tente novamente em 15 minutos.' }
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6)
+});
+
+const requestAccountSchema = z.object({
+  businessName: z.string().min(3),
+  ownerName: z.string().min(3),
+  businessType: z.enum(['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'outro']),
+  location: z.string().min(3),
+  phone: z.string().min(8),
+  email: z.string().email().optional(),
+  nuit: z.string().optional(),
+  idDocument: z.string().optional()
+});
+
+const googleAuthSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2).optional(),
+  avatar: z.string().url().optional().or(z.literal(''))
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email()
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6),
+  password: z.string().min(8)
+});
+
+const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
+
+const signUserToken = (user) => jwt.sign({
+  userId: user.id,
+  tenantId: user.tenant_id,
+  role: user.role,
+  name: user.name
+}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRY });
+
+// Refresh token: longer lived, separate secret
+const signRefreshToken = (user) => jwt.sign({
+  userId: user.id,
+  tenantId: user.tenant_id,
+  role: user.role,
+  name: user.name
+}, process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET + 'refresh'), { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '30d' });
+
+const setAuthCookie = (res, token) => {
+  const cookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+  };
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('token', token, cookieOptions);
+};
+
+const setRefreshCookie = (res, token) => {
+  const cookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000
+  };
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('refreshToken', token, cookieOptions);
+};
+
+router.post('/login', loginLimiter, async (req, res) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(email);
+
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { tenant: true }
+    });
+
+    if (!user || !user.is_active) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    if (user.role !== 'super_admin' && user.tenant && user.tenant.status === 'suspended') {
+      return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
+    }
+
+    const token = signUserToken(user);
+    const refresh = signRefreshToken(user);
+    setAuthCookie(res, token);
+    setRefreshCookie(res, refresh);
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        tenantId: user.tenant_id,
+        email: user.email,
+        tenant: user.tenant ? {
+          id: user.tenant.id,
+          onboarding_completed: Boolean(user.tenant.onboarding_completed)
+        } : null
+      }
+    });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors });
+    }
+    return res.status(500).json({ error: 'Erro interno no servidor' });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { email, name } = googleAuthSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(email);
+
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { tenant: true }
+    });
+
+    if (!user) {
+      const tenant = await prisma.tenant.create({
+        data: {
+          name: `${name || 'Loja'} - Google`,
+          owner_name: name || 'Gestor',
+          business_type: 'mercearia',
+          location: 'Moçambique',
+          phone: '000000000',
+          email: normalizedEmail,
+          status: 'trial',
+          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      });
+
+      const generatedPassword = `${Date.now()}Genesis!`;
+      user = await prisma.user.create({
+        data: {
+          tenant_id: tenant.id,
+          role: 'owner',
+          name: name || 'Gestor',
+          email: normalizedEmail,
+          password_hash: await bcrypt.hash(generatedPassword, 12),
+          phone: '000000000',
+          is_active: true,
+        },
+        include: { tenant: true }
+      });
+
+      console.log('Google signup auto-created', { tenantId: tenant.id, email: normalizedEmail, password: generatedPassword });
+    }
+
+    if (user.role !== 'super_admin' && user.tenant && user.tenant.status === 'suspended') {
+      return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
+    }
+
+    const token = signUserToken(user);
+    setAuthCookie(res, token);
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        tenantId: user.tenant_id,
+        email: user.email,
+        provider: 'google'
+      }
+    });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors });
+    }
+    return res.status(500).json({ error: 'Erro ao iniciar sessão com Google' });
+  }
+});
+
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(email);
+
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+    // Resposta igual exista ou nao a conta: um 404 para emails inexistentes
+    // transforma esta rota publica num oraculo de contas registadas.
+    const genericResponse = {
+      message: 'Se a conta existir, o código de recuperação foi enviado. É válido 15 minutos.'
+    };
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const code = generateCode();
+    saveResetCode(normalizedEmail, code);
+
+    // O codigo nunca sai na resposta HTTP (quem o tem troca a password da conta).
+    // So e entregue por WhatsApp, quando a conta tem telefone e o Twilio esta
+    // configurado. Fora de producao fica no log do servidor para permitir testes.
+    const isProduction = process.env.NODE_ENV === 'production';
+    try {
+      const sent = user.phone
+        ? await sendWhatsAppAlert({
+            to: user.phone,
+            message: `Genesis: codigo de recuperacao ${code}. Valido 15 minutos.`
+          })
+        : { ok: false, skipped: true, reason: 'conta-sem-telefone' };
+
+      if (!sent.ok && !isProduction) {
+        console.info('[reset] Codigo de recuperacao (apenas dev) para', normalizedEmail, code);
+      } else if (!sent.ok) {
+        console.error('[reset] Codigo nao entregue a', normalizedEmail, '-', sent.reason);
+      }
+    } catch (err) {
+      console.error('Falha ao entregar codigo de recuperacao', err.message || err);
+    }
+
+    return res.json(genericResponse);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors });
+    }
+    return res.status(500).json({ error: 'Não foi possível processar a recuperação de senha.' });
+  }
+});
+
+router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
+  try {
+    const { email, code, password } = resetPasswordSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(email);
+
+    // verifyResetCode conta as tentativas falhadas, destroi o codigo ao fim de
+    // MAX_ATTEMPTS e compara o hash em tempo constante.
+    if (!verifyResetCode(normalizedEmail, code)) {
+      return res.status(400).json({ error: 'Código inválido ou expirado.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.user.update({
+      where: { email: normalizedEmail },
+      data: { password_hash: passwordHash }
+    });
+
+    clearResetCode(normalizedEmail);
+    return res.json({ message: 'Senha redefinida com sucesso.' });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors });
+    }
+    return res.status(500).json({ error: 'Não foi possível redefinir a senha.' });
+  }
+});
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  return res.json({ message: 'Sessão encerrada.' });
+});
+
+// Simple endpoint to validate current session and return user info
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.cookies && req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Não autenticado' });
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true }
+    });
+    if (!user || !user.is_active) return res.status(401).json({ error: 'Conta inactiva ou não encontrada' });
+    if (user.tenant_id) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: user.tenant_id },
+        // name/location servem o recibo do POS (nome e local da loja). NUNCA
+        // devolver aqui cancel_pin_hash nem dados sensiveis do dono.
+        select: { status: true, name: true, location: true }
+      });
+      if (tenant?.status === 'suspended') return res.status(401).json({ error: 'Conta suspensa. Contacte o suporte.' });
+      return res.json({
+        user: {
+          ...user,
+          tenant: tenant ? { name: tenant.name, location: tenant.location } : null,
+        },
+      });
+    }
+
+    return res.json({ user });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+router.post('/request-account', async (req, res) => {
+  try {
+    const data = requestAccountSchema.parse(req.body);
+
+    const created = await prisma.tenant.create({
+      data: {
+        name: data.businessName,
+        owner_name: data.ownerName,
+        business_type: data.businessType,
+        location: data.location,
+        phone: data.phone,
+        email: data.email,
+        nuit: data.nuit,
+        id_document: data.idDocument,
+        status: 'pending'
+      }
+    });
+
+    console.log('Novo pedido de conta recebido:', { tenantId: created.id, name: created.name, owner: created.owner_name, phone: created.phone, email: created.email });
+
+    return res.status(201).json({ message: 'Pedido recebido. Entraremos em contacto em até 48 horas.' });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors });
+    }
+    return res.status(500).json({ error: 'Erro ao processar pedido' });
+  }
+});
+
+module.exports = router;

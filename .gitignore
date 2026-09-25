@@ -1,0 +1,51 @@
+# Ambiente e credenciais (MUITO IMPORTANTE)
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+
+# Dependências e builds
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+admin-frontend/node_modules/
+dist/
+build/
+.next/
+out/
+
+# Logs (nunca versionar: podem conter credenciais em texto claro)
+*.log
+logs/
+
+# Bases de dados locais (nunca versionar: contêm hashes de passwords)
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+backend/prisma/dev.db
+prisma/dev.db
+
+# Arquivos e dumps de ficheiros
+*.zip
+Desktop.zip
+
+# Ficheiros do sistema operativo / IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Ferramentas / cache
+.npm
+.eslintcache
+.aider*
+
+# Ficheiros temporários de editores (podem conter segredos não guardados)
+*.swp
+*.swo
+*.swx
+*.orig
+*.rej

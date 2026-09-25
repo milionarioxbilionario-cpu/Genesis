@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "lovable": {
+      "type": "http",
+      "url": "https://mcp.lovable.dev/?src=settings"
+    }
+  },
+  "system_reminder": {
+    "sql_tables": ["todos", "todo_deps", "inbox_entries"],
+    "todo_status": "Todos: 6 pending (6 total) - Use sql tool to query ready todos and update status as you work."
+  },
+  "raw_system_reminder": "<system_reminder>\n<sql_tables>Available tables: todos, todo_deps, inbox_entries</sql_tables>\n</system_reminder>\n<system_reminder>\n<todo_status>\nTodos: 6 pending (6 total)\nUse sql tool to query ready todos and update status as you work.\n</todo_status>\n</system_reminder>"
+}

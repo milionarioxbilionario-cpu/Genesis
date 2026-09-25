@@ -1,0 +1,33 @@
+{
+  "name": "genesis-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dexie": "^3.2.3",
+    "dompurify": "^2.4.0",
+    "i18next": "^23.0.0",
+    "lucide-react": "^1.48.0",
+    "qrcode": "^1.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^11.18.6",
+    "react-router-dom": "^6.14.1",
+    "recharts": "^2.4.0",
+    "tailwindcss": "^3.4.0",
+    "vite-plugin-pwa": "^0.18.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.4.10"
+  }
+}

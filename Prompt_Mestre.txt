@@ -1,0 +1,2198 @@
+================================================================================
+PROMPT MESTRE UNIFICADO — PROJECTO GENESIS
+(anteriormente "Gestão Inteligente MZ" / "LucroCerto" — nomes descontinuados)
+Documento de Handoff Completo para Agente de IA de Desenvolvimento
+Consolidado a partir de: Plano de Produto original (PDF, Ago/2025) + Prompt Mestre
+de Handoff (Setembro/2026) + Plano_a_Executar.md (análise crítica pós-auditoria de
+repositório) + notas de progresso do fundador.
+Versão consolidada: Setembro 2026
+================================================================================
+
+--------------------------------------------------------------------------------
+SECÇÃO 0 — LEIA ISTO PRIMEIRO: COMO USAR ESTE DOCUMENTO
+--------------------------------------------------------------------------------
+
+Tu (agente de IA — Claude Code, Copilot, Cursor, ou outro) estás a entrar num
+projecto JÁ EM CURSO, não a começar do zero. Este documento é a fonte única de
+verdade sobre: o que este projecto é, qual é o objectivo final, o que já foi
+construído, o que está confirmado como correcto, o que está confirmado como
+problema/bug, o que falta fazer, e a ordem exacta em que deves trabalhar.
+
+Este documento existe porque, neste projecto, já aconteceu, com múltiplos
+agentes de IA diferentes:
+- Reportar "pronto para produção" sem qualquer prova.
+- Reintroduzir bugs que já tinham sido corrigidos noutro ficheiro.
+- Deixar dois ficheiros `App.jsx` com comportamentos de segurança opostos a
+  coexistir no mesmo repositório sem ninguém dar por isso.
+- Confundir-se entre nomes de produto diferentes de versões antigas do mesmo
+  plano ("Gestão Inteligente MZ", "LucroCerto", "Genesis").
+- Assumir que uma funcionalidade "deve estar a funcionar porque o código
+  parece correcto", sem correr nada.
+
+A TUA PRIMEIRA ACÇÃO, sem excepção, antes de tocares em qualquer ficheiro de
+código:
+1. Verifica se existe o directório `Mapa Mental/` na raiz do repositório
+   (o agente de IA corre localmente, neste mesmo directório do projecto).
+2. Se existir, lê `Mapa Mental/Mapa_Mental.md` na íntegra.
+3. Se NÃO existir, cria o directório e o ficheiro agora, usando a SECÇÃO 12
+   (Estado Real Verificado) deste documento como conteúdo inicial — é a
+   auditoria mais recente e verificada que existe.
+4. Só depois de leres o estado actual real é que decides o que fazer a seguir.
+5. Confirma que leste este documento inteiro antes de escrever qualquer linha
+   de código.
+
+⚠️ ATENÇÃO — CONTRADIÇÃO A RESOLVER ANTES DE COMEÇAR:
+No fim deste documento (ver SECÇÃO 23) existe uma instrução do fundador a
+pedir para "fazer tudo em loop, de uma vez só, sem esperar confirmação, sem
+parar a avisar de fase em fase". Esta instrução ENTRA EM CONFLITO DIRECTO com
+a REGRA 1 da SECÇÃO 8 deste mesmo documento, escrita pelo próprio fundador
+em sessão anterior, que diz explicitamente para NUNCA aceitar esse tipo de
+instrução como licença para saltar paragens obrigatórias. A REGRA 1 é
+explícita: se o fundador pedir "bypass all, não pares", o agente deve
+relembrá-lo gentilmente de que a regra existe para o proteger, e propor
+checkpoints curtos em vez de silêncio total. Este documento não resolve essa
+contradição por ti — regista-a ao fundador antes de decidires como proceder,
+citando ambas as instruções, e propõe o meio-termo definido na própria
+REGRA 1 (checkpoints a cada mini-meta, em vez de parar por completo ou
+avançar tudo às cegas).
+
+--------------------------------------------------------------------------------
+SECÇÃO 1 — IDENTIDADE DO PROJECTO
+--------------------------------------------------------------------------------
+
+- Nome oficial e definitivo do produto: GENESIS.
+  NÃO uses "LucroCerto" nem "GESTÃO INTELIGENTE MZ" — são nomes de versões
+  anteriores deste mesmo plano de produto. Se encontrares qualquer referência
+  a esses nomes no código, comentários, PDFs de recibos gerados, strings de
+  UI, nomes de ficheiros exportados, etc., é resíduo a corrigir, não uma
+  indicação de que o produto se chama outra coisa. Fazer `grep -ri
+  "lucrocerto\|gestao inteligente\|gestão inteligente"` em todo o repositório
+  e substituir por "Genesis"/"genesis" é uma tarefa obrigatória (ver Fase 0-A).
+
+- Tipo de produto: Plataforma SaaS (Software as a Service) multi-tenant de
+  gestão comercial, acessível via browser, tablet e smartphone.
+
+- Mercado-alvo: Pequenos e médios comerciantes de Moçambique — bottle
+  stores/lojas de bebidas, mercearias e contentores (incluindo comerciantes
+  nigerianos e locais), padarias, talhos, pequenos supermercados,
+  restaurantes/churrasqueiras, boutiques, e (fase posterior, versão
+  simplificada) vendedores de legumes e frutas.
+
+- Repositório: github.com/milionarioxbilionario-cpu/Genesis
+
+- Moeda do produto: Metical moçambicano (MZN).
+  REGRA CRÍTICA E JÁ VIOLADA PELO MENOS DUAS VEZES NESTE PROJECTO: todos os
+  valores monetários são armazenados e calculados internamente em CENTAVOS
+  (números inteiros), NUNCA em floats/doubles. Exemplo: 150.50 MZN é
+  armazenado como 15050. A divisão por 100 só acontece na apresentação ao
+  utilizador. Tratar esta regra como crítica em todo o código, sempre.
+
+- Idiomas da interface: Português (padrão) e Inglês, com suporte visual por
+  ícones universais para que o utilizador não precise de ler para operar o
+  sistema.
+
+--------------------------------------------------------------------------------
+SECÇÃO 2 — VISÃO GERAL DO PRODUTO: O PROBLEMA E A SOLUÇÃO
+--------------------------------------------------------------------------------
+
+### 2.1 O problema real que este software resolve
+
+A maioria dos comerciantes moçambicanos — desde vendedores de mercado no
+Xipamanine, donos de bottle stores no Alambazine, padarias, talhos,
+contentores e pequenos supermercados — gere o seu negócio de forma manual:
+caderno, papel e cálculo à mão.
+
+Problemas reais e documentados que isso causa:
+- Erros de cálculo no fecho do dia, gerando falsa percepção de lucro ou
+  prejuízo.
+- Impossibilidade de o dono saber o que realmente lucrou depois de deduzir
+  restock, salários, renda e custos de transporte.
+- Roubos por parte de atendentes que o dono não consegue detectar sem
+  auditoria manual.
+- Quebras de stock não antecipadas — o dono fica sem produto popular sem
+  aviso prévio.
+- Dívidas ("chenecas") não cobradas porque não há sistema de rastreamento e
+  lembretes.
+- Os softwares existentes (Dardo, PHC, equivalentes chineses) têm interface
+  em língua estrangeira, são caros, complexos de usar e não estão adaptados
+  à realidade do mercado moçambicano.
+
+### 2.2 A solução
+
+Um sistema SaaS de gestão comercial, acessível via browser (web), tablet e
+smartphone, desenhado especificamente para o mercado moçambicano. Preço
+acessível por subscrição mensal. Funciona OFFLINE com sincronização
+automática quando há rede — isto não é um extra, é o esqueleto do sistema,
+porque Moçambique tem rede instável.
+
+### 2.3 Modelo de negócio
+
+- Tipo: SaaS, subscrição mensal.
+- Preço base: 3.000 MZN/mês por cliente.
+- Período de teste: 30 dias gratuitos por novo cliente.
+- Aquisição: vendas presenciais porta-a-porta por parceiro comercial —
+  demonstração de 5 minutos no local com dados reais do tipo de negócio do
+  prospecto; instalação, configuração e treino feitos no local pelo parceiro
+  durante o trial; ligação pessoal no fim do trial para converter a
+  pagamento; incentivo de 1 mês grátis por cada referência de boca-a-boca que
+  converta.
+- Metas de receita (referência do plano original, ajustar conforme
+  necessário):
+  - Conservadora: 34 clientes pagantes = 102.000 MZN/mês (meta Dez/2025).
+  - Intermédia: 84 clientes pagantes = 252.000 MZN/mês.
+  - Ambiciosa: 167 clientes pagantes = 501.000 MZN/mês.
+
+### 2.4 Público-alvo, por prioridade, e a dor principal de cada um
+
+1. Bottle stores e lojas de bebidas — maior dor: controlo de stock de
+   bebidas, turnos de caixistas, chenecas.
+2. Mercearias e contentores (comerciantes nigerianos e locais) — maior dor:
+   volume de produtos variado, cálculo de margens, pagamentos de
+   fornecedores.
+3. Padarias — maior dor: controlo de produção vs vendas, validades, salários
+   de funcionários.
+4. Talhos — maior dor: controlo de peso, quebras, validades.
+5. Pequenos supermercados — maior dor: múltiplos caixistas, relatórios
+   consolidados, stock de centenas de produtos.
+6. Vendedores de legumes e frutas — versão simplificada, fase posterior.
+
+--------------------------------------------------------------------------------
+SECÇÃO 3 — OBJECTIVO GERAL, FOCO E O QUE SE PRETENDE ALCANÇAR
+--------------------------------------------------------------------------------
+
+O objectivo final não é "ter um sistema com muitas funcionalidades". É ter
+um sistema que:
+
+1. Processa dinheiro real de comerciantes reais sem erros de cálculo — isto
+   não é um protótipo académico. Um bug de cálculo, um vazamento de dados
+   entre clientes (tenants), ou uma venda offline perdida representa
+   prejuízo financeiro real para uma pessoa real que confiou no produto.
+   Cada decisão técnica deve ser tratada com esse peso.
+2. Mostra ao dono do negócio, pela primeira vez na vida dele, o que ele
+   REALMENTE lucrou depois de todas as deduções (restock, salários, renda,
+   fornecedores) — esta é a proposta de valor central e diferenciadora do
+   produto. O relatório mensal com lucro líquido real é a peça mais
+   importante de todo o sistema.
+3. Funciona sem internet e sincroniza sozinho quando a rede volta —
+   porque a rede em Moçambique é instável e o negócio não pode parar por
+   causa disso.
+4. É simples o suficiente para um comerciante sem literacia digital
+   avançada usar em minutos — ícones universais, poucos cliques, cores
+   intuitivas.
+5. Nunca deixa um tenant (cliente) ver dados de outro tenant, em nenhuma
+   circunstância, mesmo que haja um erro de código na aplicação — a
+   segurança de isolamento é a fundação, não uma camada adicionada depois.
+6. Resolve a dor específica das chenecas (fiados/dívidas), que é uma dor
+   quase universal e não digitalizada no comércio informal moçambicano, com
+   lembretes automáticos por WhatsApp.
+
+O foco imediato, por ordem de prioridade real (não a ordem "bonita" de um
+roadmap genérico, mas a ordem que protege o negócio primeiro):
+1. Corrigir bugs críticos existentes que corrompem dados reais ou abrem
+   falhas de segurança (dinheiro errado, rotas sem protecção, admin exposto).
+2. Garantir que o primeiro contacto do cliente com o produto (onboarding)
+   funciona sem fricção e sem bugs de moeda.
+3. Entregar a proposta de valor central: relatórios com lucro líquido real
+   correctos.
+4. Entregar o diferencial único: módulo de chenecas com WhatsApp.
+5. Só depois: polimento, refactorização de arquitectura, funcionalidades
+   secundárias.
+
+Como alcançar isto: NÃO é construindo tudo de uma vez. É construindo módulo
+a módulo, cada um testado isoladamente com prova real antes de ligar ao
+seguinte — ver SECÇÃO 8 (Regras Invioláveis) e SECÇÃO 16 (Roadmap por
+Fases) para o "como" passo a passo.
+
+A analogia correcta (do plano original): estás a construir um carro. O motor
+vem primeiro. Cada peça é construída e testada separadamente. Só no final se
+monta o carro completo e se testa o conjunto. Nunca o contrário.
+
+--------------------------------------------------------------------------------
+SECÇÃO 4 — DIVISÃO DE PAPÉIS / HIERARQUIA DE UTILIZADORES (3 NÍVEIS)
+--------------------------------------------------------------------------------
+
+Esta é a definição DEFINITIVA, incluindo clarificações do fundador que
+corrigem ambiguidades do plano original em PDF. Cada nível só vê botões e
+opções que fazem sentido para o seu papel — nada de menus misturados.
+
+### 4.1 — Nível 1: Super Admin (o fundador)
+
+- Acesso: painel FISICAMENTE SEPARADO do frontend principal — projecto React
+  distinto (`admin-frontend/`), servido em subdomínio ou porta diferente
+  (ex: `admin.genesis.co.mz` em produção, porta diferente em desenvolvimento
+  local, ex. 5175). NUNCA partilha o mesmo bundle de frontend que
+  Owners/Cashiers, nem sequer o código deve ser compilado e servido junto,
+  mesmo que as chamadas de API estejam protegidas — o simples facto de o
+  JavaScript de admin estar inspeccionável no browser de um Owner é uma
+  falha de segurança grave.
+- Funções:
+  - Ver todos os clientes (tenants) registados na plataforma.
+  - Aprovar / rejeitar / marcar como "pendente de visita" pedidos de conta
+    novos.
+  - Suspender clientes com pagamento em atraso (a suspensão invalida
+    imediatamente o JWT de todos os utilizadores desse tenant).
+  - Ver métricas globais da plataforma: total de tenants activos, em trial,
+    suspensos; receita mensal total (soma de subscrições); gráfico de
+    crescimento de clientes ao longo do tempo; tenants com maior/menor
+    actividade.
+  - Barra de meta de receita da PLATAFORMA (não de uma loja individual), com
+    comparação mês a mês.
+  - Gerir catálogos pré-definidos (master_catalogs) por tipo de negócio.
+  - Configurar preços de subscrição.
+  - "Entrar" no perfil de um Owner para o ver como suporte (impersonate/
+    drill-down), útil para suporte ao cliente e monitorização — NÃO é um
+    login como esse Owner, é uma vista de leitura/suporte.
+  - Rastreio de quando cada tenant renova (ou não) a subscrição; alertas
+    automáticos quando um trial está a terminar.
+- Segurança de recuperação de conta do Super Admin: BI + data de nascimento
+  + resposta a 3 perguntas de segurança + código enviado por SMS (OTP).
+  Nunca por link simples.
+- O backend deve ter um middleware que verifica o header `Origin`/`Referer`
+  de qualquer pedido a `/api/admin/*` e rejeita com 403 qualquer pedido que
+  não venha do domínio/porta do admin-frontend (ver SECÇÃO 18 para código
+  exacto de `adminOriginCheck.js`).
+
+### 4.2 — Nível 2: Owner (dono do negócio)
+
+- Acesso: um ÚNICO painel de acesso, sem opções de "modo POS" nem "modo
+  super admin" misturadas dentro dele. Criado pelo Super Admin após
+  aprovação do pedido de conta.
+- Dentro do seu painel, o Owner:
+  - Regista e gere caixistas. NÃO faz login "como" caixista — vê os dados
+    deles, não substitui a sessão deles, excepto através de
+    impersonate/histórico de auditoria.
+  - Vê histórico completo de cada venda de cada caixista, com
+    data/hora/minuto/segundo, e pode reimprimir recibos.
+  - Vê dashboards diário, semanal e mensal com: dinheiro feito, stock a
+    repor, notificações de stock (normal <100 unidades, severa ≤20, crítica
+    ≤10), rastreio de qual caixista gerou qual receita.
+  - Recebe resumo diário via WhatsApp no fecho do dia, e resumo semanal aos
+    domingos à 0h (com comparação face à semana anterior, dia mais/menos
+    vendido e o porquê).
+  - Barra de meta mensal com cores progressivas: vermelho <20%, laranja
+    20-50%, amarelo/quase-verde 50-80%, verde 80-100%, e uma barra de bónus
+    AZUL separada acima de 100%.
+  - Quando a subscrição está em atraso/pausada: continua a ver histórico e
+    relatórios já existentes, mas fica bloqueado de acções que gerem NOVO
+    valor ou novos acessos — ex: não pode entrar nas contas dos caixistas,
+    não pode registar nova meta. (Isto é diferente de suspensão total — a
+    suspensão total é decisão do Super Admin.)
+  - Gere produtos, stock, trabalhadores/salários, fornecedores/custos fixos,
+    chenecas, metas, definições (PIN de cancelamento, horário de
+    funcionamento, perfil).
+  - Não pode: alterar o plano de subscrição, ver dados de outros clientes da
+    plataforma, aceder ao painel do Super Admin.
+- Navegação lateral exacta do Owner (nada além disto): Dashboard, Produtos,
+  Stock, Caixistas, Trabalhadores, Fornecedores, Chenecas, Relatórios,
+  Metas, Definições.
+- Requisito de UI: interface visualmente agradável, poucos cliques, cores
+  não agressivas mas com saturação suficiente para leitura rápida (ex:
+  verde/vermelho intuitivos para "boa semana"/"semana fraca" sem precisar de
+  ler números).
+
+### 4.3 — Nível 3: Cashier/Caixista (atendente)
+
+- Acesso: criado EXCLUSIVAMENTE pelo Owner (Nível 2). Login próprio com
+  senha própria, mas SEMPRE associado a esse Owner — não é uma conta
+  solitária/autónoma.
+- Vê APENAS a interface de POS. Nunca relatórios, nunca margens de lucro,
+  nunca dados de outros caixistas.
+- Funções: registar vendas, escanear produtos, calcular troco, imprimir
+  recibos, registar pedidos de produto em falta (demand capture), registar
+  quebras/consumo interno.
+- Não pode: ver relatórios financeiros, ver margens de lucro, cancelar
+  vendas sem PIN do Owner, aceder ao painel do Owner ou do Super Admin.
+
+--------------------------------------------------------------------------------
+SECÇÃO 5 — ARQUITECTURA TÉCNICA
+--------------------------------------------------------------------------------
+
+### 5.1 — Stack tecnológico definitivo (já decidido pelo código existente,
+não é mais uma escolha "OR" como no plano original)
+
+- Backend: Node.js + Express.js + Prisma (ORM, protecção automática contra
+  SQL Injection) sobre PostgreSQL via Supabase.
+- Autenticação: JWT em cookie httpOnly (NUNCA em localStorage), expiração de
+  24 horas, sem renovação automática. Token expirado/inválido = sessão
+  encerrada, força novo login. bcrypt com mínimo de 12 rounds para hash de
+  passwords.
+- Base de dados: PostgreSQL via Supabase. TODAS as tabelas têm coluna
+  `tenant_id`. Row-Level Security (RLS) configurado a nível de base de
+  dados — um cliente NUNCA pode aceder aos dados de outro, mesmo que a
+  query da aplicação falhe ou esteja mal escrita. Regra INVIOLÁVEL.
+- Frontend (Owner/Cashier): React + Vite + Tailwind CSS.
+- Frontend (Super Admin): projecto React SEPARADO (`admin-frontend/`), com
+  o seu próprio `package.json` e `vite.config.js`, build e deploy
+  independentes.
+- Gráficos: Recharts.
+- Offline: Dexie.js (wrapper sobre IndexedDB) para armazenamento local de
+  transacções quando sem internet; PWA via `vite-plugin-pwa` para
+  instalação no smartphone como app nativa, sem precisar de App Store.
+- WhatsApp: Twilio (WhatsApp Business API através da Twilio).
+- Impressão térmica: Web Serial API / Bluetooth Web API para comunicação
+  com impressoras ESC/POS (compatível com impressoras de 58mm e 80mm).
+- Leitor de código de barras: leitores USB que emulam teclado — sem
+  configuração extra, mantendo o cursor sempre no campo de pesquisa de
+  produto no POS.
+- Hosting: VPS (DigitalOcean ou Hetzner, mais barato e controlável que AWS
+  no arranque).
+
+### 5.2 — Multi-tenancy e isolamento de dados
+
+- TODAS as tabelas da base de dados têm coluna `tenant_id` (UUID do
+  cliente).
+- Row-Level Security (RLS) no PostgreSQL: políticas de base de dados que
+  garantem que cada query só retorna dados do tenant correcto, mesmo que a
+  aplicação envie uma query errada.
+- Verificação DUPLA e independente: a aplicação filtra por `tenant_id` E a
+  base de dados aplica RLS. Dois filtros independentes, não um substituto
+  do outro.
+- ATENÇÃO A UM CANTO OBSCURO FREQUENTEMENTE ESQUECIDO: multi-tenancy não é
+  só sobre a base de dados. Se o sistema vier a usar filas (queues) ou
+  cache, cada uma dessas camadas TAMBÉM precisa de isolamento por tenant.
+  O erro clássico de um "AI coder" é focar-se apenas na base de dados e
+  esquecer o resto da infraestrutura — uma cache excelente mas não isolada
+  por tenant faz o Tenant A ver dados em cache do Tenant B. Trata isto como
+  parte da mesma regra de isolamento, sempre que filas/cache forem
+  introduzidas.
+
+### 5.3 — Arquitectura offline-first (obrigatória desde o início, não opcional)
+
+Moçambique tem rede instável. O sistema deve funcionar sem internet e
+sincronizar quando a rede voltar. Esta não é uma funcionalidade a adicionar
+depois — é o esqueleto do sistema, implementado no módulo/fase de fundação.
+
+- Todas as transacções de venda são PRIMEIRO escritas no IndexedDB (via
+  Dexie.js) no browser/dispositivo.
+- Um worker em background tenta sincronizar com o servidor central a cada
+  30 segundos quando há rede disponível.
+- Quando a sincronização ocorre, os registos locais são marcados como
+  "sincronizados" e mantidos como backup local.
+- O utilizador vê sempre um indicador visual no topo da interface: "Online —
+  sincronizado" ou "Offline — X transacções pendentes de sincronização".
+
+### 5.4 — Hierarquia de directórios corrigida (estrutura-alvo)
+
+```
+Genesis/
+├── backend/                        (Node.js + Express + Prisma)
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.js
+│   │   │   ├── product.controller.js
+│   │   │   ├── sale.controller.js
+│   │   │   ├── debt.controller.js
+│   │   │   ├── employee.controller.js
+│   │   │   ├── supplier.controller.js
+│   │   │   ├── report.controller.js
+│   │   │   ├── goal.controller.js
+│   │   │   ├── cashier.controller.js
+│   │   │   └── admin.controller.js
+│   │   ├── middleware/
+│   │   │   ├── auth.js             (verifica JWT, injecta req.user)
+│   │   │   ├── rbac.js             (requireRole)
+│   │   │   ├── tenantContext.js    (SET app.tenant_id para RLS)
+│   │   │   ├── adminOriginCheck.js (rejeita pedidos /api/admin fora do domínio admin)
+│   │   │   ├── rateLimiter.js
+│   │   │   └── errorHandler.js
+│   │   ├── routes/
+│   │   │   ├── auth.routes.js
+│   │   │   ├── owner.routes.js
+│   │   │   ├── cashier.routes.js
+│   │   │   ├── admin.routes.js
+│   │   │   └── public.routes.js
+│   │   ├── services/
+│   │   │   ├── report.service.js   (generateDailyReport/Weekly/Monthly)
+│   │   │   ├── whatsapp.service.js (Twilio)
+│   │   │   ├── notification.service.js
+│   │   │   └── sync.service.js
+│   │   ├── validators/             (schemas Zod para cada endpoint)
+│   │   └── utils/
+│   │       ├── currency.js         (centavos <-> MZN)
+│   │       ├── qrcode.js
+│   │       └── audit.js
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── seed.js                 (master_catalogs por tipo de negócio)
+│   │   └── migrations/
+│   └── scripts/                    (scripts E2E: e2e_test2.js,
+│                                     shift_closing_e2e.js, rls_validation.js)
+│
+├── frontend/                       (React + Vite — Owners e Cashiers)
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Owner/
+│   │   │   │   ├── Dashboard.jsx   (wrapper com navegação lateral)
+│   │   │   │   ├── Products.jsx
+│   │   │   │   ├── Stock.jsx
+│   │   │   │   ├── Suppliers.jsx
+│   │   │   │   ├── Employees.jsx
+│   │   │   │   ├── Cashiers.jsx
+│   │   │   │   ├── Debts.jsx       (Chenecas)
+│   │   │   │   ├── Goals.jsx
+│   │   │   │   ├── Reports/
+│   │   │   │   │   ├── DailyReport.jsx
+│   │   │   │   │   ├── WeeklyReport.jsx
+│   │   │   │   │   └── MonthlyReport.jsx
+│   │   │   │   └── Settings.jsx
+│   │   │   ├── Cashier/
+│   │   │   │   └── POS.jsx
+│   │   │   └── Onboarding/
+│   │   │       └── Wizard.jsx      (5 passos)
+│   │   ├── components/
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── layout/
+│   │   │   │   ├── OwnerLayout.jsx
+│   │   │   │   └── CashierLayout.jsx
+│   │   │   ├── ui/
+│   │   │   │   ├── GoalProgressBar.jsx
+│   │   │   │   ├── OnlineStatusIndicator.jsx
+│   │   │   │   ├── NotificationBell.jsx
+│   │   │   │   └── QRCodeDisplay.jsx
+│   │   │   └── charts/
+│   │   │       ├── RevenueChart.jsx
+│   │   │       ├── TopProductsChart.jsx
+│   │   │       └── PaymentMethodChart.jsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js          (valida token ao carregar)
+│   │   │   ├── useOfflineSync.js
+│   │   │   ├── useSales.js
+│   │   │   └── useNotifications.js
+│   │   ├── store/authStore.js
+│   │   ├── db/localDb.js           (Dexie)
+│   │   └── utils/
+│   │       ├── currency.js         (formatMZN, toWhole, toCents)
+│   │       ├── api.js
+│   │       └── receiptPrinter.js
+│   └── public/
+│
+├── admin-frontend/                 (React SEPARADO — só Super Admin)
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── AdminLogin.jsx      (login separado, branding próprio)
+│   │   │   ├── Dashboard.jsx       (overview global de tenants)
+│   │   │   ├── Requests.jsx        (aprovação de pedidos de conta)
+│   │   │   ├── Tenants.jsx         (lista de todos os clientes)
+│   │   │   └── TenantDetail.jsx    (ver dados de um tenant, modo suporte)
+│   │   └── ...
+│   └── vite.config.js              (build separada, porta/domínio distinto)
+│
+├── Mapa Mental/
+│   └── Mapa_Mental.md              (memória persistente — ver SECÇÃO 10)
+│
+├── docs/
+│   └── [este documento + planos anteriores]
+├── scripts/
+├── run-local.sh                    (inicia backend + frontend + admin-frontend)
+└── .env
+```
+
+--------------------------------------------------------------------------------
+SECÇÃO 6 — FUNCIONALIDADES COMPLETAS DO PRODUTO (ESPECIFICAÇÃO FUNCIONAL
+COMPLETA, do plano de produto original)
+--------------------------------------------------------------------------------
+
+Esta secção é a especificação funcional integral do que o produto deve
+fazer. Nada aqui deve ser inventado ou alterado sem confirmação — se falta
+algo aqui, NÃO IMPLEMENTAR sem perguntar primeiro (ver REGRA 8, SECÇÃO 8).
+
+### 6.1 — Onboarding e gestão de clientes (fluxo completo)
+
+**Passo 1 — Pedido de conta pelo comerciante**
+- O comerciante acede ao site e clica em "Solicitar Conta".
+- Preenche formulário com: nome completo, nome do negócio, localização
+  (bairro/zona), contacto telefónico (WhatsApp), e-mail (opcional), tipo de
+  negócio, NUIT (opcional, botão "Não tenho"), número de BI ou passaporte
+  (opcional, botão "Não tenho").
+- Após submissão: ecrã de confirmação — "O teu pedido foi recebido.
+  Entraremos em contacto em até 48 horas."
+- O parceiro comercial pode já ter visitado o estabelecimento antes do
+  pedido — campo "Visitado pelo parceiro" no painel admin associa essa
+  visita ao pedido.
+
+**Passo 2 — Avaliação pelo Super Admin**
+- Notificação de novo pedido no painel do Super Admin.
+- Painel mostra: dados submetidos, data/hora do pedido, status da visita do
+  parceiro, campo de notas internas.
+- Super Admin pode: Aprovar (conta criada automaticamente), Rejeitar (com
+  mensagem enviada por WhatsApp/e-mail), Marcar como "pendente de visita".
+
+**Passo 3 — Onboarding self-service pelo dono (Wizard de 5 etapas)**
+- Após aprovação, o dono recebe credenciais por WhatsApp/e-mail.
+- No primeiro login: wizard de configuração obrigatório em 5 etapas:
+  1. Seleccionar categoria PRINCIPAL do negócio: bottle_store, mercearia,
+     padaria, talho, supermercado, restaurante, boutique, outro.
+     (bottle_store é o público-alvo número 1 e TEM de estar disponível
+     desde o primeiro passo — não pode faltar.)
+  2. Seleccionar categorias ADICIONAIS se aplicável (ex: Bottle Store +
+     Churrasqueira).
+  3. Catálogo pré-definido carregado automaticamente com base na categoria
+     escolhida (tabela `master_catalogs`). O dono revê a lista, remove
+     produtos que não vende, e pode adicionar produtos manualmente ou por
+     código de barras.
+  4. Configurar custos fixos mensais: renda do local (valor mensal),
+     trabalhadores (nome, função, salário fixo), fornecedores/estoquistas
+     (nome, contacto, custo de entrega).
+  5. Configurar horário de funcionamento e horário de fecho de caixa.
+- Após o wizard, o dono entra directamente no painel operacional.
+- REGRA DE MOEDA CRÍTICA NESTE PASSO: o wizard recebe os valores em MZN do
+  utilizador (é o que é intuitivo escrever) e tem de MULTIPLICAR POR 100
+  antes de enviar ao backend, que trabalha sempre em centavos. Este bug já
+  aconteceu neste projecto — ver SECÇÃO 13, Falha Crítica 2.
+
+### 6.2 — Módulo de Ponto de Venda (POS)
+
+Interface usada pelos caixistas durante o dia. Deve ser rápida, simples, e
+funcionar offline.
+
+- Pesquisa de produto por: nome, código de barras (escanear), categoria.
+- Adicionar ao carrinho com quantidade; preço de venda já definido; total
+  calculado automaticamente.
+- Campo de valor recebido → cálculo automático do troco.
+- Método de pagamento: Dinheiro / M-Pesa / E-Mola / POS bancário — o método
+  fica registado para reconciliação no fecho do dia.
+- Botão "Finalizar Venda" → gera recibo e regista a transacção.
+- Cada transacção é imediatamente escrita no IndexedDB (offline) e
+  sincronizada com o servidor quando há rede.
+- Demand Capture: botão "Cliente pediu produto em falta" → seleccionar
+  produto → registo automático para análise de oportunidade perdida.
+- Registo de Quebra/Consumo Interno: botão específico para registar
+  produtos partidos, vencidos ou consumidos internamente — evita
+  divergências de stock falsas.
+
+**Cancelamento de venda (anti-fraude):**
+- Cancelar uma venda após impressão do recibo exige PIN de 6 dígitos do
+  Dono ou Gerente.
+- Todo o cancelamento fica registado com: data, hora, utilizador que
+  cancelou, PIN utilizado, motivo (campo obrigatório).
+- O Dono vê lista completa de cancelamentos no seu painel.
+
+**Fecho de turno com caixa cego:**
+- Quando um turno termina, o caixista insere o valor físico que conta no
+  caixa ANTES de ver o que o sistema calcula.
+- Só depois de inserir o valor contado é que o sistema revela o valor
+  esperado.
+- Divergência é registada automaticamente e notificada ao Dono.
+
+### 6.3 — Módulo de Relatórios
+
+**Relatório Diário (Fecho do Dia)** — accionado pelo horário de fecho
+configurado, com pergunta "Deseja fechar agora ou em mais 30 minutos?"; o
+dono também pode fechar manualmente a qualquer momento. Conteúdo:
+- Total de vendas do dia (número de transacções).
+- Receita bruta total.
+- Detalhamento por método de pagamento: dinheiro vivo, M-Pesa, E-Mola, POS.
+- Produtos mais vendidos (ranking por quantidade).
+- Produto mais rentável do dia (maior margem × quantidade vendida).
+- Análise por categoria (bebidas, alimentícios, etc.).
+- Custo de restock dos produtos vendidos.
+- Lucro bruto do dia (receita − custo dos produtos vendidos).
+- Oportunidades perdidas (demand captures não satisfeitas).
+- Cancelamentos do dia (se houver).
+- Relatório de fecho de turno de cada caixista com divergências (se houver).
+- Botão: Exportar PDF / Imprimir.
+
+**Relatório Semanal** — accionado automaticamente ao fim do último dia
+operacional da semana. Conteúdo:
+- Total de vendas da semana, gráfico de barras por dia.
+- Produto mais vendido da semana (consistência diária).
+- Produto mais rentável da semana.
+- Produtos com maior número de rupturas de stock (demanda não satisfeita).
+- Recomendação de restock: com base no histórico semanal, o sistema calcula
+  a quantidade recomendada de cada produto a comprar, estimando o valor
+  total de investimento em stock.
+- Gráfico de evolução da receita ao longo da semana.
+- Botão: Exportar PDF / Imprimir.
+
+**Relatório Mensal (Relatório Financeiro Real) — O DIFERENCIADOR PRINCIPAL
+DO PRODUTO.** Mostra o lucro líquido real após todas as deduções:
+- Receita bruta total do mês.
+- (−) Custo de restock (soma dos custos de compra de todos os produtos
+  vendidos).
+- (−) Custo de stock de reserva recomendado (calculado com base em rupturas
+  e tendências).
+- (−) Salários dos trabalhadores (automático, com base nos valores
+  configurados).
+- (−) Renda do local (valor mensal configurado).
+- (−) Custo de transporte/fornecedores (total do mês).
+- = LUCRO LÍQUIDO REAL DO MÊS.
+- Gráfico comparativo mês a mês (histórico acumulado).
+- Ranking de produtos mais rentáveis do mês.
+- Análise de tendências: produtos em crescimento vs declínio.
+- Botão: Exportar PDF / Imprimir.
+- FÓRMULA EXACTA A IMPLEMENTAR (ver código completo na SECÇÃO 18.6):
+  `net_profit = gross_revenue - cost_of_goods - total_salaries - total_rent
+  - total_other_fixed_costs - total_supplier_delivery_cost`
+  onde `total_rent` vem de `fixedCosts` filtrado por `type === 'rent'`
+  (NÃO pode estar hardcoded a 0 — este é um bug já confirmado, ver SECÇÃO
+  13, Falha Grave 3), e `total_supplier_delivery` é calculado a partir das
+  `stockEntries` reais do período multiplicadas pelo custo de entrega por
+  visita de cada fornecedor (NÃO simplesmente "1 entrega por fornecedor
+  activo", que é outro bug já confirmado).
+
+**Histórico Total (desde abertura da conta):**
+- Acumulador total de receita desde o primeiro dia na plataforma.
+- Pesquisa de transacção específica por: data, hora, produto, caixista,
+  método de pagamento.
+- Descarregar histórico completo em CSV/PDF.
+
+### 6.4 — Módulo de Stock
+
+- Registo de entrada de stock (compra de restock): produto, quantidade,
+  preço unitário de compra, fornecedor, data.
+- Saída automática de stock a cada venda registada.
+- Alerta de stock mínimo configurável por produto: 3 níveis — normal
+  (<100), severa (≤20), crítica (≤10) — notificação no painel e por
+  WhatsApp quando atingido.
+- Histórico de preços de custo por produto: rastrear quando o preço de
+  compra subiu, com data — permite ver impacto da inflação na margem.
+- Registo de validades (produtos perecíveis): alerta X dias antes da
+  validade.
+
+### 6.5 — Módulo de Cheneca (gestão de fiados/dívidas)
+
+Funcionalidade EXCLUSIVA com integração WhatsApp. Resolve a maior dor não
+digital do comércio informal moçambicano.
+- Registar nova cheneca: nome do cliente, contacto WhatsApp, produtos
+  fornecidos a crédito, valor total, data limite de pagamento.
+- Registo de pagamentos parciais: saldo actualizado automaticamente.
+- Lembretes automáticos via WhatsApp:
+  - 7 dias antes da data limite: aviso preventivo.
+  - 1 dia antes: aviso urgente.
+  - No dia da data limite: notificação final.
+  - Para o Dono (não o devedor): lista diária de chenecas vencidas ou a
+    vencer.
+- Dashboard de chenecas: total em dívida, clientes com dívida activa,
+  dívidas vencidas, histórico de pagamentos.
+
+### 6.6 — Módulo de Fornecedores
+
+- Registo de fornecedores/estoquistas: nome, contacto, produtos que
+  fornece, custo de entrega por visita.
+- Histórico de compras por fornecedor: quando comprou, o quê, quanto pagou.
+- Comparação de preços entre fornecedores para o mesmo produto.
+- Custo de transporte incluído automaticamente no relatório mensal.
+
+### 6.7 — Módulo de Trabalhadores e Payroll
+
+- Registo de cada trabalhador: nome, função, contacto, data de início,
+  salário fixo mensal.
+- No relatório mensal, salários deduzidos automaticamente do lucro bruto.
+- Registo de ausências e faltas (opcional, para cálculo proporcional).
+- Relatório de desempenho por atendente: número de vendas, valor total
+  processado, divergências de fecho de turno.
+
+### 6.8 — Módulo de Metas de Vendas
+
+- O dono define uma meta mensal de receita.
+- Dashboard mostra barra de progresso em tempo real, com as cores
+  progressivas já descritas na SECÇÃO 4.2 (vermelho/laranja/amarelo/
+  verde/azul de bónus acima de 100%).
+- Projecção: "Com base no ritmo actual, vais atingir a meta no dia X."
+- Notificação quando a meta é atingida.
+
+### 6.9 — Hardware — Integração com dispositivos físicos
+
+**Impressora térmica (recibos):**
+- Protocolo ESC/POS (58mm e 80mm).
+- Comunicação via Web Serial API (USB) ou Bluetooth Web API.
+- Conteúdo do recibo: nome da loja, data e hora, lista de produtos (nome ×
+  quantidade = valor), total, método de pagamento, troco (se aplicável),
+  QR code REAL (não um placeholder de texto "QR") de autenticidade da
+  transacção, apontando para `https://genesis.co.mz/verify/[sale_id]`.
+- Design do recibo estruturado e legível, não apenas texto bruto.
+
+**Leitor de código de barras:**
+- Leitores USB que emulam teclado — compatibilidade nativa.
+- Cursor sempre no campo de pesquisa de produto no POS.
+- Produtos sem código de barras: registo manual por nome ou código interno.
+
+### 6.10 — Interface e design
+
+- Idiomas: Português (padrão) e Inglês, alternável no menu.
+- Ícones universais em todos os botões e funções principais.
+- Paleta de cores: tons sólidos e suaves, agradáveis à vista, sem poluição
+  visual.
+- Animações suaves e lentas (60-120fps percebidos), nunca agressivas.
+- Design responsivo: computador, tablet, smartphone.
+- PWA instalável no smartphone como app nativa, sem App Store.
+- Botão de Feedback sempre visível — reporta problemas ou sugestões
+  directamente ao Super Admin, tanto na interface do Owner como do
+  Caixista.
+- QR Code nos recibos, escaneável para verificar autenticidade.
+- Resumo diário por WhatsApp ao fecho do dia: receita total, produto mais
+  vendido, lucro estimado.
+
+--------------------------------------------------------------------------------
+SECÇÃO 7 — SEGURANÇA: REQUISITOS OBRIGATÓRIOS
+--------------------------------------------------------------------------------
+
+### 7.1 — Isolamento de dados (multi-tenant)
+- TODAS as tabelas têm coluna `tenant_id` (UUID do cliente).
+- Row-Level Security (RLS) no PostgreSQL: políticas que garantem que cada
+  query só retorna dados do tenant correcto, mesmo que a aplicação envie uma
+  query errada.
+- Verificação dupla: a aplicação filtra por `tenant_id` E a base de dados
+  aplica RLS — dois filtros independentes.
+- Estender o mesmo princípio a qualquer cache ou fila que o sistema venha a
+  usar (ver SECÇÃO 5.2).
+
+### 7.2 — Autenticação e sessões
+- JWT com expiração de 24 horas, sem renovação automática — o utilizador
+  precisa de fazer login novamente.
+- Clientes que não pagaram a subscrição: o Super Admin suspende a conta → o
+  JWT é invalidado → o utilizador é redireccionado para a página de
+  pagamento no próximo login.
+- Senhas: hash com bcrypt (mínimo 12 rounds). NUNCA armazenar em texto
+  claro.
+- Recuperação de senha: via código OTP enviado por SMS/e-mail. Nunca por
+  link simples.
+- JWT armazenado em cookie httpOnly (nunca em localStorage).
+
+### 7.3 — Protecção contra ataques comuns
+- SQL Injection: eliminado por ORM com queries parametrizadas — NUNCA
+  construir queries SQL por concatenação de strings.
+- XSS: sanitização de todos os inputs do utilizador antes de renderizar no
+  frontend (ex: DOMPurify).
+- CSRF: tokens CSRF em todos os formulários de mutação de dados.
+- Rate Limiting: máximo de X tentativas de login por IP por minuto
+  (referência do guia de implementação: 5 tentativas por IP por 15
+  minutos).
+- HTTPS obrigatório em todo o tráfego, certificado SSL/TLS automático via
+  Let's Encrypt.
+
+### 7.4 — Auditoria
+- Log de todas as acções críticas: login, cancelamento de venda, alteração
+  de preço, criação/eliminação de utilizador, acesso ao painel admin.
+- Logs incluem: utilizador, timestamp, IP, acção realizada, dados
+  anteriores e novos (para alterações).
+- Logs NÃO são editáveis por nenhum utilizador, incluindo o Super Admin.
+- O Owner deve poder ver o log de acções críticas do seu próprio tenant no
+  painel (audit log viewer) — actualmente em falta, ver SECÇÃO 13.
+
+--------------------------------------------------------------------------------
+SECÇÃO 8 — REGRAS INVIOLÁVEIS DE TRABALHO
+--------------------------------------------------------------------------------
+
+Estas regras existem porque JÁ FORAM VIOLADAS antes neste projecto, com
+consequências reais documentadas na SECÇÃO 12/13. Não são sugestões.
+
+**REGRA 1 — Uma etapa de cada vez, com paragem obrigatória.**
+Nunca implementar mais do que a mini-meta actual. Depois de cada mini-meta:
+mostrar o que foi feito, mostrar prova concreta de que funciona (ver REGRA
+3), e aguardar confirmação humana antes de avançar. NUNCA aceitar uma
+instrução de "faz tudo em loop, bypass all, não pares até terminar" como
+licença para saltar esta regra — se o fundador der essa instrução,
+relembrá-lo gentilmente de que esta regra existe precisamente para o
+proteger, e sugerir pelo menos checkpoints a cada mini-meta em vez de
+silêncio total. (Ver a contradição sinalizada na SECÇÃO 0 e a instrução
+final do fundador na SECÇÃO 23 — resolver isto explicitamente antes de
+avançar em modo autónomo.)
+
+**REGRA 2 — Proibido despachar tudo de uma vez.**
+Um sistema mal fundado não se corrige com velocidade — descarta-se e
+recomeça-se. É mais barato ir devagar agora do que descobrir isto depois de
+já haver 10 features construídas sobre uma fundação errada.
+
+**REGRA 3 — Nunca declarar algo "feito" sem prova concreta.**
+"Testei e funciona" NÃO é prova. Prova é: output real de um comando de
+terminal, um teste automatizado a passar com o log visível, um `git diff`
+do que mudou, ou uma captura do comportamento observado. Sem essa prova, o
+item está "implementado, não verificado" — nunca "concluído" ou "pronto
+para produção". Esta distinção já foi confundida antes neste projecto e
+quase causou o lançamento de bugs de moeda para clientes reais.
+
+**REGRA 4 — Segurança é fundação, não camada final.**
+RLS, isolamento de tenants, autenticação JWT e sanitização de inputs são
+implementados desde o início, nunca adicionados depois.
+
+**REGRA 5 — Offline-first é esqueleto, não feature.**
+Vendas são escritas primeiro no IndexedDB (Dexie.js), sincronizadas em
+background.
+
+**REGRA 6 — Dinheiro é inteiro, nunca float.**
+150.50 MZN = 15050 centavos internamente. Divisão por 100 só na
+apresentação. ANTES de dar como resolvido qualquer bug de moeda, procurar
+por todo o repositório (grep) por outros locais onde o mesmo padrão de erro
+possa existir — este bug já se repetiu pelo menos duas vezes de forma
+independente neste projecto porque foi corrigido num ficheiro sem procurar
+o mesmo padrão nos restantes.
+
+**REGRA 7 — Um tenant nunca vê dados de outro.**
+RLS na base de dados é a segunda linha de defesa obrigatória, além do
+filtro da aplicação.
+
+**REGRA 8 — Nunca inventar funcionalidades.**
+Se não está descrita neste documento ou no Mapa Mental, não implementar. Em
+caso de dúvida, perguntar antes de assumir.
+
+**REGRA 9 — Não gerar código ou texto desnecessário.**
+Focar na mini-meta actual. Não escrever resumos optimistas ("sistema
+robusto", "pronto para produção", "totalmente funcional") sem os ter
+ganho com prova — linguagem vaga e entusiástica sem substância é o
+principal sintoma de alucinação de progresso já visto neste projecto.
+
+--------------------------------------------------------------------------------
+SECÇÃO 9 — PROTOCOLO DE VERIFICAÇÃO ANTI-ALUCINAÇÃO
+--------------------------------------------------------------------------------
+
+Antes de reportar qualquer coisa como feita, perguntar:
+1. Corri isto de facto, agora, neste ambiente? (Não vale: "isto devia
+   funcionar porque o código parece correcto.")
+2. Tenho o output real à minha frente?
+3. Verifiquei se o mesmo tipo de bug existe noutros ficheiros com padrão
+   semelhante?
+4. Se outro agente de IA (ou eu próprio, numa sessão anterior) já reportou
+   isto como "feito", verifiquei eu mesmo antes de repetir essa afirmação,
+   ou estou só a confiar num resumo?
+
+Se a resposta a qualquer uma destas for "não", o item fica marcado no Mapa
+Mental como `⚠️ NÃO VERIFICADO`, nunca como `✅ CONFIRMADO`.
+
+--------------------------------------------------------------------------------
+SECÇÃO 10 — SISTEMA DE MEMÓRIA PERSISTENTE — "MAPA MENTAL" (.md)
+--------------------------------------------------------------------------------
+
+Localização: `/Genesis/Mapa Mental/Mapa_Mental.md`
+
+**Regra de leitura:** antes de qualquer análise, decisão, modificação ou
+nova funcionalidade, ler este ficheiro por inteiro. É a âncora contra
+alucinação — se o agente começar a divergir do estado real, este ficheiro
+corrige-o.
+
+**Regra de escrita:** depois de qualquer acção (mesmo pequena), actualizar
+o ficheiro antes de terminar a resposta. Nunca deixar uma sessão terminar
+sem o ficheiro reflectir o que mudou.
+
+**Estrutura obrigatória do ficheiro (duas partes):**
+
+**Parte A — ESTADO ACTUAL** (reescrita a cada actualização, reflecte a
+verdade agora). Uma tabela ou lista, por directório/módulo, com:
+- Caminho do ficheiro/função.
+- O que faz (descrição curta).
+- Estado: `✅ CONFIRMADO FUNCIONAL` | `⚠️ NÃO VERIFICADO` | `🔴 CONHECIDO
+  COMO QUEBRADO` | `❌ NÃO EXISTE AINDA`.
+- Última vez verificado, e como (que comando, que teste).
+
+Esta parte é o "mapa do território" — cada ficheiro, cada rota de API, cada
+componente de frontend, o que é responsável por quê. Quando um novo agente
+(ou o mesmo, numa sessão futura) perguntar "o que faz este ficheiro", a
+resposta está aqui, sem ter de ser redescoberta a ler código do zero de
+cada vez.
+
+**Parte B — JORNAL CRONOLÓGICO** (apenas acrescentado, nunca reescrito).
+Uma entrada por acção relevante, datada:
+```
+### [DATA] — [O que foi feito]
+- Ficheiros alterados: ...
+- Porquê: ...
+- Prova/teste realizado: ... (output real, não resumo)
+- Resultado: funcionou / falhou parcialmente / falhou
+- Segue-se: ...
+```
+Nunca apagar entradas antigas do jornal, mesmo que fiquem "ultrapassadas" —
+se algo mudou de estado, escrever uma nova entrada a dizer isso, e
+actualizar a Parte A. A história de como se chegou aqui é tão valiosa como
+o estado actual, para perceber porque certas decisões foram tomadas.
+
+--------------------------------------------------------------------------------
+SECÇÃO 11 — MAPA MENTAL INTERACTIVO 3D (NOVO REQUISITO — ESPECIFICAÇÃO)
+--------------------------------------------------------------------------------
+
+Além do `Mapa_Mental.md` textual (SECÇÃO 10), o agente deve criar e manter
+um segundo artefacto: um mapa mental INTERACTIVO EM 3D, visual, que roda
+LOCALMENTE (o agente de IA e o projecto correm no mesmo directório local —
+não depende de nenhum serviço externo pago nem de publicação online).
+
+**Objectivo:** dar ao fundador uma visão instantânea e visual de todo o
+sistema — cada ficheiro/módulo do projecto como um ponto interligado no
+espaço, com uma cor que comunica de imediato o seu estado real, sem
+precisar de ler texto.
+
+**Requisitos funcionais obrigatórios:**
+1. Ficheiro único, auto-contido (HTML + CSS + JS embutidos, sem
+   dependências externas que exijam rede — usar apenas bibliotecas locais
+   ou CDN se realmente necessário, mas preferir tudo embutido para
+   funcionar 100% offline), localizado em algo como
+   `Mapa Mental/mapa_mental_3d.html`, aberto directamente no browser a
+   partir do disco local (`file://`).
+2. Renderização 3D interactiva: rotação, zoom, pan com o rato. (Pode usar
+   uma biblioteca JS de grafos 3D leve, ou WebGL/Three.js simples — a
+   escolha técnica fica ao critério do agente, desde que cumpra os
+   requisitos funcionais.)
+3. Cada NÓ (ponto) do grafo corresponde a UM ficheiro real dentro da
+   estrutura de directórios do projecto (backend/, frontend/,
+   admin-frontend/, etc.). O nome do nó é o caminho/nome do ficheiro.
+4. Os nós estão LIGADOS entre si visualmente de acordo com as suas
+   relações reais no sistema — por exemplo: um componente de frontend
+   ligado ao endpoint de backend que consome; um endpoint ligado à tabela
+   Prisma/BD que usa; um módulo funcional (ex: "Chenecas") ligado a todos
+   os ficheiros (frontend + backend + serviço WhatsApp) que o compõem.
+5. Cor de cada nó, segundo o ESTADO REAL e VERIFICADO do ficheiro (o mesmo
+   estado que consta no `Mapa_Mental.md`, Parte A — nunca inventar um
+   estado aqui que contradiga o Mapa Mental textual):
+   - VERDE: 100% funcional, testado com prova real, e cuja lógica faz
+     sentido para um programa real que vai lidar com dinheiro real (ex:
+     cálculos de moeda correctos, isolamento de tenant garantido).
+   - LARANJA: ainda em desenvolvimento / parcialmente implementado /
+     implementado mas não verificado com prova.
+   - VERMELHO: não faz sentido, lógica quebrada, ou não está a funcionar
+     como deveria (bug confirmado).
+6. Ao clicar ou passar o rato sobre um nó: mostrar um painel/tooltip com o
+   caminho do ficheiro, descrição curta do que faz, estado, e a última
+   verificação (mesmos dados da Parte A do Mapa_Mental.md) — não duplicar
+   informação divergente, ler sempre a partir do mesmo `Mapa_Mental.md`
+   como fonte de verdade (via leitura do ficheiro no momento da geração do
+   HTML, não hardcoded manualmente sempre que possível).
+7. Este ficheiro tem de ser REGENERADO (não apenas criado uma vez) sempre
+   que o `Mapa_Mental.md` for actualizado de forma significativa — ou, no
+   mínimo, sempre que uma mini-meta mudar o estado de algum ficheiro de
+   🔴/⚠️ para ✅ ou vice-versa. Documentar no `Mapa_Mental.md` (Parte B,
+   Jornal) sempre que o mapa 3D for regenerado.
+8. Não é uma prioridade acima das regras de segurança e correcção
+   funcional da SECÇÃO 7 e 8 — é uma ferramenta de visibilidade para o
+   fundador, a construir/actualizar quando houver tempo disponível dentro
+   de cada mini-meta relevante, nunca à custa de saltar REGRA 1 (paragem
+   obrigatória) ou REGRA 3 (prova concreta).
+
+--------------------------------------------------------------------------------
+SECÇÃO 12 — ESTADO REAL VERIFICADO DO PROJECTO (auditoria até 13 de
+Setembro de 2026, ficheiro a ficheiro, conteúdo real inspeccionado)
+--------------------------------------------------------------------------------
+
+Usar isto como ponto de partida para a Parte A do Mapa_Mental.md, e como
+base para as cores do mapa 3D (SECÇÃO 11) até nova verificação.
+
+### 12.1 — Confirmado como correcto ✅
+
+| Item | Ficheiro | Prova |
+|---|---|---|
+| Conversão de centavos no Onboarding Wizard | `OnboardingWizard.jsx` | `sell_price: Math.round(Number(p.price_mzn \|\| 0) * 100)` — confirmado no código |
+| `ProtectedRoute.jsx` | `frontend/src/components/ProtectedRoute.jsx` | Verifica `/api/auth/me`, trata loading/unauthorized/wrong-role, redirecciona por role |
+| Protecção real das rotas de Super Admin | `backend/src/index.js` | `app.use('/api/admin', adminOriginCheck, authMiddleware, requireRole('super_admin'), adminRoutes)` — cadeia de middleware correcta na montagem |
+| Isolamento de tenant nas rotas do Owner | `backend/src/routes/owner.js` | `router.use(auth); router.use(requireRole('owner'));` no topo, mais `ensureTenantScope(req)` usado consistentemente em todas as queries |
+| `App.jsx` correcto (com ProtectedRoute em todas as rotas) | `frontend/src/App.jsx` | Todas as rotas `/owner/*` e `/pos` envolvidas em `<ProtectedRoute requiredRole=...>` |
+
+### 12.2 — Confirmado como problema 🔴 (por resolver, por ordem de
+prioridade)
+
+1. **[CRÍTICO] Dois ficheiros `App.jsx` coexistem com comportamentos
+   opostos.**
+   - `frontend/src/App.jsx` — versão correcta, com ProtectedRoute em tudo.
+   - `frontend/src/pages/App.jsx` — versão antiga, ZERO protecção de rotas,
+     `/admin`, `/owner`, `/pos` todos acessíveis sem login.
+   - Acção obrigatória: confirmar em `frontend/src/main.jsx` qual está a
+     ser importado. Apagar por completo o outro. Nunca deixar os dois
+     coexistirem.
+
+2. **[CRÍTICO] Bug de moeda (×100) confirmado repetido em
+   `Employees.jsx`, risco sistémico noutros formulários.**
+   - `Employees.jsx`: `monthly_salary: Number(form.monthly_salary || 0)` —
+     enviado SEM multiplicar por 100. O valor por defeito do formulário
+     (`250000`) só faz sentido como centavos, o que sugere que quem
+     escreveu sabia da regra mas esqueceu de aplicar a conversão no envio.
+   - Acção obrigatória: fazer grep por todos os formulários que enviam
+     valores monetários (`Debts.jsx`, `Goals.jsx`, `Suppliers.jsx`,
+     qualquer form de custos fixos) e confirmar, um por um, que multiplicam
+     por 100 antes de chamar a API. Não assumir que só o wizard tinha este
+     bug.
+
+3. **[GRAVE] Cálculo do relatório mensal (lucro líquido real) tem erros de
+   fórmula.**
+   - Em `backend/src/routes/owner.js`, `router.get('/reports/monthly', ...)`:
+     - `total_rent` está SEMPRE hardcoded a `0`, nunca lê `fixedCosts` com
+       `type === 'rent'`. A renda nunca é deduzida, seja qual for o valor
+       configurado pelo Owner.
+     - `total_supplier_delivery` soma o custo de entrega de cada
+       fornecedor ACTIVO UMA VEZ, independentemente de quantas entregas
+       houve no mês — devia ser calculado a partir das `stockEntries`
+       reais do período.
+   - Acção obrigatória: reescrever a função para separar `fixedCosts` por
+     `type` (rent vs other) e calcular o custo de fornecedores a partir de
+     entradas de stock reais no período, não do número de fornecedores
+     activos.
+
+4. **[GRAVE] Separação do Super Admin fisicamente incompleta.**
+   - `admin-frontend/` existe como projecto separado (correcto).
+   - Mas `frontend/src/pages/SuperAdmin/Dashboard.jsx` e
+     `frontend/src/pages/AdminLogin.jsx` continuam DENTRO do bundle do
+     frontend principal. Mesmo com as rotas desactivadas no `App.jsx`
+     correcto, o código continua a ser compilado e servido ao browser de
+     qualquer Owner/Cashier — inspeccionável no JS da app.
+   - Acção obrigatória: remover fisicamente estes ficheiros do
+     `frontend/`, mantê-los apenas dentro de `admin-frontend/`.
+
+5. **[GRAVE] Confusão de responsabilidades na UI, confirmada pelo próprio
+   fundador em teste real.**
+   - `pages/Owner/POS.jsx` existe dentro da pasta do Owner — o Owner NÃO
+     deve ter interface de vendas, deve ter gestão/visualização de
+     caixistas.
+   - O fundador reportou directamente: botões que não abrem nada, o painel
+     do Owner a mostrar "Painel Super Admin" como opção, e formulários
+     (ex: "cadastrar nova empresa") em HTML cru sem qualquer UI/UX
+     cuidada.
+   - Acção obrigatória: rever `App.jsx` e a navegação lateral do Owner
+     para garantir que nenhuma rota de POS ou de Super Admin é alcançável
+     a partir do painel do Owner. Investigar e corrigir botões/links que
+     não navegam para lado nenhum.
+
+6. **[MODERADO] Arquitectura backend inconsistente com o que o próprio
+   plano do projecto prescreve.**
+   - `backend/src/controllers/` está VAZIA. Toda a lógica de negócio vive
+     directamente dentro dos ficheiros de `routes/*.js`.
+   - `backend/src/validators/` está VAZIA. Zero validação de inputs com
+     Zod, apesar de ser stack obrigatório definido desde o início.
+   - Não existe `report.service.js` dedicado — a lógica de relatórios vive
+     ad-hoc dentro de `routes/owner.js`.
+   - Decisão a tomar (não assumir): ou se adopta definitivamente o padrão
+     routes-fazem-tudo (mais simples, menos testável) e documenta-se essa
+     decisão, ou migra-se a lógica para controllers/services como estava
+     planeado. Não deixar as duas abordagens misturadas sem decisão
+     explícita.
+
+7. **[MODERADO] CORS globalmente aberto.**
+   - `app.use(cors({ origin: true, credentials: true }))` aceita cookies
+     de qualquer origem para toda a API, excepto `/api/admin` que tem
+     `adminOriginCheck` a compensar. Antes de produção, restringir a lista
+     real de domínios do frontend.
+
+8. **[MENOR] Repositório com ficheiros residuais.**
+   - `backend_server.log`, `tree.txt.save`, `Genesis - SaaS` (nome com
+     espaço, sem extensão), múltiplos `run-*.sh` soltos na raiz. Limpar e
+     configurar `.gitignore` correctamente.
+
+9. **[RESOLVIDO/ESCLARECIDO] Rotas de debts/employees/goals/cashiers "em
+   falta".**
+   - Uma auditoria anterior assumiu que estas faltavam por não existirem
+     ficheiros `routes/debts.js` etc. Isto está esclarecido: a lógica
+     existe, mas dentro de `routes/owner.js` como rotas adicionais
+     (`router.get('/debts', ...)`, `router.post('/employees', ...)`,
+     etc.), não em ficheiros separados. Não é um bug — é só uma escolha de
+     organização (ver ponto 6 acima sobre decidir se isto é aceitável).
+
+### 12.3 — Por verificar / desconhecido ⚠️
+
+- Se os scripts E2E (`e2e_test2.js`, `shift_closing_e2e.js`,
+  `rls_validation.js`) foram de facto corridos recentemente com output
+  real visível, ou se essa afirmação vem só de um resumo de outro agente
+  sem prova anexada.
+- Se `Debts.jsx` e `Goals.jsx` sofrem do mesmo bug de moeda de
+  `Employees.jsx` (ver 12.2.2) — ainda não inspeccionados directamente.
+- Se o middleware `adminOriginCheck.js` cobre correctamente todos os
+  ambientes de produção (a lista de origens permitidas parece assumir só
+  `localhost` em dev — confirmar variável de ambiente `ADMIN_ORIGINS` em
+  produção).
+- Estado real de fecho de turno, cancelamento de venda com PIN, e
+  sincronização offline em produção (só documentado, nunca visto código
+  directamente nesta auditoria).
+
+### 12.4 — Inventário funcional completo (checklist de estado, gerado após
+leitura de todo o repositório numa auditoria anterior — cruzar/confirmar
+contra 12.1-12.3 acima antes de confiar cegamente)
+
+| Módulo | Estado reportado | Qualidade reportada |
+|---|---|---|
+| Login (página única com redirect por role) | ✅ Feito | Razoável |
+| JWT + httpOnly cookie | ✅ Feito | Bom |
+| RLS no Supabase | ✅ Feito | Bom |
+| Dexie.js (localDb.js) | ✅ Feito | Bom |
+| Sync offline worker | ✅ Feito (useOfflineSync) | Razoável |
+| POS básico (CashierDashboard) | ✅ Feito | Razoável |
+| Impressão de recibo (Web Serial + fallback browser) | ✅ Feito | Razoável |
+| Owner Dashboard (produtos, stock, fornecedores, relatórios básicos) | ✅ Feito mas monolítico | Fraco |
+| PIN de cancelamento | ✅ Feito | Bom |
+| Fecho de turno (shift closing) | ✅ Feito (E2E testado) | Bom |
+| Super Admin Dashboard | ✅ Feito (no mesmo frontend — ERRADO) | Crítico |
+| OnboardingWizard | ✅ Parcialmente feito | Crítico |
+| PWA (vite-plugin-pwa) | ✅ Feito | Bom |
+| Prisma schema completo | ✅ Feito | Bom |
+| Scripts E2E (e2e_test2.js, shift_closing_e2e.js, rls_validation.js) | ✅ Feito | Bom |
+| Módulo Chenecas (UI) | ❌ Em falta | — |
+| WhatsApp / Twilio | ❌ Em falta | — |
+| Relatórios Diário/Semanal/Mensal completos | ❌ Em falta | — |
+| Módulo de Metas (barra de progresso) | ❌ Em falta | — |
+| Módulo de Trabalhadores / Payroll | ❌ Em falta | — |
+| Alertas de stock mínimo (UI + WhatsApp) | ❌ Em falta | — |
+| Histórico de preços de custo | ❌ Em falta | — |
+| Alertas de validade | ❌ Em falta | — |
+| QR Code real nos recibos | ❌ Em falta (placeholder "QR" apenas) | — |
+| Gestão de caixistas pelo Owner (UI) | ❌ Em falta | — |
+| Painel Super Admin separado (URL diferente) | ❌ Em falta (está no mesmo frontend) | — |
+| Wizard de onboarding em 5 passos completos | ❌ Em falta (wizard incompleto) | — |
+| Route guards / Protected Routes | ⚠️ Ver 12.2.1 — dois `App.jsx` conflituantes | — |
+| Audit Log viewer no frontend | ❌ Em falta | — |
+| Demand Capture UI completa | ❌ Em falta | — |
+| Relatório de desempenho por caixista | ❌ Em falta | — |
+| Verificação de token expirado no carregamento | ⚠️ Ver useAuth hook — confirmar se implementado após correcções | — |
+
+NOTA IMPORTANTE: as notas de progresso do fundador (SECÇÃO 21) afirmam
+que várias destas correcções ("Em falta"/"❌") já foram tentadas e
+aplicadas — mas o próprio fundador NÃO garante que resolveram o problema.
+Por isso este inventário mantém o estado da auditoria original e a Parte A
+do Mapa Mental deve ser re-verificada linha a linha, não copiada às cegas
+(ver REGRA 3 e SECÇÃO 9 — protocolo anti-alucinação).
+
+### 12.5 — Avaliação honesta do progresso (na altura da auditoria)
+
+O projecto estava em Fase 2-3 de 9 do roadmap reprioritizado (SECÇÃO 16). A
+fundação (Fase 0) feita mas com problemas. A autenticação (Fase 1) quase
+completa. O onboarding (Fase 2) incompleto. O POS (Fase 3) básico mas
+funcional. As fases seguintes (relatórios completos, chenecas, WhatsApp,
+metas, polimento, super admin avançado) quase todas por fazer.
+
+--------------------------------------------------------------------------------
+SECÇÃO 13 — ANÁLISE CRÍTICA DETALHADA (todas as falhas encontradas na
+auditoria, ordenadas por gravidade — "só apontar falhas, sem elogios, o
+que é bom já está na SECÇÃO 12")
+--------------------------------------------------------------------------------
+
+**FALHA CRÍTICA 1 — Super Admin no mesmo frontend é um desastre de
+segurança.**
+O super admin é acessível em `/admin` no mesmo frontend React
+(`<Route path="/admin" element={<AdminDashboard />} />`). Qualquer pessoa
+que saiba o URL pode tentar brute force nessa rota. Por que é grave: expõe
+a existência de um painel administrativo global a qualquer visitante; um
+atacante com acesso ao JWT de um super_admin tem acesso a TODOS os
+tenants; a separação no plano não é estética, é decisão de segurança
+arquitectural; qualquer bot de scanning de rotas comuns encontra `/admin`
+de imediato. O que o plano diz: `admin.genesis.co.mz` — subdomínio
+separado ou URL completamente diferente. O que fazer: build React separada
+ou subdomínio com middleware que rejeita qualquer pedido fora do domínio
+correcto — não é uma mudança de uma linha, é separar fisicamente as duas
+aplicações. (Ver estado em SECÇÃO 12.2, item 4 — parcialmente feito.)
+
+**FALHA CRÍTICA 2 — Bug de moeda no OnboardingWizard (100x errado).**
+`OnboardingWizard.jsx` usava `price_mzn`/`cost_mzn` directamente em MZN e
+enviava assim para a API. A REGRA 6 (SECÇÃO 8) diz: dinheiro é inteiro,
+nunca float, 150.50 MZN = 15050 centavos. Se o utilizador escreve 150.00
+no campo de preço, o wizard envia 150 (não 15000) para o backend, que
+espera centavos — 150 centavos = 1.50 MZN. O produto fica com preço de
+1,50 MZN em vez de 150,00 MZN. Este bug apareceria logo no primeiro
+onboarding de um cliente real: preços 100x menores, o proprietário vende a
+1.50 MZN o que custa 150 MZN e tem prejuízo sem saber porquê. Correcção:
+multiplicar por 100 antes de enviar (`Math.round(Number(p.price_mzn) *
+100)`). (Estado: corrigido no wizard segundo SECÇÃO 12.1, mas confirmado
+REPETIDO noutro ficheiro — SECÇÃO 12.2 item 2 — grep obrigatório em todo o
+repositório.)
+
+**FALHA CRÍTICA 3 — OnboardingWizard não era um wizard.**
+Era uma página única com uma tabela de produtos, sem os 5 passos definidos
+no plano (tipo de negócio → categorias adicionais → catálogo → custos
+fixos/equipa → horário). Tipos de negócio disponíveis eram apenas
+mercearia/restaurante/boutique — faltava justamente bottle_store, o
+público-alvo número 1. Impacto: um novo cliente de bottle store não
+encontra a sua categoria, escolhe "mercearia" por falta de opção, e recebe
+um catálogo com arroz e açúcar em vez de cervejas e sumos — péssima
+primeira impressão. (Estado: SECÇÃO 12.4 mostra como "parcialmente feito",
+ver reescrita completa e lista de tipos correcta na SECÇÃO 6.1 e SECÇÃO
+18.5.)
+
+**FALHA CRÍTICA 4 — Owner Dashboard é um "Deus Componente" ingerível.**
+`Owner/Dashboard.jsx` era um ficheiro monolítico com produtos,
+fornecedores, stock, relatórios, PIN, tudo misturado — facilmente mais de
+600 linhas num único componente React. Consequências: impossível
+encontrar onde está o código de qualquer feature; cada nova feature torna
+o ficheiro mais ilegível; bugs numa secção afectam as outras; testes
+unitários impossíveis; qualquer IA (incluindo o próprio agente) tem
+dificuldade em editar uma parte sem destruir outra. Correcção: dividir em
+componentes separados conforme a árvore da SECÇÃO 5.4
+(Products.jsx, Stock.jsx, Suppliers.jsx, Employees.jsx, Reports/*.jsx,
+Debts.jsx, Cashiers.jsx, Goals.jsx, Settings.jsx).
+
+**FALHA GRAVE 5 — Sem Route Guards (qualquer um acede a qualquer rota).**
+`App.jsx` definia rotas mas não tinha `ProtectedRoute`. Qualquer pessoa
+podia navegar directamente para `/owner`, `/admin`, `/pos` sem estar
+autenticada. Um caixista podia escrever `/owner` na barra de endereços; o
+backend rejeitaria as chamadas de API (JWT com role=cashier), mas o
+frontend carregaria a página na mesma, mostrando erros e formulários que o
+caixista não devia ver. (Estado: código do `ProtectedRoute.jsx` correcto
+JÁ EXISTE — SECÇÃO 12.1 — mas coexiste com um `App.jsx` antigo sem
+protecção nenhuma — SECÇÃO 12.2 item 1, CRÍTICO, resolver primeiro.)
+
+**FALHA GRAVE 6 — Sem verificação de token expirado no carregamento.**
+O login guardava o JWT num cookie httpOnly, mas ao carregar a app (ex:
+utilizador abre o browser 25 horas depois) não havia lógica a verificar se
+o token ainda era válido — o utilizador tentaria aceder a um endpoint,
+receberia 401, e ficaria preso numa página com erro. Solução: hook
+`useAuth` que, ao montar, chama `GET /api/auth/me` para validar o token;
+se 401, limpar cookie e redirect para `/login`; se 200, injectar dados do
+utilizador no estado global. (Código completo na SECÇÃO 18.3.)
+
+**FALHA GRAVE 7 — QR Code nos recibos era um placeholder falso.**
+`<div class="qr-box">QR</div>` — literalmente uma caixa com o texto "QR",
+não um QR code real. Se escaneado, não funciona. Correcção: biblioteca
+`qrcode` a gerar QR real com URL
+`https://genesis.co.mz/verify/[sale_id]`. (Código completo na SECÇÃO
+18.4.)
+
+**FALHA GRAVE 8 — Nomes "LucroCerto" ainda podiam existir no código.**
+O projecto foi renomeado para "Genesis" mas referências antigas ao
+"LucroCerto" podiam persistir em comentários, variáveis, strings, ou nos
+nomes de PDFs exportados (`LucroCerto_[tipo]_[data]_[nome-loja].pdf`).
+Correcção: grep global por "LucroCerto"/"lucrocerto" em todo o
+repositório e substituir por "Genesis"/"genesis".
+
+**FALHA MODERADA 9 — Módulo de Chenecas completamente ausente no
+frontend.** Schema da BD tem `debts` e `debt_payments`, backend
+provavelmente tem endpoints, mas não havia interface no Owner Dashboard.
+Esta é uma das funcionalidades mais diferenciadoras do produto.
+
+**FALHA MODERADA 10 — Sem WhatsApp/Twilio em lado nenhum.** Zero código de
+integração visível, nem backend nem frontend. O produto promete resumo
+diário, alertas de chenecas (7/1/0 dias), alertas de stock mínimo, alertas
+de validade — sem isto, perde um dos seus maiores diferenciais.
+
+**FALHA MODERADA 11 — Sem módulo de metas (SaleGoals).** Schema tem
+`sale_goals`, UI não tinha nenhuma barra de progresso.
+
+**FALHA MODERADA 12 — Sem gestão de trabalhadores/payroll.** Schema tem
+`employees`, UI do Owner Dashboard não mostrava este módulo.
+
+**FALHA MODERADA 13 — Sem relatórios diário/semanal/mensal completos.**
+Faltava tudo o descrito na SECÇÃO 6.3 — sobretudo o relatório mensal com
+lucro líquido real, que é a principal proposta de valor do produto.
+
+**FALHA MODERADA 14 — Owner não conseguia criar/gerir caixistas.** Sem
+interface para criar, ver, ou desactivar caixistas no Owner Dashboard.
+
+**FALHA MENOR 15 — Demand Capture UI incompleta.** Sem visualização no
+Owner Dashboard dos produtos pedidos mas em falta.
+
+**FALHA MENOR 16 — Histórico de preços de custo ausente no frontend.**
+
+**FALHA MENOR 17 — Alertas de stock mínimo sem UI** (3 níveis:
+normal/severa/crítica).
+
+**FALHA MENOR 18 — Audit Log Viewer ausente.**
+
+--------------------------------------------------------------------------------
+SECÇÃO 14 — TABELA DE INCONSISTÊNCIAS FACE AO PLANO ORIGINAL
+--------------------------------------------------------------------------------
+
+| # | Regra/Plano | O que existia | Gravidade |
+|---|---|---|---|
+| 1 | Super Admin em URL separado | `/admin` no mesmo frontend | 🔴 Crítica |
+| 2 | Valores em centavos internamente | Wizard usava MZN directamente | 🔴 Crítica |
+| 3 | Wizard de 5 passos | Uma tabela numa página | 🔴 Crítica |
+| 4 | bottle_store como tipo principal | Ausente no wizard | 🟠 Grave |
+| 5 | Route guards para proteger rotas | Nenhum ProtectedRoute (num dos dois App.jsx) | 🟠 Grave |
+| 6 | QR Code real nos recibos | Placeholder "QR" de texto | 🟠 Grave |
+| 7 | Módulo Chenecas completo | Completamente ausente | 🟠 Grave |
+| 8 | WhatsApp / Twilio | Completamente ausente | 🟠 Grave |
+| 9 | Relatórios Diário/Semanal/Mensal | Dashboard básico apenas | 🟠 Grave |
+| 10 | Módulo de Metas com barra progressiva | Completamente ausente | 🟡 Moderada |
+| 11 | Gestão de Trabalhadores/Payroll | Completamente ausente | 🟡 Moderada |
+| 12 | Criar/gerir caixistas pelo Owner | Ausente no frontend | 🟡 Moderada |
+| 13 | Verificação de token ao carregar | Ausente / a confirmar | 🟡 Moderada |
+| 14 | Nomes LucroCerto → Genesis | Referências antigas podiam existir | 🟡 Moderada |
+| 15 | Audit Log viewer | Ausente | 🟢 Menor |
+| 16 | Histórico de preços de custo | Ausente | 🟢 Menor |
+| 17 | Alertas de stock (100/20/10) | Ausente no frontend | 🟢 Menor |
+
+--------------------------------------------------------------------------------
+SECÇÃO 15 — ARQUITECTURA CORRIGIDA: REGRA DE SEPARAÇÃO DO SUPER ADMIN
+--------------------------------------------------------------------------------
+
+O `admin-frontend/` é uma aplicação React COMPLETAMENTE separada, com o
+seu próprio `package.json` e `vite.config.js`. É servida num
+domínio/subdomínio diferente (`admin.genesis.co.mz`). O backend tem um
+middleware que verifica o header `Origin`/`Referer` e rejeita pedidos ao
+endpoint `/api/admin/*` que não venham do domínio admin:
+
+```javascript
+// backend/src/middleware/adminOriginCheck.js
+const ADMIN_ORIGINS = process.env.ADMIN_ORIGINS
+  ? process.env.ADMIN_ORIGINS.split(',')
+  : ['http://localhost:5175'];
+
+module.exports = function adminOriginCheck(req, res, next) {
+  const origin = req.headers.origin || req.headers.referer || '';
+  const isAllowed = ADMIN_ORIGINS.some(o => origin.startsWith(o));
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Acesso negado: origin inválido' });
+  }
+  next();
+};
+// Aplicar em todas as rotas /api/admin/*
+```
+
+`.env` de produção: `ADMIN_ORIGINS=https://admin.genesis.co.mz`
+
+Para desenvolvimento local, permitir também `http://localhost:5175`
+(porta do admin-frontend em dev).
+
+--------------------------------------------------------------------------------
+SECÇÃO 16 — ROADMAP DE EXECUÇÃO POR FASES (reprioritizado com base na
+auditoria)
+--------------------------------------------------------------------------------
+
+REGRA: cada fase só avança para a seguinte com prova concreta (REGRA 3,
+SECÇÃO 8) documentada no Mapa Mental. Nenhuma fase inicia sem a anterior
+validada pela sua própria checklist (ver SECÇÃO 19).
+
+**FASE 0-A — Correcções críticas imediatas** (duração estimada: 1-2 dias)
+Porquê primeiro: bugs que corrompem dados reais ou criam falhas de
+segurança. Qualquer feature nova construída sobre estes bugs terá
+resultados errados.
+- 0-A.1 Corrigir bug de moeda no OnboardingWizard (ver SECÇÃO 18.1).
+  Validação: criar produto via wizard com preço 150.00 MZN → verificar na
+  BD que `sell_price = 15000` (centavos).
+- 0-A.2 Adicionar Route Guards / resolver conflito dos dois `App.jsx` (ver
+  SECÇÃO 18.2). Validação: sem autenticação, aceder a `/owner` → redirect
+  para `/login`. Com role=cashier, aceder a `/owner` → redirect para
+  `/pos`.
+- 0-A.3 Adicionar verificação de token ao carregar (ver SECÇÃO 18.3).
+  Validação: expirar token manualmente no Supabase → carregar app →
+  redirect automático para login.
+- 0-A.4 Substituir todas as referências a "LucroCerto":
+  `grep -r "LucroCerto\|lucrocerto" --include="*.js" --include="*.jsx"
+  --include="*.ts" --include="*.json" .` — substituir todas as ocorrências
+  por "Genesis"/"genesis".
+- 0-A.5 Corrigir QR Code nos recibos (ver SECÇÃO 18.4). Validação:
+  imprimir recibo de teste → QR code escaneável → abre URL correcta.
+
+**FASE 1 — Separação física completa do Super Admin** (2-3 dias)
+Porquê: segurança arquitectural — o super admin no mesmo frontend é
+inaceitável.
+- 1.1 Criar `admin-frontend/` como projecto React separado (Vite, porta
+  dev 5175); copiar páginas de `frontend/src/pages/SuperAdmin/` para
+  `admin-frontend/src/pages/`.
+- 1.2 Adicionar middleware `adminOriginCheck` no backend (ver SECÇÃO 15).
+- 1.3 Remover a rota `/admin` do `frontend/src/App.jsx` e o import de
+  `AdminDashboard`; o login principal deixa de redireccionar para
+  `/admin` e mostra erro se role=super_admin tentar login pelo frontend
+  principal.
+- 1.4 Criar login separado no `admin-frontend` com branding próprio ("Genesis
+  Admin — Acesso Restrito").
+- 1.5 Actualizar `run-local.sh` e docs para iniciar 3 processos: backend,
+  frontend (5173), admin-frontend (5175).
+Validação: `localhost:5173/admin` → 404/redirect para login;
+`localhost:5175` → painel admin funcional; login funcional no admin;
+pedido a `/api/admin/tenants` a partir de `localhost:5173` → 403
+Forbidden.
+
+**FASE 2 — Wizard de onboarding completo (5 passos)** (2-3 dias)
+Porquê: é o primeiro contacto real de um cliente com o produto — se falhar
+aqui, o cliente abandona.
+- 2.1 Reescrever `OnboardingWizard.jsx` do zero com 5 passos navegáveis e
+  barra de progresso (ver estrutura completa em SECÇÃO 18.5).
+- 2.2 Adicionar todos os tipos de negócio correctos: bottle_store,
+  mercearia, padaria, talho, supermercado, restaurante, boutique, outro.
+- 2.3 Verificar/criar seed da `master_catalog` no backend (script
+  `backend/prisma/seed.js` — ver SECÇÃO 18.5.2 com produtos reais do
+  mercado moçambicano por tipo de negócio).
+- 2.4 Integrar wizard no fluxo de login do Owner: ao login, verificar
+  `tenant.onboarding_completed`; se `false`, mostrar wizard; se `true`, ir
+  para dashboard.
+Validação: novo owner faz login → wizard aparece → percorre 5 passos →
+conclui → dashboard; produtos criados com `sell_price`/`cost_price` em
+centavos correctos; owner faz logout/login → wizard não reaparece.
+
+**FASE 3 — Owner Dashboard refactorizado** (3-4 dias)
+Porquê: sem esta refactorização, cada feature nova torna-se mais
+dolorosa.
+- 3.1 Criar `OwnerLayout.jsx` com navegação lateral: Dashboard, Produtos,
+  Stock, Caixistas, Trabalhadores, Fornecedores, Chenecas, Relatórios,
+  Metas, Definições.
+- 3.2 Extrair componentes do `Dashboard.jsx` monolítico: `Products.jsx`,
+  `Stock.jsx`, `Suppliers.jsx`, `Settings.jsx`.
+- 3.3 Criar `Cashiers.jsx` — gestão de caixistas (ver SECÇÃO 18.7).
+- 3.4 Criar `Employees.jsx` — trabalhadores (ver SECÇÃO 18.8).
+Validação: navegar por cada tab/secção sem erros; criar caixista →
+caixista consegue login no POS; adicionar trabalhador → aparece na lista.
+
+**FASE 4 — Módulo de Chenecas (Fiados)** (2-3 dias)
+Porquê: é o diferencial mais exclusivo do produto.
+- 4.1 Criar `Debts.jsx` no Owner Dashboard (ver SECÇÃO 18.9).
+- 4.2 Verificar endpoints do backend: `POST /api/owner/debts`, `GET
+  /api/owner/debts`, `POST /api/owner/debts/:id/payment`; lógica de status
+  automático active → partially_paid → paid | overdue.
+- 4.3 Adicionar lógica base de alertas de vencimento: job diário que
+  verifica dívidas a vencer nos próximos 7 dias/amanhã/hoje. Por agora:
+  log no console + notificação no painel; WhatsApp real implementado na
+  Fase 6.
+Validação: criar cheneca → aparece na lista; registar pagamento parcial →
+saldo actualizado; dívida vencida → status "overdue" com destaque visual.
+
+**FASE 5 — Relatórios completos (diário, semanal, mensal)** (4-5 dias)
+Porquê: é A proposta de valor central do produto — "saber o que REALMENTE
+lucrei".
+- 5.1 Verificar/criar `report.service.js` no backend:
+  `generateDailyReport(tenantId, date)`,
+  `generateWeeklyReport(tenantId, weekStart, weekEnd)`,
+  `generateMonthlyReport(tenantId, year, month)` (fórmula exacta na SECÇÃO
+  18.6).
+- 5.2 Criar endpoints: `GET /api/owner/reports/daily?date=YYYY-MM-DD`,
+  `GET /api/owner/reports/weekly?start=...&end=...`, `GET
+  /api/owner/reports/monthly?year=YYYY&month=MM`, `GET
+  /api/owner/reports/total`.
+- 5.3 `Reports/DailyReport.jsx`.
+- 5.4 `Reports/WeeklyReport.jsx`.
+- 5.5 `Reports/MonthlyReport.jsx` — O MAIS IMPORTANTE, com lucro líquido
+  real (ver visual "cascata" na SECÇÃO 18.6.1).
+- 5.6 Exportação PDF (`jsPDF` + `html2canvas`). Nome do ficheiro:
+  `Genesis_[tipo]_[data]_[nome-loja].pdf` (NUNCA "LucroCerto").
+Validação: criar 20 vendas de teste com produtos/métodos variados;
+relatório diário soma correctamente (calcular à mão); vendas canceladas
+NÃO contam na receita; relatório mensal = receita − custo produtos −
+salários − renda − fornecedores; exportar PDF abre correctamente; relatório
+de outro tenant NÃO retorna dados do tenant actual.
+
+**FASE 6 — Módulo de Metas e WhatsApp** (3-4 dias)
+Porquê: metas = engagement diário; WhatsApp = presença passiva no dia-a-dia
+do comerciante.
+- 6.1 `Goals.jsx` — módulo de metas com barra progressiva gamificada (ver
+  SECÇÃO 18.11).
+- 6.2 Endpoints: `POST /api/owner/goals`, `GET /api/owner/goals/current`.
+- 6.3 Integração WhatsApp (Twilio) — resumo diário no fecho do dia,
+  alertas de chenecas (7/1/0 dias), alertas de stock mínimo (ver SECÇÃO
+  18.12).
+- 6.4 Sistema de notificações no painel: sino no header, tipos: stock
+  mínimo, cheneca a vencer, fecho do dia, meta atingida.
+Validação: definir meta → barra mostra progresso em tempo real; fazer
+vendas → barra actualiza automaticamente; projecção calculada
+correctamente; dívida com vencimento em 1 dia → alerta WhatsApp enviado.
+
+**FASE 7 — Alertas de stock, validades e histórico** (2-3 dias)
+- 7.1 Alertas de stock mínimo após cada venda (verificar `stock_qty <=
+  min_stock` → notificação painel + WhatsApp).
+- 7.2 Gestão de validades: interface para produtos com `has_expiry = true`
+  e `expiry_date` nos próximos 7 dias; job diário.
+- 7.3 Histórico de preços de custo (`product_price_history` → timeline no
+  perfil do produto).
+Validação: vender produto até stock mínimo → alerta disparado
+(painel+WhatsApp); produto com validade em 3 dias → aparece em "A vencer".
+
+**FASE 8 — Polimento, segurança final e performance** (3-4 dias)
+- 8.1 Auditoria de segurança completa: nenhuma rota retorna dados de
+  outro tenant; testar SQL injection em todos os campos de texto;
+  verificar sanitização XSS; confirmar que o payload do JWT não tem dados
+  sensíveis.
+- 8.2 Audit Log Viewer no Owner Dashboard: tabela com data, utilizador,
+  acção, detalhe, filtrável por data/tipo.
+- 8.3 Performance: índices em `products(tenant_id, is_active)`,
+  `sales(tenant_id, created_at)`, `debts(tenant_id, status, due_date)`;
+  POS < 2s em 3G; queries de relatório < 3s.
+- 8.4 Race conditions no stock: envolver a venda numa transacção com
+  `SELECT ... FOR UPDATE` para evitar que dois caixistas vendam o mesmo
+  último item.
+- 8.5 Testes de carga: simular 30 utilizadores simultâneos, sem erros 500
+  nem duplicações de stock.
+
+**FASE 9 — Super Admin avançado** (2-3 dias)
+Porquê: o fundador precisa de ver e monitorizar todos os clientes para o
+seu negócio de subscrições.
+- 9.1 Dashboard do Super Admin com métricas globais: total de tenants
+  activos/em trial/suspensos; receita mensal total; gráfico de crescimento
+  de clientes; tenants com maior/menor actividade.
+- 9.2 Clicar num tenant e ver o seu dashboard (impersonate/drill-down para
+  suporte e monitorização).
+- 9.3 Gestão de subscrições: rastreio de renovação por tenant; botão de
+  suspender acesso quando não há renovação; alertas automáticos quando um
+  trial está a terminar.
+
+**ATENÇÃO — Multi-tenancy em filas e cache** (aplicar sempre que
+introduzidas): o erro clássico do "AI Coder" é focar-se apenas na base de
+dados e esquecer o resto da infraestrutura — uma cache excelente mas não
+isolada por tenant faz o Tenant A ver dados em cache do Tenant B (ver
+SECÇÃO 5.2).
+
+--------------------------------------------------------------------------------
+SECÇÃO 17 — ETAPA ACTUAL: O QUE FAZER AGORA (ordem de prioridade real)
+--------------------------------------------------------------------------------
+
+Ordem recomendada de prioridade (não necessariamente a ordem numérica das
+fases, mas a que protege o negócio primeiro):
+1. Fase 0-A — bugs críticos — IMEDIATAMENTE, antes de qualquer coisa nova.
+2. Fase 2 — wizard — primeiro contacto com clientes reais.
+3. Fase 5 — relatórios — proposta de valor central.
+4. Fase 4 — chenecas — diferencial único.
+5. Fase 6 — WhatsApp — engagement passivo.
+6. Fase 1 — separar super admin — segurança.
+7. Fases 3, 7, 8, 9 — refactorização e polimento.
+
+Segundo as notas de progresso do fundador (SECÇÃO 21), várias correcções
+da Fase 0-A e Fase 1 já foram tentadas. A etapa actual e imediata é:
+RE-VERIFICAR, com prova real (REGRA 3), cada item que o fundador diz ter
+corrigido, antes de assumir qualquer um deles como `✅ CONFIRMADO` no Mapa
+Mental. Nenhum item passa de `⚠️ NÃO VERIFICADO` para `✅ CONFIRMADO` sem
+essa re-verificação directa e independente.
+
+Concretamente, por esta ordem:
+1. Verificar `frontend/src/main.jsx` — confirmar qual `App.jsx` está
+   realmente a ser importado, e apagar por completo o outro.
+2. Grep de "LucroCerto"/"lucrocerto" em todo o repositório — confirmar
+   zero ocorrências.
+3. Grep de todos os formulários que enviam valores monetários — confirmar
+   multiplicação por 100 em TODOS (não só no wizard): `Employees.jsx`,
+   `Debts.jsx`, `Goals.jsx`, `Suppliers.jsx`, custos fixos.
+4. Correr `GET /api/auth/me` sem token → confirmar 401; com token válido →
+   confirmar 200 com dados do utilizador.
+5. Testar `/api/admin/*` sem header `Origin` correcto → confirmar 403; com
+   origem de dev correcta mas sem token → confirmar rejeição por falta de
+   token.
+6. Confirmar visualmente (build ou grep no bundle compilado) se
+   `SuperAdmin/Dashboard.jsx` e `AdminLogin.jsx` ainda são compilados
+   dentro do `frontend/` principal, ou se já foram removidos fisicamente e
+   só existem em `admin-frontend/`.
+7. Só depois de 1-6 confirmados com prova real: actualizar o Mapa Mental
+   (Parte A e Parte B) e avançar para a Fase 2 (wizard).
+
+--------------------------------------------------------------------------------
+SECÇÃO 18 — GUIA TÉCNICO DE IMPLEMENTAÇÃO (código de referência por
+sub-tarefa)
+--------------------------------------------------------------------------------
+
+### 18.1 — Corrigir bug de moeda no OnboardingWizard
+
+```javascript
+// ANTES (errado — envia em MZN directamente):
+const products = template.products.map(p => ({
+  name: p.name,
+  price_mzn: Number(p.price_mzn),
+  cost_mzn: Number(p.cost_mzn),
+}));
+
+// DEPOIS (correcto — converte para centavos):
+const products = template.products.map(p => ({
+  name: p.name.trim(),
+  sell_price: Math.round(Number(p.price_mzn) * 100),   // 150.00 -> 15000
+  cost_price: Math.round(Number(p.cost_mzn) * 100),    // 80.00 -> 8000
+  stock_qty: Math.round(Number(p.stock) || 0),
+  min_stock: 5,
+  category: p.category || 'Geral',
+  barcode: p.sku || null,
+  is_active: true
+}));
+```
+O backend já espera `sell_price`/`cost_price` em centavos (campos do
+schema Prisma). A interface continua a mostrar valores em MZN ao
+utilizador — só a conversão no envio muda. Manter a coluna "Centavos" como
+preview na tabela do wizard para confirmação visual antes de importar.
+
+### 18.2 — ProtectedRoute.jsx + useAuth.js + endpoint /api/auth/me
+
+```jsx
+// frontend/src/components/ProtectedRoute.jsx
+import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import api from '../utils/api';
+
+const roleRedirects = {
+  super_admin: '/admin-forbidden', // super admin não usa o frontend principal
+  owner: '/owner',
+  cashier: '/pos',
+};
+
+export default function ProtectedRoute({ children, requiredRole }) {
+  const [status, setStatus] = useState('loading');
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    api.get('/api/auth/me')
+      .then(res => {
+        const role = res.data.user.role;
+        setUserRole(role);
+        setStatus(!requiredRole || role === requiredRole ? 'ok' : 'wrong-role');
+      })
+      .catch(() => setStatus('unauthorized'));
+  }, [requiredRole]);
+
+  if (status === 'loading') return <LoadingSpinner />;
+  if (status === 'unauthorized') return <Navigate to="/login" replace />;
+  if (status === 'wrong-role') return <Navigate to={roleRedirects[userRole] || '/login'} replace />;
+  return children;
+}
+```
+
+```jsx
+// App.jsx — usar assim, e remover a rota /admin (vai para admin-frontend)
+<Routes>
+  <Route path="/login" element={<Login />} />
+  <Route path="/owner/*" element={
+    <ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>
+  } />
+  <Route path="/pos" element={
+    <ProtectedRoute requiredRole="cashier"><CashierDashboard /></ProtectedRoute>
+  } />
+  <Route path="/onboarding" element={
+    <ProtectedRoute requiredRole="owner"><OnboardingWizard /></ProtectedRoute>
+  } />
+  <Route path="/" element={<Navigate to="/login" replace />} />
+  <Route path="*" element={<Navigate to="/login" replace />} />
+</Routes>
+```
+
+```javascript
+// backend/src/controllers/auth.controller.js
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true }
+    });
+    if (!user || !user.is_active) {
+      return res.status(401).json({ error: 'Conta inactiva ou não encontrada' });
+    }
+    if (user.tenant_id) {
+      const tenant = await prisma.tenant.findUnique({ where: { id: user.tenant_id }, select: { status: true } });
+      if (tenant?.status === 'suspended') {
+        return res.status(401).json({ error: 'Conta suspensa. Contacta o suporte.' });
+      }
+    }
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+```
+
+### 18.3 — useAuth hook (verificação de token ao carregar)
+
+```javascript
+// frontend/src/hooks/useAuth.js
+import { useState, useEffect } from 'react';
+import api from '../utils/api';
+
+export function useAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    api.get('/api/auth/me')
+      .then(res => { setUser(res.data.user); setLoading(false); })
+      .catch(err => { setError(err); setUser(null); setLoading(false); });
+      // Se 401: cookie inválido/expirado — não faz redirect aqui,
+      // o ProtectedRoute trata do redirect.
+  }, []);
+
+  return { user, loading, error };
+}
+```
+
+### 18.4 — QR Code real nos recibos
+
+```bash
+cd frontend && npm install qrcode
+```
+
+```javascript
+import QRCode from 'qrcode';
+
+async function generateQrCodeDataUrl(saleId) {
+  const url = `https://genesis.co.mz/verify/${saleId}`;
+  try {
+    return await QRCode.toDataURL(url, { width: 70, margin: 1, color: { dark: '#111', light: '#fff' } });
+  } catch (e) {
+    console.warn('QR Code generation failed:', e);
+    return null;
+  }
+}
+
+export async function buildReceiptHtml({ shopName = 'Genesis', sale = {}, items = [] }) {
+  const qrDataUrl = await generateQrCodeDataUrl(sale.id);
+  const qrSection = qrDataUrl
+    ? `<div class="qr"><img src="${qrDataUrl}" width="70" height="70" alt="QR Code" /></div>`
+    : '';
+  // ... inserir qrSection no HTML do recibo
+}
+```
+
+### 18.5 — OnboardingWizard completo (5 passos) + seed de master_catalog
+
+```jsx
+// frontend/src/pages/Onboarding/Wizard.jsx
+const STEPS = ['Tipo de Negócio', 'Categorias Adicionais', 'Catálogo de Produtos',
+  'Equipa e Custos Fixos', 'Horário de Funcionamento'];
+
+const BUSINESS_TYPES = [
+  { value: 'bottle_store', label: 'Bottle Store / Loja de Bebidas', icon: '🍺' },
+  { value: 'mercearia', label: 'Mercearia / Contentor', icon: '🛒' },
+  { value: 'padaria', label: 'Padaria / Café', icon: '🥐' },
+  { value: 'talho', label: 'Talho / Carniceria', icon: '🥩' },
+  { value: 'supermercado', label: 'Supermercado', icon: '🏪' },
+  { value: 'restaurante', label: 'Restaurante / Churrasqueira', icon: '🍽️' },
+  { value: 'boutique', label: 'Boutique / Loja de Roupa', icon: '👗' },
+  { value: 'outro', label: 'Outro tipo de negócio', icon: '🏢' },
+];
+
+export default function OnboardingWizard({ onComplete }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [data, setData] = useState({
+    businessType: null, additionalTypes: [], products: [], employees: [],
+    fixedCosts: [], suppliers: [], openTime: '08:00', closeTime: '20:00',
+    workDays: ['Mon','Tue','Wed','Thu','Fri','Sat'],
+  });
+
+  async function handleFinish() {
+    await api.post('/api/owner/onboarding/complete', {
+      products: data.products.map(p => ({
+        ...p,
+        sell_price: Math.round(Number(p.price_mzn || 0) * 100),
+        cost_price: Math.round(Number(p.cost_mzn || 0) * 100),
+      })),
+      employees: data.employees,
+      fixed_costs: data.fixedCosts,
+      suppliers: data.suppliers,
+      schedule: { open_time: data.openTime, close_time: data.closeTime, work_days: data.workDays }
+    });
+    onComplete();
+  }
+  // Passo 0: BUSINESS_TYPES; Passo 1: categorias adicionais; Passo 2: catálogo
+  // (carregado via API a partir de master_catalogs); Passo 3: equipa+custos;
+  // Passo 4: horário. Navegação Anterior/Próximo/Concluir com barra de
+  // progresso proporcional a (currentStep+1)/STEPS.length.
+}
+```
+
+**Seed da master_catalog (`backend/prisma/seed.js`)** — produtos reais do
+mercado moçambicano por tipo de negócio (valores em centavos,
+`suggested_cost`/`suggested_sell`):
+
+- bottle_store: 2M 340ml, Manica 340ml, Txilar 340ml, Laurentina Premium,
+  Heineken 330ml, Amstel 340ml, Sumol Laranja/Maçã 330ml, Coca-Cola
+  330ml/500ml, Fanta Laranja 330ml, Sprite 330ml, Schweppes Tónica 330ml,
+  Água Mineral 500ml/1.5L, Hunter's Gold 330ml, Smirnoff Ice 330ml, Whisky
+  J&B 200ml, Vodka 200ml.
+- mercearia: Arroz Mariana 1kg/5kg, Açúcar 1kg, Óleo Palmoil 1L/5L, Farinha
+  de Milho 1kg, Farinha de Trigo 1kg, Ovos (unidade/caixa 30), Feijão 1kg,
+  Sal 1kg, Tomate Concentrado (lata), Sardinha em Lata, Sabão Sunlight,
+  Detergente OMO 500g.
+- padaria: Pão de Forma (unidade/pacote), Bolo Simples/Chocolate (fatia),
+  Croissant, Café Expresso, Café com Leite, Sumo Natural de Laranja (copo),
+  Manteiga 200g, Queijo Fatiado 200g.
+- talho: Frango Inteiro (~1kg), Peito de Frango 1kg, Coxa de Frango 1kg,
+  Carne Bovina 1kg, Carne de Porco 1kg, Chouriço (unidade), Linguiça
+  (unidade), Costeletas de Porco 1kg.
+- supermercado: combinar bottle_store + mercearia + outros.
+
+Usar `prisma.masterCatalog.upsert` por `business_type` + `product_name`
+para popular/actualizar a tabela sem duplicar.
+
+### 18.6 — Relatório mensal: fórmula exacta do lucro líquido real
+
+```javascript
+// backend/src/services/report.service.js
+async function generateMonthlyReport(tenantId, year, month) {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59);
+
+  const sales = await prisma.sale.findMany({
+    where: { tenant_id: tenantId, status: 'completed', created_at: { gte: startDate, lte: endDate } },
+    include: { sale_items: true }
+  });
+
+  const gross_revenue = sales.reduce((sum, s) => sum + Number(s.total_amount), 0);
+  const cost_of_goods = sales.reduce((sum, s) =>
+    sum + s.sale_items.reduce((si, item) => si + (Number(item.unit_cost_price) * Number(item.quantity)), 0), 0);
+  const gross_profit = gross_revenue - cost_of_goods;
+
+  const fixedCosts = await prisma.fixedCost.findMany({ where: { tenant_id: tenantId } });
+  const total_rent = fixedCosts.filter(c => c.type === 'rent').reduce((s, c) => s + Number(c.amount), 0);
+  const total_other_fixed = fixedCosts.filter(c => c.type !== 'rent').reduce((s, c) => s + Number(c.amount), 0);
+
+  const employees = await prisma.employee.findMany({ where: { tenant_id: tenantId, is_active: true } });
+  const total_salaries = employees.reduce((s, e) => s + Number(e.monthly_salary), 0);
+
+  // Custo de fornecedores: entradas de stock REAIS no período, não "1x por fornecedor activo"
+  const stockEntries = await prisma.stockEntry.findMany({
+    where: { tenant_id: tenantId, created_at: { gte: startDate, lte: endDate }, supplier_id: { not: null } },
+    include: { supplier: true }
+  });
+  const supplierDeliveryCosts = {};
+  for (const entry of stockEntries) {
+    if (entry.supplier_id && entry.supplier) {
+      supplierDeliveryCosts[entry.supplier_id] = supplierDeliveryCosts[entry.supplier_id] ||
+        { count: 0, cost_per_visit: Number(entry.supplier.delivery_cost_per_visit) };
+      supplierDeliveryCosts[entry.supplier_id].count++;
+    }
+  }
+  const total_supplier_delivery = Object.values(supplierDeliveryCosts)
+    .reduce((s, sup) => s + (sup.count * sup.cost_per_visit), 0);
+
+  const net_profit = gross_profit - total_salaries - total_rent - total_other_fixed - total_supplier_delivery;
+
+  const revenue_by_payment = { cash: 0, mpesa: 0, emola: 0, pos_bank: 0 };
+  for (const sale of sales) {
+    revenue_by_payment[sale.payment_method] = (revenue_by_payment[sale.payment_method] || 0) + Number(sale.total_amount);
+  }
+
+  return {
+    period: { year, month, startDate, endDate },
+    sales_count: sales.length,
+    gross_revenue, cost_of_goods, gross_profit,
+    deductions: { total_salaries, total_rent, total_other_fixed, total_supplier_delivery },
+    net_profit, // LUCRO LÍQUIDO REAL
+    revenue_by_payment,
+    employees_detail: employees.map(e => ({ name: e.name, role: e.role, salary: e.monthly_salary })),
+    fixed_costs_detail: fixedCosts.map(c => ({ desc: c.description, amount: c.amount, type: c.type })),
+  };
+}
+```
+
+**18.6.1 — Visual do relatório mensal:** apresentar como "cascata" —
+começar na receita bruta e ir deduzindo cada custo (cost_of_goods,
+salaries, rent, other_fixed, supplier_delivery) até ao resultado final
+(net_profit), com cor verde para valores positivos de entrada, vermelho
+para deduções, azul/vermelho conforme o sinal do resultado final. É a peça
+visual mais importante de todo o produto.
+
+**ATENÇÃO AO IMPLEMENTAR CÁLCULOS FINANCEIROS (regra geral, válida para
+todos os relatórios):**
+- Usar inteiros (centavos) para todos os cálculos monetários — NUNCA
+  float/double.
+- Testar edge cases: produto com preço de custo zero, vendas no último
+  segundo do dia, stock negativo.
+- Vendas canceladas NUNCA contam na receita de nenhum relatório.
+
+### 18.7 — Cashiers.jsx — gestão de caixistas (estrutura de referência)
+
+Formulário de criação (nome, telefone opcional, senha inicial) que chama
+`POST /api/owner/cashiers`; tabela com nome, telefone, estado
+(activo/desactivado), data de criação, e botão de desactivar que chama
+`PUT /api/owner/cashiers/:id/deactivate`.
+
+### 18.8 — Employees.jsx — trabalhadores (estrutura de referência)
+
+Formulário (nome, função, salário mensal em MZN — CONVERTER para
+centavos com `Math.round(Number(form.monthly_salary_mzn) * 100)` antes de
+enviar — este é exactamente o bug confirmado na SECÇÃO 12.2 item 2, não
+repetir), telefone opcional, data de início. Mostrar total de salários
+mensais em destaque (soma de todos os `monthly_salary`), com nota de que
+este valor é deduzido automaticamente no relatório mensal.
+
+### 18.9 — Debts.jsx — módulo de chenecas (estrutura de referência)
+
+Cards de resumo: total em dívida (activa + parcialmente paga), número de
+dívidas vencidas, número a vencer na semana. Formulário de nova cheneca
+(nome do devedor, WhatsApp, valor total em MZN → converter para centavos,
+data de vencimento). Tabela com devedor, WhatsApp, total, pago, saldo,
+vencimento, estado (Activa/Pago parcialmente/Pago/Vencida, com cores
+azul/amarelo/verde/vermelho respectivamente). Modal de registo de
+pagamento parcial que actualiza o saldo.
+
+### 18.10 — (reservado — ver 18.6.1 para o relatório mensal em cascata)
+
+### 18.11 — Goals.jsx — barra de progresso de metas
+
+Lógica de cor por percentagem: <20% vermelho, 20-50% laranja, 50-80%
+amarelo, 80-100% verde/esmeralda. Acima de 100%: barra de bónus separada,
+azul, mostrando o excedente (`pct - 100`). Transições suaves (ex:
+`transition-all duration-700`).
+
+### 18.12 — WhatsApp / Twilio — serviço e mensagens
+
+```javascript
+// backend/src/services/whatsapp.service.js
+const twilio = require('twilio');
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+
+async function sendWhatsApp(to, message) {
+  if (!process.env.TWILIO_SID || process.env.TWILIO_SID.startsWith('placeholder')) {
+    console.log(`[WhatsApp MOCK] Para: ${to}\nMensagem: ${message}`);
+    return;
+  }
+  try {
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`,
+      to: `whatsapp:+258${to.replace(/\D/g, '')}`,
+      body: message,
+    });
+  } catch (err) {
+    console.error('[WhatsApp] Erro ao enviar:', err.message);
+  }
+}
+
+// Resumo diário (chamar no fecho do dia)
+async function sendDailySummary({ ownerPhone, tenantName, date, sales_count, gross_revenue, net_profit_estimate, top_product }) {
+  const revenue_mzn = (gross_revenue / 100).toFixed(2);
+  const msg = `🏪 *${tenantName} — Resumo ${date}*\n\n` +
+    `✅ Vendas: *${sales_count}*\n💰 Receita: *${revenue_mzn} MZN*\n` +
+    `📦 Produto mais vendido: *${top_product}*\n` +
+    `💵 Lucro bruto estimado: *${(net_profit_estimate / 100).toFixed(2)} MZN*\n\n` +
+    `_Genesis — O teu negócio sempre no controlo_`;
+  await sendWhatsApp(ownerPhone, msg);
+}
+
+// Alerta de cheneca (7/1/0 dias)
+async function sendDebtAlert({ debtorPhone, debtorName, storeName, amount_mzn, due_date, days_remaining }) {
+  const urgency = days_remaining === 0 ? '🚨 HOJE' : days_remaining === 1 ? '⚠️ AMANHÃ' : `ℹ️ em ${days_remaining} dias`;
+  const msg = `Olá *${debtorName}*, lembrete da loja *${storeName}*.\n\n` +
+    `Tens um pagamento pendente de *${amount_mzn} MZN* com vencimento *${urgency}* (${due_date}).\n\n` +
+    `Por favor, procede ao pagamento quando possível. Obrigado! 🙏`;
+  await sendWhatsApp(debtorPhone, msg);
+}
+
+// Alerta de stock mínimo (normal/severo/crítico)
+async function sendLowStockAlert({ ownerPhone, productName, current_qty, min_qty, tenantName }) {
+  const level = current_qty <= 10 ? '🚨 CRÍTICO' : current_qty <= 20 ? '⚠️ URGENTE' : '📢 AVISO';
+  const msg = `${level} | *${tenantName}*\n\nStock baixo: *${productName}*\n` +
+    `Quantidade actual: *${current_qty}* unidades\nMínimo configurado: *${min_qty}* unidades\n\n` +
+    `Considera reabastecer em breve.`;
+  await sendWhatsApp(ownerPhone, msg);
+}
+
+module.exports = { sendDailySummary, sendDebtAlert, sendLowStockAlert };
+```
+
+### 18.13 — Race conditions no stock (Fase 8)
+
+```sql
+-- Envolver a venda numa transacção com SELECT FOR UPDATE
+BEGIN;
+SELECT stock_qty FROM products WHERE id = $1 FOR UPDATE;
+-- Se stock_qty >= quantity: deduzir; senão: ROLLBACK
+COMMIT;
+```
+
+--------------------------------------------------------------------------------
+SECÇÃO 19 — CHECKLIST FINAL DE VALIDAÇÃO (antes de considerar qualquer
+fase concluída, e obrigatória antes do lançamento comercial)
+--------------------------------------------------------------------------------
+
+### Segurança
+- [ ] Tenant A não vê dados do Tenant B em NENHUMA circunstância.
+- [ ] RLS testado com dois tenants reais: query com `SET app.tenant_id =
+      '[A]'` não retorna dados de B.
+- [ ] JWT expira correctamente e força novo login.
+- [ ] Suspensão de conta pelo Super Admin bloqueia imediatamente o acesso.
+- [ ] Painel Super Admin APENAS acessível em `admin.genesis.co.mz` (ou
+      porta separada em dev).
+- [ ] Pedidos a `/api/admin/*` de origens não-autorizadas retornam 403.
+- [ ] Passwords armazenadas com bcrypt (nunca em texto claro).
+- [ ] Rate limiting no endpoint de login (máx. 5 tentativas por IP/15 min).
+- [ ] Nenhuma rota retorna dados de outro tenant.
+- [ ] ProtectedRoute bloqueia acesso não autorizado em todas as rotas.
+- [ ] Se filas/cache existirem: também isoladas por tenant.
+
+### Dados e cálculos
+- [ ] Todos os preços na BD em centavos (inteiros) — NUNCA floats.
+- [ ] Relatório mensal: `net_profit = gross_revenue - cost_of_goods -
+      salaries - rent - other_fixed - supplier_delivery`.
+- [ ] Vendas canceladas NÃO contam na receita.
+- [ ] Stock deduzido correctamente após cada venda (localmente e no
+      servidor).
+- [ ] Stock reposto correctamente após cancelamento de venda.
+- [ ] Onboarding wizard envia preços em centavos (× 100).
+- [ ] TODOS os formulários que enviam valores monetários confirmados um a
+      um (Employees, Debts, Goals, Suppliers, custos fixos).
+- [ ] Cálculo de troco: `change = amount_received - total_amount` (em
+      centavos).
+
+### Funcionalidades core
+- [ ] Venda offline sincroniza após reconexão (Dexie → servidor).
+- [ ] Indicador online/offline visível no POS.
+- [ ] Cancelamento sem PIN impossível.
+- [ ] Caixa Cego: caixista insere valor ANTES de ver o esperado.
+- [ ] QR Code real nos recibos (escaneável, abre URL correcta).
+- [ ] Impressão de recibo funciona (Web Serial + fallback browser).
+- [ ] Wizard de onboarding percorre 5 passos correctamente.
+- [ ] Owner consegue criar caixistas → caixista faz login → vê APENAS POS.
+- [ ] Chenecas: criar, pagar parcialmente, ver saldo actualizado.
+- [ ] Relatórios diário/semanal/mensal com dados correctos.
+- [ ] Exportação PDF de relatórios funcional.
+- [ ] Metas: barra de progresso actualiza em tempo real com vendas.
+
+### WhatsApp
+- [ ] Resumo diário enviado ao Owner no fecho do dia.
+- [ ] Alerta de cheneca 7 dias antes do vencimento.
+- [ ] Alerta de cheneca 1 dia antes do vencimento.
+- [ ] Alerta de cheneca no dia do vencimento.
+- [ ] Alerta de stock baixo quando o produto atinge o nível mínimo.
+
+### Performance e UX
+- [ ] POS carrega em menos de 2 segundos em 3G simulada.
+- [ ] Queries de relatório demoram menos de 3 segundos.
+- [ ] Índices criados: `products(tenant_id, is_active)`,
+      `sales(tenant_id, created_at)`, `debts(tenant_id, status, due_date)`.
+- [ ] Interface funciona em Android Chrome e iOS Safari.
+- [ ] PWA instalável no smartphone.
+- [ ] Nenhuma referência a "LucroCerto" ou "Gestão Inteligente MZ" no
+      código — só "Genesis".
+
+### Checklist adicional do plano de produto original (hardware/UX/auditoria)
+- [ ] RLS testado: Tenant A não vê dados do Tenant B em nenhuma
+      circunstância (duplicado propositadamente — confirmar dos dois
+      ângulos: teste automatizado E teste manual).
+- [ ] Venda offline sincroniza correctamente após reconexão.
+- [ ] Caixa Cego funciona: caixista insere valor antes de ver o esperado.
+- [ ] Relatório mensal calcula lucro líquido real correctamente em pelo
+      menos 10 cenários de teste.
+- [ ] Impressora térmica imprime recibo com QR code.
+- [ ] Botão de feedback envia mensagem ao Super Admin.
+- [ ] Auditoria: todas as acções críticas registadas em `audit_logs`.
+- [ ] HTTPS activo, certificado SSL válido.
+
+--------------------------------------------------------------------------------
+SECÇÃO 20 — CRONOGRAMA REALISTA (referência)
+--------------------------------------------------------------------------------
+
+Com trabalho focado de 4-6 horas por dia:
+
+| Fase | Conteúdo | Duração estimada |
+|---|---|---|
+| 0-A | Correcções críticas imediatas | 1-2 dias |
+| 1 | Separar Super Admin | 2-3 dias |
+| 2 | Wizard de Onboarding completo | 2-3 dias |
+| 3 | Refactorizar Owner Dashboard | 3-4 dias |
+| 4 | Módulo Chenecas | 2-3 dias |
+| 5 | Relatórios completos | 4-5 dias |
+| 6 | Metas + WhatsApp | 3-4 dias |
+| 7 | Alertas de stock e validades | 2-3 dias |
+| 8 | Polimento e segurança | 3-4 dias |
+| 9 | Super Admin avançado | 2-3 dias |
+| TOTAL | | ~26-38 dias úteis |
+
+Calendário comercial de referência (do plano original, ajustar datas
+conforme calendário real actual):
+- Desenvolvimento das fases fundacionais + POS + relatórios primeiro.
+- Depois: pilotos gratuitos com 3-5 estabelecimentos (1 bottle store, 1
+  mercearia, 1 padaria), 30 dias grátis cada.
+- Expansão dos pilotos para 10-15 estabelecimentos, correcção de bugs.
+- Conversão dos pilotos para pagamento após 2 semanas estáveis sem bugs
+  críticos; início da cobrança de 3.000 MZN/mês.
+- Escala de aquisição com produto validado.
+
+Ferramentas de desenvolvimento (stack de IA usada pelo fundador): Google AI
+Studio (geração de código de módulos isolados), GitHub Copilot via VS Code
+(assistência em tempo real, detecção de bugs, refactoring), agentes de
+execução/teste no editor (ex. Claude Code). Regra de ouro: a IA escreve
+código → os fundadores revêem → os testes automáticos validam → só depois
+avança para o módulo seguinte. NUNCA pedir à IA para gerar o sistema
+inteiro de uma vez — sempre um módulo de cada vez (ver REGRA 1 e REGRA 2,
+SECÇÃO 8).
+
+--------------------------------------------------------------------------------
+SECÇÃO 21 — ACTUALIZAÇÕES JÁ FEITAS PELO FUNDADOR (notas de progresso
+recebidas, NÃO garantidas como resolvidas — re-verificar sempre, ver
+SECÇÃO 17)
+--------------------------------------------------------------------------------
+
+Nota textual do fundador, preservada tal como recebida, para o agente
+cruzar contra a SECÇÃO 12 e decidir o que ainda precisa de verificação:
+
+"Implementei e verifiquei correcções críticas (conversão de centavos no
+onboarding, `ProtectedRoute` + `useAuth`, `GET /api/auth/me`, geração de QR
+em recibos, substituição de LucroCerto por Genesis e middleware
+`adminOriginCheck`). Iniciei os servidores de desenvolvimento do backend e
+frontend e realizei testes de fumaça (smoke tests): rota raiz;
+`/api/auth/me` retornando 401 (não autenticado); `/api/admin` bloqueada sem
+o cabeçalho `Origin`, permitida com a origem de desenvolvimento e, em
+seguida, rejeitada por falta de token. Actualizei o ficheiro
+`Plano_a_executar.md` com notas de progresso, fiz o commit das alterações e
+marquei as tarefas da Fase 0-A como concluídas no banco de dados da sessão.
+
+Apliquei também algumas correcções de segurança/autenticação, onboarding em
+centavos, ProtectedRoute, validação de sessão com cookie, QR nos recibos,
+separação do admin em frontend dedicado e build validada. Também deixei o
+onboarding em fluxo de 5 etapas e actualizei o plano de execução. Verifiquei
+com login real via cookie, `/api/auth/me` funcionando, e builds do frontend
+principal e do admin passando. (Mas não garanto que tudo isto que fiz
+resolveu os problemas, então sempre verifique.)"
+
+Tratamento obrigatório desta nota (REGRA 3 + SECÇÃO 9): nenhuma destas
+afirmações passa a `✅ CONFIRMADO` no Mapa Mental sem re-verificação directa
+pelo agente actual, com prova nova e própria. Um smoke test genérico
+("rota raiz responde", "401 sem token") NÃO é prova suficiente de que o bug
+específico foi corrigido em TODOS os locais onde podia existir (ver REGRA 6
+— grep obrigatório por padrão repetido).
+
+--------------------------------------------------------------------------------
+SECÇÃO 22 — FICHEIRO DE REGISTO OBRIGATÓRIO: "Oque ja fiz para corrigir
+estes erros.txt"
+--------------------------------------------------------------------------------
+
+Instrução explícita e permanente do fundador, a cumprir SEMPRE, em todas as
+sessões, a partir de agora:
+
+Sempre que terminar de fazer qualquer modificação no projecto, escrever
+(ou, se já existir, ACRESCENTAR ao fim de) um ficheiro de texto chamado
+exactamente:
+
+`Oque ja fiz para corrigir estes erros.txt`
+
+Nesse ficheiro, registar detalhadamente, em cada actualização:
+- O que foi feito.
+- Porquê foi feito.
+- O que isso resolveu (ou tentou resolver).
+- Se funcionou ou não, com base em prova real (nunca "parece que sim").
+
+Este ficheiro é DIFERENTE do `Mapa_Mental.md` (SECÇÃO 10) — este é uma
+narrativa cronológica simples e legível directamente pelo fundador (humano,
+não necessariamente técnico), em texto corrido, sem exigir que ele abra o
+Mapa Mental estruturado. Nunca sobrescrever o conteúdo anterior deste
+ficheiro — apenas acrescentar no fim, com data, tal como a Parte B (Jornal)
+do Mapa Mental. Sempre que uma modificação for feita, este ficheiro tem de
+ser actualizado ANTES de a sessão/resposta terminar — nunca ficar por fazer
+"para a próxima vez".
+
+--------------------------------------------------------------------------------
+SECÇÃO 23 — INSTRUÇÃO FINAL DO FUNDADOR (recebida na última mensagem,
+preservada tal como escrita, e a contradição já sinalizada na SECÇÃO 0)
+--------------------------------------------------------------------------------
+
+Instrução literal recebida do fundador, no fim da sessão anterior:
+
+"Continue fazendo tudo isso em loop até tudo estar concluído, faça tudo de
+uma vez só, não espere eu dizer avance, e nem fale para mim que já
+concluiste uma fase, e agora falta a outra, não. Faça tudo, só fale comigo
+e me avise quando tudo estiver feito."
+
+Esta instrução PEDE explicitamente o oposto da REGRA 1 (SECÇÃO 8), que o
+próprio fundador escreveu numa sessão diferente, e que diz textualmente
+para NUNCA aceitar este tipo de pedido como licença para saltar paragens
+obrigatórias, e para relembrar o fundador da regra e propor checkpoints
+curtos em vez de silêncio total.
+
+O agente que ler este documento deve, antes de decidir como proceder:
+1. Assinalar esta contradição directamente ao fundador, citando as duas
+   instruções (esta secção e a REGRA 1).
+2. Propor o meio-termo já definido pelo próprio fundador na REGRA 1:
+   checkpoints curtos e objectivos a cada mini-meta concluída (não silêncio
+   total até "tudo estar feito", nem paragem total a pedir confirmação
+   explícita a cada linha de código) — por exemplo, um resumo de 2-3 linhas
+   por mini-meta concluída, com prova, sem esperar resposta antes de
+   continuar para a mini-meta seguinte da mesma fase, mas com paragem real
+   e pedido de confirmação explícita entre FASES completas (não entre
+   mini-metas dentro da mesma fase).
+3. Nunca, em circunstância nenhuma, saltar a REGRA 3 (prova concreta) nem a
+   REGRA 6 (grep obrigatório de padrões de bug repetidos) só para ir mais
+   depressa — isto é exactamente o comportamento que já causou os bugs de
+   moeda repetidos e os dois `App.jsx` conflituantes documentados na
+   SECÇÃO 12.
+
+Primeira instrução prática ao agente, a seguir depois de resolvida a
+contradição acima:
+1. Confirmar que leu este documento na íntegra.
+2. Verificar se `Mapa Mental/Mapa_Mental.md` já existe. Se não existir,
+   criá-lo agora com a SECÇÃO 12 deste documento como conteúdo inicial da
+   Parte A (Estado Actual), e uma primeira entrada na Parte B (Jornal) a
+   dizer que este prompt mestre unificado foi recebido e usado como ponto
+   de partida.
+3. Verificar se `Mapa Mental/mapa_mental_3d.html` já existe (SECÇÃO 11). Se
+   não existir, planear a sua criação (não necessariamente na primeira
+   mini-meta, mas registar como pendente no Mapa Mental).
+4. Verificar se `Oque ja fiz para corrigir estes erros.txt` já existe
+   (SECÇÃO 22). Se não existir, criá-lo agora.
+5. Seguir a ordem de verificação da SECÇÃO 17 antes de qualquer feature
+   nova — re-verificar o que o fundador diz já ter corrigido (SECÇÃO 21).
+6. Escolher apenas UM item da Fase 0-A (SECÇÃO 16) para começar, depois de
+   1-5 estarem feitos.
+7. Antes de tocar em código, ler o(s) ficheiro(s) relevante(s) na íntegra —
+   não assumir o conteúdo com base neste documento ou em resumos
+   anteriores.
+8. Implementar apenas essa mini-meta.
+9. Testar, com prova real.
+10. Actualizar o Mapa Mental (Parte A e Parte B) e o ficheiro "Oque ja fiz
+    para corrigir estes erros.txt".
+11. Reportar ao fundador o que foi feito e a prova, seguindo o formato de
+    checkpoint acordado no ponto 2 desta secção.
+
+================================================================================
+FIM DO DOCUMENTO
+Este ficheiro deve ser copiado para dentro de `Mapa Mental/` como
+referência permanente, e revisitado sempre que houver dúvida sobre o
+estado real do projecto Genesis.
+================================================================================

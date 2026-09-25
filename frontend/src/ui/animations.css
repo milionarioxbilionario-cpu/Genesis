@@ -1,0 +1,192 @@
+/* ==========================================================================
+   GENESIS - MOVIMENTO
+   Principios: curto (140-380ms), fluido (ease-out "quint"), nunca agressivo.
+   Namespaced g-* para nao colidir com as utilities animate-* do Tailwind.
+   O guard global de prefers-reduced-motion vive em tokens.css.
+   ========================================================================== */
+
+/* ---------------- 1. KEYFRAMES ---------------- */
+@keyframes g-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes g-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes g-rise-sm { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes g-scale { from { opacity: 0; transform: scale(0.965) translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes g-pop { 0% { opacity: 0; transform: scale(0.92); } 60% { opacity: 1; transform: scale(1.015); } 100% { transform: scale(1); } }
+@keyframes g-enter-right { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+@keyframes g-enter-left { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+@keyframes g-slide-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes g-toast-in { from { opacity: 0; transform: translateX(26px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes g-toast-out { to { opacity: 0; transform: translateX(26px) scale(0.97); } }
+@keyframes g-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes g-pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes g-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.34); } 70% { box-shadow: 0 0 0 14px rgba(229, 9, 20, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); } }
+@keyframes g-spin { to { transform: rotate(360deg); } }
+@keyframes g-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes g-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+@keyframes g-backdrop { from { opacity: 0; } to { opacity: 1; } }
+@keyframes g-drawer { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+@keyframes g-underline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes g-glow { 0%, 100% { box-shadow: 0 0 0 rgba(229, 9, 20, 0); } 50% { box-shadow: 0 8px 26px rgba(229, 9, 20, 0.22); } }
+@keyframes g-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------------- 2. UTILITARIOS DE ENTRADA ---------------- */
+.g-anim-fade { animation: g-fade var(--d-base) var(--e-out) both; }
+.g-anim-rise { animation: g-rise var(--d-base) var(--e-out) both; }
+.g-anim-rise-sm { animation: g-rise-sm var(--d-fast) var(--e-out) both; }
+.g-anim-scale { animation: g-scale var(--d-base) var(--e-out) both; }
+.g-anim-pop { animation: g-pop var(--d-base) var(--e-spring) both; }
+.g-anim-slide-down { animation: g-slide-down var(--d-fast) var(--e-out) both; }
+.g-anim-enter-right { animation: g-enter-right var(--d-base) var(--e-out) both; }
+.g-anim-shake { animation: g-shake 420ms var(--e-out) both; }
+.g-anim-spin { animation: g-spin 900ms linear infinite; }
+.g-anim-pulse { animation: g-pulse-soft 1.8s var(--e-inout) infinite; }
+.g-anim-ring { animation: g-pulse-ring 2s var(--e-out) infinite; }
+.g-anim-float { animation: g-float 3.2s var(--e-inout) infinite; }
+.g-anim-glow { animation: g-glow 2.6s var(--e-inout) infinite; }
+
+/* Nomes antigos usados no codigo (compatibilidade). */
+.animate-slide-up { animation: g-rise var(--d-base) var(--e-out) both; }
+.animate-slide-right { animation: g-enter-right var(--d-base) var(--e-out) both; }
+.animate-slide-down { animation: g-slide-down var(--d-fast) var(--e-out) both; }
+.animate-scale-in { animation: g-scale var(--d-base) var(--e-out) both; }
+
+/* Entrada de pagina: o CRMLayout aplica isto por rota (key=pathname). */
+.g-page-anim { animation: g-rise var(--d-slow) var(--e-out) both; }
+
+/* ---------------- 3. CASCATA (STAGGER) ---------------- */
+.g-stagger > * { animation: g-rise var(--d-base) var(--e-out) both; }
+.g-stagger > *:nth-child(1) { animation-delay: 15ms; }
+.g-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.g-stagger > *:nth-child(3) { animation-delay: 105ms; }
+.g-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.g-stagger > *:nth-child(5) { animation-delay: 195ms; }
+.g-stagger > *:nth-child(6) { animation-delay: 240ms; }
+.g-stagger > *:nth-child(7) { animation-delay: 285ms; }
+.g-stagger > *:nth-child(8) { animation-delay: 330ms; }
+.g-stagger > *:nth-child(n+9) { animation-delay: 360ms; }
+
+/* ---------------- 4. REVEAL AO SCROLL ---------------- */
+/* O hook useReveal (components/ui) acrescenta .is-visible quando o elemento
+   entra no viewport. Sem JS, o conteudo fica visivel (opacity 1) por defeito
+   apenas se .is-visible existir - por isso o hook marca tambem o root. */
+.g-reveal { opacity: 0; transform: translateY(14px); transition: opacity var(--d-slow) var(--e-out), transform var(--d-slow) var(--e-out); will-change: opacity, transform; }
+.g-reveal.is-visible { opacity: 1; transform: none; }
+
+/* ---------------- 5. MICRO-INTERACOES ---------------- */
+.press { transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast); }
+.press:active { transform: scale(0.975); }
+.hover-lift { transition: transform var(--t), box-shadow var(--t), border-color var(--t), background var(--t); }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: var(--sh-md); }
+.hover-glow:hover { box-shadow: var(--sh-brand); border-color: var(--brand); }
+.g-underline { position: relative; }
+.g-underline::after { content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px; background: currentColor; border-radius: 2px; transform: scaleX(0); transform-origin: left; transition: transform var(--t); }
+.g-underline:hover::after,
+.g-underline:focus-visible::after { transform: scaleX(1); }
+
+/* ---------------- 6. PECAS ANIMADAS ---------------- */
+.g-spinner { width: 16px; height: 16px; border-radius: var(--r-full); border: 2px solid currentColor; border-top-color: transparent; animation: g-spin 800ms linear infinite; }
+.g-spinner-lg { width: 26px; height: 26px; border-width: 3px; }
+.g-backdrop { animation: g-backdrop var(--d-base) var(--e-out) both; }
+.g-drawer-anim { animation: g-drawer var(--d-base) var(--e-out) both; }
+.g-toast-in { animation: g-toast-in var(--d-slow) var(--e-spring) both; }
+.g-toast-out { animation: g-toast-out var(--d-base) var(--e-inout) both; }
+.g-bar-anim { transform-origin: left; animation: g-bar-grow var(--d-slow) var(--e-out) both; }
+
+/* ---------------- 7. EFEITOS DE ASSINATURA ----------------
+   Sao o que separa o Genesis de um template: o recibo sai da impressora em
+   3D, o realce segue o rato, e o fundo respira devagar. */
+
+/* 7.1 RECEBO 3D - a folha sai de dentro do slot da impressora em perspectiva. */
+@keyframes g-receipt-feed {
+  0%   { opacity: 0; transform: perspective(1000px) rotateX(-78deg) translateY(-32%) scaleY(0.86); }
+  38%  { opacity: 1; }
+  100% { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0) scaleY(1); }
+}
+@keyframes g-receipt-settle {
+  0%, 100% { transform: rotate(-0.4deg); }
+  50% { transform: rotate(0.4deg); }
+}
+@keyframes g-printer-feed {
+  0%   { transform: scaleX(0.1); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+.g-receipt-3d-stage { perspective: 1000px; }
+.g-receipt-3d {
+  transform-origin: top center;
+  animation: g-receipt-feed 620ms var(--e-out) both;
+  will-change: transform, opacity;
+}
+.g-receipt-3d-settle { animation: g-receipt-settle 3.4s var(--e-inout) 620ms infinite; }
+.g-receipt-slot {
+  position: relative;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.g-receipt-slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  transform-origin: center;
+  animation: g-printer-feed 1.6s var(--e-inout) infinite;
+}
+
+/* 7.2 SPOTLIGHT QUE SEGUE O RATO - o JS escreve --mx/--my (usePointerGlow).
+   O brilho e um ELEMENTO FILHO (.g-track-glow), nao um ::before: os cards
+   usam ja ::before para a barra de tom (g-stat-kpi) e ::after para a scanline
+   (g-scanline), e um pseudo-elemento partilhado apagaria esses efeitos. */
+.g-track { position: relative; }
+.g-track-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%), var(--track-color, rgba(229, 9, 20, 0.13)), transparent 68%);
+  transition: opacity var(--t);
+  z-index: 0;
+}
+.g-track:hover > .g-track-glow { opacity: 1; }
+.g-track > *:not(.g-track-glow) { position: relative; z-index: 1; }
+.g-track-soft { --track-color: rgba(255, 255, 255, 0.08); }
+.g-track-brand { --track-color: rgba(229, 9, 20, 0.16); }
+
+/* 7.3 LOOPS AMBIENTES - movimento continuo, lento, nunca distractor. */
+@keyframes g-aurora-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, -6%, 0) scale(1.12); }
+}
+@keyframes g-aurora-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.06); }
+  50% { transform: translate3d(-5%, 5%, 0) scale(1); }
+}
+@keyframes g-grid-drift { to { background-position: 0 -40px, -40px 0, 0 0, 0 0; } }
+@keyframes g-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+.g-ambient { position: absolute; border-radius: var(--r-full); filter: blur(64px); pointer-events: none; will-change: transform; }
+.g-ambient-brand { background: radial-gradient(circle, var(--brand-weak), transparent 68%); animation: g-aurora-a 16s var(--e-inout) infinite; }
+.g-ambient-info { background: radial-gradient(circle, var(--info-weak), transparent 68%); animation: g-aurora-b 21s var(--e-inout) infinite; }
+.g-grid-bg {
+  background-image:
+    linear-gradient(var(--border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: g-grid-drift 22s linear infinite;
+}
+.g-scanline { position: relative; overflow: hidden; }
+.g-scanline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 38%;
+  background: linear-gradient(180deg, transparent, var(--brand-weak), transparent);
+  animation: g-scan 4.2s var(--e-inout) infinite;
+  pointer-events: none;
+}

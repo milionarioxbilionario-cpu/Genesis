@@ -1,0 +1,199 @@
+/* ==========================================================================
+   GENESIS - TOKENS DE DESIGN (fonte unica de verdade visual)
+   Regra: nenhum ficheiro escreve hex a mao. Tudo sai daqui.
+   Paleta: near-black frio + acento vermelho Genesis usado com parcimonia
+   (acao primaria, estado ativo, alerta). Verde = dinheiro, Vermelho = alerta,
+   Azul = meta/bonus.
+   Aqui vivem tambem os ALIASES LEGACY (--bg-surface, --primary, --radius-*,
+   --transition-*) que o ui/components.css ja usava, para que a antiga
+   ui/main.css (que sequestrava a paleta) possa ser eliminada.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+
+  /* ---------- Fundos ---------- */
+  --bg-base: #08090c;
+  --bg-deep: #050609;
+  --bg-elev: #101219;
+  --bg-elev2: #14161e;
+  --bg-elev3: #1a1d27;
+  --bg-page: var(--bg-base);
+
+  /* ---------- Superficies ---------- */
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-2: rgba(255, 255, 255, 0.055);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-solid: var(--bg-elev);
+  --surface-glass: rgba(16, 18, 25, 0.74);
+
+  /* ---------- Bordas ---------- */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-soft: rgba(255, 255, 255, 0.045);
+  --border-strong: rgba(255, 255, 255, 0.13);
+
+  /* ---------- Marca ---------- */
+  --brand: #e50914;
+  --brand-hi: #ff2b36;
+  --brand-deep: #8f0a11;
+  --brand-weak: rgba(229, 9, 20, 0.14);
+  --brand-text: #ff7a80;
+  --brand-grad: linear-gradient(135deg, #ff2b36 0%, #e50914 48%, #9c0a13 100%);
+  --focus-ring: 0 0 0 3px rgba(229, 9, 20, 0.26);
+
+  /* ---------- Semanticas ---------- */
+  --ok: #22c55e;
+  --ok-text: #86efac;
+  --ok-weak: rgba(34, 197, 94, 0.13);
+  --warn: #f59e0b;
+  --warn-text: #fcd34d;
+  --warn-weak: rgba(245, 158, 11, 0.13);
+  --danger: #f43f5e;
+  --danger-text: #fda4af;
+  --danger-weak: rgba(244, 63, 94, 0.13);
+  --info: #60a5fa;
+  --info-text: #bfdbfe;
+  --info-weak: rgba(96, 165, 250, 0.13);
+
+  /* ---------- Meta / bonus ---------- */
+  --goal: #3b82f6;
+  --goal-bonus: #38bdf8;
+
+  /* ---------- Niveis de stock ---------- */
+  --stock-normal: #22c55e;
+  --stock-severe: #f59e0b;
+  --stock-critical: #f43f5e;
+
+  /* ---------- Texto ---------- */
+  --text: #f2f4f8;
+  --text-muted: #9aa3b2;
+  --text-dim: #69707d;
+
+  /* ---------- Tipografia ---------- */
+  --font-family: Inter, Segoe UI Variable Text, Segoe UI, system-ui, -apple-system, Roboto, Helvetica Neue, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Cascadia Mono, Consolas, Courier New, monospace;
+  --fs-xs: 0.72rem;
+  --fs-sm: 0.8rem;
+  --fs-base: 0.875rem;
+  --fs-md: 0.94rem;
+  --fs-lg: 1.06rem;
+  --fs-xl: 1.3rem;
+  --fs-2xl: 1.65rem;
+  --fs-3xl: 2.1rem;
+  --lh-tight: 1.18;
+  --lh-base: 1.55;
+  --tracking-tight: -0.025em;
+  --tracking-wide: 0.08em;
+
+  /* ---------- Espacamento ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 44px;
+  --sp-8: 64px;
+
+  /* ---------- Raios ---------- */
+  --r-xs: 8px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-full: 999px;
+
+  /* ---------- Sombras / elevacao ---------- */
+  --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --sh-md: 0 10px 28px rgba(0, 0, 0, 0.42);
+  --sh-lg: 0 26px 64px rgba(0, 0, 0, 0.55);
+  --sh-brand: 0 8px 24px rgba(229, 9, 20, 0.26);
+  --sh-inner-hi: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+
+  /* ---------- Movimento ---------- */
+  --d-fast: 140ms;
+  --d-base: 220ms;
+  --d-slow: 380ms;
+  --e-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --e-inout: cubic-bezier(0.4, 0, 0.2, 1);
+  --e-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t: var(--d-base) var(--e-out);
+  --t-fast: var(--d-fast) var(--e-out);
+  --t-slow: var(--d-slow) var(--e-out);
+
+  /* ---------- Layout ---------- */
+  --sidebar-width: 264px;
+  --sidebar-collapsed-width: 76px;
+  --header-height: 62px;
+  --content-max: 1520px;
+
+  /* ---------- Camadas ---------- */
+  --z-base: 1;
+  --z-header: 20;
+  --z-sidebar: 30;
+  --z-dropdown: 40;
+  --z-modal: 60;
+  --z-toast: 80;
+  --z-lock: 100;
+
+  /* ======================================================================
+     ALIASES LEGACY - nomes antigos (ui/main.css + ui/components.css) mapeados
+     para os tokens acima. Permite apagar a main.css sem partir o components.css.
+     ====================================================================== */
+  --bg-surface: var(--bg-elev);
+  --bg-surface-elevated: var(--bg-elev2);
+  --bg-surface-hover: var(--bg-elev3);
+  --bg-glass: var(--surface-glass);
+  --bg-glass-card: var(--surface-glass);
+
+  --border-subtle: var(--border-soft);
+  --border-medium: var(--border);
+  --border-glow: rgba(229, 9, 20, 0.32);
+
+  --text-main: var(--text);
+  --text-subtle: var(--text-dim);
+
+  --primary: var(--brand);
+  --primary-hover: var(--brand-hi);
+  --primary-light: var(--brand-weak);
+  --primary-glow: rgba(229, 9, 20, 0.22);
+
+  --accent-emerald: var(--ok);
+  --accent-emerald-light: var(--ok-weak);
+  --accent-amber: var(--warn);
+  --accent-amber-light: var(--warn-weak);
+  --accent-rose: var(--danger);
+  --accent-rose-light: var(--danger-weak);
+  --accent-cyan: #06b6d4;
+  --accent-cyan-light: rgba(6, 182, 212, 0.15);
+  --accent-purple: #a855f7;
+  --accent-purple-light: rgba(168, 85, 247, 0.15);
+
+  --radius-sm: var(--r-xs);
+  --radius-md: var(--r-sm);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+  --radius-full: var(--r-full);
+
+  --shadow-sm: var(--sh-xs);
+  --shadow-md: var(--sh-sm);
+  --shadow-lg: var(--sh-md);
+  --shadow-xl: var(--sh-lg);
+  --shadow-glow: 0 0 24px rgba(229, 9, 20, 0.22);
+
+  --transition-fast: var(--d-fast) var(--e-out);
+  --transition-normal: var(--d-base) var(--e-out);
+  --transition-smooth: var(--d-slow) var(--e-out);
+}
+
+/* Acessibilidade: quem pede menos movimento nao recebe animacao nenhuma. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
