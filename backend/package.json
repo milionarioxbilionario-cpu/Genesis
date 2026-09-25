@@ -7,7 +7,14 @@
     "dev": "node src/index.js",
     "start": "node src/index.js",
     "prisma:generate": "prisma generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:use:pg": "prisma generate --schema prisma/schema.prisma",
+    "db:use:sqlite": "prisma generate --schema prisma/schema.sqlite.prisma",
+    "db:push:pg": "prisma db push --schema prisma/schema.prisma",
+    "db:push:sqlite": "prisma db push --schema prisma/schema.sqlite.prisma",
+    "db:check": "node scripts/smoke_boot.js",
+    "test:google": "node scripts/test_google.js",
+    "test:auth": "node scripts/test_auth.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -19,6 +26,7 @@
     "express-rate-limit": "^6.11.2",
     "jsonwebtoken": "^9.0.3",
     "nodemon": "^2.0.22",
+    "pg": "^8.13.1",
     "prisma": "^5.0.0",
     "zod": "^3.25.76"
   }

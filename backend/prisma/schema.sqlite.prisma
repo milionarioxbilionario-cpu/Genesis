@@ -2,15 +2,32 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ============================================================================
+//  SCHEMA PARA DESENVOLVIMENTO LOCAL EM SQLITE (24-09-2026)
+//
+//  Porquê este ficheiro separado:
+//  o Prisma valida a URL no construtor do cliente e so aceita o protocolo do
+//  provider declarado. Um cliente gerado com provider "postgresql" RECUSA um
+//  URL `file:` (verificado experimentalmente). Como o Prisma exige um schema
+//  estatico por provider, o caminho SQLite precisa do seu proprio schema.
+//
+//  COMO SE USA
+//  - O ficheiro activo e escolhido por src/utils/dbEngine.js + um script npm.
+//  - `prisma/schema.prisma`        -> PostgreSQL (Supabase). Alvo de producao.
+//  - `prisma/schema.sqlite.prisma` -> SQLite, so para trabalhar offline.
+//
+//  REGRA DE OURO: este ficheiro tem de ficar IDENTICO ao schema.prisma de
+//  PostgreSQL, excepto no bloco `datasource`. Se o mudares a mao, copia-o
+//  novamente (ver package.json -> prisma:schema:sqlite).
+//
+//  ATENCAO: o SQLite NAO tem Row Level Security. O isolamento entre empresas
+//  e feito na camada de aplicacao (applyTenantRls e os filtros por tenant_id).
+//  Para isolamento garantido pela base de dados, usa PostgreSQL.
+// ============================================================================
+
 datasource db {
-  // PostgreSQL (Supabase) e o alvo do Genesis: permite Row Level Security,
-  // que e o que garante o isolamento de dados entre empresas (multi-tenant).
-  // Antes estava "sqlite", o que fazia o Prisma recusar o DATABASE_URL
-  // Postgres e impedia o servidor de arrancar.
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  // Usado em migracoes e aplicacao de RLS (pooler em modo sessao).
-  directUrl = env("DIRECT_URL")
 }
 
 model Tenant {

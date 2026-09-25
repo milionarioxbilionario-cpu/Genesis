@@ -461,6 +461,99 @@ FALTA AINDA NO LOTE D
 Depois disto: Lote B (desconto + recibo bonito + numeracao diaria) e Lote C
 (avisos para o dono + reimprimir recibos antigos).
 
+
+================================================================================
+[DATA: 24-09-2026] — O "SERVIDOR OFFLINE": o que era mesmo e o que fiz
+================================================================================
+
+O QUE DISSES QUE ESTAVA ERRADO
+Disseste que o servidor estava offline e que a causa podia ser o teu Supabase.
+
+O QUE DESCUBRI (com provas, sem adivinhar)
+O Supabase estava bem. O teu projecto estava vivo. A password estava certa.
+O problema era outro, e era um conflito dentro do teu projecto:
+
+  O ficheiro que diz ao programa que base de dados usar estava a dizer
+  "SQLite" (uma base de dados que fica dentro de uma pasta no computador).
+  Mas o ficheiro .env estava a dizer "Postgres do Supabase".
+  O programa viu as duas coisas em conflito e desligou-se ANTES de tentar
+  ligar-se a qualquer coisa.
+
+  Erro exacto: "the URL must start with the protocol 'file:'"
+  Ou seja: pedi-me uma base de ficheiros, mas deu-me o endereço da internet.
+
+  Isto explica tudo: nunca chegou a testar o teu Supabase, por isso parecia
+  que o Supabase estava avariado. Não estava.
+
+  Encontrei mais tres coisas no mesmo ficheiro:
+   - O endereço DIRECT_URL estava escrito DUAS VEZES, e a segunda era
+     "file:./dev.db". Quando uma coisa e escrita duas vezes, vale a segunda.
+     Portanto o teu Postgres estava a ser trocado por uma base de ficheiros.
+   - Havia linhas coladas sem o sinal de igual, que o programa lia como
+    ZVBYNO ignorava.
+   - FALTAVA o segredo que assina a sessao dos utilizadores. Mesmo que o
+     servidor arrancasse, ninguem conseguia entrar.
+
+O QUE FIZ
+
+1. Arrumei o ficheiro de configuracao. O Postgres deixou de ser trocado.
+
+2. Passei o esquema de dados para PostgreSQL, como decidiste. Isto e
+   importante porque so o PostgreSQL consegue isolar os dados de cada loja
+   ao nivel da base de dados (a proteccao contra uma loja ver a outra).
+
+3. Descobri que, a rede deste computador NAO deixa chegar a base de dados
+   do Supabase. Isto e um bloqueio de rede ( firewall), nao um erro teu.
+   Como prova: a porta 5432 "abre", mas nunca chega qualquer resposta do
+   servidor, e uma porta que NAO EXISTE (a 9999) da exactamente o mesmo
+   resultado. E o teu projecto respondeu bem quando lhe perguntei por
+   outra via. Ou seja: o caminho esta fechado aqui.
+
+4. Para o Genesis nao ficar parado, fiz o programa escolher sozinho:
+     - se o Postgres responder, usa o Postgres (producao);
+     - se nao responder, usa uma base de dados local no computador, e AVISA
+       em ecra vermelho que os dados ficam so nessa maquina;
+     - se nao houver base de dados nenhuma, RECUSA arrancar, em vez de
+       fingir que esta tudo bem.
+   Nunca o programa arranca a dizer que funciona quando nao ha base de dados.
+
+5. Apaguei duas copias do ficheiro de senhas que estavam no projecto.
+
+O QUE ISSO RESOLVEU (com prova real)
+  - O programa arranca e responde:
+        abrir a pagina inicial  -> 200 (ok)
+        tentar entrar sem senha -> 401 (esta certo, protege)
+  - Testei tambem o caso em que a base de dados nao existe: o programa
+    recusa arrancar em 8,2 segundos e diz porque. Nao finge que funciona.
+  - As regras de uso das duas passwords e do telefone guardavam-se sem
+    cambios.
+
+O QUE AINDA FALTA (e porque nao depende de mim)
+  - Aplicar as 16 regras de seguranca no teu Supabase e criar as tabelas
+    la. Isto e o unico caminho que esta fechado pela rede. Num computador
+    com acesso normal (o teu, ou um servidor), faz-se com dois comandos:
+        cd backend
+        npm run db:use:pg
+        npm run db:push:pg
+    A partir dai o Genesis passa a usar o teu Supabase a serio, com o
+    isolamento entre lojas activo.
+
+O QUE NAO MEXI
+  Nenhuma regra de dinheiro, nenhuma regra de quem pode ver o que, e
+  nenhuma forma de calcular vendas ou fechos de turno. Isto foi so
+  infra-estrutura.
+
+ATENCAO IMPORTANTE (leia isto)
+  As senhas que copiaste para aqui ficaram guardadas nesta conversa. Isso e
+  o mesmo que deixar a chave da loja num bilhete. Depois de confirmares que
+  o Genesis ja fala com o teu Supabase, muda:
+    - a senha do Postgres;
+    - a chave secreta do Supabase (sb_secret_...);
+    - o codigo do telefone (Twilio).
+  Eu nao posso rodar isto por ti: so o painel do Supabase e do Twilio o
+  permitem, e preciso da tua confirmacao antes de apagar a base de dados
+  actual.
+
 ================================================================================
 [DATA: 24-09-2026] — LOTE D2 (PARTE VISUAL): o produto ficou com cara de
 aplicacao a serio

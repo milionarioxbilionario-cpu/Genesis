@@ -329,6 +329,128 @@ body::before {
 .company-link svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; transition: transform var(--t); }
 .company-link:hover svg { transform: translateX(3px); }
 .company-link-label { display: inline-flex; align-items: center; gap: 9px; }
+
+/* ---- Divisor "ou" + login com Google (substitui "Configurar nova empresa") ---- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+}
+.auth-divider span { display: none; }
+
+.auth-google { display: flex; flex-direction: column; gap: 10px; }
+
+/* O botão oficial do Google é desenhado por JS dentro deste contentor.
+   Alinhamos o iframe que o Google injeta com o resto do formulário. */
+.auth-google-btn { display: flex; justify-content: center; min-height: 44px; }
+.auth-google-btn > div,
+.auth-google-btn iframe { margin: 0 auto !important; }
+
+/* Fallback quando ainda não há Client ID configurado: o botão não pode
+   autenticar, mas deve explicar-se em vez de desaparecer. */
+.auth-google-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-hover);
+  color: var(--text);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.auth-google-fallback:hover {
+  background: var(--surface-2);
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+.auth-google-fallback svg { flex-shrink: 0; }
+
+.auth-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(122, 165, 214, 0.1);
+  border: 1px solid rgba(122, 165, 214, 0.28);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+}
+.auth-hint .text-link { color: var(--brand); font-weight: 700; }
+
+/* ---- Aviso permanente: modo de reset directo ligado (inseguro) ---- */
+.auth-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: var(--sp-4);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  color: #fbbf24;
+}
+.auth-warning svg { flex-shrink: 0; margin-top: 2px; }
+.auth-warning > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.auth-warning strong { font-size: var(--fs-xs); font-weight: 800; letter-spacing: 0.02em; }
+.auth-warning span { color: var(--text-muted); font-size: var(--fs-xs); line-height: 1.55; }
+
+/* ---- Confirmação de senha trocada ---- */
+.auth-done { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; animation: g-rise-sm var(--d-base) var(--e-out) both; }
+.auth-done-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ok);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.32);
+}
+.auth-done h2 { margin: 4px 0 0; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+.auth-done p { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.6; max-width: 42ch; }
+.auth-done .auth-submit { margin-top: var(--sp-3); width: 100%; }
+.auth-warning-inline {
+  margin: var(--sp-2) 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+  text-align: left;
+}
+
+/* ---- Lista de etapas no painel de valor do reset ---- */
+.auth-aside-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.auth-aside-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.auth-aside-list svg { color: var(--brand-text); flex-shrink: 0; }
+
 .role-switcher {
   display: flex;
   width: 100%;

@@ -266,6 +266,28 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, seg
 - Prova/teste realizado: `npm run build` (frontend) verde em todas as etapas — ultimo `built in 5.95s`, `EXIT=0`, ficheiros PWA gerados. Varreduras: `icon="<emoji>"` = **0 resultados** em 185 ficheiros; `style={{ color: {` = **0 resultados**.
 - Resultado: funcionou. Interface coesa sem emojis, sem cores escritas a mao nos ecras tocados, e o bug do desconto corrigido. **Nenhuma logica de negocio, regra de dinheiro, limite de tenant ou fronteira de seguranca foi alterada** — so apresentacao, mais a correccao aritmetica do desconto.
 - Limite desta fase: nao ha prova visual em browser (so build). `pos-header-bar` e a barra de pesquisa mantem o layout anterior.
+
+### [2026-09-24] — "Servidor offline": causa raiz encontrada (schema sqlite vs Supabase Postgres)
+- Ficheiros alterados: `backend/.env`, `backend/.env.txt` (APAGADO), `.env.txt` (APAGADO), `.gitignore`, `backend/prisma/schema.prisma`, `backend/prisma/schema.sqlite.prisma` (novo), `backend/prisma/migrations/migration_lock.toml`, `backend/src/utils/dbEngine.js` (novo), `backend/src/utils/prisma.js`, `backend/src/index.js`, `backend/package.json`, `backend/scripts/smoke_boot.js` (novo), `plan.md`.
+- Porquê: o backend não arrancava e o founder reportava "servidor offline". **Não era falha do Supabase**: o Prisma validava a URL *antes* de ligar e morria.
+- **Causa raiz (provada, não inferida):** `schema.prisma` declarava `provider = "sqlite"` enquanto `backend/.env` apontava `DATABASE_URL` para o Postgres do Supabase. Erro exacto reproduzido: `PrismaClientInitializationError: the URL must start with the protocol 'file:'`.
+- Defeitos adicionais encontrados no `.env`: (a) `DIRECT_URL` **duplicado**, e o último (`file:./dev.db`) sobrescrevia o Postgres real — confirmado por leitura: `DIRECT_URL e file? true`; (b) linhas de notas coladas sem `=`; (c) **`JWT_SECRET` não existia**, pelo que o servidor nem teria sessões.
+- Decisão do fundador: **PostgreSQL (Supabase) como alvo**. Criado `prisma/schema.prisma` (postgresql) e `prisma/schema.sqlite.prisma` (sqlite) — necessário porque um cliente gerado com provider `postgresql` **recusa** um URL `file:` (verificado experimentalmente: "RECUSA file:"). `migration_lock.toml` passou a `postgresql`.
+- **Diagnóstico de rede (com prova, não palpite):** a password está CORRECTA (a autenticação passou). O projecto NÃO está pausado (REST respondeu `401 Secret API key required`). DNS resolve. `Test-NetConnection` dá `True` nas portas 6543 e 5432, mas o socket **nunca recebe o banner do Postgres** (TIMEOUT). O controlo decisivo: a porta **9999 (inexistente) dá exactamente o mesmo resultado** que a 5432 — assinatura de firewall/proxy que aceita a ligação e a descarta. Conclusão: **é bloqueio de rede deste ambiente, não configuração do projecto.**
+- Como não se pode deixar o produto parado, foi implementado `src/utils/dbEngine.js`: escolhe o motor no arranque (Postgres se responder; SQLite local se `DB_ALLOW_SQLITE_FALLBACK=true`; **recusa arrancar** se não houver base — nunca servir dados de uma base errada em silêncio). `prisma.js` passou a Proxy preguiçoso com `require('@prisma/client')` **tardio**.
+- **Dois bugs meus detectados e corrigidos durante a execução:** (1) `spawnSync npx.cmd` devolvia `EINVAL` no Windows — resolvido com `shell: true`; (2) a sondagem inicial baseda-se só na porta aberta e dava **falso positivo** ("Postgres acessivel") porque o pgbouncer aceita o SYN mas morre antes da primeira query — corrigida para exigir uma **query real**.
+- **Prova/teste realizado (executado agora):**
+  - `prisma validate` → schema válido (postgresql).
+  - `prisma generate` → OK (295ms).
+  - `prisma db push` (sqlite) → "Your database is now in sync with your Prisma schema".
+  - `device_keys` criada (é `@@ignore` no Prisma, criada por SQL directo).
+  - **Arranque + API reais:** `GET /` → **HTTP 200** `{"message":"Genesis API - v1.0"}`; `GET /api/auth/me` → **HTTP 401** (protecção activa).
+  - **Fail-closed:** com `DB_ALLOW_SQLITE_FALLBACK=false`, o servidor **recusa arrancar em 8.2s** com mensagem clara, em vez de servir de uma base errada.
+- Resultado: **o Genesis arrancou e responde.** O caminho Postgres está pronto e testado; a barreira actual é a rede deste ambiente, não o código.
+- **Pendente (bloqueio externo, não resolvível em codigo):** aplicar as 16 políticas de `prisma/rls_policies.sql` no Supabase (passo 8 do plano) e correr `prisma db push` para o Postgres — ambos exigem saída de rede para a porta 5432. Assim que houver rede, basta: `npm run db:use:pg` + `npm run db:push:pg`.
+- **Segurança:** `.env.txt` e `backend/.env.txt` (cópias com a password do Postgres, `SUPABASE_SECRET_KEY` e `TWILIO_AUTH_TOKEN` em texto claro) foram **APAGADOS**; `.gitignore` reforçado (o padrão `*.env` não cobria `.env.txt`).
+- **Credenciais expostas nesta sessão — a RODAR:** password do Postgres, `SUPABASE_SECRET_KEY`, `TWILIO_AUTH_TOKEN`. Ver secção 6 do plano activo.
+
 - Segue-se: revisao do `CRMLayout` (shell), das paginas `Hub`/`Onboarding`, e so depois o `Mapa Mental/mapa_mental_3d.html` (SECÇÃO 11), que continua por criar.
 
 - Lote D: redesign visual (Visao Geral/CRM enterprise, graficos Recharts, popups flutuantes).
