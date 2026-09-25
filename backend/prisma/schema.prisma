@@ -3,8 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  // PostgreSQL (Supabase) e o alvo do Genesis: permite Row Level Security,
+  // que e o que garante o isolamento de dados entre empresas (multi-tenant).
+  // Antes estava "sqlite", o que fazia o Prisma recusar o DATABASE_URL
+  // Postgres e impedia o servidor de arrancar.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Usado em migracoes e aplicacao de RLS (pooler em modo sessao).
+  directUrl = env("DIRECT_URL")
 }
 
 model Tenant {

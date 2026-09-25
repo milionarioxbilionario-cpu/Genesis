@@ -94,3 +94,141 @@ Status: trabalho de reconstrução do frontend iniciado e demo visual funcional.
   - backend/scripts/smoke_tests.js — bateria de smoke tests cobrindo reports/payroll/alerts
 - Resultado: todos os passos da bateria de smoke tests passaram localmente. Alertas WhatsApp foram gerados em texto mas o envio foi ignorado porque as credenciais Twilio não estavam configuradas (comportamento esperado).
 
+
+---
+
+# PLANO ACTIVO — Correcção do "servidor offline" (2026-09-24)
+
+> Ver secção completa no fim deste ficheiro: **"PLANO ACTIVO — Correcção do
+> servidor offline"**. Resumo: o backend não arrancava por um conflito
+> declarado entre `prisma/schema.prisma` (`provider = "sqlite"`) e
+> `backend/.env` (`DATABASE_URL` Postgres do Supabase). O Prisma morria na
+> validação do URL, antes de tentar ligar. Decisão do fundador: migrar para
+> PostgreSQL (Supabase), com `prisma db push`.
+
+
+---
+
+# PLANO ACTIVO — Correcção do "servidor offline"
+
+**Data:** 2026-09-24
+**Estado:** Diagnosticado · Aprovado pelo fundador · Em execução
+**Estratégia de migrações:** Opção A (`prisma db push` + migração inicial limpa)
+
+---
+
+## 1. Diagnóstico (concluído, com prova objectiva)
+
+O servidor Genesis não arranca. O erro exacto, reproduzido nesta sessão:
+
+```
+PrismaClientInitializationError
+Error validating datasource `db`: the URL must start with the protocol `file:`.
+  --> schema.prisma:7 |  provider = "sqlite"  |  url = env("DATABASE_URL")
+```
+
+**Não é falha do Supabase.** O Prisma valida o URL *antes* de tentar ligar, e a
+validação falha. O teu projecto Supabase nunca chega a ser contactado — por isso
+o sintoma é "servidor offline".
+
+### 1.1 Defeitos identificados
+
+| # | Defeito | Ficheiro:linha | Gravidade |
+|---|---------|----------------|-----------|
+| 1 | `provider = "sqlite"` mas o URL é Postgres | `backend/prisma/schema.prisma:6` | 🔴 Crítico |
+| 2 | `DIRECT_URL` duplicado; o último (`file:./dev.db`) **sobrescreve** o Postgres | `backend/.env:11-12` | 🔴 Crítico |
+| 3 | Linhas sem `=` (notas coladas sem comentário) | `backend/.env:15-19` | 🟠 Ruído |
+| 4 | Password com `$` crua — o dotenv expande `$VAR` | `backend/.env:9,11` | 🟠 Risco |
+| 5 | Migrações SQLite-specific (`DATETIME`, `BOOLEAN`, `TRUE`) | `backend/prisma/migrations/` | 🟠 Bloqueante |
+| 6 | Cópia de segredos em disco (duas) | `backend/.env.txt`, `.env.txt` | 🔴 Segurança |
+
+### 1.2 O que já está BOM (verificado, não é preciso refazer)
+
+- ✅ `backend/src/utils/tenantRls.js` **já suporta SQLite e Postgres**:
+  `isSqliteUrl()` decide o caminho e, em Postgres, aplica
+  `set_config('app.tenant_id', ...)` com `fail-closed` (aborta em vez de
+  servir dados sem isolamento). O código de isolamento está pronto.
+- ✅ `backend/prisma/rls_policies.sql` tem políticas para **16 tabelas**
+  (Tenant, User, Product, Sale, SaleItem, StockEntry, Employee, Supplier,
+  FixedCost, Debt, DebtPayment, DemandCapture, ShrinkageRecord, ShiftClosing,
+  SaleGoal, AuditLog, ProductPriceHistory). Só falta aplicar no Supabase.
+- ✅ Schema limpo e portátil: dinheiro em `Int` (centavos), IDs em `String`,
+  datas em `DateTime`. Não há tipos exóticos (Json/Decimal/Array).
+- ✅ **Não existe `dev.db`** — não há dados locais a perder.
+
+---
+
+## 2. Riscos assumidos (declaração honesta)
+
+- **A password do Postgres pode não ser `Wendynha1313$`.** A linha 15 do `.env`
+  mostra `Wendynha1313%24` (URL-encoded). Se a ligação falhar, o plano
+  **para e pergunta** — não se adivinha passwords.
+- **As migrações antigas não são portáveis** para Postgres. Não são aplicadas;
+  ficam arquivadas como histórico do período SQLite.
+- **As RLS são `fail-closed` por desenho.** Se as políticas não forem aplicadas,
+  as transações abortam em vez de devolver dados sem isolamento. É o
+  comportamento correcto de segurança, não um bug.
+- **O `device_keys` é criado fora do Prisma** (`$executeRaw` no
+  `deviceKeyService.js`). Precisa de existir como tabela antes de qualquer
+  pedido de sync offline — está contemplado no passo 8.
+
+---
+
+## 3. Os 12 passos
+
+| # | Passo | Acção | Prova de sucesso |
+|---|-------|-------|------------------|
+| 1 | Limpar `.env` | Apagar `DIRECT_URL="file:./dev.db"`; comentar notas sem `=` | leitura confirma providers |
+| 2 | `schema.prisma` | `provider = "postgresql"` | `prisma validate` OK |
+| 3 | `migration_lock.toml` | `provider = "postgresql"` | — |
+| 4 | Gerar cliente | `npx prisma generate` | "Generated Prisma Client" |
+| 5 | **Testar ligação** | `prisma.$connect()` | `LIGOU` (ou erro claro → parar) |
+| 6 | Criar tabelas | `npx prisma db push` | "database is now in sync" |
+| 7 | Migração inicial | `prisma migrate diff` → `_init_postgres` | `.sql` criado |
+| 8 | Aplicar RLS | `rls_policies.sql` (via `prisma db execute`) | 16 políticas activas |
+| 9 | Arrancar servidor | `node src/index.js` | "running on port 4000" |
+| 10 | Prova funcional | login + venda + isolamento tenant A≠B | testes passam |
+| 11 | Apagar segredos | `rm backend/.env.txt .env.txt` | ficheiros removidos |
+| 12 | Documentar | Mapa Mental + ficheiro de registo | entradas acrescentadas |
+
+**Nota sobre o passo 8:** as RLS exigem papel de dono na BD. Se a ligação
+usar o papel `postgres`, aplica-se directamente por SQL. Se falhar por
+permissões, o plano para e a instrução é aplicar o ficheiro no SQL Editor do
+Supabase (conteúdo já pronto, é só colar).
+
+---
+
+## 4. Decisões de arquitectura
+
+- **PostgreSQL (Supabase) como alvo único.** O SQLite fica apenas como
+  caminho de desenvolvimento, suportado por `isSqliteUrl()`.
+- **Opção A para as migrações.** Como não existe `dev.db`, aplica-se
+  `prisma db push` e gera-se uma migração inicial limpa para Postgres.
+- **`migration_lock.toml` muda para `postgresql`.** Sem isto, o Prisma
+  recusa-se a aplicar migrações sobre um schema de outro motor.
+
+---
+
+## 5. O que NÃO será tocado
+
+- ❌ Lógica de negócio, cálculo de dinheiro, regras do POS
+- ❌ Isolamento de tenant (o código já está correcto)
+- ❌ Fronteiras de segurança (`rbac.js`, `auth.js`, `adminOriginCheck.js`)
+- ❌ Ficheiros de frontend, salvo se um teste revelar bloqueio
+
+---
+
+## 6. Segurança — acções recomendadas ao fundador
+
+Estas credenciais foram expostas nesta sessão e devem ser **rodadas**:
+
+- 🔴 Password do Postgres
+- 🔴 `SUPABASE_SECRET_KEY` (prefixo `sb_secret_`)
+- 🔴 `TWILIO_AUTH_TOKEN`
+
+Depois de a ligação ser confirmada (passo 5), a password pode ser rodada no
+painel do Supabase. O `.env` já está no `.gitignore` ✅ — mas ver o passo 11
+(`backend/.env.txt` **não** está protegido pelo `.gitignore`, porque o padrão
+`*.env` não cobre `.env.txt`).
+
+

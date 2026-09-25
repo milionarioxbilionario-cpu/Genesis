@@ -219,13 +219,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-ensureDemoData()
+// Escolhe o motor ANTES de qualquer query (ver src/utils/dbEngine.js).
+// Se a base nao responder, a falha e explicita e o processo termina — e
+// preferivel a um servidor que arranque sem base de dados.
+prisma.ready()
+  .then(() => ensureDemoData())
   .then(() => {
     app.listen(port, () => {
       console.log(`Genesis backend running on port ${port}`);
     });
   })
   .catch((error) => {
-    console.error('Failed to ensure demo data:', error);
+    console.error('Genesis backend nao arrancou:', error.message);
     process.exit(1);
   });

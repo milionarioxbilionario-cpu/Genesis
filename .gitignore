@@ -49,3 +49,38 @@ Thumbs.db
 *.swx
 *.orig
 *.rej
+
+
+# ============================================================================
+# SEGREDOS — reforco (24-09-2026)
+# O padrao "*.env" acima NAO cobre ".env.txt". Essas copias foram encontradas
+# com a password do Postgres e chaves do Supabase/Twilio em texto claro.
+.env*
+*.env
+!.env.example
+!.env.*.example
+secrets.*
+*.secret
+*.pem
+*.key
+
+# Copias de configuracao SEM extensao.
+# Encontrado um "backend/txt" (criado por um redireccionamento de shell
+# falhado) que era uma copia integra do .env com a password do Postgres e as
+# chaves do Supabase/Twilio em texto claro. Nao estava coberto por nenhum
+# padrao acima e estava a um `git add` de ir para o historico.
+txt
+**/txt
+*.env.bak
+*.env.backup
+*.env.old
+*.env.save
+*.env.swp
+
+# Base de dados local de desenvolvimento (SQLite fallback). Nunca versionar:
+# contem dados de contas demo e hashes de senha.
+backend/data/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3

@@ -40,7 +40,26 @@ export default function RequestAccount() {
       setSubmitted(true);
       setForm(defaultForm);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Não foi possível enviar o pedido. Tente novamente.');
+      // O backend pode devolver `error` como array do Zod ([{path, message}]).
+      // Passar esse array para o React rebenta a pagina em branco ("ecra
+      // vazio" reportado pelo fundador). Normalizamos SEMPRE para texto.
+      const raw = err?.response?.data?.error;
+      if (typeof raw === 'string' && raw.trim()) {
+        setError(raw);
+      } else if (Array.isArray(raw)) {
+        const joined = raw
+          .map((item) => {
+            if (!item) return null;
+            if (typeof item === 'string') return item;
+            const field = Array.isArray(item.path) ? item.path.join('.') : item.path;
+            return field ? `${field}: ${item.message}` : item.message;
+          })
+          .filter(Boolean)
+          .join(' · ');
+        setError(joined || 'Não foi possível enviar o pedido. Tente novamente.');
+      } else {
+        setError('Não foi possível enviar o pedido. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
