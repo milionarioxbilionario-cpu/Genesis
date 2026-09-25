@@ -1,0 +1,21 @@
+git add .
+
+
+
+(para preparar as novidades)
+
+
+
+git commit -m "Explique aqui o que alterou ou criou"          
+
+
+
+(para gravar localmente)
+
+
+
+git push               
+
+
+
+(para enviar para o GitHub — já não precisa de colocar o comando longo com -u origin main)

@@ -1,0 +1,19 @@
+tokens.css: braces=3/3 balanced=True bytes=6105
+animations.css: braces=110/110 balanced=True bytes=6850
+main_css_existe=False
+imports_main.css=True
+imports_components=True
+imports_animations=True
+--- animations.css head ---
+/* ==========================================================================
+   GENESIS - MOVIMENTO
+   Principios: curto (140-380ms), fluido (ease-out "quint"), nunca agressivo.
+   Namespaced g-* para nao colidir com as utilities animate-* do Tailwind.
+   O guard global de prefers-reduced-motion vive em tokens.css.
+   ========================================================================== */
+
+--- animations.css tail ---
+.g-drawer-anim { animation: g-drawer var(--d-base) var(--e-out) both; }
+.g-toast-in { animation: g-toast-in var(--d-slow) var(--e-spring) both; }
+.g-toast-out { animation: g-toast-out var(--d-base) var(--e-inout) both; }
+.g-bar-anim { transform-origin: left; animation: g-bar-grow var(--d-slow) var(--e-out) both; }

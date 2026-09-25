@@ -1,0 +1,32 @@
+
+file                                  hex  tw emoji lines
+----                                  ---  -- ----- -----
+pages\RequestAccount.jsx               61  51     0   136
+pages\CashierDashboard.jsx             33  15     0   836
+pages\ResetPassword.jsx                32  27     0   129
+pages\Hub.jsx                          31  14     0   185
+pages\Owner\Dashboard.jsx               9  15     0   311
+components\PosGate.jsx                  1   1     0    82
+components\ui\index.jsx                 1   5     0   209
+layouts\CRMLayout.jsx                   1  23     0   206
+pages\Owner\Settings.jsx                0   4     0   108
+pages\Owner\Products.jsx                0   4     0   170
+pages\Owner\Employees.jsx               0   3     0   108
+pages\Owner\Goals.jsx                   0   6     0    85
+pages\Owner\Reports\DailyReport.jsx     0   2     0    47
+pages\Owner\Reports\MonthlyReport.jsx   0   6     0    87
+pages\Owner\Suppliers.jsx               0   1     0    91
+pages\Owner\Reports\WeeklyReport.jsx    0   2     0    57
+pages\Owner\Stock.jsx                   0   8     0   176
+pages\CashierLogin.jsx                  0   0     0     7
+pages\Login.jsx                         0   4     0   155
+main.jsx                                0   0     0    14
+components\ProtectedRoute.jsx           0   2     0    51
+pages\OnboardingWizard.jsx              0 118     0   323
+pages\Owner\Debts.jsx                   0   0     0    57
+pages\Owner\DeviceKeys.jsx              0   3     0   103
+App.jsx                                 0   0     0   131
+pages\Owner\AuditLogViewer.jsx          0   0     0    43
+
+
+

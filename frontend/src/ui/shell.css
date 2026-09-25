@@ -1,0 +1,289 @@
+/* ==========================================================================
+   GENESIS - SHELL (moldura da aplicacao: sidebar, topbar, navegacao)
+   Substitui a antiga ui/components.css (1067 linhas, 100% mortas - nenhuma
+   pagina usava as classes .sidebar, .modal-window, .palette-any ou .toast).
+   Tudo aqui e novo,
+   tokenizado e animado. O markup vive em src/layouts/CRMLayout.jsx.
+   ========================================================================== */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-base);
+  position: relative;
+  isolation: isolate;
+}
+
+/* ------------------------------- SIDEBAR --------------------------------- */
+.app-side {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--bg-elev2), var(--bg-elev) 60%, var(--bg-base));
+  border-right: 1px solid var(--border);
+  transition: width var(--t-slow);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: var(--z-sidebar);
+}
+.app-side.is-collapsed { width: var(--sidebar-collapsed-width); }
+.app-side-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  min-height: var(--header-height);
+}
+.app-brand { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
+.app-brand-mark {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--brand-grad);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.05rem;
+  box-shadow: var(--sh-brand), var(--sh-inner-hi);
+}
+.app-brand-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.app-brand-name {
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-brand-sub {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.app-collapse { color: var(--text-dim); }
+.app-collapse:hover { color: var(--text); background: var(--surface-hover); }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.icon-btn svg { width: 17px; height: 17px; }
+.icon-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border); }
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn.is-danger:hover { background: var(--danger-weak); color: var(--danger-text); border-color: rgba(244, 63, 94, 0.3); }
+
+.app-nav { flex: 1; overflow-y: auto; padding: 8px 10px 18px; display: flex; flex-direction: column; gap: 4px; }
+.app-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.app-nav-title {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 16px 10px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.app-side.is-collapsed .app-nav-title { opacity: 0; height: 10px; padding: 4px 0; }
+.app-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.app-nav-item svg { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.85; }
+.app-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand);
+  transform: translateY(-50%);
+  transition: height var(--t);
+}
+.app-nav-item:hover { background: var(--surface); color: var(--text); }
+.app-nav-item:hover svg { opacity: 1; }
+.app-nav-item.is-active { background: var(--brand-weak); color: var(--text); }
+.app-nav-item.is-active svg { color: var(--brand-text); opacity: 1; }
+.app-nav-item.is-active::before { height: 56%; }
+.app-nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-side.is-collapsed .app-nav-item { justify-content: center; padding: 11px 0; }
+.app-side.is-collapsed .app-nav-label { display: none; }
+
+.app-side-foot { padding: 12px; border-top: 1px solid var(--border-soft); }
+.app-user { display: flex; align-items: center; gap: 10px; }
+.app-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+.app-user-info { min-width: 0; flex: 1; }
+.app-user-name { font-size: 0.82rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-user-role { font-size: 0.68rem; color: var(--text-dim); }
+.app-side.is-collapsed .app-user-info { display: none; }
+.app-side.is-collapsed .app-user { flex-direction: column; gap: 8px; }
+
+/* -------------------------------- TOPBAR --------------------------------- */
+.app-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  min-height: var(--header-height);
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 9, 12, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.app-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  max-width: 460px;
+  padding: 9px 13px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.app-search:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); }
+.app-search svg { width: 15px; height: 15px; flex-shrink: 0; }
+.app-search-label { flex: 1; font-size: 0.84rem; }
+.app-kbd {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 2px 6px;
+  background: var(--surface-2);
+}
+.app-topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.app-status { display: inline-flex; align-items: center; gap: 7px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); }
+.app-status-dot { width: 7px; height: 7px; border-radius: var(--r-full); background: var(--ok); box-shadow: 0 0 0 3px var(--ok-weak); }
+.app-status.is-offline .app-status-dot { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-weak); animation: g-pulse-soft 1.6s var(--e-inout) infinite; }
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+.app-content { flex: 1; min-width: 0; }
+/* Entrada de pagina: aplicada a cada rota pelo CRMLayout (key=pathname). */
+.app-page-anim { animation: g-rise var(--d-slow) var(--e-out) both; }
+.app-offline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 20px;
+  background: var(--warn-weak);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.28);
+  color: var(--warn-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.app-offline svg { width: 15px; height: 15px; }
+
+/* --------------------------- PALETA DE COMANDOS -------------------------- */
+.app-cmd-list { margin-top: 14px; display: flex; flex-direction: column; gap: 3px; max-height: 330px; overflow: auto; }
+.app-cmd-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.87rem;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.app-cmd-item svg { width: 16px; height: 16px; color: var(--text-dim); }
+.app-cmd-item:hover, .app-cmd-item.is-selected { background: var(--surface-2); border-color: var(--border); }
+.app-cmd-item:hover svg, .app-cmd-item.is-selected svg { color: var(--brand-text); }
+.app-cmd-item:active { transform: scale(0.99); }
+.app-cmd-section { margin-left: auto; font-size: 0.7rem; color: var(--text-dim); font-weight: 600; }
+.app-cmd-empty { padding: 14px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+
+/* ------------------------------ RESPONSIVO ------------------------------- */
+.app-menu-toggle { display: none; }
+.app-scrim { display: none; }
+@media (max-width: 900px) {
+  .app-side {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-102%);
+    transition: transform var(--t-slow);
+    box-shadow: var(--sh-lg);
+  }
+  .app-side.is-open { transform: translateX(0); width: var(--sidebar-width); }
+  .app-side.is-open .app-brand-text,
+  .app-side.is-open .app-nav-label,
+  .app-side.is-open .app-user-info { display: flex; }
+  .app-side.is-open .app-nav-item { justify-content: flex-start; padding: 10px 12px; }
+  .app-scrim { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px); z-index: calc(var(--z-sidebar) - 1); animation: g-fade var(--d-base) var(--e-out) both; }
+  .app-menu-toggle { display: inline-flex; }
+  .app-search { max-width: none; }
+  .app-search-label, .app-kbd { display: none; }
+}
+@media (max-width: 640px) {
+  .app-topbar { padding: 9px 12px; gap: 10px; }
+}

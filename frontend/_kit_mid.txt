@@ -1,0 +1,62 @@
+﻿total_linhas=208
+--- linhas 82-126 ---
+            {hint && <div className="g-stat-hint" style={{ marginTop: 4 }}>{hint}</div>}
+          </div>
+          <button type="button" onClick={onClose} className="g-btn g-btn-ghost g-btn-icon" aria-label="Fechar">✕</button>
+        </div>
+        <div className="g-modal-body">{children}</div>
+        {footer && <div className="g-modal-foot">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------- Toast ---------------------------------- */
+const ToastCtx = createContext({ push: () => {} });
+
+export function ToastProvider({ children }) {
+  const [items, setItems] = useState([]);
+  const push = useCallback((message, tone = 'ok') => {
+    const id = Math.random().toString(36).slice(2);
+    setItems((prev) => [...prev, { id, message, tone }]);
+    setTimeout(() => setItems((prev) => prev.filter((t) => t.id !== id)), 4200);
+  }, []);
+  const value = useMemo(() => ({ push }), [push]);
+  return (
+    <ToastCtx.Provider value={value}>
+      {children}
+      <div className="g-toast-wrap">
+        {items.map((t) => (
+          <div key={t.id} className={'g-toast g-toast-' + (t.tone === 'err' || t.tone === 'error' ? 'err' : t.tone === 'warn' ? 'warn' : 'ok')}>
+            {t.message}
+          </div>
+        ))}
+      </div>
+    </ToastCtx.Provider>
+  );
+}
+
+export function useToast() { return useContext(ToastCtx); }
+
+/* ------------------------------- Table ---------------------------------- */
+export function Table({ columns = [], rows = [], rowKey, empty }) {
+  if (!rows.length) return empty || <EmptyState title="Sem registos" />;
+  return (
+    <div className="g-table-wrap">
+      <table className="g-table">
+        <thead>
+useToast usos=27 ficheiros=AuditLogViewer.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,index.jsx,MonthlyReport.jsx,Products.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<Table usos=10 ficheiros=AuditLogViewer.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,index.jsx,OnboardingWizard.jsx,Products.jsx,Stock.jsx,Suppliers.jsx
+<Modal usos=4 ficheiros=CashierDashboard.jsx,CRMLayout.jsx,DeviceKeys.jsx,Products.jsx
+<Alert usos=3 ficheiros=Dashboard.jsx,DeviceKeys.jsx,Settings.jsx
+<StatCard usos=8 ficheiros=Dashboard.jsx
+<GoalBar usos=2 ficheiros=Dashboard.jsx,Goals.jsx
+<EmptyState usos=17 ficheiros=AuditLogViewer.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,index.jsx,MonthlyReport.jsx,Products.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<Skeleton usos=16 ficheiros=AuditLogViewer.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,MonthlyReport.jsx,Products.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<PageHead usos=13 ficheiros=AuditLogViewer.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,MonthlyReport.jsx,Products.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<CardHead usos=27 ficheiros=AuditLogViewer.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,MonthlyReport.jsx,Products.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx
+<Card usos=97 ficheiros=AuditLogViewer.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,index.jsx,MonthlyReport.jsx,Products.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<Badge usos=13 ficheiros=AuditLogViewer.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Products.jsx,Settings.jsx,Stock.jsx
+<Input usos=67 ficheiros=CashierDashboard.jsx,CRMLayout.jsx,DailyReport.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,Hub.jsx,index.jsx,Login.jsx,MonthlyReport.jsx,OnboardingWizard.jsx,Products.jsx,RequestAccount.jsx,ResetPassword.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<Button usos=89 ficheiros=AuditLogViewer.jsx,CashierDashboard.jsx,CRMLayout.jsx,DailyReport.jsx,Dashboard.jsx,Debts.jsx,DeviceKeys.jsx,Employees.jsx,Goals.jsx,Hub.jsx,index.jsx,Login.jsx,MonthlyReport.jsx,OnboardingWizard.jsx,Products.jsx,RequestAccount.jsx,ResetPassword.jsx,Settings.jsx,Stock.jsx,Suppliers.jsx,WeeklyReport.jsx
+<ToastProvider usos=1 ficheiros=App.jsx

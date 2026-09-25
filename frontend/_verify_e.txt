@@ -1,0 +1,7 @@
+build_exit=0
+dist_css_bytes=59003
+dist_js_bytes=890254
+cls_app_shell=True
+cls_app_nav_item=True
+cls_app_page_anim=False
+cls_app_scrim=True

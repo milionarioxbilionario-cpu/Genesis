@@ -1,0 +1,11 @@
+build_exit=0
+dist_css_bytes=67359
+kf_g_rise=True
+kf_g_float=True
+cls_pos_shell=True
+cls_auth_submit=True
+cls_product_card=True
+alias_bg_surface=True
+token_bg_base_08090c=True
+legacy_navy_0a1220_presente=True
+tailwind_util_flex=True

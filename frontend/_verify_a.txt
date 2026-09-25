@@ -1,0 +1,8 @@
+tailwind_version=3.4.19
+build_exit=0
+dist_css_bytes=60053
+util_flex=True
+util_gap3=True
+util_md_grid_cols_2=True
+preflight=True
+brand_var_used=False

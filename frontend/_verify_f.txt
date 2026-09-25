@@ -1,0 +1,10 @@
+css=index-DSpH3aw0.css bytes=59003
+.app-page-anim = False
+.g-stagger = True
+.hover-lift = True
+@keyframes g-rise = True
+.g-spinner = True
+.app-side = True
+.g-page-anim = True
+.press:active = True
+--bg-surface = True

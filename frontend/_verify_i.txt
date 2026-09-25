@@ -1,0 +1,1 @@
+corrompidos_antes=5 depois=0 bytes=16797

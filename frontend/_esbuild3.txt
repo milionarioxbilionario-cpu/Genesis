@@ -1,0 +1,4 @@
+corrigidos_ternario_chaveta=1
+corrigidos_ternario_parenteses=1
+src/components/ui/index.jsx: OK
+src/layouts/CRMLayout.jsx: OK

@@ -1,0 +1,76 @@
+    if (!query.trim()) return all;
+    const q = query.trim().toLowerCase();
+    return all.filter((i) => i.label.toLowerCase().includes(q));
+  }, [nav, query]);
+
+  async function handleLogout() {
+    try { await api.post('/api/auth/logout'); } catch { /* sessao ja invalida */ }
+    window.location.href = '/login';
+  }
+
+  function runCommand(item) {
+    setPaletteOpen(false);
+    navigate(item.to);
+  }
+
+  const tenantName = tenant?.name || 'Genesis';
+  const planLabel = tenant?.business_type ? (BUSINESS_LABEL[tenant.business_type] || tenant.business_type) : 'Demo';
+  const initials = String(user?.name || 'Genesis').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <aside style={{ width: collapsed ? 78 : 262, flexShrink: 0, background: 'var(--bg-elev2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', transition: 'width var(--t)' }}>
+        <div style={{ padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 'var(--r-md)', background: 'linear-gradient(135deg, var(--brand), #7a1017)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 19 }}>
+            {initials[0] || 'G'}
+          </div>
+          {!collapsed && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: 'var(--text)', fontWeight: 800, fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tenantName}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{planLabel}</div>
+            </div>
+          )}
+          <button type="button" onClick={() => setCollapsed((c) => !c)} aria-label="Alternar menu"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 15 }}>
+            {collapsed ? '\u00BB' : '\u00AB'}
+          </button>
+        </div>
+
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '6px 10px 16px' }}>
+          {nav.map((group) => (
+            <div key={group.section}>
+              {!collapsed && <div style={{ color: 'var(--text-dim)', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', padding: '16px 10px 7px' }}>{group.section}</div>}
+              {group.items.map((item) => (
+                <NavLink key={item.to} to={item.to} end={item.end}
+                  title={collapsed ? item.label : undefined}
+                  style={({ isActive }) => ({
+                    display: 'flex', alignItems: 'center', gap: 11,
+                    padding: collapsed ? '11px 0' : '10px 12px',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    borderRadius: 'var(--r-sm)', marginBottom: 3,
+                    textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem',
+                    color: isActive ? 'var(--text)' : 'var(--text-muted)',
+                    background: isActive ? 'var(--brand-weak)' : 'transparent',
+                    borderLeft: isActive ? '3px solid var(--brand)' : '3px solid transparent',
+                    transition: 'background var(--t), color var(--t)',
+                  })}>
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>{item.icon}</span>
+                  {!collapsed && <span>{item.label}</span>}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div style={{ padding: 12, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 'var(--r-sm)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem' }}>{initials || 'G'}</div>
+          {!collapsed && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'A carregar...'}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>{role === 'cashier' ? 'Caixista' : 'Dono'}</div>
+            </div>
+          )}
+          <button type="button" onClick={handleLogout} title="Sair" aria-label="Sair" style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 15 }} >⏻</button>
+        </div>
+      </aside>
+

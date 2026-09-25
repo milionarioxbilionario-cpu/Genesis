@@ -1,0 +1,12 @@
+kit_bytes=6238
+kit_exports=11
+kit_has_field_label=False
+kit_has_countup=True
+primitives_has_spark=False
+build_exit=1
+dist_css=59003
+cls_g_spark=False
+cls_g_tabs=False
+cls_g_spinner=True
+cls_app_page_anim=False
+cls_g_stat_kpi=False

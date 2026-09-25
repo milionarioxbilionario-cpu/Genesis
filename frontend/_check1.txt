@@ -1,0 +1,7 @@
+tailwindcss_installed=True
+postcss_installed=True
+autoprefixer_installed=True
+dist_css=index-CBep9Yia.css bytes=43120
+util_flex=False
+util_gap3=False
+tw_preflight=False

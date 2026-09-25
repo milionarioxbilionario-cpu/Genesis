@@ -1,0 +1,5 @@
+version=1.48.0
+entry=dist/esm/lucide-react.mjs
+file_bytes=248533
+EXISTEM(66): LayoutDashboard, PanelLeftClose, PanelLeftOpen, Menu, Search, Home, Users, Package, Boxes, Truck, UserCog, Receipt, BarChart, BarChart3, Target, Rocket, KeyRound, Key, ShieldCheck, Shield, Settings, ShoppingCart, LogOut, WifiOff, Command, X, Check, AlertTriangle, Info, Loader2, Plus, Minus, Trash2, Pencil, Eye, EyeOff, Download, ArrowRight, ArrowLeft, Mail, Lock, TrendingUp, TrendingDown, Banknote, Coins, Store, Wallet, Calendar, FileText, Clock, ScanLine, Printer, ChevronDown, ChevronRight, Sparkles, Zap, CheckCircle2, CircleAlert, TriangleAlert, Tag, Save, Filter, RefreshCw, BellRing, BarChart2, LineChart
+FALTAM(1): ExclamationTriangle
