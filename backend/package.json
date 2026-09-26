@@ -25,6 +25,7 @@
     "express": "^4.22.2",
     "express-rate-limit": "^6.11.2",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10",
     "nodemon": "^2.0.22",
     "pg": "^8.13.1",
     "prisma": "^5.0.0",

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Globe, KeyRound, Lock, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Globe, KeyRound, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import api from '../utils/api';
 import { AmbientLayer, SheenBar } from '../components/ui';
 import { setLang, useLang } from '../i18n';
@@ -31,42 +31,10 @@ export default function ResetPassword() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [warning, setWarning] = useState('');
   const [done, setDone] = useState(false);
-
-  // Modo por código: entra só se o servidor não aceitar o reset directo.
-  const [codeMode, setCodeMode] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Troca imediata de senha. Não há servidor de email, por isso não há código
-  // nem email: esta é a via que funciona hoje para o owner E para o super
-  // admin — o backend procura a conta pelo email e não distingue papel.
-  const handleInstantReset = async (event) => {
-    event.preventDefault();
-    setError('');
-    if (password !== confirm) {
-      setError(t('reset.mismatch'));
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await api.post('/api/auth/reset-password-instant', { email, password });
-      setWarning(response.data.warning || '');
-      setDone(true);
-    } catch (err) {
-      const reason = err?.response?.data?.code;
-      if (reason === 'RESET_DISABLED' || err?.response?.status === 404 || err?.response?.status === 503) {
-        setCodeMode(true);
-      } else {
-        setError(messageOf(err, t('reset.invalid')));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // --- Rota por código (fallback oficial do backend) -----------------------
+  // Solicitar envio de codigo de 6 digitos (email com fallback whatsapp)
   const requestCode = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -75,21 +43,27 @@ export default function ResetPassword() {
       await api.post('/api/auth/forgot-password', { email });
       setSent(true);
     } catch (err) {
-      setError(messageOf(err, t('reset.invalid')));
+      setError(messageOf(err, t('reset.invalid') || 'Erro ao solicitar código de recuperação.'));
     } finally {
       setLoading(false);
     }
   };
 
+  // Validar codigo e redefinir palavra-passe
   const applyCode = async (event) => {
     event.preventDefault();
-    setLoading(true);
     setError('');
+    if (password !== confirm) {
+      setError(t('reset.mismatch') || 'As palavras-passe não coincidem.');
+      return;
+    }
+
+    setLoading(true);
     try {
       await api.post('/api/auth/reset-password', { email, code, password });
       setDone(true);
     } catch (err) {
-      setError(messageOf(err, t('reset.invalid')));
+      setError(messageOf(err, t('reset.invalid') || 'Código inválido ou expirado.'));
     } finally {
       setLoading(false);
     }
@@ -160,6 +134,16 @@ export default function ResetPassword() {
                 <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
                 <h2>{t('reset.doneTitle')}</h2>
                 <p>{t('reset.doneLead')}</p>
+                {warning && <p className="auth-warning-inline">{warning}</p>}
+                <Link to="/login" className="auth-submit">
+                  <span>{t('reset.goLogin')}</span>
+                  <ArrowRight size={17} strokeWidth={2.3} aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="auth-done">
+                <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
+                <h2>{t('reset.doneTitle')}</h2>
+                <p>{t('reset.doneLead')}</p>
                 {/* O aviso do servidor não é escondido: mostra-se sempre. */}
                 {warning && <p className="auth-warning-inline">{warning}</p>}
                 <Link to="/login" className="auth-submit">
@@ -200,6 +184,16 @@ export default function ResetPassword() {
                   <span>{loading ? t('reset.submitting') : t('reset.submit')}</span>
                 </button>
               </form>
+            {done ? (
+              <div className="auth-done">
+                <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
+                <h2>{t('reset.doneTitle')}</h2>
+                <p>{t('reset.doneLead')}</p>
+                <Link to="/login" className="auth-submit">
+                  <span>{t('reset.goLogin')}</span>
+                  <ArrowRight size={17} strokeWidth={2.3} aria-hidden="true" />
+                </Link>
+              </div>
             ) : !sent ? (
               <form onSubmit={requestCode} className="auth-form">
                 <p className="auth-hint">{t('reset.fallbackLead')}</p>
@@ -227,6 +221,7 @@ export default function ResetPassword() {
             </form>
           ) : (
             <form onSubmit={applyCode} className="auth-form">
+              <p className="auth-hint">{t('reset.codeSent')}</p>
               <div className="field-group">
                 <label htmlFor="rb-code" className="field-label">{t('reset.code')}</label>
                 <input

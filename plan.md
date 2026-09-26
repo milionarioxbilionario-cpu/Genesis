@@ -232,3 +232,226 @@ painel do Supabase. O `.env` já está no `.gitignore` ✅ — mas ver o passo 1
 `*.env` não cobre `.env.txt`).
 
 
+
+---
+
+# PLANO — 26-09-2026 — Sete frentes (pedido do fundador)
+
+Sete pedidos, ordenados por risco (primeiro o que corrompe dados ou segurança,
+só depois o visual). Estado por frente: ⬜ não iniciado · 🟨 a decorrer · ✅ feito.
+
+---
+
+## Frente 1 — Google OAuth ✅ desbloqueado
+
+O fundador forneceu o Client ID:
+`8132927831-ml07r5e7acop6f3kg27rj0ccfrs0tbbi.apps.googleusercontent.com`
+(formato válido: número-de-projecto + hash de 32 + `.apps.googleusercontent.com`).
+
+- `backend/.env` → `GOOGLE_CLIENT_ID=<id>`
+- `frontend/.env` → `VITE_GOOGLE_CLIENT_ID=<id>`
+- **Acção do fundador (não é código):** Google Cloud Console → Credenciais →
+  Origens JavaScript autorizadas → `http://localhost:5173`, `http://localhost:5174`
+  e o domínio de produção. Sem isto o botão falha com `origin_mismatch`.
+- Verificação já existente e testada (18/18 em `npm run test:google`): `iss`, `aud`,
+  `exp`, `email_verified`, assinatura RS256, recusa de API Key `AIza...`.
+- Regra mantida: **nunca** criar conta automaticamente; email desconhecido recebe a
+  mensagem + ligação para "Pedir conta".
+
+---
+
+## Frente 2 — Email real + código obrigatório ⬜
+
+**Decisão do fundador: Gmail normal + App Password.**
+
+Causa raiz actual: não existe nodemailer nem SMTP no projecto. `forgot-password`
+tenta WhatsApp/Twilio; sem Twilio devolve `twilio-not-configured` e o código fica
+**apenas no log do servidor** em desenvolvimento — o utilizador nunca o recebe.
+
+Trabalho:
+1. `nodemailer` como dependência do backend.
+2. Novo `backend/src/utils/mailer.js` — `sendMail({ to, subject, text, html })` com
+   SMTP genérico (`SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM`), default Gmail
+   (`smtp.gmail.com:465`). **Falha alto e claro**, nunca em silêncio: devolve
+   `{ ok, reason }` e faz `console.error` do erro real do SMTP.
+3. **Normalizar o App Password**: o Gmail mostra-o em 4 grupos de 4 caracteres
+   (`abcd efgh ijkl mnop`) mas usa-se sem espaços. O código remove os espaços —
+   é o erro nº1 e dá `Username and Password not accepted`.
+4. `MAIL_FROM` = o Gmail autenticado (o Gmail reescreve o `From:` e não deixa usar
+   outro endereço sem alias verificado em *Enviar email como*).
+5. **Remover `POST /auth/reset-password-instant`** e a variável `RESET_IMMEDIATE`.
+   A senha só muda com código de 6 dígitos confirmado — pedido explícito.
+6. `forgot-password` passa a entregar por **email** (Twilio fica como canal
+   secundário, se estiver configurado).
+7. **Correcção de robustez:** mover os códigos do `Map` em memória
+   (`passwordResetStore.js`) para tabela `PasswordResetCode`
+   (hash, expira, tentativas). Sem isto: um restart invalida pedidos a meio e com
+   duas instâncias o código emitido numa não é validado na outra — o próprio
+   ficheiro admite esta dívida.
+8. `ResetPassword.jsx`: remover o modo directo e o aviso laranja; fica o fluxo por
+   código, com reenvio e contagem decrescente.
+9. Manter a **resposta genérica** no `forgot-password` (não revelar se o email
+   existe) — é uma boa defesa que já está no código.
+
+Risco declarado: a partir daqui, sem SMTP a funcionar ninguém recupera a senha.
+Esta frente só fecha quando o email chegar mesmo.
+
+
+---
+
+## Frente 3 — Fechar o furo do fecho de turno ⬜
+
+**Bug provado** (é a explicação directa do "permite fechar abaixo do vendido").
+Existem **dois** caminhos de fecho e um não valida nada:
+
+| Caminho | Validação |
+|---|---|
+| `POST /api/owner/cashiers/:id/close-shift-blind` (`owner.js:381`) | Correcta — calcula o real no servidor, recusa `declared < realCash` |
+| `POST /api/shift_closings` (`shift_closings.js:27`) | **Nenhuma** — aceita `counted_amount` E `expected_amount` do corpo |
+
+Em `index.js:195` a segunda está montada com `requireRole('owner','cashier')`,
+logo **um token de caixista grava um fecho oficial com `difference: 0`**,
+contornando o fecho cego e deixando auditoria falsa.
+
+Trabalho:
+1. `shift_closings.js` deixa de aceitar `expected_amount` do cliente. O servidor
+   calcula o esperado (vendas em dinheiro desde o último fecho) e deriva
+   `difference`.
+2. `counted < expected` passa a seguir a **mesma via** de tentativa falhada e
+   bloqueio do fecho cego, em vez de gravar um fecho válido.
+3. Remover `'cashier'` do `requireRole` dessa rota (o caixa fecha pelo
+   `/close-shift-blind`). Verificado: o POS usa o `close-shift-blind`.
+4. Actualizar `backend/scripts/shift_closing_e2e.js` — hoje testa justamente o
+   caminho permissivo.
+5. Teste novo: caixista tenta gravar abaixo do vendido → **recusado** + auditoria.
+
+Nota: o filtro `payment_method: 'cash'` do cálculo é fiável hoje porque
+`sales.js:218` normaliza o método na escrita (`normalizePaymentMethod`).
+
+---
+
+## Frente 4 — Recibo: imprimir de facto, PDF automático, 3D a sério ⬜
+
+### 4a. Porque não imprime (causa provada)
+`receiptPrinter.js:140` chama `tryWebSerialPrint` **antes** de imprimir, e essa
+função invoca `navigator.serial.requestPort()`. Isso abre o **seletor de porta
+série** em vez de imprimir. Se cancelar — ou o browser não suportar Web Serial —
+cai para `window.open(...)` + `print()`, que o bloqueador de pop-ups impede.
+Nenhum dos caminhos funciona.
+
+Correcção:
+- Imprimir por **iframe escondido** (`document.createElement('iframe')` +
+  `contentWindow.print()`). Não é bloqueado por pop-ups.
+- Web Serial passa a **opt-in** numa definição da loja, deixando de capturar o
+  clique por omissão.
+
+### 4b. PDF automático
+- `jspdf` (offline após bundle). **Gerado a partir dos dados da venda, não de
+  screenshot** — três razões: texto vectorial nítido, o `html2canvas` corromperia a
+  captura de um elemento com transform 3D, e o ficheiro fica muito mais leve.
+- Fonte Courier (look de talão) e QR embutido como imagem.
+- Nome exacto: `Recibo_1  26-09-2026  23:58:34.pdf` — com os **dois espaços**
+  pedidos.
+- Numeração: `sale.daily_number` (servidor, por loja/dia, **já reinicia à
+  meia-noite** — `sales.js:41`), para coincidir com o recibo impresso. Fallback por
+  dispositivo em `localStorage` com chave por data, para vendas offline; reseta
+  sozinho no dia seguinte.
+- O download dispara no **mesmo clique** de imprimir.
+
+### 4c. Impressora 3D verdadeira
+O `Receipt3D` actual (`components/ui/index.jsx:491`) é só uma barra de 6px com um
+gradiente — não há impressora desenhada, razão pela qual o fundador não reconheceu
+ali animação nenhuma. Novo `Printer3D`: corpo em CSS 3D, slot, LED, papel a sair
+com `rotateX`, linha de varrimento durante a impressão e oscilação suave no fim.
+Respeita `prefers-reduced-motion`.
+
+### 4d. Recibo mais bonito
+É a cara do Genesis no balcão: cabeçalho com marca, hierarquia tipográfica, totais
+destacados, QR emoldurado, rodapé memorável — um recibo que dá vontade de guardar.
+
+
+---
+
+## Frente 5 — Tema claro (azul-piscina) + botão sol/lua ⬜
+
+Descobertas que tornam isto contido:
+- **Zero classes `dark:`** em todo o código. O `tailwind.config.js` declara
+  `darkMode: ['class','[data-theme="dark"]']` mas nada o usa, logo pôr `data-theme`
+  não rebenta nada.
+- Os tokens estão **todos** em `frontend/src/ui/tokens.css` → um bloco
+  `[data-theme="light"]` muda a app inteira de uma vez.
+- **Excepção:** `frontend/src/pages/Hub.jsx` ainda tem hex fixo (`#0a1220`,
+  `#7aa5d6`, `#141c2b`…) em `style={{}}` inline — não adapta ao claro e precisa de
+  limpeza, senão fica uma ilha escura.
+
+Trabalho:
+1. Novo `frontend/src/ui/theme-light.css`: fundo branco-azulado, marca ciano
+   (`#0ea5e9`), texto azul-escuro. Azul e branco a reinar.
+2. **Efeito de água:** camadas de ondas SVG + brilho especular animados a
+   velocidades diferentes, com `mix-blend-mode` e `filter: blur`, para as
+   "ondinhas/linhas de azulejo" descritas. Desligado em `prefers-reduced-motion`.
+3. Botão `Moon`/`Sun` (lucide) no login, header do Owner, POS e Super Admin.
+   Persistência em `localStorage` + script inline nos dois `index.html` para não
+   haver flash branco ao carregar.
+4. Limpar os hex fixos do `Hub.jsx`.
+
+---
+
+## Frente 6 — Super Admin ⬜
+
+- Redesenhar `admin-frontend/src/App.jsx` + `index.css` com os mesmos tokens e o
+  botão de tema.
+- **Remover o `admin@genesis.co.mz` pré-preenchido** (`App.jsx:8`) — mesmo defeito
+  já corrigido no login do owner.
+- Expor o que a API já oferece e a UI ignora. `admin.js` tem `/audit`, `/requests`,
+  `approve`, `reject`, `/tenants`, `suspend`, `unsuspend`, `block`, `unblock`,
+  `restore`, `delete`, `impersonate`; a UI só usa approve/reject/suspend.
+- `reject` usa `window.prompt` → substituir por modal próprio com motivo validado.
+- Pesquisa e filtros por estado.
+
+---
+
+## Frente 7 — Mapa mental 3D ⬜
+
+**Decisão técnica: canvas + matemática 3D própria, SEM Three.js.** Razões: a regra
+do projecto é funcionar **offline sem CDN**; o Three.js são ~600 KB para um ficheiro
+estático; e com 200–300 nós o canvas 2D com algoritmo do pintor dá o mesmo efeito de
+constelação/galáxia, com controlo total do glow e do rasto. **Custo assumido:** mais
+código meu e sem orbit controls prontos — rotação, zoom e pan escritos à mão.
+
+- `Mapa Mental/mapa_mental_3d.html` — nós = ficheiros, ligados a quem dependem,
+  **agrupados por directoria** (backend, frontend, admin-frontend, scripts, docs)
+  com ligações entre grupos, para se ver que tudo está interligado.
+- Cores: **verde** funciona · **laranja** incompleto · **vermelho** não roda ou tem
+  falha de segurança · **azul** planeado.
+- Clique num nó → painel com caminho, estado, o que faz e com quem está ligado
+  (entradas e saídas). Zoom com a roda, rodar, arrastar.
+- `Mapa Mental/mapa_mental_status.json` = fonte de verdade curada (estado +
+  descrição + dependências). `scripts/gen_mindmap_data.js` cruza com os ficheiros
+  reais e deixa os desconhecidos por classificar.
+- **Compromisso:** sempre que planear um ficheiro novo, registo-o lá a **azul** com
+  as suas ligações. Os desta plan entram já assim: `mailer.js`, `receiptPdf.js`,
+  `Printer3D`, `ThemeProvider`, `theme-light.css`, `ThemeToggle`,
+  `mapa_mental_3d.html`, `gen_mindmap_data.js` e os testes novos.
+- O tema claro também se aplica ao mapa.
+
+---
+
+## Riscos declarados ao fundador
+
+1. **Os dois espaços no nome do PDF.** Alguns sistemas colapsam espaços duplos em
+   nomes de ficheiro. Implementado como pedido; se vier com espaços simples, avisa-se.
+2. **Numeração com dois caixistas no mesmo dia.** Usa-se o `daily_number` do servidor
+   (por loja/dia). Numeração **por dispositivo** é uma mudança pequena, mas o número
+   do PDF deixa de coincidir com o recibo impresso — preferiu-se o comportamento actual.
+3. **`RESET_IMMEDIATE` desaparece.** Perda deliberada: era a via que funcionava sem
+   email. Depois da Frente 2, sem SMTP ninguém recupera senha.
+4. **Origens do Google Console são do fundador** — eu configuro o `.env`.
+5. **Remover `'cashier'` de `/api/shift_closings`** pode partir um fluxo não visto.
+   Chamadores verificados: o POS usa `/close-shift-blind`. O teste E2E apanha.
+
+## O que NÃO é tocado
+- ❌ Cálculo de dinheiro e regras do POS (excepto o fecho de turno, que é o bug)
+- ❌ Isolamento por tenant (o código está correcto)
+- ❌ Modo offline (IndexedDB, `useOfflineSync`) — o fallback do PDF é aditivo
+

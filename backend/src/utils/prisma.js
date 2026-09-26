@@ -1,11 +1,11 @@
-// Cliente Prisma com escolha de motor feita no arranque.
+// Cliente Prisma com escolha de motor feita no arranque (VERSAO 2026-09-26).
 //
 // O motor e resolvido por src/utils/dbEngine.js ANTES de `new PrismaClient()`,
 // porque o Prisma valida a URL no construtor. Como os testes de Prisma exigem
 // um schema estatico, o provider do schema.prisma fica fixo em "postgresql"
 // e, no caminho SQLite, o URL `file:` e devolvido pelo utilitario de fallback.
 //
-// A API e um Proxy preguiçoso: `prisma.tenant.findMany()` continua a funcionar
+// Proxy
 // em qualquer modulo, e o motor e escolhido na primeira utilisation. Para
 // garantir que a escolha acontece antes de qualquer query, src/index.js chama
 // `await prisma.ready()` durante o arranque.
@@ -28,7 +28,7 @@
 //  em qualquer modulo, sem alterar uma unica linha dos.routes.
 // ============================================================================
 
-const { prepareDatabase } = require('./dbEngine');
+const { prepareDatabase } = require('./dbEngine2');
 
 let client = null;
 let initPromise = null;
@@ -41,7 +41,7 @@ async function init() {
     const { url, engine } = await prepareDatabase();
     // Require tardio e intencional: so depois de o cliente estar gerado.
     const { PrismaClient } = require('@prisma/client');
-    client = new PrismaClient({ datasources: { db: { url } } });
+    client = new PrismaClient();
     console.log(`[db] cliente pronto (${engine})`);
     return client;
   })();

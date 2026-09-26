@@ -12,6 +12,7 @@
     "dexie": "^3.2.3",
     "dompurify": "^2.4.0",
     "i18next": "^23.0.0",
+    "jspdf": "^2.5.2",
     "lucide-react": "^1.48.0",
     "qrcode": "^1.5.3",
     "react": "^18.2.0",

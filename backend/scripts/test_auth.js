@@ -1,5 +1,8 @@
 // Teste end-to-end das rotas de autenticação contra o servidor a correr.
-// Uso: node scripts/test_auth.js
+// Uso: BASE_URL=http://localhost:4020 node scripts/test_auth.js
+// ACTUALIZADO 2026-09-26 (Frente 2): a rota /reset-password-instant foi
+// REMOVIDA. O teste agora verifica que ela devolve 404 e que o fluxo por
+// codigo (forgot-password -> reset-password) continua intacto.
 require('dotenv').config();
 const BASE = process.env.BASE_URL || 'http://localhost:4000';
 
@@ -59,14 +62,15 @@ async function call(path, body) {
     record('google nao emite token', mustNotAuth, mustNotAuth ? 'sem token (correcto)' : 'EMITIU TOKEN!');
   } catch (e) { record('google bloqueado sem config', false, 'sem resposta: ' + e.message); }
 
-  // 4) Reset imediado -> tem de recusar se RESET_IMMEDIATE nao for true.
+  // 4) Reset imediato foi REMOVIDO (Frente 2): tem de dar 404.
+  // Qualquer outro status significa que a backdoor ainda esta exposta.
   try {
     const r = await call('/api/auth/reset-password-instant', {
       email: 'owner@genesis.local', password: 'NovaSenha12345'
     });
-    console.log(`     reset-instant status=${r.status} -> ${explain(r.data)}`);
-    results.push({ name: 'reset-instant acessivel', ok: r.status !== 404, detail: `status=${r.status}` });
-  } catch (e) { console.log('FAIL | reset-instant | ' + e.message); }
+    record('reset-instant removido (404)', r.status === 404,
+      `status=${r.status} ${r.status === 404 ? '(correcto: rota extinta)' : '-> ' + explain(r.data)}`);
+  } catch (e) { console.log('FAIL | reset-instant removido | ' + e.message); }
 
   const failed = results.filter(r => !r.ok);
   console.log(`\nRESUMO: ${results.length - failed.length}/${results.length} passaram`);

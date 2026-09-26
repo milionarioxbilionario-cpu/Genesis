@@ -53,7 +53,8 @@ export const resources = {
       // ------------------------- Recuperar senha -------------------------
       'reset.kicker': 'Acesso',
       'reset.title': 'Recuperar senha',
-      'reset.lead': 'Escolha uma nova senha. Não é preciso código nem email.',
+      'reset.lead': 'Enviamos um código de 6 dígitos para o seu email. Depois escolhe a nova senha.',
+      'reset.codeSent': 'Código enviado. Verifique o seu email (e o spam) e introduza o código abaixo.',
       'reset.warningTitle': 'Modo directo activo',
       'reset.warning':
         'Não existe servidor de email ligado, por isso a senha muda logo à frente. ' +
@@ -108,7 +109,8 @@ export const resources = {
       // ------------------------- Password reset -------------------------
       'reset.kicker': 'Access',
       'reset.title': 'Reset password',
-      'reset.lead': 'Choose a new password. No code, no email needed.',
+      'reset.lead': 'We send a 6-digit code to your email. Then choose the new password.',
+      'reset.codeSent': 'Code sent. Check your email (and spam) and enter the code below.',
       'reset.warningTitle': 'Direct mode enabled',
       'reset.warning':
         'No email server is connected, so the password changes right here. ' +

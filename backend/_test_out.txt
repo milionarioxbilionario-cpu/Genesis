@@ -1,0 +1,27 @@
+
+=== Fecho de turno: guarda de seguranca ===
+
+[db] FORCE_DB=sqlite -> a usar a base local de desenvolvimento
+[db] cliente ja gerado para sqlite
+[db] motor preparado: sqlite
+[db] cliente pronto (sqlite)
+
+  (limpeza concluida)
+
+
+Teste falhou ao correr: 
+Invalid `prisma.tenant.create()` invocation in
+c:\Users\CMM\Desktop\Genesis\backend\scripts\shift_closing_e2e.js:76:40
+
+  73 const ids = { tenant: null };
+  74 
+  75 try {
+→ 76   const tenant = await prisma.tenant.create(
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  schema.prisma:11
+   | 
+10 |   provider  = "postgresql"
+11 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
