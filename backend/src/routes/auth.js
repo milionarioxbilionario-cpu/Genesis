@@ -12,6 +12,7 @@ const {
   clearResetCode,
 } = require('../services/passwordResetStore');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
+const { sendPasswordResetEmail } = require('../utils/mailer');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -389,22 +390,27 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
     const code = generateCode();
     saveResetCode(normalizedEmail, code);
 
-    // O codigo nunca sai na resposta HTTP (quem o tem troca a password da conta).
-    // So e entregue por WhatsApp, quando a conta tem telefone e o Twilio esta
-    // configurado. Fora de producao fica no log do servidor para permitir testes.
+    // Entrega de seguranca:
+    // Prioridade 1: Email (SMTP / Gmail).
+    // Prioridade 2: WhatsApp (se o utilizador tiver telefone configurado).
+    // Em desenvolvimento (nao prod): regista no log para viabilizar testes offline.
     const isProduction = process.env.NODE_ENV === 'production';
     try {
-      const sent = user.phone
-        ? await sendWhatsAppAlert({
-            to: user.phone,
-            message: `Genesis: codigo de recuperacao ${code}. Valido 15 minutos.`
-          })
-        : { ok: false, skipped: true, reason: 'conta-sem-telefone' };
+      const mailResult = await sendPasswordResetEmail(normalizedEmail, code);
+      if (mailResult.ok) {
+        console.info('[reset] Codigo de recuperacao enviado por email para', normalizedEmail);
+      } else if (user.phone) {
+        const waResult = await sendWhatsAppAlert({
+          to: user.phone,
+          message: `Genesis: codigo de recuperacao ${code}. Valido 15 minutos.`
+        });
+        if (waResult.ok) {
+          console.info('[reset] Codigo de recuperacao enviado por WhatsApp para', user.phone);
+        }
+      }
 
-      if (!sent.ok && !isProduction) {
-        console.info('[reset] Codigo de recuperacao (apenas dev) para', normalizedEmail, code);
-      } else if (!sent.ok) {
-        console.error('[reset] Codigo nao entregue a', normalizedEmail, '-', sent.reason);
+      if (!isProduction) {
+        console.info('[reset] Codigo de recuperacao (modo teste local) para', normalizedEmail, '->', code);
       }
     } catch (err) {
       console.error('Falha ao entregar codigo de recuperacao', err.message || err);
@@ -438,92 +444,6 @@ router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
 
     clearResetCode(normalizedEmail);
     return res.json({ message: 'Senha redefinida com sucesso.' });
-  } catch (err) {
-    if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.errors });
-    }
-    return res.status(500).json({ error: 'Não foi possível redefinir a senha.' });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// REDEFINICAO IMEDIATA DE SENHA (pedida pelo fundador, 2026-09-25)
-//
-// Hoje nao ha nenhum servidor de email ligado. O fluxo normal gera um codigo
-// de 6 digitos e tenta entrega-lo por WhatsApp — que nao funciona sem Twilio
-// configurado, nem conta com telefone. Resultado: o utilizador nunca recebe
-// nada e fica bloqueado. Pediu-se: clicar e a senha mudar logo.
-//
-// SEGURANCA — isto e uma porta de backdoor para qualquer conta, por isso:
-//   1) Desligado por omissao. So abre com RESET_IMMEDIATE=true no .env.
-//   2) Sem codigo nem segredo: exige email + a senha nova, logo nao serve
-//      para explorar contas de terceiros sem saberes a senha.
-//   3) Cada uso e registado em AuditLog e o aviso volta sempre na resposta.
-//
-// QUANDO O EMAIL ESTIVER LIGADO: apagar esta rota e voltar ao codigo de 6
-// digitos (rota /reset-password que continua intacta).
-// ---------------------------------------------------------------------------
-const instantResetSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, 'A senha precisa de pelo menos 8 caracteres.')
-});
-
-const RESET_WARNING =
-  '⚠️ Senha redefinida SEM verificação por email (modo directo). ' +
-  'Nenhuma confirmação foi enviada. Ligue um servidor de email e remova ' +
-  'RESET_IMMEDIATE do .env antes de ir para produção.';
-
-router.post('/reset-password-instant', async (req, res) => {
-  if (process.env.RESET_IMMEDIATE !== 'true') {
-    return res.status(403).json({
-      error: 'Redefinição directa desligada. Configure RESET_IMMEDIATE=true ou use o código de recuperação.',
-      code: 'RESET_IMMEDIATE_DISABLED'
-    });
-  }
-
-  try {
-    const { email, password } = instantResetSchema.parse(req.body);
-    const normalizedEmail = normalizeEmail(email);
-
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user) {
-      return res.status(404).json({
-        error: `A conta ${normalizedEmail} não está registada no Genesis.`,
-        code: 'NOT_REGISTERED'
-      });
-    }
-
-    const passwordHash = await bcrypt.hash(password, 12);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password_hash: passwordHash }
-    });
-
-    // Auditoria obrigatoria: nao deixar a porta sem registo.
-    try {
-      await prisma.auditLog.create({
-        data: {
-          user_id: user.id,
-          tenant_id: user.tenant_id,
-          action: 'RESET_PASSWORD_INSTANT',
-          entity_type: 'user',
-          entity_id: user.id,
-          new_value: JSON.stringify({
-            email: normalizedEmail,
-            role: user.role,
-            at: new Date().toISOString(),
-            warning: 'redefinida sem verificacao (RESET_IMMEDIATE)'
-          }),
-          ip_address: req.ip || '0.0.0.0'
-        }
-      });
-    } catch (e) {
-      console.error('[reset-instant] falha ao gravar auditoria:', e.message);
-    }
-
-    console.warn(`[reset-instant] senha redefinida para ${normalizedEmail} (role=${user.role})`);
-
-    return res.json({ message: 'Senha redefinida com sucesso.', warning: RESET_WARNING });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });

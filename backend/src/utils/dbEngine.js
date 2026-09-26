@@ -45,8 +45,9 @@ function generateClientFor(engine) {
   // falha com EINVAL. Em Linux/macOS usa-se o binario directamente.
   const isWin = process.platform === 'win32';
 
-  // Gerar o cliente em cada arranque e lento e, no Windows, pode falhar com
-  // EPERM quando a query engine esta bloqueada por outro processo. Se ja
+  // POSTINSTALACAO: npm install corre `prisma generate` (schema.prisma =
+// postgresql) e SUBSTITUI o cliente sqlite em disco. A deteccao por
+// activeProvider trata disso: forca a regeneracao sqlite quando preciso.
   // existe um cliente gerado para ESTE motor, usa-se: e o mesmo resultado.
   if (clientAlreadyFor(engine)) {
     console.log(`[db] cliente ja gerado para ${engine}`);
@@ -69,20 +70,27 @@ function generateClientFor(engine) {
   }
 }
 
-// O cliente gerado regista qual era o schema. Se coincidir com o motor pedido,
-// nao ha nada a regenerar.
+// O cliente gerado regista o provider REAL no index.js ("activeProvider").
+// NOTA: NAO ler node_modules/.prisma/client/schema.prisma — esse ficheiro e
+// apenas uma COPIA do schema e pode estar desactualizado (foi o que causou o
+// teste shift_closing a falhar com "URL must start with postgresql://" mesmo
+// com FORCE_DB=sqlite: o schema.prisma copiado dizia sqlite mas o cliente
+// gerado era postgresql).
 function clientAlreadyFor(engine) {
   try {
     const fs = require('fs');
     const path = require('path');
-    const meta = path.join(process.cwd(), 'node_modules', '.prisma', 'client', 'schema.prisma');
-    if (!fs.existsSync(meta)) return false;
-    const content = fs.readFileSync(meta, 'utf8');
-    return content.includes('provider = "' + engine + '"');
-  } catch {
+    const indexJs = path.join(process.cwd(), 'node_modules', '.prisma', 'client', 'index.js');
+    if (!fs.existsSync(indexJs)) return false;
+    const content = fs.readFileSync(indexJs, 'utf8');
+    const markerX = '"activeProvider": "' + engine + '"';
+    if (content.includes(markerX)) return true;
+    return false;
+  } catch (_) {
     return false;
   }
 }
+  // Fim AUX (FIX-1).
 
 // A sondagem NAO pode depender de um cliente Postgres especifico (o modulo
 // 'pg' nao e dependencia deste projecto, e '@prisma/client/runtime/library'

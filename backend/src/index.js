@@ -191,8 +191,12 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/demand_captures', authOrDevice, requireRole('owner', 'cashier'), demandCapturesRoutes);
 // Shrinkage records (stock loss) - require auth
 app.use('/api/shrinkage_records', authOrDevice, requireRole('owner', 'cashier'), shrinkageRoutes);
-// Fechos de turno (caixa cego)
-app.use('/api/shift_closings', authOrDevice, requireRole('owner', 'cashier'), shiftClosingsRoutes);
+// Fechos de turno (caixa cego).
+// Só OWNER: o caixista fecha pelo POS via /api/owner/cashiers/:id/close-shift-blind,
+// onde o dono valida com a senha dele. Deixar o caixista entrar aqui permitia-lhe
+// gravar o seu proprio fecho com os numeros que quisesse — ver o cabecalho de
+// src/routes/shift_closings.js.
+app.use('/api/shift_closings', authOrDevice, requireRole('owner'), shiftClosingsRoutes);
 
 // Rotas de Sales - require auth
 app.use('/api/sales', authOrDevice, requireRole('owner', 'cashier'), salesRoutes);
