@@ -3,19 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { setHubSeller } from '../utils/hubSession';
 import { useIsolatedScreen } from '../hooks/useIsolatedScreen';
+import ThemeToggle from '../theme/ThemeToggle';
 
 // HUB DEDICADO — pagina propria do balcao (estilo Netflix, SEM sidebar).
 // O caixista nunca ve o menu do dono: so perfis + senha.
 //  - Perfil bloqueado (3 erros no fecho) mostra BLOQUEADO e so abre com a
 //    senha do dono (que o desbloqueia).
 //  - "Novo caixista" e "Modo do dono" exigem a senha do dono.
+//
+// NOTA (27-09-2026): todas as cores fixas (hex) foram substituidas por tokens
+// de ui/tokens.css. Sem isto, o Hub continuava vermelho/preto no modo claro
+// (azul-piscina). Nenhum hex a mao.
 const HUB_CSS = `
 .hub-card { transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease; }
-.hub-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 24px 60px rgba(0,0,0,.55); border-color: rgba(229,9,20,.55) !important; }
-.hub-card.locked-card:hover { transform: none; box-shadow: none; border-color: rgba(244,63,94,.6) !important; }
-.hub-btn { transition: background .2s ease, transform .2s ease; }
+.hub-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: var(--sh-lg); border-color: var(--brand) !important; }
+.hub-card.locked-card:hover { transform: none; box-shadow: none; border-color: var(--danger) !important; }
+.hub-btn { transition: background .2s ease, transform .2s ease, border-color .2s ease; }
 .hub-btn:hover { transform: translateY(-1px); }
+.hub-shell::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, var(--brand-weak), transparent),
+    radial-gradient(900px 500px at 90% 110%, var(--info-weak), transparent);
+}
+.hub-shell > * { position: relative; z-index: 1; }
 `;
+
 
 export default function Hub() {
   const navigate = useNavigate();
@@ -100,38 +114,39 @@ export default function Hub() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(1200px 600px at 50% -10%, rgba(229,9,20,0.16), transparent), #080b14' }}>
+    <div className="hub-shell" style={{ minHeight: '100vh', background: 'var(--bg-base)', color: 'var(--text)' }}>
       <style>{HUB_CSS}</style>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 34px', borderBottom: '1px solid rgba(148,163,184,0.08)' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 34px', borderBottom: '1px solid var(--border-soft)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#e50914,#7a1017)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 22 }}>G</div>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--brand-grad)', boxShadow: 'var(--sh-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 22 }}>G</div>
           <div>
-            <div style={{ color: '#edf2f7', fontWeight: 900, fontSize: 20, letterSpacing: '-0.03em' }}>Genesis</div>
-            <div style={{ color: '#64748b', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Hub do Balcao</div>
+            <div style={{ color: 'var(--text)', fontWeight: 900, fontSize: 20, letterSpacing: '-0.03em' }}>Genesis</div>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Hub do Balcao</div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button type="button" className="hub-btn" onClick={() => openGate('create')} style={{ padding: '11px 20px', borderRadius: 14, background: '#e50914', color: '#fff', fontWeight: 800, border: 'none', cursor: 'pointer' }}>+ Novo caixista</button>
-          <button type="button" className="hub-btn" onClick={() => openGate('owner')} style={{ padding: '11px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(148,163,184,0.15)', color: '#edf2f7', fontWeight: 700, cursor: 'pointer' }}>Modo do dono</button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <ThemeToggle compact />
+          <button type="button" className="hub-btn" onClick={() => openGate('create')} style={{ padding: '11px 20px', borderRadius: 14, background: 'var(--brand)', color: '#fff', fontWeight: 800, border: 'none', cursor: 'pointer' }}>+ Novo caixista</button>
+          <button type="button" className="hub-btn" onClick={() => openGate('owner')} style={{ padding: '11px 20px', borderRadius: 14, background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Modo do dono</button>
         </div>
       </header>
       <main style={{ padding: '36px 34px' }}>
-        <h1 style={{ color: '#edf2f7', fontSize: 32, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 6 }}>Quem esta a vender?</h1>
-        <p style={{ color: '#64748b', marginBottom: 28 }}>Escolhe o teu perfil e introduz a tua senha para abrir o caixa.</p>
-        {msg && <div style={{ marginBottom: 18, padding: '11px 16px', borderRadius: 12, background: 'rgba(122,165,214,0.12)', border: '1px solid rgba(122,165,214,0.32)', color: '#cfe0f5', fontWeight: 600 }}>{msg}</div>}
+        <h1 style={{ color: 'var(--text)', fontSize: 32, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 6 }}>Quem esta a vender?</h1>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 28 }}>Escolhe o teu perfil e introduz a tua senha para abrir o caixa.</p>
+        {msg && <div style={{ marginBottom: 18, padding: '11px 16px', borderRadius: 12, background: 'var(--info-weak)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600 }}>{msg}</div>}
         {cashiers.length === 0 ? (
-          <div style={{ color: '#475569', fontSize: 16 }}>Ainda nao ha caixistas. Usa "+ Novo caixista" acima (pede a senha do dono).</div>
+          <div style={{ color: 'var(--text-dim)', fontSize: 16 }}>Ainda nao ha caixistas. Usa "+ Novo caixista" acima (pede a senha do dono).</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 22 }}>
             {cashiers.map((c) => {
               const inactive = c.is_active === false;
               const blocked = Boolean(c.locked);
               return (
-                <div key={c.id} onClick={() => clickProfile(c)} className={'hub-card' + (blocked ? ' locked-card' : '')} style={{ cursor: inactive && !blocked ? 'not-allowed' : 'pointer', opacity: inactive && !blocked ? 0.35 : 1, borderRadius: 20, background: 'linear-gradient(160deg,#141c2b,#0d1420)', border: blocked ? '1px solid rgba(244,63,94,0.55)' : '1px solid rgba(148,163,184,0.1)', padding: '26px 20px', textAlign: 'center', position: 'relative' }}>
-                  {blocked && <div style={{ position: 'absolute', top: 12, right: 12, padding: '4px 10px', borderRadius: 999, background: 'rgba(244,63,94,0.18)', border: '1px solid rgba(244,63,94,0.5)', color: '#fda4af', fontSize: 10.5, fontWeight: 900, letterSpacing: '0.06em' }}>BLOQUEADO</div>}
-                  <div style={{ width: 78, height: 78, margin: '0 auto 14px', borderRadius: 20, background: blocked ? 'linear-gradient(135deg,#7f1d1d,#450a0a)' : 'linear-gradient(135deg,#7aa5d6,#3b5a80)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: blocked ? '#fecaca' : '#0a1220', fontWeight: 900, fontSize: 32 }}>{blocked ? '\uD83D\uDD12' : (c.name || '?')[0].toUpperCase()}</div>
-                  <div style={{ color: '#edf2f7', fontWeight: 800, fontSize: 16 }}>{c.name}</div>
-                  <div style={{ color: blocked ? '#fb7185' : '#64748b', fontSize: 12, marginTop: 4 }}>{blocked ? (c.attempts + ' erros no fecho de turno') : (inactive ? 'Inactivo' : 'Activo')}</div>
+                <div key={c.id} onClick={() => clickProfile(c)} className={'hub-card' + (blocked ? ' locked-card' : '')} style={{ cursor: inactive && !blocked ? 'not-allowed' : 'pointer', opacity: inactive && !blocked ? 0.35 : 1, borderRadius: 20, background: 'linear-gradient(160deg, var(--bg-elev2), var(--bg-elev))', border: blocked ? '1px solid var(--danger)' : '1px solid var(--border-soft)', padding: '26px 20px', textAlign: 'center', position: 'relative' }}>
+                  {blocked && <div style={{ position: 'absolute', top: 12, right: 12, padding: '4px 10px', borderRadius: 999, background: 'var(--danger-weak)', border: '1px solid var(--danger)', color: 'var(--danger-text)', fontSize: 10.5, fontWeight: 900, letterSpacing: '0.06em' }}>BLOQUEADO</div>}
+                  <div style={{ width: 78, height: 78, margin: '0 auto 14px', borderRadius: 20, background: blocked ? 'linear-gradient(135deg, var(--danger), var(--brand-deep))' : 'var(--brand-grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 32 }}>{blocked ? '\uD83D\uDD12' : (c.name || '?')[0].toUpperCase()}</div>
+                  <div style={{ color: 'var(--text)', fontWeight: 800, fontSize: 16 }}>{c.name}</div>
+                  <div style={{ color: blocked ? 'var(--danger-text)' : 'var(--text-dim)', fontSize: 12, marginTop: 4 }}>{blocked ? (c.attempts + ' erros no fecho de turno') : (inactive ? 'Inactivo' : 'Activo')}</div>
                   {enterId === c.id ? (
                     <form onSubmit={(e) => { e.preventDefault(); enter(c); }} onClick={(e) => e.stopPropagation()} style={{ marginTop: 12 }}>
                       <input autoFocus type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Senha deste perfil" className="auth-input" required />
@@ -141,7 +156,7 @@ export default function Hub() {
                       </div>
                     </form>
                   ) : (
-                    <div style={{ marginTop: 12, color: blocked ? '#fb7185' : '#7aa5d6', fontSize: 13, fontWeight: 700 }}>{blocked ? 'Abrir com a senha do dono \u2192' : 'Abrir caixa \u2192'}</div>
+                    <div style={{ marginTop: 12, color: blocked ? 'var(--danger-text)' : 'var(--brand-text)', fontSize: 13, fontWeight: 700 }}>{blocked ? 'Abrir com a senha do dono \u2192' : 'Abrir caixa \u2192'}</div>
                   )}
                 </div>
               );
@@ -150,12 +165,12 @@ export default function Hub() {
         )}
       </main>
       {gate && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={submitGate} style={{ background: '#111c2b', border: '1px solid rgba(148,163,184,0.15)', borderRadius: 24, padding: 32, width: 400 }}>
-            <h3 style={{ color: '#edf2f7', fontWeight: 900, fontSize: 18, marginBottom: 6 }}>{gate === 'create' ? 'Criar novo caixista' : gate === 'owner' ? 'Acesso do dono' : 'Desbloquear perfil'}</h3>
-            <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>{gate === 'create' ? 'So o dono cria caixistas. Introduz a tua senha para continuar.' : gate === 'owner' ? 'Introduz a tua senha para abrir o painel de gestao.' : 'Este perfil foi bloqueado por erros no fecho de turno. Introduz a tua senha para o desbloquear.'}</p>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--overlay)', backdropFilter: 'blur(8px)' }}>
+          <form onSubmit={submitGate} style={{ background: 'var(--bg-elev)', border: '1px solid var(--border)', borderRadius: 24, padding: 32, width: 400 }}>
+            <h3 style={{ color: 'var(--text)', fontWeight: 900, fontSize: 18, marginBottom: 6 }}>{gate === 'create' ? 'Criar novo caixista' : gate === 'owner' ? 'Acesso do dono' : 'Desbloquear perfil'}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>{gate === 'create' ? 'So o dono cria caixistas. Introduz a tua senha para continuar.' : gate === 'owner' ? 'Introduz a tua senha para abrir o painel de gestao.' : 'Este perfil foi bloqueado por erros no fecho de turno. Introduz a tua senha para o desbloquear.'}</p>
             <input autoFocus type="password" value={ownerPw} onChange={(e) => setOwnerPw(e.target.value)} placeholder="Senha do dono" className="auth-input" required />
-            {gateErr && <div style={{ marginTop: 10, color: '#fda4af', fontSize: 13, fontWeight: 700 }}>{gateErr}</div>}
+            {gateErr && <div style={{ marginTop: 10, color: 'var(--danger-text)', fontSize: 13, fontWeight: 700 }}>{gateErr}</div>}
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
               <button className="primary-btn" type="submit" disabled={gateBusy}>{gateBusy ? 'A verificar...' : 'Confirmar'}</button>
               <button className="secondary-btn" type="button" onClick={() => setGate(null)}>Cancelar</button>
@@ -164,9 +179,9 @@ export default function Hub() {
         </div>
       )}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(8px)' }}>
-          <form onSubmit={submitCreate} style={{ background: '#111c2b', border: '1px solid rgba(148,163,184,0.15)', borderRadius: 24, padding: 32, width: 440 }}>
-            <h3 style={{ color: '#edf2f7', fontWeight: 900, fontSize: 18, marginBottom: 16 }}>Novo caixista</h3>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--overlay)', backdropFilter: 'blur(8px)' }}>
+          <form onSubmit={submitCreate} style={{ background: 'var(--bg-elev)', border: '1px solid var(--border)', borderRadius: 24, padding: 32, width: 440 }}>
+            <h3 style={{ color: 'var(--text)', fontWeight: 900, fontSize: 18, marginBottom: 16 }}>Novo caixista</h3>
             <div style={{ display: 'grid', gap: 10 }}>
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome" className="auth-input" required />
               <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Telefone (opcional)" className="auth-input" />

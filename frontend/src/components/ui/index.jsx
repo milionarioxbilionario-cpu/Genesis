@@ -487,17 +487,10 @@ export function AmbientLayer({ grid = true }) {
   );
 }
 
-/* Recibo que sai da impressora em 3D. children = conteudo do ticket. */
-export function Receipt3D({ slot = true, settle = true, children, className = '' }) {
-  return (
-    <div className={'g-receipt-3d-stage ' + className}>
-      {slot && <div className="g-receipt-slot" />}
-      <div className={settle ? 'g-receipt-3d g-receipt-3d-settle' : 'g-receipt-3d'}>
-        {children}
-      </div>
-    </div>
-  );
-}
+/* Recibo dentro da impressora 3D real (ver components/Printer3D.jsx).
+   Mantido aqui por compatibilidade de import: quem importava Receipt3D do
+   kit continua a receber a mesma peça. */
+export { Printer3D, Receipt3D } from '../Printer3D';
 
 /* Barra que preenche com a marca (usada em cabecalhos de KPI e no topo do login). */
 export function SheenBar({ tone = 'brand', className = '' }) {

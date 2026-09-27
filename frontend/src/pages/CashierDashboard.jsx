@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import { clearHubSeller } from '../utils/hubSession';
 import { useIsolatedScreen } from '../hooks/useIsolatedScreen';
-import { AmbientLayer, Modal, Button, Receipt3D } from '../components/ui';
+import { AmbientLayer, Modal, Button } from '../components/ui';
+import Printer3D from '../components/Printer3D';
+import ThemeToggle from '../theme/ThemeToggle';
 import QRCode from 'qrcode';
 
 const demoProducts = [
@@ -81,6 +83,11 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [receiptQr, setReceiptQr] = useState('');
   const [printingReceipt, setPrintingReceipt] = useState(false);
+  // Impressora 3D: 'idle' = papel em repouso | 'printing' = a sair pela fenda.
+  // `printKey` muda a cada impressao para o React remontar a animacao de raiz.
+  const [printerState, setPrinterState] = useState('idle');
+  const [printKey, setPrintKey] = useState(0);
+  const [lastPdfName, setLastPdfName] = useState('');
 
   const handleUnauthorized = (err) => {
     if (err?.response?.status === 401) {
@@ -313,31 +320,76 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
     }
   };
 
-  // Imprime o recibo a partir da pre-visualizacao (o caixista ja confirmou
-  // loja, local, caixista, numero do dia e QR no modal).
-  const printPreviewReceipt = async () => {
-    if (!receiptPreview) return;
+  // ===== IMPRESSÃO EM 3 FASES =============================================
+  // 1) O caixista clica em "Imprimir recibo" -> arranca a animação 3D.
+  // 2) Quando o papel acaba de sair da impressora (onAnimationEnd), corre:
+  //    geração do PDF + DOWNLOAD AUTOMÁTICO com o nome pedido.
+  // 3) Depois disso abre o diálogo de impressão do navegador (e, se houver
+  //    Web Serial ligada a uma impressora térmica, usa essa).
+  // Um clique, três passos: animação -> download -> impressão.
+  const startPrintSequence = async () => {
+    if (!receiptPreview || printingReceipt || printerState === 'printing') return;
     setPrintingReceipt(true);
-    try {
-      const result = await printReceipt({
-        shopName: shopInfo.name,
-        shopLocation: shopInfo.location,
-        cashierName: hubSeller?.name || operatorName || 'Caixa',
-        sale: receiptPreview.sale,
-        items: receiptPreview.items,
-      });
-      if (result && result.ok === false) {
-        setMessage(`Recibo nao impresso: ${result.reason || 'erro'}. A venda ficou registada.`);
-      } else {
-        setMessage('Recibo enviado para a impressora.');
-      }
-      setReceiptPreview(null);
-    } catch (e) {
-      console.warn('Receipt printing failed', e);
-      setMessage('Falha ao imprimir o recibo. A venda ficou registada.');
-    } finally {
+    setPrinterState('printing');
+    setPrintKey((k) => k + 1);
+  };
+
+  const finishPrintSequence = async () => {
+    const preview = receiptPreview;
+    if (!preview) {
       setPrintingReceipt(false);
+      setPrinterState('idle');
+      return;
     }
+    const receiptArgs = {
+      shopName: shopInfo.name,
+      shopLocation: shopInfo.location,
+      cashierName: hubSeller?.name || operatorName || 'Caixa',
+      sale: preview.sale,
+      items: preview.items,
+    };
+
+    // --- FASE 2: PDF com nome sequencial do dia + download automático ---
+    // O jsPDF é carregado A PEDIDO (import dinâmico): pesa ~150 kB e o
+    // caixista só precisa dele no momento de imprimir. Assim não entra no
+    // pacote inicial do POS.
+    let pdfName = '';
+    try {
+      const { generateReceiptPdf, downloadReceiptPdf } = await import('../utils/receiptPdf');
+      const { blob, fileName } = generateReceiptPdf({
+        ...receiptArgs,
+        qrDataUrl: receiptQr,
+      });
+      downloadReceiptPdf({ blob, fileName });
+      pdfName = fileName;
+      setLastPdfName(fileName);
+    } catch (err) {
+      console.warn('Geração do PDF do recibo falhou', err);
+    }
+
+    // --- FASE 3: impressão real (serial se existir, senão janela do browser)
+    let result;
+    try {
+      result = await printReceipt(receiptArgs);
+    } catch (err) {
+      result = { ok: false, reason: err?.message || 'erro ao abrir a impressão' };
+    }
+
+    if (result && result.ok === false) {
+      setMessage(
+        `Recibo não impresso (${result.reason || 'erro'}), mas ficou guardado como "${pdfName}" e a venda está registada.`,
+      );
+    } else {
+      setMessage(
+        pdfName
+          ? `Recibo ${pdfName} baixado e enviado para a impressora.`
+          : 'Recibo enviado para a impressora.',
+      );
+    }
+
+    setReceiptPreview(null);
+    setPrinterState('idle');
+    setPrintingReceipt(false);
   };
 
   async function submitSale() {
@@ -574,6 +626,7 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
         <div className="pos-top-actions">
           <div className="user-pill">{(hubSeller?.name || operatorName || 'C')[0].toUpperCase()}</div>
           <div className="user-name">{hubSeller?.name || operatorName || 'Caixa'}</div>
+          <ThemeToggle compact />
         </div>
       </div>
 
@@ -670,18 +723,23 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
           open
           title="Venda registada"
           hint={`Confirma o recibo antes de imprimir — venda nº ${String(receiptPreview.sale.daily_number || 0).padStart(3, '0')}`}
-          onClose={() => setReceiptPreview(null)}
-          width={430}
+          onClose={() => { if (printerState !== 'printing') setReceiptPreview(null); }}
+          width={470}
           footer={(
-            <div style={{ display: 'flex', gap: 12, width: '100%', justifyContent: 'flex-end' }}>
-              <Button variant="ghost" onClick={() => setReceiptPreview(null)}>Nova venda</Button>
-              <Button variant="primary" onClick={printPreviewReceipt} disabled={printingReceipt}>
-                {printingReceipt ? 'A imprimir...' : 'Imprimir recibo'}
-              </Button>
+            <div style={{ display: 'flex', gap: 12, width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.76rem', color: 'var(--text-dim)', maxWidth: '58%' }}>
+                {lastPdfName ? `Último PDF: ${lastPdfName}` : 'Ao imprimir, o PDF baixa automático.'}
+              </span>
+              <span style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <Button variant="ghost" onClick={() => setReceiptPreview(null)} disabled={printingReceipt}>Nova venda</Button>
+                <Button variant="primary" onClick={startPrintSequence} disabled={printingReceipt}>
+                  {printingReceipt ? 'A imprimir...' : 'Imprimir recibo'}
+                </Button>
+              </span>
             </div>
           )}
         >
-          <Receipt3D>
+          <Printer3D state={printerState} repeatKey={printKey} onPrinted={finishPrintSequence}>
           <div className="receipt-shell">
             <div className="receipt-shop">{shopInfo.name}</div>
             {shopInfo.location && <div className="receipt-sub">{shopInfo.location}</div>}
@@ -728,8 +786,10 @@ export default function CashierDashboard({ hubSeller = null, onRequestLeave = nu
                 <div className="receipt-qr-hint">Escaneia para verificar esta venda</div>
               </div>
             )}
+            <div className="receipt-knife" aria-hidden="true" />
           </div>
-          </Receipt3D>
+          <div className="receipt-knife-under" aria-hidden="true" />
+          </Printer3D>
         </Modal>
       )}
 

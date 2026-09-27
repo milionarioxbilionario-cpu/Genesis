@@ -184,6 +184,8 @@
   --transition-fast: var(--d-fast) var(--e-out);
   --transition-normal: var(--d-base) var(--e-out);
   --transition-smooth: var(--d-slow) var(--e-out);
+  /* --------- Overlay de modais/dialogos (muda com o tema) --------- */
+  --overlay: rgba(2, 6, 23, 0.86);
 }
 
 /* Acessibilidade: quem pede menos movimento nao recebe animacao nenhuma. */

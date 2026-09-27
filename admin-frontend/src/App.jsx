@@ -1,11 +1,61 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Route, Routes, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeToggle from './ThemeToggle';
 
 const api = axios.create({ baseURL: 'http://localhost:4000', withCredentials: true });
 
+/* Camada de "água de piscina" — só aparece no modo claro (CSS decide). */
+function PoolLayer() {
+  return (
+    <div className="admin-pool" aria-hidden="true">
+      <div className="admin-pool__tiles" />
+      <div className="admin-pool__wave w1" />
+      <div className="admin-pool__wave w2" />
+      <div className="admin-pool__wave w3" />
+      <div className="admin-pool__caustic c1" />
+      <div className="admin-pool__caustic c2" />
+    </div>
+  );
+}
+
+/* Motivo de rejeição/bloqueio: modal próprio, com validação.
+   Antes disto era window.prompt — texto livre sem limite e sem rasto. */
+function ReasonModal({ open, title, hint, confirmLabel, danger, onCancel, onConfirm }) {
+  const [reason, setReason] = useState('');
+  const [touched, setTouched] = useState(false);
+
+  useEffect(() => { setReason(''); setTouched(false); }, [open, title]);
+
+  if (!open) return null;
+  const trimmed = reason.trim();
+  const tooShort = trimmed.length < 5;
+
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (tooShort) { setTouched(true); return; } onConfirm(trimmed); }}>
+        <h3>{title}</h3>
+        <p>{hint}</p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Motivo (mínimo 5 caracteres) — fica no rasto da acção."
+          autoFocus
+          required
+          minLength={5}
+        />
+        {touched && tooShort && <p style={{ color: 'var(--danger)', marginTop: 8 }}>O motivo precisa de pelo menos 5 caracteres.</p>}
+        <div className="modal-actions">
+          <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
+          <button type="submit" className={danger ? 'btn btn-danger' : 'btn btn-primary'}>{confirmLabel}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function AdminLogin() {
-  const [email, setEmail] = useState('admin@genesis.co.mz');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,19 +79,22 @@ function AdminLogin() {
 
   return (
     <div className="login">
+      <PoolLayer />
+      <ThemeToggle onLogin />
       <div className="card login-card">
+        <div className="login-mark" aria-hidden="true">G</div>
         <h1 style={{ margin: 0, fontSize: '2rem' }}>Genesis Admin</h1>
-        <p style={{ marginTop: '8px', color: '#475569' }}>Acesso restrito para gestão da plataforma</p>
+        <p className="login-sub">Acesso restrito para gestão da plataforma</p>
         <form onSubmit={handleLogin}>
           <div className="field">
-            <label>Email</label>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label htmlFor="adm-email">Email</label>
+            <input id="adm-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required />
           </div>
           <div className="field">
-            <label>Senha</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <label htmlFor="adm-pass">Senha</label>
+            <input id="adm-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
           </div>
-          {error && <p style={{ color: '#dc2626', marginTop: '16px' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--danger)', marginTop: '16px' }}>{error}</p>}
           <div className="field">
             <button disabled={loading} className="btn btn-primary" type="submit">{loading ? 'Entrando...' : 'Entrar'}</button>
           </div>
@@ -55,6 +108,10 @@ function AdminDashboard() {
   const [tenants, setTenants] = useState([]);
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  // Modal de motivo: { kind: 'reject' | 'block', tenant: {...} } | null
+  const [reasonModal, setReasonModal] = useState(null);
 
   const load = async () => {
     try {
@@ -82,9 +139,10 @@ function AdminDashboard() {
     }
   };
 
-  const reject = async (tenantId) => {
-    const reason = window.prompt('Qual o motivo da rejeição?', 'Dados incompletos');
-    if (!reason) return;
+  // Rejeitar: motivo OBRIGATÓRIO e validado (modal, nunca window.prompt).
+  const reject = (tenantId) => setReasonModal({ kind: 'reject', tenantId });
+  const doReject = async (tenantId, reason) => {
+    setReasonModal(null);
     try {
       const res = await api.post(`/api/admin/requests/${tenantId}/reject`, { reason });
       setMessage(res.data.message || 'Pedido rejeitado com sucesso.');
@@ -114,9 +172,9 @@ function AdminDashboard() {
     }
   };
 
-  const block = async (tenantId) => {
-    const reason = window.prompt('Qual o motivo do bloqueio?', 'Pagamento em falta / incumprimento');
-    if (!reason) return;
+  const block = (tenantId) => setReasonModal({ kind: 'block', tenantId });
+  const doBlock = async (tenantId, reason) => {
+    setReasonModal(null);
     try {
       const res = await api.post(`/api/admin/tenants/${tenantId}/block`, { reason });
       setMessage(res.data.message || 'Tenant bloqueado.');
@@ -171,10 +229,22 @@ function AdminDashboard() {
 
   const statusOrder = ['pending', 'trial', 'active', 'suspended', 'blocked', 'rejected', 'deleted'];
   const statusClean = { pending: 'Pendente', trial: 'Trial', active: 'Ativo', suspended: 'Suspenso', blocked: 'Bloqueado', rejected: 'Rejeitado', deleted: 'Eliminado' };
+
+  // Pesquisa + filtro por estado (antes: só agrupamento, sem procurar nada).
+  const needle = search.trim().toLowerCase();
+  const filteredTenants = tenants.filter((tenant) => {
+    if (statusFilter !== 'all' && tenant.status !== statusFilter) return false;
+    if (!needle) return true;
+    const hay = [tenant.name, tenant.owner_name, tenant.email, tenant.phone, tenant.business_type, tenant.location]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(needle);
+  });
+
   const grouped = statusOrder.reduce((acc, status) => {
-    acc[status] = tenants.filter((tenant) => tenant.status === status);
+    acc[status] = filteredTenants.filter((tenant) => tenant.status === status);
     return acc;
   }, {});
+  const visibleCount = filteredTenants.length;
 
   const metrics = {
     totalTenants: tenants.length,
@@ -184,10 +254,18 @@ function AdminDashboard() {
     blocked: tenants.filter((tenant) => tenant.status === 'blocked').length,
   };
 
+  const badgeClass = (status) => {
+    const base = 'badge';
+    if (status === 'active' || status === 'trial') return base + ' is-ok';
+    if (status === 'pending' || status === 'suspended') return base + ' is-warn';
+    if (status === 'blocked' || status === 'rejected' || status === 'deleted') return base + ' is-danger';
+    return base;
+  };
+
   const renderTenantRow = (tenant) => (
     <tr key={tenant.id}>
       <td>{tenant.name}</td>
-      <td><span className="badge">{statusClean[tenant.status] || tenant.status}</span></td>
+      <td><span className={badgeClass(tenant.status)}>{statusClean[tenant.status] || tenant.status}</span></td>
       <td>{tenant.owner_name || '—'}</td>
       <td>{tenant.business_type || '—'}</td>
       <td>{tenant.phone || '—'}</td>
@@ -235,20 +313,50 @@ function AdminDashboard() {
 
   return (
     <div className="page">
+      <PoolLayer />
       <div className="shell">
         <div className="topbar">
           <div>
-            <h1 style={{ margin: 0 }}>Dashboard do Super Admin</h1>
-            <p style={{ margin: '6px 0 0', color: '#475569' }}>Overview da plataforma Genesis</p>
+            <h1 className="title-main">Dashboard do Super Admin</h1>
+            <p className="title-sub">Overview da plataforma Genesis</p>
           </div>
-          <button className="btn btn-secondary" onClick={() => window.location.href = 'http://localhost:5173/login'}>Voltar para login principal</button>
+          <div className="topbar-actions">
+            <ThemeToggle />
+            <button className="btn btn-secondary" onClick={() => window.location.href = 'http://localhost:5173/login'}>Voltar para login principal</button>
+          </div>
         </div>
 
         <div className="nav">
           <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Geral</NavLink>
         </div>
 
-        {message && <div style={{ margin: '16px 0', padding: '10px 14px', borderRadius: 12, background: '#fef3c7', color: '#92400e' }}>{message}</div>}
+        {message && <div className="message" role="status">{message}</div>}
+
+        <div className="toolbar">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Procurar loja, dono, email ou telefone…"
+            aria-label="Procurar tenants"
+          />
+          <button className={'filter' + (statusFilter === 'all' ? ' is-on' : '')} onClick={() => setStatusFilter('all')}>Todos</button>
+          {statusOrder.map((status) => (
+            <button
+              key={status}
+              className={'filter' + (statusFilter === status ? ' is-on' : '')}
+              onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
+            >
+              {statusClean[status]}
+            </button>
+          ))}
+          {(needle || statusFilter !== 'all') && (
+            <button className="btn btn-secondary btn-sm" onClick={() => { setSearch(''); setStatusFilter('all'); }}>Limpar</button>
+          )}
+          <span style={{ marginLeft: 'auto', color: 'var(--text-dim)', fontSize: 13, fontWeight: 700 }}>
+            {visibleCount} de {tenants.length} tenants
+          </span>
+        </div>
 
         <div className="grid">
           <div className="card stat"><strong>{metrics.activeStores}</strong><div>lojas ativas</div></div>
@@ -266,7 +374,7 @@ function AdminDashboard() {
               {requests.length ? requests.map((tenant) => (
                 <tr key={tenant.id}>
                   <td>{tenant.name}</td>
-                  <td><span className="badge">{statusClean[tenant.status] || tenant.status}</span></td>
+                  <td><span className={badgeClass(tenant.status)}>{statusClean[tenant.status] || tenant.status}</span></td>
                   <td>{tenant.owner_name}</td>
                   <td>{tenant.phone}</td>
                   <td>
@@ -283,6 +391,11 @@ function AdminDashboard() {
 
         <div className="card" style={{ marginTop: '24px', padding: '20px' }}>
           <h2>Todos os tenants</h2>
+          {!visibleCount ? (
+            <div className="empty-state">
+              {tenants.length ? 'Nenhum tenant corresponde à pesquisa.' : 'Ainda não há tenants registados.'}
+            </div>
+          ) : null}
           {statusOrder.map((status) => {
             const list = grouped[status] || [];
             if (!list.length) return null;
@@ -310,6 +423,24 @@ function AdminDashboard() {
             );
           })}
         </div>
+
+        <ReasonModal
+          open={Boolean(reasonModal)}
+          danger={reasonModal?.kind === 'block'}
+          title={reasonModal?.kind === 'block' ? 'Bloquear tenant' : 'Rejeitar pedido'}
+          hint={
+            reasonModal?.kind === 'block'
+              ? 'O motivo fica no rasto e é mostrado ao dono da loja.'
+              : 'O motivo do pedido enviado ao dono — o backend exige ao menos 5 caracteres.'
+          }
+          confirmLabel={reasonModal?.kind === 'block' ? 'Bloquear' : 'Rejeitar'}
+          onCancel={() => setReasonModal(null)}
+          onConfirm={(reason) => {
+            if (!reasonModal) return;
+            if (reasonModal.kind === 'block') doBlock(reasonModal.tenantId, reason);
+            else doReject(reasonModal.tenantId, reason);
+          }}
+        />
       </div>
     </div>
   );

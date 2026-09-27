@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import api from '../utils/api';
 import { Modal } from '../components/ui';
+import ThemeToggle from '../theme/ThemeToggle';
+
 
 /* ==========================================================================
    SHELL DO GENESIS (donos e caixistas).
@@ -229,6 +231,7 @@ export default function CRMLayout({ children, title }) {
               <Store size={12} aria-hidden="true" />
               {tenant?.status || 'demo'}
             </span>
+            <ThemeToggle compact />
           </div>
         </header>
 
