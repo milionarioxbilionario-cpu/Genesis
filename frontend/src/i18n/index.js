@@ -55,10 +55,9 @@ export const resources = {
       'reset.title': 'Recuperar senha',
       'reset.lead': 'Enviamos um código de 6 dígitos para o seu email. Depois escolhe a nova senha.',
       'reset.codeSent': 'Código enviado. Verifique o seu email (e o spam) e introduza o código abaixo.',
-      'reset.warningTitle': 'Modo directo activo',
-      'reset.warning':
-        'Não existe servidor de email ligado, por isso a senha muda logo à frente. ' +
-        'Desligue RESET_IMMEDIATE no backend/.env antes de ir para produção.',
+      'reset.verifyCode': 'Confirmar código',
+      'reset.codeVerified': 'Código confirmado. Escolhe agora a nova palavra-passe.',
+      'reset.resendCode': 'Não recebi o código — enviar de novo',
       'reset.email': 'Email da conta',
       'reset.emailPlaceholder': 'gerente@loja.com',
       'reset.newPassword': 'Nova palavra-passe',
@@ -74,7 +73,6 @@ export const resources = {
       'reset.fallbackLead': 'Este servidor está no modo por código. Enviaremos o código por WhatsApp.',
       'reset.sendCode': 'Enviar código',
       'reset.code': 'Código de verificação',
-      'reset.disabled': 'A recuperação de senha não está disponível neste servidor.',
       'reset.invalid': 'Não foi possível mudar a senha.',
     }
   },
@@ -111,10 +109,9 @@ export const resources = {
       'reset.title': 'Reset password',
       'reset.lead': 'We send a 6-digit code to your email. Then choose the new password.',
       'reset.codeSent': 'Code sent. Check your email (and spam) and enter the code below.',
-      'reset.warningTitle': 'Direct mode enabled',
-      'reset.warning':
-        'No email server is connected, so the password changes right here. ' +
-        'Turn off RESET_IMMEDIATE in backend/.env before going to production.',
+      'reset.verifyCode': 'Confirm code',
+      'reset.codeVerified': 'Code confirmed. Choose the new password now.',
+      'reset.resendCode': 'Did not get the code — send again',
       'reset.email': 'Account email',
       'reset.emailPlaceholder': 'manager@store.com',
       'reset.newPassword': 'New password',
@@ -130,7 +127,6 @@ export const resources = {
       'reset.fallbackLead': 'This server runs in code mode. The code is sent by WhatsApp.',
       'reset.sendCode': 'Send code',
       'reset.code': 'Verification code',
-      'reset.disabled': 'Password recovery is not available on this server.',
       'reset.invalid': 'Could not change the password.',
     }
   }

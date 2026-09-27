@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Genesis · Mapa Mental 3D do sistema</title>
+<style>
+/* ==========================================================================
+   GENESIS - MAPA MENTAL 3D  (ficheiro independente)
+   Abre com duplo-clique. Nao precisa de servidor, internet nem CDN.
+   Le os dados do ficheiro ao lado: mapa_mental_data.js
+   ========================================================================== */
+:root{
+  --bg:#05070c; --bg2:#080b12; --panel:rgba(12,16,24,.86); --line:rgba(255,255,255,.10);
+  --ink:#eef2f8; --muted:#9aa6b8; --dim:#63708a;
+  --ok:#22c55e; --partial:#f59e0b; --broken:#ef4444; --planned:#3b82f6; --untracked:#94a3b8;
+  --accent:#e50914; --accent2:#ff5a63;
+  --glow:0 0 18px rgba(229,9,20,.35);
+  --sky1:rgba(229,9,20,.10); --sky2:rgba(59,130,246,.10);
+}
+html[data-theme="light"]{
+  --bg:#eaf7ff; --bg2:#dff2ff; --panel:rgba(255,255,255,.88); --line:rgba(6,78,120,.16);
+  --ink:#06344a; --muted:#3d6e8c; --dim:#6f93aa;
+  --ok:#0e9f6e; --partial:#d97706; --broken:#dc2626; --planned:#0284c7; --untracked:#7b8ea3;
+  --accent:#0891b2; --accent2:#22d3ee;
+  --glow:0 0 18px rgba(8,145,178,.30);
+  --sky1:rgba(34,211,238,.22); --sky2:rgba(255,255,255,.55);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--ink); overflow:hidden;
+  font-family:Inter,"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+canvas{position:fixed;inset:0;display:block}
+#sky{z-index:0}
+#stage{z-index:1;cursor:grab}
+#stage.dragging{cursor:grabbing}
+#stage.pointing{cursor:pointer}
+
+/* ------------------------------- BARRA TOPO ------------------------------ */
+.topbar{
+  position:fixed; z-index:6; top:0; left:0; right:0; height:58px;
+  display:flex; align-items:center; gap:14px; padding:0 16px;
+  background:linear-gradient(180deg,var(--panel),transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{
+  width:32px;height:32px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(140deg,var(--accent2),var(--accent));
+  box-shadow:var(--glow); display:grid;place-items:center;font-weight:900;color:#fff;font-size:15px;
+}
+html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2)}
+.brand h1{margin:0;font-size:15px;font-weight:750;letter-spacing:-.2px;white-space:nowrap}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500}
+.spacer{flex:1 1 auto}
+.search{
+  display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:7px 10px;min-width:230px;
+}
+.search input{background:transparent;border:0;outline:none;color:var(--ink);font-size:13px;width:100%}
+.search input::placeholder{color:var(--dim)}
+.btn{
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;transition:.16s ease;white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.btn.on{border-color:var(--accent);box-shadow:var(--glow)}
+.btn.icon{padding:7px 9px}
+.stat{font-size:12px;color:var(--muted);white-space:nowrap}
+.stat b{color:var(--ink)}
+/* ------------------------------- LEGENDA -------------------------------- */
+.legend{
+  position:fixed;z-index:6;left:14px;bottom:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;backdrop-filter:blur(10px);font-size:12px;min-width:236px;
+}
+.legend h3{margin:0 0 8px;font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.legend li{display:flex;align-items:center;gap:8px;cursor:pointer;opacity:.55;transition:.15s}
+.legend li.active{opacity:1}
+.legend li:hover{opacity:1}
+.dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 8px currentColor}
+.legend .count{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend .sep{height:1px;background:var(--line);margin:9px 0}
+.groups{display:flex;flex-wrap:wrap;gap:6px}
+.groups button{
+  border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;
+  padding:3px 9px;font-size:11px;cursor:pointer
+}
+.groups button.on{color:var(--ink);border-color:var(--accent);box-shadow:var(--glow)}
+
+/* ------------------------------- PAINEL --------------------------------- */
+.panel{
+  position:fixed;z-index:7;top:70px;right:14px;width:372px;max-height:calc(100vh - 96px);
+  overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  backdrop-filter:blur(12px);padding:16px;transform:translateX(112%);transition:transform .28s cubic-bezier(.22,1,.36,1);
+}
+.panel.open{transform:none}
+.panel h2{margin:0 0 4px;font-size:15px;word-break:break-word}
+.panel .path{font-family:var(--mono,ui-monospace,Consolas,monospace);font-size:11.5px;color:var(--muted);word-break:break-all}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:700;margin:10px 0 4px}
+.panel section{margin-top:13px}
+.panel h4{margin:0 0 6px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.panel p{margin:0;font-size:13px;line-height:1.6;color:var(--ink)}
+.panel p.soft{color:var(--muted);font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px}
+.kv span{color:var(--muted)}
+.kv b{font-weight:600;font-variant-numeric:tabular-nums}
+.links{display:grid;gap:5px}
+.link{
+  display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);background:transparent;
+  border-radius:9px;padding:6px 8px;cursor:pointer;text-align:left;color:var(--ink);font-size:12px;width:100%;
+}
+.link:hover{border-color:var(--accent)}
+.link .mini{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:0 0 auto;background:currentColor}
+.link code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted);display:block;word-break:break-all}
+.close{position:absolute;top:10px;right:10px}
+.empty{color:var(--muted);font-size:12.5px}
+
+/* ------------------------------- TOOLTIP -------------------------------- */
+.tip{
+  position:fixed;z-index:8;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+  font-size:12px;max-width:330px;backdrop-filter:blur(10px);box-shadow:0 12px 32px rgba(0,0,0,.35)
+}
+.tip b{display:block;font-size:12.5px}
+.tip code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
+.tip em{color:var(--muted);font-style:normal;font-size:11.5px}
+
+/* ------------------------------- AVISOS --------------------------------- */
+.hint{
+  position:fixed;z-index:6;bottom:14px;left:50%;transform:translateX(-50%);
+  background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+  font-size:11.5px;color:var(--muted);backdrop-filter:blur(10px);white-space:nowrap
+}
+.hint kbd{border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:10.5px}
+.warn{
+  position:fixed;z-index:9;top:70px;left:50%;transform:translateX(-50%);max-width:620px;
+  background:var(--panel);border:1px solid var(--partial);border-radius:12px;padding:12px 14px;font-size:12.5px;display:none
+}
+.warn.show{display:block}
+.warn code{font-family:ui-monospace,Consolas,monospace}
+@media (max-width:900px){
+  .search{min-width:120px}
+  .panel{width:min(92vw,372px)}
+  .hint{display:none}
+  .stat.hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .btn{transition:none} .panel{transition:none} }
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+<canvas id="stage"></canvas>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="mark">G</div>
+    <div>
+      <h1>Genesis · Mapa Mental 3D</h1>
+      <small id="sub">rede de ficheiros, ligações e estado</small>
+    </div>
+  </div>
+
+  <div class="search">
+    <span aria-hidden="true">🔎</span>
+    <input id="q" type="search" placeholder="Procurar ficheiro, pasta ou estado…" autocomplete="off" />
+  </div>
+
+  <div class="stat" id="stats">—</div>
+  <button class="btn hide-sm" id="bRotate" title="Rodar automaticamente">⟳ <span id="rotLbl">Rodar</span></button>
+  <button class="btn hide-sm" id="bLabels">🏷 Nomes</button>
+  <button class="btn hide-sm" id="bReset">⤾ Recentrar</button>
+  <button class="btn icon" id="bFull" title="Ecrã inteiro">⛶</button>
+  <button class="btn icon" id="bTheme" title="Alternar modo escuro / claro (claro = azul-piscina)">🌙</button>
+</header>
+
+<div class="warn" id="warn"></div>
+<aside class="panel" id="panel" aria-live="polite"></aside>
+<div class="legend" id="legend"></div>
+<div class="tip" id="tip"></div>
+<div class="hint">
+  <kbd>arrastar</kbd> rodar · <kbd>roda</kbd> zoom · <kbd>shift+arrastar</kbd> mover ·
+  <kbd>clique</kbd> detalhes · <kbd>duplo clique</kbd> focar vizinhos · <kbd>Esc</kbd> limpar
+</div>
+
+<!-- DADOS: ficheiro ao lado (gerado por scripts/gen_mindmap_data.js) -->
+<script src="mapa_mental_data.js"></script>
+
+<script>
+/* ==========================================================================
+   GENESIS - MAPA MENTAL 3D
+   --------------------------------------------------------------------------
+   Matematica 3D propria sobre canvas 2D. Sem libs, sem CDN, offline.
+   Cada no = 1 ficheiro do projecto. Cada ligacao = um import/require real
+   (extraido pelo gerador). Grupos = aglomerados; cada pasta = sub-aglomerado.
+   Cores: verde=ok, laranja=incompleto, vermelho=nao roda/falha de seguranca,
+          azul=planeado (ainda nao existe), cinzento=por classificar.
+   ========================================================================== */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ------------------------- 0. Dados e constantes ----------------------- */
+  // Se o mapa_mental_data.js faltar, o mapa mostra-se com um exemplo minimo e
+  // avisa como o gerar. Nunca fica um ecra em branco sem explicacao.
+  var DEMO = {
+    generatedAt: null,
+    project: 'Genesis',
+    note: 'DADOS DE EXEMPLO - ficheiro mapa_mental_data.js nao encontrado.',
+    groups: [
+      { id: 'backend', label: 'Backend (exemplo)', tone: '#e50914', nodes: 2, clusters: { 'backend/src': 2 } },
+      { id: 'frontend', label: 'Frontend (exemplo)', tone: '#3b82f6', nodes: 2, clusters: { 'frontend/src': 2 } }
+    ],
+    nodes: [
+      { id: 'backend/src/index.js', label: 'index.js', group: 'backend', dir: 'backend/src', status: 'ok', summary: 'Exemplo de no verde.', dependsOn: ['backend/src/utils/prisma.js'], usedBy: [], inbound: 0, outbound: 1, lines: 10, size: 300, planned: false },
+      { id: 'backend/src/utils/prisma.js', label: 'prisma.js', group: 'backend', dir: 'backend/src/utils', status: 'planned', summary: 'Exemplo de no azul.', dependsOn: [], usedBy: ['backend/src/index.js'], inbound: 1, outbound: 0, lines: 0, size: 0, planned: true },
+      { id: 'frontend/src/App.jsx', label: 'App.jsx', group: 'frontend', dir: 'frontend/src', status: 'partial', summary: 'Exemplo de no laranja.', dependsOn: [], usedBy: [], inbound: 0, outbound: 0, lines: 10, size: 300, planned: false },
+      { id: 'frontend/src/utils/receiptPrinter.js', label: 'receiptPrinter.js', group: 'frontend', dir: 'frontend/src/utils', status: 'broken', summary: 'Exemplo de no vermelho.', dependsOn: [], usedBy: [], inbound: 0, outbound: 0, lines: 10, size: 300, planned: false }
+    ],
+    links: [{ source: 'backend/src/index.js', target: 'backend/src/utils/prisma.js' }]
+  };
+
+  var HAS_DATA = !!(window.GENESIS_MINDMAP && window.GENESIS_MINDMAP.nodes && window.GENESIS_MINDMAP.nodes.length);
+  var DATA = HAS_DATA ? window.GENESIS_MINDMAP : DEMO;
+
+  var STATUS = {
+    ok: { name: 'Funciona', long: 'Está pronto e a funcionar como deve ser.' },
+    partial: { name: 'Incompleto', long: 'Existe, mas falta trabalho. Pode estar a funcionar em parte.' },
+    broken: { name: 'Não roda / risco', long: 'Não funciona, não arranca, ou tem falha de segurança por corrigir.' },
+    planned: { name: 'Planeado', long: 'Ainda não existe no disco. Ficheiro por criar, já com as ligações previstas.' },
+    untracked: { name: 'Por classificar', long: 'Ficheiro real que ainda não foi classificado no mapa curado.' }
+  };
+  var ORDER = ['ok', 'partial', 'broken', 'planned', 'untracked'];
+
+  var PALETTE = {
+    dark: {
+      bg: '#05070c', bg2: '#0a0e17', neb1: 'rgba(229,9,20,.15)', neb2: 'rgba(59,130,246,.13)',
+      star: '#ffffff', link: '#8ea0bb', text: '#eef2f8', sub: '#9aa6b8',
+      ok: '#22c55e', partial: '#f59e0b', broken: '#ef4444', planned: '#3b82f6', untracked: '#94a3b8'
+    },
+    light: {
+      bg: '#eaf7ff', bg2: '#d7effc', neb1: 'rgba(255,255,255,.9)', neb2: 'rgba(34,211,238,.32)',
+      star: '#7fc9e8', link: '#5d90ad', text: '#06344a', sub: '#3d6e8c',
+      ok: '#0e9f6e', partial: '#d97706', broken: '#dc2626', planned: '#0284c7', untracked: '#7b8ea3'
+    }
+  };
+
+  var R = 560;      // raio da esfera onde ficam os grupos
+  var FOV = 920;    // distancia focal (px)
+  var CAM = 1220;   // distancia da camara ao centro
+  var HIT = 13;     // raio minimo de clique (px)
+
+  var theme = 'dark';
+  var C = PALETTE.dark;
+
+  var view = { yaw: 0.7, pitch: -0.22, zoom: 1, target: [0, 0, 0], tgt: [0, 0, 0] };
+  var autoRotate = true, showLabels = false, dragging = null, hovered = null, selected = null;
+  var query = '', activeStatus = {}, activeGroup = {};
+  ORDER.forEach(function (s) { activeStatus[s] = true; });
+  DATA.groups.forEach(function (g) { activeGroup[g.id] = true; });
+  var matched = null;
+  var W = 0, H = 0, DPR = 1;
+
+  var stage = $('stage'), sctx = stage.getContext('2d');
+  var sky = $('sky'), kctx = sky.getContext('2d');
+
+  /* --------------------------- 1. Utilidades ----------------------------- */
+  function hash(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function rng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function unit(seed) {
+    var r = rng(seed), u = r() * 2 - 1, t = r() * Math.PI * 2, s = Math.sqrt(Math.max(0, 1 - u * u));
+    return [s * Math.cos(t), u, s * Math.sin(t)];
+  }
+  function color(status) { return C[status] || C.untracked; }
+  function rgba(hex, a) {
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+  function bytes(n) {
+    if (!n) return '0 B';
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1048576).toFixed(2) + ' MB';
+  }
+  function visible(n) { return !!activeStatus[n.status] && !!activeGroup[n.group]; }
+  function dimmed(n) {
+    if (matched && !matched.has(n.id)) return true;
+    if (selected) {
+      return !(n.id === selected.id || selected.dependsOn.indexOf(n.id) >= 0 || selected.usedBy.indexOf(n.id) >= 0);
+    }
+    return false;
+  }
+  /* ------------------- 2. Posicoes 3D dos nos e dos grupos --------------- */
+  // Cada grupo ocupa um ponto numa esfera (espiral de Fibonacci, para os
+  // grupos ficarem bem separados). Dentro do grupo, cada PASTA tem o seu
+  // proprio desvio (sub-aglomerado) e cada ficheiro tem um desvio pequeno.
+  var NODES = DATA.nodes.slice();
+  var BY_ID = {};
+  NODES.forEach(function (n) {
+    n.dependsOn = n.dependsOn || [];
+    n.usedBy = n.usedBy || [];
+    n.cluster = (n.dir && n.dir !== '.') ? n.dir : (n.group || 'raiz');
+    BY_ID[n.id] = n;
+  });
+
+  var GROUPS = DATA.groups.slice().sort(function (a, b) { return (b.nodes || 0) - (a.nodes || 0); });
+  GROUPS.forEach(function (g, i) {
+    var n = Math.max(1, GROUPS.length);
+    var y = 1 - (i + 0.5) * (2 / n);
+    var rad = Math.sqrt(Math.max(0, 1 - y * y));
+    var phi = i * 2.399963229728653;
+    g.center = [Math.cos(phi) * rad * R, y * R, Math.sin(phi) * rad * R];
+    g.index = i;
+  });
+  var GROUP_BY_ID = {};
+  GROUPS.forEach(function (g) { GROUP_BY_ID[g.id] = g; });
+
+  (function layout() {
+    var buckets = {};
+    NODES.forEach(function (n) {
+      var key = n.group || 'infra';
+      (buckets[key] = buckets[key] || []).push(n);
+    });
+    Object.keys(buckets).forEach(function (gid) {
+      var g = GROUP_BY_ID[gid] || { center: [0, 0, 0] };
+      var list = buckets[gid];
+      var byDir = {};
+      list.forEach(function (n) { (byDir[n.cluster] = byDir[n.cluster] || []).push(n); });
+      Object.keys(byDir).forEach(function (dir) {
+        var arr = byDir[dir];
+        var d = unit(hash(dir));
+        var spread = 48 + 26 * Math.sqrt(arr.length);
+        arr.forEach(function (node, i) {
+          var j = unit(hash(node.id));
+          var k = 17 + 8 * Math.cbrt(i + 1);
+          node.pos = [
+            g.center[0] + d[0] * spread + j[0] * k,
+            g.center[1] + d[1] * spread + j[1] * k,
+            g.center[2] + d[2] * spread + j[2] * k
+          ];
+          var deg = node.inbound + node.outbound;
+          node.r = 2.7 + Math.min(5.4, Math.log(1 + deg) * 1.35) + (node.planned ? 0.5 : 0);
+          node.tw = rng(hash(node.id + 't'))() * 6.283;
+        });
+      });
+    });
+  })();
+
+  // Projeccao: roda o mundo (yaw/pitch), centra no alvo e aplica perspectiva.
+  var cy = 1, sy = 0, cp = 1, sp = 0, tgt = [0, 0, 0];
+  function refreshTrig() {
+    cy = Math.cos(view.yaw); sy = Math.sin(view.yaw);
+    cp = Math.cos(view.pitch); sp = Math.sin(view.pitch);
+  }
+  function toCam(p) {
+    var x = p[0] - tgt[0], y = p[1] - tgt[1], z = p[2] - tgt[2];
+    var x1 = x * cy - z * sy, z1 = x * sy + z * cy;
+    var y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
+    return [x1, y2, z2];
+  }
+  // Inverso: vetor no plano da camara -> mundo (usado no pan).
+  function camToWorld(v) {
+    var x = v[0], y = v[1] * cp + v[2] * sp, z = -v[1] * sp + v[2] * cp;
+    return [x * cy + z * sy, y, -x * sy + z * cy];
+  }
+  function project(p) {
+    var r = toCam(p);
+    var z = r[2] + CAM / Math.max(0.35, view.zoom);
+    if (z < 40) return null;
+    var s = (FOV * view.zoom) / z;
+    return { x: W / 2 + r[0] * s, y: H / 2 + r[1] * s, s: s, z: r[2], depth: z };
+  }
+  function focusOn(node) {
+    selected = node;
+    view.tgt = [node.pos[0] * 0.55, node.pos[1] * 0.55, node.pos[2] * 0.55];
+    renderPanel();
+  }
+  /* ----------------------- 3. Fundo (ceu + piscina) ---------------------- */
+  var STARS = [];
+  function buildStars() {
+    STARS = [];
+    var r = rng(20260927);
+    for (var i = 0; i < 460; i++) {
+      STARS.push({ x: r(), y: r(), r: 0.4 + r() * 1.5, p: r() * 6.283, s: 0.4 + r() * 1.6 });
+    }
+  }
+
+  function skyDark(t) {
+    var g = kctx.createLinearGradient(0, 0, W * 0.34, H);
+    g.addColorStop(0, C.bg2);
+    g.addColorStop(0.55, C.bg);
+    g.addColorStop(1, '#020409');
+    kctx.fillStyle = g;
+    kctx.fillRect(0, 0, W, H);
+
+    var ox = Math.sin(view.yaw * 0.5) * 90, oy = Math.sin(view.pitch * 0.5) * 60;
+    nebula(W * 0.24 + ox, H * 0.30 + oy, Math.max(W, H) * 0.46, C.neb1);
+    nebula(W * 0.78 + ox, H * 0.72 + oy, Math.max(W, H) * 0.40, C.neb2);
+    nebula(W * 0.60 + ox, H * 0.14 + oy, Math.max(W, H) * 0.26, 'rgba(168,85,247,.10)');
+
+    for (var i = 0; i < STARS.length; i++) {
+      var s = STARS[i];
+      var tw = 0.55 + 0.45 * Math.sin(t * s.s + s.p);
+      var x = ((s.x * W + view.yaw * 26) % W + W) % W;
+      var y = ((s.y * H + view.pitch * 22) % H + H) % H;
+      kctx.fillStyle = rgba(C.star, 0.14 + 0.6 * tw);
+      kctx.beginPath();
+      kctx.arc(x, y, s.r, 0, 6.283);
+      kctx.fill();
+    }
+  }
+  function nebula(x, y, r, col) {
+    var g = kctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, col);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    kctx.fillStyle = g;
+    kctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // Modo claro = piscina: azulejos, ondas de agua a passar e causticas.
+  function skyLight(t) {
+    var g = kctx.createLinearGradient(0, 0, W * 0.3, H);
+    g.addColorStop(0, '#f4fcff');
+    g.addColorStop(0.42, '#ddf3ff');
+    g.addColorStop(1, '#b6e6fa');
+    kctx.fillStyle = g;
+    kctx.fillRect(0, 0, W, H);
+
+    // azulejos
+    var step = 74,
+      ox = ((view.yaw * 52) % step + step) % step,
+      oy = ((view.pitch * 52) % step + step) % step;
+    kctx.save();
+    kctx.globalAlpha = 0.42;
+    kctx.strokeStyle = '#9fd8f0';
+    kctx.lineWidth = 1;
+    for (var x = ox - step; x < W + step; x += step) {
+      kctx.beginPath(); kctx.moveTo(x, 0); kctx.lineTo(x, H); kctx.stroke();
+    }
+    for (var y = oy - step; y < H + step; y += step) {
+      kctx.beginPath(); kctx.moveTo(0, y); kctx.lineTo(W, y); kctx.stroke();
+    }
+    kctx.restore();
+
+    // ondas (as "linhas" da superficie da agua)
+    kctx.save();
+    kctx.globalCompositeOperation = 'screen';
+    kctx.lineCap = 'round';
+    for (var b = 0; b < 6; b++) {
+      var amp = 16 + b * 7, freq = 0.0055 + b * 0.0014, spd = 0.40 + b * 0.16;
+      kctx.beginPath();
+      for (var px = 0; px <= W; px += 14) {
+        var py = H * 0.10 + (b + 1) * (H * 0.155) + amp * Math.sin(px * freq + t * spd + b * 1.7);
+        if (px === 0) kctx.moveTo(px, py); else kctx.lineTo(px, py);
+      }
+      kctx.strokeStyle = 'rgba(255,255,255,.52)';
+      kctx.lineWidth = 11 + b * 3;
+      kctx.stroke();
+      kctx.strokeStyle = 'rgba(34,211,238,.26)';
+      kctx.lineWidth = 3;
+      kctx.stroke();
+    }
+    kctx.restore();
+
+    // causticas (manchas de luz a mover-se, como o reflexo no fundo da piscina)
+    kctx.save();
+    kctx.globalCompositeOperation = 'screen';
+    for (var i = 0; i < 8; i++) {
+      var cx = ((i * 0.31 + Math.sin(t * 0.19 + i) * 0.06) * W + view.yaw * 60) % (W * 1.2) - W * 0.1;
+      var cyy = (0.16 + (i % 4) * 0.24 + Math.cos(t * 0.17 + i) * 0.03) * H;
+      var rad = 130 + (i % 3) * 70;
+      var rg = kctx.createRadialGradient(cx, cyy, 0, cx, cyy, rad);
+      rg.addColorStop(0, 'rgba(255,255,255,.42)');
+      rg.addColorStop(0.55, 'rgba(160,230,255,.16)');
+      rg.addColorStop(1, 'rgba(255,255,255,0)');
+      kctx.fillStyle = rg;
+      kctx.fillRect(cx - rad, cyy - rad, rad * 2, rad * 2);
+    }
+    kctx.restore();
+  }
+
+  function drawSky(t) {
+    if (theme === 'light') skyLight(t); else skyDark(t);
+  }
+  /* --------------------------- 4. Desenhar grafo ------------------------- */
+  var CACHE = { pts: [], order: [], links: [] };
+
+  function drawGraph(t) {
+    refreshTrig();
+    // interpolacao suave do alvo da camara
+    tgt[0] += (view.tgt[0] - tgt[0]) * 0.12;
+    tgt[1] += (view.tgt[1] - tgt[1]) * 0.12;
+    tgt[2] += (view.tgt[2] - tgt[2]) * 0.12;
+
+    var pts = CACHE.pts, i, n;
+    pts.length = 0;
+    for (i = 0; i < NODES.length; i++) {
+      n = NODES[i];
+      n.proj = project(n.pos);
+      n.vis = !!n.proj && visible(n);
+      pts.push(n);
+    }
+
+    var order = CACHE.order;
+    order.length = 0;
+    for (i = 0; i < pts.length; i++) if (pts[i].vis) order.push(pts[i]);
+    order.sort(function (a, b) { return b.proj.z - a.proj.z; });
+
+    var lut = CACHE.links;
+    lut.length = 0;
+    for (i = 0; i < DATA.links.length; i++) {
+      var lk = DATA.links[i];
+      var a = BY_ID[lk.source], b = BY_ID[lk.target];
+      if (!a || !b || !a.vis || !b.vis) continue;
+      var rel = !!selected && (a === selected || b === selected ||
+        (selected.dependsOn.indexOf(a.id) >= 0 && selected.dependsOn.indexOf(b.id) >= 0));
+      lut.push({ a: a, b: b, focus: rel, z: (a.proj.z + b.proj.z) / 2 });
+    }
+    lut.sort(function (x, y) { return y.z - x.z; });
+
+    for (i = 0; i < lut.length; i++) drawLink(lut[i]);
+    drawClusterLabels();
+    for (i = 0; i < order.length; i++) drawNode(order[i], t);
+    drawLabels(order);
+  }
+
+  function drawLink(l) {
+    var a = l.a.proj, b = l.b.proj;
+    var z = (a.z + b.z) / 2;
+    var near = 1 - Math.min(1, Math.max(0, (z + R) / (R * 2)));
+    var alpha = (l.focus ? 0.85 : 0.18 + 0.30 * near) * linkAlpha(l.a, l.b);
+    if (alpha <= 0.02) return;
+    sctx.strokeStyle = rgba(l.focus && selected ? color(selected.status) : C.link, alpha);
+    sctx.lineWidth = (l.focus ? 1.5 : 0.7) + near * 0.7;
+    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    var dx = mx - W / 2, dy = my - H / 2, dl = Math.sqrt(dx * dx + dy * dy) || 1;
+    var bend = l.focus ? 0 : Math.min(26, dl * 0.05);
+    sctx.beginPath();
+    sctx.moveTo(a.x, a.y);
+    sctx.quadraticCurveTo(mx + (dx / dl) * bend, my + (dy / dl) * bend, b.x, b.y);
+    sctx.stroke();
+  }
+  function linkAlpha(a, b) {
+    if (matched && !(matched.has(a.id) || matched.has(b.id))) return 0.12;
+    if (selected) {
+      var ok = a === selected || b === selected ||
+        (selected.dependsOn.indexOf(a.id) >= 0 && selected.dependsOn.indexOf(b.id) >= 0) ||
+        (selected.usedBy.indexOf(a.id) >= 0 && selected.usedBy.indexOf(b.id) >= 0);
+      return ok ? 1 : 0.09;
+    }
+    return 1;
+  }
+  function drawNode(n, t) {
+    var p = n.proj;
+    var near = 1 - Math.min(1, Math.max(0, (p.z + R) / (R * 2)));
+    var isSel = selected === n, isHov = hovered === n;
+    var isMatch = !!matched && matched.has(n.id);
+    var r = Math.max(1.4, n.r * p.s * 1.5);
+    var col = color(n.status);
+    var alpha = 0.35 + 0.65 * near;
+    if (dimmed(n) && !isSel && !isHov) alpha *= 0.18;
+
+    var halo = r * (isSel ? 6.5 : isHov ? 5 : isMatch ? 5.5 : 3.6);
+    var g = sctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, halo);
+    g.addColorStop(0, rgba(col, Math.min(1, 0.55 * alpha)));
+    g.addColorStop(0.45, rgba(col, Math.min(0.6, 0.20 * alpha)));
+    g.addColorStop(1, rgba(col, 0));
+    sctx.fillStyle = g;
+    sctx.beginPath();
+    sctx.arc(p.x, p.y, halo, 0, 6.283);
+    sctx.fill();
+
+    // nucleo: os planeados (azuis) sao ocos - ainda nao existem no disco
+    sctx.beginPath();
+    sctx.arc(p.x, p.y, r, 0, 6.283);
+    if (n.planned) {
+      sctx.strokeStyle = rgba(col, alpha);
+      sctx.lineWidth = Math.max(1, r * 0.45);
+      sctx.stroke();
+    } else {
+      sctx.fillStyle = rgba(col, Math.min(1, alpha + 0.25));
+      sctx.fill();
+    }
+
+    if (isMatch || isSel) {
+      var puls = 1 + 0.35 * Math.sin(t * 3.2);
+      sctx.strokeStyle = rgba(col, isSel ? 0.95 : 0.55);
+      sctx.lineWidth = 1.6;
+      sctx.beginPath();
+      sctx.arc(p.x, p.y, r + 6 * puls, 0, 6.283);
+      sctx.stroke();
+    }
+    if (n.status === 'broken' && !dimmed(n)) {
+      sctx.strokeStyle = rgba(col, 0.5 + 0.4 * Math.sin(t * 2.6));
+      sctx.lineWidth = 1.2;
+      sctx.beginPath();
+      sctx.arc(p.x, p.y, r + 4, 0, 6.283);
+      sctx.stroke();
+    }
+  }
+
+  function drawLabels(order) {
+    sctx.font = '600 11px Inter, Segoe UI, system-ui, sans-serif';
+    sctx.textBaseline = 'middle';
+    for (var i = 0; i < order.length; i++) {
+      var n = order[i], p = n.proj;
+      var isSel = selected === n, isHov = hovered === n;
+      var isMatch = !!matched && matched.has(n.id);
+      var big = p.s > 1.05;
+      if (!showLabels && !isSel && !isHov && !isMatch && !big) continue;
+      if (dimmed(n) && !isSel && !isHov) continue;
+      var x = p.x + Math.max(6, n.r * p.s * 1.5 + 5);
+      var w = sctx.measureText(n.label).width;
+      sctx.fillStyle = theme === 'light' ? 'rgba(255,255,255,.72)' : 'rgba(4,7,12,.62)';
+      sctx.fillRect(x - 3, p.y - 8, w + 6, 16);
+      sctx.fillStyle = isSel ? color(n.status) : C.text;
+      sctx.fillText(n.label, x, p.y);
+    }
+  }
+
+  function drawClusterLabels() {
+    if (!showLabels && !selected) return;
+    sctx.font = '700 10.5px Inter, Segoe UI, system-ui, sans-serif';
+    sctx.textAlign = 'center';
+    sctx.textBaseline = 'middle';
+    for (var i = 0; i < GROUPS.length; i++) {
+      var g = GROUPS[i];
+      if (!activeGroup[g.id]) continue;
+      var p = project([g.center[0], g.center[1] - 165, g.center[2]]);
+      if (!p) continue;
+      var a = Math.max(0.12, Math.min(0.9, 1 - Math.max(0, (p.z + R) / (R * 2))));
+      sctx.fillStyle = rgba(g.tone || '#7b8ea3', a * 0.85);
+      sctx.fillText(String(g.label || g.id).toUpperCase() + '  (' + (g.nodes || 0) + ')', p.x, p.y);
+    }
+    sctx.textAlign = 'left';
+  }
+  /* ---------------------------- 5. Interacao ----------------------------- */
+  function pick(mx, my) {
+    var best = null, bestD = 1e9;
+    for (var i = 0; i < NODES.length; i++) {
+      var n = NODES[i];
+      if (!n.vis || !n.proj || dimmed(n)) continue;
+      var dx = n.proj.x - mx, dy = n.proj.y - my;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      var lim = Math.max(HIT, n.r * n.proj.s * 1.6 + 8);
+      if (d < lim && d < bestD) { bestD = d; best = n; }
+    }
+    return best;
+  }
+  function camScale() { return (FOV * view.zoom) / CAM; }
+
+  stage.addEventListener('pointerdown', function (e) {
+    try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignorar */ }
+    dragging = {
+      x: e.clientX, y: e.clientY, moved: 0,
+      mode: (e.shiftKey || e.button === 2 || e.button === 1) ? 'pan' : 'rotate'
+    };
+    stage.classList.add('dragging');
+  });
+
+  stage.addEventListener('pointermove', function (e) {
+    if (!dragging) {
+      var hit = pick(e.clientX, e.clientY);
+      if (hit !== hovered) {
+        hovered = hit;
+        stage.classList.toggle('pointing', !!hit);
+      }
+      showTip(hovered, e.clientX, e.clientY);
+      return;
+    }
+    var dx = e.clientX - dragging.x, dy = e.clientY - dragging.y;
+    dragging.x = e.clientX; dragging.y = e.clientY;
+    dragging.moved += Math.abs(dx) + Math.abs(dy);
+    if (dragging.mode === 'pan') {
+      var inv = camToWorld([-dx / camScale(), -dy / camScale(), 0]);
+      view.tgt = [view.tgt[0] + inv[0], view.tgt[1] + inv[1], view.tgt[2] + inv[2]];
+    } else {
+      view.yaw += dx * 0.0052;
+      view.pitch = Math.max(-1.45, Math.min(1.45, view.pitch + dy * 0.0048));
+    }
+    hideTip();
+  });
+
+  stage.addEventListener('pointerup', function (e) {
+    stage.classList.remove('dragging');
+    var wasDrag = dragging && dragging.moved > 6;
+    dragging = null;
+    if (wasDrag) return;
+    var hit = pick(e.clientX, e.clientY);
+    if (hit) { selected = hit; renderPanel(); }
+    else { selected = null; renderPanel(); }
+  });
+  stage.addEventListener('pointerleave', function () { hideTip(); hovered = null; });
+  stage.addEventListener('dblclick', function (e) {
+    var hit = pick(e.clientX, e.clientY);
+    if (hit) { focusOn(hit); view.zoom = Math.max(view.zoom, 1.25); }
+  });
+  stage.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  stage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var k = Math.exp(-e.deltaY * 0.0012);
+    view.zoom = Math.max(0.22, Math.min(4, view.zoom * k));
+  }, { passive: false });
+
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { selected = null; matched = null; $('q').value = ''; query = ''; renderPanel(); renderLegend(); }
+    if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
+  });
+
+  /* ------------------- 6. Tooltip, painel, legenda, stats ---------------- */
+  var tip = $('tip');
+  function showTip(n, x, y) {
+    if (!n) { hideTip(); return; }
+    tip.innerHTML = '';
+    var b = document.createElement('b');
+    b.textContent = n.label;
+    var c = document.createElement('code');
+    c.textContent = n.id;
+    var em = document.createElement('em');
+    em.textContent = (STATUS[n.status] || {}).name + (n.planned ? ' · ainda não existe' : '') +
+      ' · ' + (n.inbound || 0) + ' entradas / ' + (n.outbound || 0) + ' saídas';
+    tip.appendChild(b); tip.appendChild(c); tip.appendChild(document.createElement('br')); tip.appendChild(em);
+    tip.style.opacity = '1';
+    moveTip(x, y);
+  }
+  function moveTip(x, y) {
+    var w = tip.offsetWidth || 260, h = tip.offsetHeight || 70;
+    tip.style.left = Math.min(window.innerWidth - w - 12, x + 14) + 'px';
+    tip.style.top = Math.min(window.innerHeight - h - 12, y + 14) + 'px';
+  }
+  function hideTip() { tip.style.opacity = '0'; }
+  var panel = $('panel');
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function statusPill(status) {
+    var p = el('span', 'pill', STATUS[status] ? STATUS[status].name : status);
+    p.style.color = color(status);
+    p.style.background = rgba(color(status), 0.14);
+    p.style.border = '1px solid ' + rgba(color(status), 0.5);
+    var d = el('span', 'dot');
+    d.style.color = color(status);
+    d.style.background = color(status);
+    p.insertBefore(d, p.firstChild);
+    return p;
+  }
+  function linkList(ids, emptyMsg) {
+    var box = el('div', 'links');
+    if (!ids || !ids.length) { box.appendChild(el('div', 'empty', emptyMsg)); return box; }
+    ids.slice().sort().forEach(function (id) {
+      var n = BY_ID[id];
+      var b = el('button', 'link');
+      var st = n ? n.status : 'planned';
+      var mini = el('span', 'mini');
+      mini.style.color = color(st);
+      mini.style.background = color(st);
+      var txt = el('span');
+      txt.appendChild(el('b', null, n ? n.label : id.split('/').pop()));
+      txt.appendChild(el('code', null, id));
+      b.appendChild(mini);
+      b.appendChild(txt);
+      b.addEventListener('click', function () { selectById(id); });
+      box.appendChild(b);
+    });
+    return box;
+  }
+  function selectById(id) {
+    var n = BY_ID[id];
+    if (n) { focusOn(n); renderPanel(); }
+  }
+
+  function renderPanel() {
+    panel.innerHTML = '';
+    var cbtn = el('button', 'btn icon close', '✕');
+    cbtn.title = 'Fechar';
+    cbtn.addEventListener('click', function () { selected = null; renderPanel(); });
+    panel.appendChild(cbtn);
+
+    if (!selected) {
+      panel.classList.remove('open');
+      return;
+    }
+    var n = selected;
+    panel.classList.add('open');
+
+    panel.appendChild(el('h2', null, n.label));
+    panel.appendChild(el('div', 'path', n.id));
+    panel.appendChild(statusPill(n.status));
+    panel.appendChild(el('p', 'soft', (STATUS[n.status] || {}).long || ''));
+
+    var s1 = el('section');
+    s1.appendChild(el('h4', null, 'O que faz'));
+    s1.appendChild(el('p', null, n.summary || 'Sem descrição registada no mapa curado (Mapa Mental/mapa_mental_status.json).'));
+    if (n.role) s1.appendChild(el('p', 'soft', 'Papel: ' + n.role));
+    panel.appendChild(s1);
+
+    var s2 = el('section');
+    s2.appendChild(el('h4', null, 'Detalhes'));
+    var kv = el('div', 'kv');
+    var pairs = [
+      ['Grupo', (GROUP_BY_ID[n.group] || {}).label || n.group],
+      ['Pasta', n.dir || '—'],
+      ['Estado', (STATUS[n.status] || {}).name || n.status],
+      ['Tipo', n.planned ? 'planeado (ainda não existe)' : (n.ext || '—')],
+      ['Linhas', n.planned ? '—' : String(n.lines || 0)],
+      ['Tamanho', n.planned ? '—' : bytes(n.size)],
+      ['Depende de', String((n.dependsOn || []).length)],
+      ['Usado por', String((n.usedBy || []).length)]
+    ];
+    pairs.forEach(function (pr) {
+      kv.appendChild(el('span', null, pr[0]));
+      kv.appendChild(el('b', null, pr[1]));
+    });
+    s2.appendChild(kv);
+    panel.appendChild(s2);
+
+    if (n.security) {
+      var ss = el('section');
+      ss.appendChild(el('h4', null, 'Segurança'));
+      ss.appendChild(el('p', null, n.security));
+      panel.appendChild(ss);
+    }
+    if (n.notes) {
+      var sn = el('section');
+      sn.appendChild(el('h4', null, 'Notas'));
+      sn.appendChild(el('p', null, n.notes));
+      panel.appendChild(sn);
+    }
+
+    var s3 = el('section');
+    s3.appendChild(el('h4', null, 'Depende de (' + (n.dependsOn || []).length + ')'));
+    s3.appendChild(linkList(n.dependsOn, 'Não importa nada do projecto (ou só pacotes externos).'));
+    panel.appendChild(s3);
+
+    var s4 = el('section');
+    s4.appendChild(el('h4', null, 'Usado por (' + (n.usedBy || []).length + ')'));
+    s4.appendChild(linkList(n.usedBy, 'Nenhum ficheiro do projecto o importa.'));
+    panel.appendChild(s4);
+
+    if (n.externals && n.externals.length) {
+      var s5 = el('section');
+      s5.appendChild(el('h4', null, 'Pacotes externos (' + n.externals.length + ')'));
+      var wrap = el('div', 'groups');
+      n.externals.forEach(function (p) { wrap.appendChild(el('button', 'on', p)); });
+      s5.appendChild(wrap);
+      panel.appendChild(s5);
+    }
+  }
+  var legend = $('legend');
+  function renderLegend() {
+    legend.innerHTML = '';
+    legend.appendChild(el('h3', null, 'Estado (clique para filtrar)'));
+    var ul = el('ul');
+    ORDER.forEach(function (s) {
+      var count = 0;
+      for (var i = 0; i < NODES.length; i++) if (NODES[i].status === s) count++;
+      var li = el('li', activeStatus[s] ? 'active' : null);
+      var d = el('span', 'dot');
+      d.style.color = C[s]; d.style.background = C[s];
+      li.appendChild(d);
+      li.appendChild(el('span', null, STATUS[s].name));
+      li.appendChild(el('span', 'count', String(count)));
+      li.title = STATUS[s].long;
+      li.addEventListener('click', function () { activeStatus[s] = !activeStatus[s]; renderLegend(); });
+      ul.appendChild(li);
+    });
+    legend.appendChild(ul);
+    legend.appendChild(el('div', 'sep'));
+    legend.appendChild(el('h3', null, 'Grupos / directorias'));
+    var gw = el('div', 'groups');
+    GROUPS.forEach(function (gr) {
+      var b = el('button', activeGroup[gr.id] ? 'on' : null, (gr.label || gr.id) + ' · ' + (gr.nodes || 0));
+      b.addEventListener('click', function () { activeGroup[gr.id] = !activeGroup[gr.id]; renderLegend(); });
+      gw.appendChild(b);
+    });
+    legend.appendChild(gw);
+    updateStats();
+  }
+
+  function updateStats() {
+    var t = DATA.totals || {};
+    var files = 0, planned = 0, kept = 0, lines = 0;
+    for (var i = 0; i < NODES.length; i++) {
+      var n = NODES[i];
+      if (n.planned) planned++; else files++;
+      lines += n.lines || 0;
+      if (activeStatus[n.status] && activeGroup[n.group]) kept++;
+    }
+    var bits = [
+      kept + '/' + NODES.length + ' visíveis',
+      files + ' ficheiros',
+      planned + ' planeados',
+      (DATA.links ? DATA.links.length : 0) + ' ligações',
+      lines.toLocaleString('pt-PT') + ' linhas'
+    ];
+    $('stats').textContent = bits.join(' · ');
+    if (DATA.generatedAt) {
+      $('sub').textContent = 'gerado ' + new Date(DATA.generatedAt).toLocaleString('pt-PT') +
+        ' · ' + (HAS_DATA ? 'dados reais do repositório' : 'DADOS DE EXEMPLO');
+    }
+    if (t.byStatus) {
+      var bad = (t.byStatus.broken || 0);
+      document.title = (bad ? '(' + bad + ') ' : '') + 'Genesis · Mapa Mental 3D';
+    }
+  }
+
+  /* ------------------------------- 7. UI --------------------------------- */
+  var q = $('q');
+  q.addEventListener('input', function () {
+    query = q.value.trim().toLowerCase();
+    if (query.length < 2) { matched = null; }
+    else {
+      var set = {};
+      NODES.forEach(function (n) {
+        var hay = (n.id + ' ' + n.label + ' ' + (n.summary || '') + ' ' + (n.role || '') + ' ' + (STATUS[n.status] || {}).name).toLowerCase();
+        if (hay.indexOf(query) >= 0) set[n.id] = true;
+      });
+      matched = {};
+      NODES.forEach(function (n) { if (set[n.id]) matched[n.id] = true; });
+    }
+    renderLegend();
+  });
+  q.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || !matched) return;
+    var first = null;
+    for (var i = 0; i < NODES.length; i++) {
+      if (matched[NODES[i].id]) { first = NODES[i]; break; }
+    }
+    if (first) focusOn(first);
+  });
+
+  var bRotate = $('bRotate');
+  bRotate.addEventListener('click', function () {
+    autoRotate = !autoRotate;
+    bRotate.classList.toggle('on', autoRotate);
+    $('rotLbl').textContent = autoRotate ? 'Rodar' : 'Parado';
+  });
+  bRotate.classList.add('on');
+
+  var bLabels = $('bLabels');
+  bLabels.addEventListener('click', function () {
+    showLabels = !showLabels;
+    bLabels.classList.toggle('on', showLabels);
+  });
+
+  $('bReset').addEventListener('click', function () {
+    view.yaw = 0.7; view.pitch = -0.22; view.zoom = 1;
+    view.tgt = [0, 0, 0];
+    selected = null; hovered = null;
+    renderPanel();
+  });
+
+  $('bFull').addEventListener('click', function () {
+    if (!document.fullscreenElement) {
+      var el2 = document.documentElement;
+      if (el2.requestFullscreen) el2.requestFullscreen();
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  });
+
+  var bTheme = $('bTheme');
+  function setTheme(t, save) {
+    theme = t;
+    C = PALETTE[t];
+    document.documentElement.setAttribute('data-theme', t);
+    bTheme.textContent = t === 'light' ? '☀️' : '🌙';
+    bTheme.title = t === 'light' ? 'Mudar para modo escuro (vermelho/preto)' : 'Mudar para modo claro (azul-piscina)';
+    if (save) { try { localStorage.setItem('genesis.map.theme', t); } catch (e) { /* ignorar */ } }
+    renderLegend();
+    renderPanel();
+  }
+  bTheme.addEventListener('click', function () { setTheme(theme === 'dark' ? 'light' : 'dark', true); });
+  /* --------------------------- 8. Arranque ------------------------------- */
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    [stage, sky].forEach(function (c) {
+      c.width = Math.round(W * DPR);
+      c.height = Math.round(H * DPR);
+      c.style.width = W + 'px';
+      c.style.height = H + 'px';
+    });
+    sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    kctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  function loop(now) {
+    var t = now / 1000;
+    if (autoRotate && !dragging) view.yaw += 0.0016;
+    drawSky(t);
+    sctx.clearRect(0, 0, W, H);
+    drawGraph(t);
+    requestAnimationFrame(loop);
+  }
+
+  // Aviso claro quando o ficheiro de dados falta (em file:// o fetch e
+  // bloqueado pelo browser, mas <script src> funciona sempre - por isso os
+  // dados sao um .js e nao um .json).
+  var warn = $('warn');
+  if (!HAS_DATA) {
+    warn.innerHTML = 'A mostrar <b>dados de exemplo</b>: o ficheiro <code>mapa_mental_data.js</code> não está nesta pasta. ' +
+      'Gera-o com <code>node scripts/gen_mindmap_data.js</code> (na raiz do projecto) e recarrega esta página.';
+    warn.classList.add('show');
+    setTimeout(function () { warn.classList.remove('show'); }, 15000);
+  } else if (DATA.totals && DATA.totals.byStatus) {
+    var st = DATA.totals.byStatus;
+    if (st.broken || st.partial) {
+      warn.innerHTML = '<b>' + (st.broken || 0) + ' ficheiro(s) a VERMELHO</b> (não roda ou falha de segurança) e <b>' +
+        (st.partial || 0) + ' a LARANJA</b> (incompletos). Clica no ponto para ver o motivo exacto.';
+      warn.classList.add('show');
+      setTimeout(function () { warn.classList.remove('show'); }, 12000);
+    }
+  }
+
+  buildStars();
+  resize();
+  try {
+    var saved = localStorage.getItem('genesis.map.theme');
+    if (saved === 'light' || saved === 'dark') theme = saved;
+  } catch (e) { /* ignorar */ }
+  renderLegend();
+  renderPanel();
+  setTheme(theme, false);
+  requestAnimationFrame(loop);
+
+
+
+
+
+
+
+
+})();
+
+</script>
+
+</html>

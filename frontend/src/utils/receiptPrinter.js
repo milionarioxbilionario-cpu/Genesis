@@ -24,6 +24,17 @@ async function generateQrDataUrl(saleId, width = 150) {
   }
 }
 
+// Escape de HTML. O nome de um produto é dado livre pelo dono da loja e ia
+//cru para dentro do documento impresso via concatenação de strings: um
+// produto chamado `<img onerror=...>` executava no diálogo de impressão.
+// Tudo o que for texto passa por aqui antes de entrar no HTML.
+const esc = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qrDataUrl }) {
   const total = Number(sale.total_amount || 0);
   const received = Number(sale.amount_received || 0);
@@ -35,15 +46,21 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
 
   const rows = (items || []).map((item) => `
     <tr>
-      <td style="text-align:left; padding-right:8px; max-width:55%;">${item.product_name || 'Produto'}</td>
-      <td style="text-align:center; width:8%;">${item.quantity || 1}</td>
+      <td style="text-align:left; padding-right:8px; max-width:55%;">${esc(item.product_name || 'Produto')}</td>
+      <td style="text-align:center; width:8%;">${esc(item.quantity || 1)}</td>
       <td style="text-align:right; width:18%;">${formatCurrency(item.unit_sell_price || item.sell_price || 0)}</td>
       <td style="text-align:right; width:19%;">${formatCurrency((item.quantity || 1) * (item.unit_sell_price || item.sell_price || 0))}</td>
     </tr>
   `).join('');
 
-  const qrHtml = qrDataUrl
-    ? `<div class="qr-box"><img src="${qrDataUrl}" width="70" height="70" alt="QR Code" /></div>`
+  // O QR só entra se for mesmo um data URL de imagem: o valor vem de código
+  // (QRCode.toDataURL) e nunca da base de dados, mas um prefixo inesperado
+  // transformava o atributo src num vector de XSS.
+  const safeQr = /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/.test(String(qrDataUrl || ''))
+    ? qrDataUrl
+    : '';
+  const qrHtml = safeQr
+    ? `<div class="qr-box"><img src="${safeQr}" width="70" height="70" alt="QR Code" /></div>`
     : `<div class="qr-box qr-empty"><div style="line-height:70px; color:#999; font-size:9px;">Sem código</div></div>`;
 
   return `
@@ -51,7 +68,7 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>Recibo - ${shopName}</title>
+        <title>Recibo - ${esc(shopName)}</title>
         <style>
           @page { size: 80mm auto; margin: 10mm; }
           body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: 0 auto; padding: 8mm; color: #111c2b; font-size: 11px; line-height: 1.55; }
@@ -73,13 +90,13 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
         </style>
       </head>
       <body>
-        <h1>${shopName}</h1>
-        ${shopLocation ? `<div class="shop-location">${shopLocation}</div>` : ''}
+        <h1>${esc(shopName)}</h1>
+        ${shopLocation ? `<div class="shop-location">${esc(shopLocation)}</div>` : ''}
         <div class="sale-meta">
-          <div><strong>Nº de venda:</strong> ${dailyNumber}</div>
-          <div><strong>Data:</strong> ${timestamp}</div>
-          <div><strong>Caixista:</strong> ${cashierName || '—'}</div>
-          <div><strong>Pagamento:</strong> ${sale.payment_method || 'Dinheiro'}</div>
+          <div><strong>Nº de venda:</strong> ${esc(dailyNumber)}</div>
+          <div><strong>Data:</strong> ${esc(timestamp)}</div>
+          <div><strong>Caixista:</strong> ${esc(cashierName || '—')}</div>
+          <div><strong>Pagamento:</strong> ${esc(sale.payment_method || 'Dinheiro')}</div>
         </div>
         <table>
           <thead>
@@ -98,7 +115,7 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
           ${qrHtml}
           <div style="font-size:9px; margin-top:3px; color:#666;">Escaneie para ver detalhes</div>
         </div>
-        <div class="footer">Obrigado pela preferência! ${shopName}</div>
+        <div class="footer">Obrigado pela preferência! ${esc(shopName)}</div>
       </body>
     </html>
   `;

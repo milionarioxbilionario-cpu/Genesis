@@ -395,11 +395,27 @@ router.post('/cashiers/:id/close-shift-blind', async (req, res) => {
       where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' },
     });
     const since = lastClosing ? lastClosing.closed_at : startOfDay;
-    const salesSince = await prisma.sale.aggregate({
-      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
-      _sum: { total_amount: true },
-    });
+    const [salesSince, openCount] = await Promise.all([
+      prisma.sale.aggregate({
+        where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
+        _sum: { total_amount: true },
+      }),
+      prisma.sale.count({
+        where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gt: since } },
+      }),
+    ]);
     const realCash = Number(salesSince._sum.total_amount || 0);
+
+    // Mesma guarda do POST /api/shift_closings: sem vendas depois do último
+    // fecho não há turno aberto. Sem isto, fechar duas vezes seguidas gravava
+    // o MESMO dinheiro duas vezes (no segundo fecho o esperado ia a 0 e a
+    // diferença ficava "a mais"), poluindo o relatório de caixa.
+    if (lastClosing && openCount === 0) {
+      return res.status(400).json({
+        ok: false, accepted: false, code: 'NO_OPEN_SHIFT',
+        error: 'Este turno já está fechado. Não há vendas desde o último fecho.',
+      });
+    }
     if (declared < realCash) {
       const lastUnlock = await prisma.auditLog.findFirst({
         where: { tenant_id: tenantId, action: 'CASHIER_UNLOCKED', entity_id: cashier.id }, orderBy: { created_at: 'desc' },

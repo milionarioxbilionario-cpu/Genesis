@@ -1,0 +1,956 @@
+{
+  "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
+  "version": "1.0",
+  "updatedAt": "2026-09-27",
+  "files": {
+    "backend/src/index.js": {
+      "status": "ok",
+      "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
+      "role": "Ponto de entrada do backend.",
+      "notes": "O fecho de turno esta montado so com requireRole('owner')."
+    },
+    "backend/src/utils/prisma.js": {
+      "status": "ok",
+      "summary": "Cliente Prisma unico (singleton) partilhado por todo o backend.",
+      "role": "Acesso a base de dados."
+    },
+    "backend/src/utils/dbEngine.js": {
+      "status": "ok",
+      "summary": "Deteta o motor da base de dados a partir do DATABASE_URL (sqlite vs postgres).",
+      "role": "Infra de dados."
+    },
+    "backend/src/utils/dbEngine2.js": {
+      "status": "ok",
+      "summary": "Deteccao de provedor resiliente: aceita SQLite local e Postgres/Supabase sem rebentar no arranque.",
+      "role": "Infra de dados.",
+      "notes": "Escrito a 26/09 para desbloquear o 'servidor offline'."
+    },
+    "backend/src/utils/tenantRls.js": {
+      "status": "ok",
+      "summary": "Isolamento por tenant fail-closed: em Postgres aplica set_config('app.tenant_id'); em SQLite usa o caminho local.",
+      "role": "Seguranca multi-tenant.",
+      "security": "Fail-closed: aborta em vez de servir dados sem isolamento."
+    },
+    "backend/src/utils/mailer.js": {
+      "status": "partial",
+      "summary": "Envio de emails por SMTP Gmail (App Password). sendPasswordResetEmail entrega o codigo de 6 digitos. require('nodemailer') e lazy, dentro de try/catch.",
+      "role": "Entrega do codigo de recuperacao.",
+      "security": "Nunca deita o backend abaixo se faltar o nodemailer.",
+      "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao)."
+    },
+    "backend/src/utils/shiftLock.js": {
+      "status": "ok",
+      "summary": "Bloqueio do perfil do caixista apos MAX_ATTEMPTS falhas no fecho cego.",
+      "role": "Controlo do fecho de turno."
+    },
+    "backend/src/utils/paymentMethods.js": {
+      "status": "ok",
+      "summary": "Canonicalizacao das formas de pagamento (cash, card, mpesa...).",
+      "role": "Dominio de vendas."
+    },
+    "backend/src/utils/whatsapp.js": {
+      "status": "partial",
+      "summary": "Alertas por WhatsApp (Twilio) com degradacao suave quando nao ha credenciais.",
+      "role": "Canal alternativo do codigo.",
+      "notes": "Twilio nao configurado: devolve skipped."
+    },
+    "backend/src/middleware/auth.js": {
+      "status": "ok",
+      "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
+      "role": "Autenticacao."
+    },
+    "backend/src/middleware/authOrDevice.js": {
+      "status": "ok",
+      "summary": "Aceita JWT OU chave de dispositivo (POS offline).",
+      "role": "Autenticacao do POS."
+    },
+    "backend/src/middleware/deviceKeyAuth.js": {
+      "status": "ok",
+      "summary": "Valida chaves de dispositivo registadas para lojas sem sessao de utilizador.",
+      "role": "Autenticacao de dispositivos."
+    },
+    "backend/src/middleware/rbac.js": {
+      "status": "ok",
+      "summary": "requireRole(...roles): guarda de perfil (super_admin, owner, cashier).",
+      "role": "Autorizacao."
+    },
+    "backend/src/middleware/adminOriginCheck.js": {
+      "status": "ok",
+      "summary": "Restringe as rotas de super admin as origens declaradas em ADMIN_ORIGINS.",
+      "role": "Autorizacao.",
+      "security": "Separacao fisica do painel admin da plataforma."
+    },
+    "backend/src/routes/auth.js": {
+      "status": "ok",
+      "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
+      "role": "Autenticacao.",
+      "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes.",
+      "notes": "Le GOOGLE_CLIENT_ID de backend/.env."
+    },
+    "backend/src/services/passwordResetStore.js": {
+      "status": "ok",
+      "summary": "Guarda o HASH do codigo de 6 digitos: expira em 15 min, max 5 tentativas, comparacao em tempo constante.",
+      "role": "Seguranca do reset.",
+      "security": "O codigo nunca fica guardado em claro."
+    },
+    "backend/src/routes/sales.js": {
+      "status": "ok",
+      "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria.",
+      "role": "Nucleo do POS.",
+      "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N."
+    },
+    "backend/src/routes/shift_closings.js": {
+      "status": "ok",
+      "summary": "Fecho de turno: o SERVIDOR calcula o esperado (vendas em dinheiro desde o ultimo fecho) e RECUSA qualquer contagem abaixo disso, com auditoria da tentativa falhada.",
+      "role": "Fecho de caixa.",
+      "security": "BURACO FECHADO a 26/09: o expected_amount do corpo do pedido e ignorado e a rota esta montada apenas para o dono.",
+      "notes": "Correcao directa do bug 'permite fechar abaixo do que foi vendido'."
+    },
+    "backend/src/routes/owner.js": {
+      "status": "ok",
+      "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
+      "role": "API do dono.",
+      "notes": "GET /api/owner/tenant alimenta o nome real da loja no shell; nunca dados de demonstracao."
+    },
+    "backend/src/routes/admin.js": {
+      "status": "ok",
+      "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
+      "role": "API da plataforma.",
+      "security": "requireRole('super_admin') + adminOriginCheck."
+    },
+    "backend/src/routes/dashboard.js": {
+      "status": "partial",
+      "summary": "Metricas agregadas para o painel do dono.",
+      "role": "Leitura.",
+      "notes": "Sem prova funcional recente registada."
+    },
+    "backend/src/routes/products.js": {
+      "status": "ok",
+      "summary": "CRUD de produtos com scoping por tenant e historico de precos.",
+      "role": "Catalogo."
+    },
+    "backend/src/routes/inventory.js": {
+      "status": "ok",
+      "summary": "Entradas de stock (compras a fornecedores) e ajustes.",
+      "role": "Stock."
+    },
+    "backend/src/routes/catalogs.js": {
+      "status": "partial",
+      "summary": "Importacao do catalogo sugerido no onboarding.",
+      "role": "Onboarding.",
+      "notes": "Validado a mao; sem testes automatizados."
+    },
+    "backend/src/routes/master_catalogs.js": {
+      "status": "ok",
+      "summary": "Serve o catalogo mestre global usado como sugestao no onboarding.",
+      "role": "Onboarding."
+    },
+    "backend/src/routes/demand_captures.js": {
+      "status": "ok",
+      "summary": "Registo de procura nao satisfeita: transaccional, com auditoria.",
+      "role": "Inteligencia comercial."
+    },
+    "backend/src/routes/shrinkage_records.js": {
+      "status": "ok",
+      "summary": "Registo de perdas/quebras com baixa de stock e auditoria.",
+      "role": "Controlo de perdas."
+    },
+    "backend/src/routes/device_keys.js": {
+      "status": "ok",
+      "summary": "Emissao e revogacao de chaves de dispositivo para o POS.",
+      "role": "Dispositivos."
+    },
+    "backend/src/routes/refresh.js": {
+      "status": "ok",
+      "summary": "Rota auxiliar de renovacao de dados do cliente.",
+      "role": "Sincronizacao."
+    },
+    "backend/src/services/deviceKeyService.js": {
+      "status": "ok",
+      "summary": "Criacao e validacao de chaves de dispositivo.",
+      "role": "Servico."
+    },
+    "backend/src/services/monthlyDeductions.js": {
+      "status": "ok",
+      "summary": "Deducoes mensais (salarios, custos fixos) que entram no lucro liquido real.",
+      "role": "Financeiro."
+    },
+    "backend/src/services/tenantAlerts.js": {
+      "status": "ok",
+      "summary": "Alertas de stock minimo e validade vencida para o dashboard do dono.",
+      "role": "Operacoes."
+    },
+    "frontend/src/App.jsx": {
+      "status": "ok",
+      "summary": "Router do produto: todas as rotas /owner/* protegidas por ProtectedRoute; /pos atras do PosGate; /admin e /super-admin redireccionam para /login.",
+      "role": "Mapa de rotas.",
+      "security": "Nenhuma rota de gestao esta exposta sem sessao."
+    },
+    "frontend/src/main.jsx": {
+      "status": "ok",
+      "summary": "Ponto de entrada: importa o App, o i18n, os tokens e as folhas de estilo, e registra o service worker.",
+      "role": "Bootstrap do frontend.",
+      "notes": "Ordem dos CSS importa: tokens.css tem de vir primeiro."
+    },
+    "frontend/src/layouts/CRMLayout.jsx": {
+      "status": "partial",
+      "summary": "Shell do Genesis para donos e caixistas: sidebar recolhivel, topbar, paleta de comandos Ctrl+K, estado online/offline e logout.",
+      "role": "Shell.",
+      "notes": "Falta o botao de tema claro/escuro."
+    },
+    "frontend/src/components/ui/index.jsx": {
+      "status": "partial",
+      "summary": "Kit de UI: Card, Button, Modal, Tag, StatCard, ToastProvider, AmbientLayer, GlowCard, Receipt3D, SheenBar.",
+      "role": "Design system.",
+      "notes": "O Receipt3D actual e apenas uma barra de 6px com gradiente: nao ha impressora desenhada. Precisa do Printer3D."
+    },
+    "frontend/src/components/ProtectedRoute.jsx": {
+      "status": "ok",
+      "summary": "Valida a sessao e o perfil antes de renderizar a pagina; redirecciona para /login.",
+      "role": "Guardas de rota.",
+      "security": "Bloqueio no cliente; o servidor continua a validar cada pedido."
+    },
+    "frontend/src/components/PosGate.jsx": {
+      "status": "ok",
+      "summary": "Porta do POS: escolhe entre login de caixista, chave de dispositivo ou perfil bloqueado.",
+      "role": "Entrada do POS."
+    },
+    "frontend/src/pages/Login.jsx": {
+      "status": "partial",
+      "summary": "Login do dono: email/senha, botao Google Identity Services e ligacao para recuperacao de senha.",
+      "role": "Autenticacao.",
+      "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console."
+    },
+    "frontend/src/pages/ResetPassword.jsx": {
+      "status": "ok",
+      "summary": "Recuperacao de senha em 3 fases separadas: pedir codigo, confirmar codigo (so com 6 digitos), e so entao escolher a nova senha com repeticao. O cadeado abre no ecra depois do codigo confirmado.",
+      "role": "Recuperacao de conta.",
+      "security": "A fase da nova senha nem existe no DOM antes do codigo ser confirmado; o servidor continua a exigir { email, code, password } e conta tentativas. A 26/09 o bug que impedia QUALQUER reposicao foi corrigido.",
+      "notes": "Fluxo antigo sem codigo eliminado a 27/09 (rota do backend ja removida antes)."
+    },
+    "frontend/src/pages/CashierDashboard.jsx": {
+      "status": "partial",
+      "summary": "POS completo: catalogo, carrinho, descontos, varios pagamentos, venda, pre-visualizacao do recibo com QR, fecho de turno cego e hub do balcao.",
+      "role": "Caixa.",
+      "notes": "O botao 'Imprimir recibo' nao descarrega PDF nem mostra impressora 3D em condicoes."
+    },
+    "frontend/src/pages/CashierLogin.jsx": {
+      "status": "ok",
+      "summary": "Login do caixista por PIN/utilizador dentro do estabelecimento.",
+      "role": "Autenticacao."
+    },
+    "frontend/src/pages/Hub.jsx": {
+      "status": "partial",
+      "summary": "Hub do balcao: criar caixistas, abrir/fechar turnos e entrar no POS de cada perfil.",
+      "role": "Gestao de caixistas.",
+      "notes": "Ainda tem cores hex fixas em style inline: nao acompanha o tema claro."
+    },
+    "frontend/src/pages/OnboardingWizard.jsx": {
+      "status": "ok",
+      "summary": "Wizard de arranque da loja: tipo de negocio, catalogo sugerido e importacao em poucos cliques.",
+      "role": "Onboarding."
+    },
+    "frontend/src/pages/RequestAccount.jsx": {
+      "status": "ok",
+      "summary": "Pedido publico de conta de loja, aprovado depois no painel de super admin.",
+      "role": "Aquisicao."
+    },
+    "frontend/src/pages/Owner/Dashboard.jsx": {
+      "status": "ok",
+      "summary": "Visao geral do dono: KPIs, graficos Recharts, alertas de stock/validade e exportacao CSV.",
+      "role": "Painel do dono."
+    },
+    "frontend/src/pages/Owner/Products.jsx": {
+      "status": "ok",
+      "summary": "Gestao de produtos: criar/editar, precos, stock minimo e codigos de barras.",
+      "role": "Catalogo."
+    },
+    "frontend/src/pages/Owner/Stock.jsx": {
+      "status": "ok",
+      "summary": "Entradas de stock e historico de movimentos.",
+      "role": "Stock."
+    },
+    "frontend/src/pages/Owner/Suppliers.jsx": {
+      "status": "ok",
+      "summary": "Gestao de fornecedores.",
+      "role": "Compras."
+    },
+    "frontend/src/pages/Owner/Employees.jsx": {
+      "status": "ok",
+      "summary": "Trabalhadores e salarios mensais (dinheiro convertido para centavos no envio).",
+      "role": "Recursos humanos."
+    },
+    "frontend/src/pages/Owner/Debts.jsx": {
+      "status": "ok",
+      "summary": "Chenecas: dividas de clientes, pagamentos parciais e saldo em falta.",
+      "role": "Credito."
+    },
+    "frontend/src/pages/Owner/Goals.jsx": {
+      "status": "ok",
+      "summary": "Metas de venda com barra de progresso e cor por percentagem.",
+      "role": "Vendas."
+    },
+    "frontend/src/pages/Owner/Settings.jsx": {
+      "status": "ok",
+      "summary": "Definicoes do estabelecimento: horario de funcionamento, dados da loja e preferencias.",
+      "role": "Configuracao."
+    },
+    "frontend/src/pages/Owner/DeviceKeys.jsx": {
+      "status": "ok",
+      "summary": "Chaves de dispositivo do POS: emitir, listar e revogar.",
+      "role": "Dispositivos."
+    },
+    "frontend/src/pages/Owner/AuditLogViewer.jsx": {
+      "status": "ok",
+      "summary": "Leitor do registo de auditoria do tenant.",
+      "role": "Auditoria."
+    },
+    "frontend/src/pages/Owner/Reports/DailyReport.jsx": {
+      "status": "ok",
+      "summary": "Relatorio diario de vendas.",
+      "role": "Relatorios."
+    },
+    "frontend/src/pages/Owner/Reports/WeeklyReport.jsx": {
+      "status": "ok",
+      "summary": "Relatorio semanal de vendas.",
+      "role": "Relatorios."
+    },
+    "frontend/src/pages/Owner/Reports/MonthlyReport.jsx": {
+      "status": "ok",
+      "summary": "Relatorio mensal com o lucro liquido REAL: receita menos custo das mercadorias menos deducoes (salarios e custos fixos), em visual de cascata.",
+      "role": "Relatorios.",
+      "notes": "Vendas canceladas nunca contam na receita."
+    },
+    "frontend/src/utils/api.js": {
+      "status": "ok",
+      "summary": "Cliente axios com base URL, cookies e tratamento comum de erros 401.",
+      "role": "Rede."
+    },
+    "frontend/src/utils/auth.js": {
+      "status": "ok",
+      "summary": "Utilitarios de sessao no cliente.",
+      "role": "Autenticacao."
+    },
+    "frontend/src/utils/money.js": {
+      "status": "ok",
+      "summary": "centsToMznInput / mznToCents: toda a conversao de dinheiro do frontend passa aqui.",
+      "role": "Dinheiro.",
+      "security": "Evita o bug de arredondamento que multiplicava valores por 100 duas vezes."
+    },
+    "frontend/src/utils/hubSession.js": {
+      "status": "ok",
+      "summary": "Sessao do perfil de caixista no Hub do balcao.",
+      "role": "Estado do POS."
+    },
+    "frontend/src/utils/receiptPrinter.js": {
+      "status": "partial",
+      "summary": "Impressao do talao: Web Serial (impressora termica ligada) com recurso a window.print(). O PDFVectorial do recibo vive em receiptPdf.js.",
+      "role": "Recibo (impressao).",
+      "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
+      "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido."
+    },
+    "frontend/src/db/localDb.js": {
+      "status": "ok",
+      "summary": "Base de dados local (Dexie/IndexedDB) para o POS funcionar offline: produtos, vendas, perdas, procura e fechos.",
+      "role": "Offline."
+    },
+    "frontend/src/hooks/useAuth.js": {
+      "status": "ok",
+      "summary": "Hook de sessao: carrega o utilizador e respeita o role.",
+      "role": "Autenticacao."
+    },
+    "frontend/src/hooks/useOfflineSync.js": {
+      "status": "ok",
+      "summary": "Sincronizacao offline para o servidor com Authorization Bearer, e envio de perdas/procura pendentes.",
+      "role": "Offline."
+    },
+    "frontend/src/hooks/useIsolatedScreen.js": {
+      "status": "ok",
+      "summary": "Modo ecra isolado (kiosk) para o balcao.",
+      "role": "POS."
+    },
+    "frontend/src/i18n/index.js": {
+      "status": "partial",
+      "summary": "Internacionalizacao PT/EN (i18next) com dicionarios do login, POS e reposicao de senha.",
+      "role": "Textos.",
+      "notes": "Textos do fluxo antigo ja removidos: agora so existe o modo por codigo com confirmacao separada."
+    },
+    "frontend/src/index.css": {
+      "status": "partial",
+      "summary": "Folha principal do produto: layout POS, cartoes, tabelas e blocos de impressao.",
+      "role": "Estilo.",
+      "notes": "Tem cores hex fixas (receipt-shell, POS) e nao acompanha o tema claro."
+    },
+    "frontend/src/ui/tokens.css": {
+      "status": "partial",
+      "summary": "Fonte unica de verdade visual: paleta escura vermelho/preto, tipografia, espacamento, raios, sombras e movimento.",
+      "role": "Design tokens.",
+      "notes": "SO TEM TEMA ESCURO. O tema claro precisa do bloco [data-theme=\"light\"] (azul ciano de piscina) num ficheiro proprio."
+    },
+    "frontend/src/ui/primitives.css": {
+      "status": "ok",
+      "summary": "Icones e primitivos usados por todo o produto.",
+      "role": "Estilo."
+    },
+    "frontend/src/ui/shell.css": {
+      "status": "ok",
+      "summary": "Estilo do shell: sidebar, topbar, paleta de comandos e transicoes de pagina.",
+      "role": "Estilo."
+    },
+    "frontend/src/ui/animations.css": {
+      "status": "partial",
+      "summary": "Animacoes de assinatura: auroras ambiente, spotlight, sheen, recibo 3D e loops de fundo.",
+      "role": "Estilo.",
+      "notes": "A seccao do recibo e fraca (uma barra de 6px): sera substituida pelo Printer3D."
+    },
+    "frontend/src/registerSW.js": {
+      "status": "ok",
+      "summary": "Registo do service worker (PWA) para apoio offline.",
+      "role": "PWA."
+    },
+    "frontend/src/data/master_catalogs.json": {
+      "status": "ok",
+      "summary": "Catalogos mestres usados como sugestao no onboarding, sem CDN.",
+      "role": "Dados."
+    },
+    "admin-frontend/src/App.jsx": {
+      "status": "partial",
+      "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
+      "role": "Painel da plataforma.",
+      "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema."
+    },
+    "admin-frontend/src/main.jsx": {
+      "status": "ok",
+      "summary": "Bootstrap do painel de super admin (React + Router + CSS proprio).",
+      "role": "Bootstrap."
+    },
+    "admin-frontend/src/index.css": {
+      "status": "partial",
+      "summary": "Estilo do painel de super admin: cartoes claros, tabelas e badges.",
+      "role": "Estilo.",
+      "notes": "Conjunto de estilos independente do produto: nao usa os tokens do Genesis nem tem tema claro/escuro."
+    },
+    "admin-frontend/index.html": {
+      "status": "partial",
+      "summary": "Pagina do painel de super admin.",
+      "role": "HTML.",
+      "notes": "Falta o script anti-flash do tema e o fundo com os tokens."
+    },
+    "admin-frontend/package.json": {
+      "status": "ok",
+      "summary": "Dependencias do painel de super admin (React, React Router, axios, Vite).",
+      "role": "Build."
+    },
+    "admin-frontend/vite.config.js": {
+      "status": "ok",
+      "summary": "Configuracao do Vite do painel, com porta propria (5175).",
+      "role": "Build."
+    },
+    "frontend/index.html": {
+      "status": "partial",
+      "summary": "HTML do produto: meta theme-color, fundo escuro inicial e carregamento do bundle.",
+      "role": "HTML.",
+      "notes": "Falta o script inline que aplica o tema guardado antes do primeiro pixel (evita o flash branco no modo claro)."
+    },
+    "frontend/vite.config.js": {
+      "status": "ok",
+      "summary": "Configuracao do Vite: proxy para a API, PWA e build.",
+      "role": "Build."
+    },
+    "frontend/tailwind.config.js": {
+      "status": "ok",
+      "summary": "Tailwind com darkMode por [data-theme=\"dark\"] e as cores do Genesis.",
+      "role": "Build.",
+      "notes": "Nenhum ficheiro usa classes `dark:`: mudar data-theme nao rebenta nada."
+    },
+    "frontend/postcss.config.js": {
+      "status": "ok",
+      "summary": "Pipeline PostCSS/Tailwind.",
+      "role": "Build."
+    },
+    "backend/prisma/schema.prisma": {
+      "status": "ok",
+      "summary": "Schema Prisma completo: Tenant, User, Product, Sale, SaleItem, StockEntry, Employee, Supplier, FixedCost, Debt, DebtPayment, DemandCapture, ShrinkageRecord, ShiftClosing, SaleGoal, AuditLog, DeviceKey, ProductPriceHistory.",
+      "role": "Modelo de dados.",
+      "notes": "Dinheiro em Int (centavos), IDs em String, datas em DateTime: portatil entre SQLite e Postgres."
+    },
+    "backend/prisma/schema.sqlite.prisma": {
+      "status": "ok",
+      "summary": "Variante do schema para o SQLite de desenvolvimento local.",
+      "role": "Modelo de dados."
+    },
+    "backend/prisma/rls_policies.sql": {
+      "status": "partial",
+      "summary": "Politicas de Row Level Security para 16 tabelas (isolamento por tenant).",
+      "role": "Seguranca de dados.",
+      "security": "Escritas e prontas; FALTA APLICAR no Supabase (prisma db push + rls_policies.sql).",
+      "notes": "Enquanto nao forem aplicadas, o isolamento depende do scoping da aplicacao (tenantRls)."
+    },
+    "backend/prisma/rls.sql": {
+      "status": "partial",
+      "summary": "Script auxiliar de activacao de RLS.",
+      "role": "Seguranca de dados."
+    },
+    "backend/prisma/add_indexes.sql": {
+      "status": "ok",
+      "summary": "Indices de desempenho para consultas frequentes.",
+      "role": "Desempenho."
+    },
+    "backend/prisma/migrations/20260905141627_init/migration.sql": {
+      "status": "ok",
+      "summary": "Migracao inicial completa do schema.",
+      "role": "Migracao.",
+      "notes": "Escrita para SQLite (DATETIME/BOOLEAN): precisa de versao Postgres para producao."
+    },
+    "backend/prisma/migrations/20260905200000_add_device_keys/migration.sql": {
+      "status": "ok",
+      "summary": "Migracao que acrescenta as chaves de dispositivo.",
+      "role": "Migracao."
+    },
+    "backend/prisma/migrations/20260919_add_sale_discount_daily/migration.sql": {
+      "status": "ok",
+      "summary": "Migracao que acrescenta discount_amount e daily_number a Sale, mais o indice por tenant/data.",
+      "role": "Migracao."
+    },
+    "backend/scripts/test_auth.js": {
+      "status": "ok",
+      "summary": "Teste E2E das rotas de autenticacao, incluindo o login Google bloqueado sem configuracao.",
+      "role": "Teste.",
+      "security": "Verifica que /reset-password-instant devolve 404 (a porta dos fundos ficou mesmo fechada)."
+    },
+    "backend/scripts/shift_closing_e2e.js": {
+      "status": "ok",
+      "summary": "Teste E2E do fecho de turno contra o servidor a correr.",
+      "role": "Teste.",
+      "security": "Prova que o caixista recebe 403, que contar abaixo do esperado e recusado sem gravar nada, que expected_amount forjado nao ilude a validacao e que a tentativa falhada fica em auditoria."
+    },
+    "backend/scripts/smoke_tests.js": {
+      "status": "ok",
+      "summary": "Bateria de smoke tests: relatorios, folha salarial e alertas.",
+      "role": "Teste."
+    },
+    "backend/scripts/smoke_boot.js": {
+      "status": "ok",
+      "summary": "Verificacao rapida de arranque do backend.",
+      "role": "Teste."
+    },
+    "backend/scripts/e2e_test.js": {
+      "status": "ok",
+      "summary": "Fluxo E2E geral: onboarding, login, produto, venda, cancelamento e stock.",
+      "role": "Teste."
+    },
+    "backend/scripts/e2e_test2.js": {
+      "status": "ok",
+      "summary": "Fluxo E2E mais completo, com cabecalho Authorization.",
+      "role": "Teste."
+    },
+    "backend/scripts/e2e_test2.fixed.js": {
+      "status": "ok",
+      "summary": "Versao corrigida do E2E2.",
+      "role": "Teste."
+    },
+    "backend/scripts/rls_validation.js": {
+      "status": "ok",
+      "summary": "Valida o isolamento por tenant com SQL directo.",
+      "role": "Teste."
+    },
+    "backend/scripts/rls_validation_with_role.js": {
+      "status": "ok",
+      "summary": "Valida o isolamento por tenant assumindo uma role especifica.",
+      "role": "Teste."
+    },
+    "backend/scripts/test_google.js": {
+      "status": "ok",
+      "summary": "Teste do fluxo de login com Google.",
+      "role": "Teste.",
+      "notes": "Falha enquanto GOOGLE_CLIENT_ID e as origens autorizadas nao estiverem configurados."
+    },
+    "backend/scripts/test_login.js": {
+      "status": "ok",
+      "summary": "Teste simples de login.",
+      "role": "Teste."
+    },
+    "backend/scripts/create_owner_user.js": {
+      "status": "ok",
+      "summary": "Cria/actualiza o utilizador dono de demonstracao.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/create_system_user.js": {
+      "status": "ok",
+      "summary": "Cria o utilizador de sistema (super admin).",
+      "role": "Semear dados."
+    },
+    "backend/scripts/create_test_tenant.js": {
+      "status": "ok",
+      "summary": "Cria um tenant de teste completo.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/create_tenant_7777.js": {
+      "status": "ok",
+      "summary": "Cria o tenant de teste 7777.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/seed_admin.js": {
+      "status": "ok",
+      "summary": "Semeia a conta de super admin.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/seed_demo.js": {
+      "status": "ok",
+      "summary": "Semeia a loja de demonstracao.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/seed_master_catalogs.js": {
+      "status": "ok",
+      "summary": "Popula/actualiza a tabela de catalogos mestres sem duplicar.",
+      "role": "Semear dados."
+    },
+    "backend/scripts/restore_owner_password.js": {
+      "status": "ok",
+      "summary": "Repoe a password do dono (apoio a testes locais).",
+      "role": "Apoio.",
+      "security": "Ferramenta de operacao: correr apenas em ambiente controlado."
+    },
+    "backend/scripts/ensure_device_keys.js": {
+      "status": "ok",
+      "summary": "Garante que a chave de dispositivo de teste existe.",
+      "role": "Apoio."
+    },
+    "backend/scripts/add_cancel_pin_column.js": {
+      "status": "ok",
+      "summary": "Acrescenta a coluna do PIN de cancelamento.",
+      "role": "Migracao pontual."
+    },
+    "backend/scripts/check_sale.js": {
+      "status": "ok",
+      "summary": "Inspecciona uma venda na base de dados.",
+      "role": "Diagnostico."
+    },
+    "backend/scripts/diag_login.js": {
+      "status": "ok",
+      "summary": "Diagnostico de problemas de login (hash, tenant, estado da conta).",
+      "role": "Diagnostico."
+    },
+    "backend/scripts/insert_product_7777.js": {
+      "status": "ok",
+      "summary": "Insere um produto de teste no tenant 7777.",
+      "role": "Apoio."
+    },
+    "backend/scripts/run_phase0.sh": {
+      "status": "ok",
+      "summary": "Script de apoio a Fase 0 (verificacoes de seguranca).",
+      "role": "Automatismo."
+    },
+    "backend/scripts/tmp_create_device_key_direct.js": {
+      "status": "partial",
+      "summary": "Script temporario de criacao directa de chave de dispositivo.",
+      "role": "Apoio.",
+      "notes": "Ferramenta de sessao anterior: candidata a remocao."
+    },
+    "backend/scripts/tmp_create_device_keys_table_sqlite.js": {
+      "status": "partial",
+      "summary": "Script temporario para criar a tabela de chaves em SQLite.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/scripts/tmp_create_product.js": {
+      "status": "partial",
+      "summary": "Script temporario para criar um produto.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/scripts/tmp_post_devicekey_flow.js": {
+      "status": "partial",
+      "summary": "Script temporario do fluxo de chaves de dispositivo.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/scripts/tmp_post_sale.js": {
+      "status": "partial",
+      "summary": "Script temporario para enviar uma venda de teste.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/scripts/tmp_post_sale_devicekey_test.js": {
+      "status": "partial",
+      "summary": "Script temporario: venda com chave de dispositivo.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/scripts/tmp_post_sale_with_real_product.js": {
+      "status": "partial",
+      "summary": "Script temporario: venda com produto real.",
+      "role": "Apoio.",
+      "notes": "Candidato a remocao."
+    },
+    "backend/controllers/.gitkeep": {
+      "status": "ok",
+      "summary": "Marcador de pasta vazia.",
+      "role": "Estrutura."
+    },
+    "Mapa Mental/Mapa_Mental.md": {
+      "status": "ok",
+      "summary": "Jornal cronologico e inventario do estado do projecto (Parte A: estado actual; Parte B: o que foi feito, quando e por que).",
+      "role": "Documentacao."
+    },
+    "plan.md": {
+      "status": "ok",
+      "summary": "Plano de implementacao do Genesis: estado, frentes de trabalho, decisoes e riscos declarados.",
+      "role": "Documentacao."
+    },
+    "Prompt_Mestre.txt": {
+      "status": "ok",
+      "summary": "Prompt mestre do fundador: regras, arquitectura, formulas e checklists de validacao.",
+      "role": "Documentacao."
+    },
+    "docs/offline_sync_test_plan.md": {
+      "status": "ok",
+      "summary": "Plano de teste da sincronizacao offline do POS.",
+      "role": "Documentacao."
+    },
+    "docs/ETAPA0_RESULT.md": {
+      "status": "ok",
+      "summary": "Resultado da Etapa 0 (higiene de seguranca e credenciais).",
+      "role": "Documentacao."
+    },
+    "docs/postman_genesis_collection.json": {
+      "status": "ok",
+      "summary": "Coleccao Postman com os pedidos principais da API.",
+      "role": "Documentacao."
+    },
+    "docs/curl_collection.sh": {
+      "status": "ok",
+      "summary": "Coleccao de exemplos curl da API.",
+      "role": "Documentacao."
+    },
+    "docs/test_harness.sh": {
+      "status": "ok",
+      "summary": "Utilitario de arranque de harness de testes.",
+      "role": "Automatismo."
+    },
+    "scripts/gen_mindmap_data.js": {
+      "status": "ok",
+      "summary": "Gerador dos dados do Mapa Mental 3D: varre o repositorio, extrai import/require, resolve para ficheiros reais e cruza com o mapa curado.",
+      "role": "Ferramenta de documentacao.",
+      "notes": "Reescrever sempre que o mapa curado mudar: node scripts/gen_mindmap_data.js"
+    },
+    "scripts/run_playwright_docker.sh": {
+      "status": "ok",
+      "summary": "Corre os testes Playwright num contentor, para ambientes sem browser instalado.",
+      "role": "Automatismo."
+    },
+    "run-localhost.sh": {
+      "status": "ok",
+      "summary": "Launcher local: arranca backend, frontend e admin-frontend e abre o browser quando o frontend responde.",
+      "role": "Infra."
+    },
+    "run-admin.ps1": {
+      "status": "ok",
+      "summary": "Launcher do painel de super admin em PowerShell.",
+      "role": "Infra."
+    },
+    "run-open-admin.sh": {
+      "status": "ok",
+      "summary": "Launcher do painel de super admin em shell.",
+      "role": "Infra."
+    },
+    "backend/package.json": {
+      "status": "ok",
+      "summary": "Dependencias e scripts do backend (Express, Prisma, bcrypt, jsonwebtoken, zod, nodemailer, nodemon).",
+      "role": "Build."
+    },
+    "frontend/package.json": {
+      "status": "ok",
+      "summary": "Dependencias e scripts do frontend (React, Vite, Dexie, qrcode, recharts, i18next, lucide, jspdf).",
+      "role": "Build.",
+      "notes": "jspdf adicionado a 27/09 para gerar o PDF do recibo offline (fica no bundle, sem CDN)."
+    },
+    "backend/data/master_catalogs.json": {
+      "status": "ok",
+      "summary": "Fonte dos catalogos mestres semeada na base de dados.",
+      "role": "Dados."
+    },
+    "backend/verify_hash.js": {
+      "status": "ok",
+      "summary": "Utilitario de verificacao de hashes de palavra-passe.",
+      "role": "Diagnostico."
+    },
+    "backend/tests/device_key_service.test.js": {
+      "status": "ok",
+      "summary": "Testes do servico de chaves de dispositivo.",
+      "role": "Teste."
+    },
+    "backend/tests/monthlyDeductions.test.js": {
+      "status": "ok",
+      "summary": "Testes das deducoes mensais usadas no lucro liquido.",
+      "role": "Teste."
+    },
+    "backend/tests/validate_rls.js": {
+      "status": "ok",
+      "summary": "Validacao das politicas de RLS.",
+      "role": "Teste."
+    },
+    "frontend/scripts/fix-hex.mjs": {
+      "status": "ok",
+      "summary": "Utilitario de migracao de cores hex para os tokens de design.",
+      "role": "Ferramenta."
+    },
+    "frontend/tests/playwright_offline_sync_test.js": {
+      "status": "ok",
+      "summary": "Teste Playwright da sincronizacao offline do POS.",
+      "role": "Teste."
+    },
+    "backend/src/services/report.service.js": {
+      "status": "planned",
+      "planned": true,
+      "group": "backend",
+      "summary": "Servico de relatorios (diario/semanal/mensal) extraido das rotas, com uma unica formula testavel do lucro liquido.",
+      "role": "Refactor planeado.",
+      "notes": "Hoje a formula vive dentro do owner.js. Extrair reduz o risco de divergencia entre relatorios.",
+      "dependsOn": [
+        "backend/src/utils/prisma.js",
+        "backend/src/services/monthlyDeductions.js"
+      ]
+    },
+    "backend/src/jobs/dailyDigest.js": {
+      "status": "planned",
+      "planned": true,
+      "group": "backend",
+      "summary": "Tarefa agendada que envia ao dono, no fim do dia, o resumo de vendas, alertas de stock e diferencas de fecho.",
+      "role": "Nao implementado.",
+      "notes": "Depende do mailer configurado e do whatsapp.",
+      "dependsOn": [
+        "backend/src/utils/mailer.js",
+        "backend/src/utils/whatsapp.js",
+        "backend/src/services/tenantAlerts.js"
+      ]
+    },
+    "backend/prisma/migrations/postgres/0001_init/migration.sql": {
+      "status": "planned",
+      "planned": true,
+      "group": "backend-data",
+      "summary": "Migracao inicial limpa para PostgreSQL, em tipos de Postgres, com as politicas de RLS aplicadas.",
+      "role": "Pendente.",
+      "notes": "Enquanto nao existir, o backend corre em SQLite local.",
+      "dependsOn": [
+        "backend/prisma/schema.prisma",
+        "backend/prisma/rls_policies.sql"
+      ]
+    },
+    "frontend/src/pages/CodeMap.jsx": {
+      "status": "planned",
+      "planned": true,
+      "group": "frontend",
+      "summary": "Versao do mapa 3D dentro da propria aplicacao, alimentada pelo mesmo mapa_mental_data.js.",
+      "role": "Ferramenta interna planeada.",
+      "notes": "O mapa independente (Mapa Mental/mapa_mental_3d.html) ja existe e e a versao oficial.",
+      "dependsOn": [
+        "Mapa Mental/mapa_mental_data.js",
+        "frontend/src/components/ui/index.jsx"
+      ]
+    },
+    "Mapa Mental/mapa_mental_3d.html": {
+      "status": "ok",
+      "summary": "Mapa mental / rede neural 3D do sistema: cada ponto é um ficheiro, cada linha é um import real, agrupado por directoria. Roda, tem zoom, clique, pesquisa, filtro por estado/grupo e tema escuro/claro (claro = azul-piscina).",
+      "role": "Ferramenta de leitura do código.",
+      "notes": "Ficheiro independente: abre com duplo-clique, sem servidor, sem internet e sem CDN. Lê os dados de mapa_mental_data.js (ao lado). Validado com 16 verificações automáticas: 144 nós, 182 ligações, 5 planeados, 2 vermelhos."
+    },
+    "Mapa Mental/mapa_mental_status.json": {
+      "status": "ok",
+      "summary": "Mapa curado (este ficheiro): estado, descricao e dependencias por ficheiro. E a fonte de verdade do mapa 3D.",
+      "role": "Documentacao.",
+      "notes": "Editar a mao sempre que um ficheiro nasce, muda de estado ou e planeado."
+    },
+    "Plano_a_executar.md": {
+      "status": "partial",
+      "summary": "Plano operacional anterior, com passos executados em sessoes passadas.",
+      "role": "Documentacao.",
+      "notes": "Parcialmente absorvido pelo plan.md; candidato a arquivo."
+    },
+    "run-admin.sh": {
+      "status": "ok",
+      "summary": "Launcher do painel de super admin em shell.",
+      "role": "Infra."
+    },
+    "docs/README_INSTALACAO.md": {
+      "status": "planned",
+      "planned": true,
+      "group": "docs",
+      "summary": "Guia de instalacao e arranque: dependencias, .env, base de dados, portas e verificacoes.",
+      "role": "Documentacao planeada.",
+      "dependsOn": [
+        "plan.md",
+        "run-localhost.sh"
+      ]
+    },
+    "frontend/src/utils/receiptPdf.js": {
+      "status": "ok",
+      "summary": "Gerador do PDF do recibo com jsPDF (offline, sem CDN): rolo de 80mm, tinta escura sobre papel, faixa Genesis com o nº da venda, serreto, QR e totais. Devolve o blob E o nome do ficheiro; o download é feito por quem chama.",
+      "role": "Recibo em PDF.",
+      "notes": "Nome exacto: Recibo_<N>  <DD-MM-YYYY>  <HH:mm:ss>.pdf (dois espaços). N = daily_number do servidor; em venda offline usa o contador local do dia, que reinicia a meia-noite. Todo o texto passa por clean(), por isso um nome de produto com <script> sai literal.",
+      "security": "Sem innerHTML: o PDF é desenhado com texto vectorial, logo não há injecção de HTML no documento impresso."
+    },
+    "frontend/src/components/Printer3D.jsx": {
+      "status": "ok",
+      "summary": "Impressora 3D de verdade: corpo em CSS 3D, fenda escura, dois LEDs e o papel a sair com inclinação que endireita. Ao fim da animação chama onPrinted - é aí que o PDF é gerado e descarregado.",
+      "role": "Recibo (animação 3D).",
+      "notes": "Substitui o antigo Receipt3D, que era só uma barra de 6px com gradiente. O Receipt3D continua exportado a partir daqui para não partir importes."
+    },
+    "frontend/src/components/SecurityGateIcon.jsx": {
+      "status": "ok",
+      "summary": "Sinal de porta para o ecrã de recuperar senha: dois painéis fechados que abrem (com ciano) quando o código do email está confirmado.",
+      "role": "Indicador de segurança na UI."
+    },
+    "frontend/src/theme/ThemeProvider.jsx": {
+      "status": "ok",
+      "summary": "Contexto de tema: aplica data-theme no <html>, guarda em localStorage (chave genesis.theme) e monta a camada da piscina quando o tema é claro.",
+      "role": "Tema claro/escuro.",
+      "notes": "First choice da ausencia de escolha guardada: respeita prefers-color-scheme. O index.html repete a lógica num script inline para não haver flash branco."
+    },
+    "frontend/src/theme/ThemeToggle.jsx": {
+      "status": "ok",
+      "summary": "Botão lua/sol que alterna o tema. Presente no login, no shell do dono, no POS, no Hub e no ecrã de recuperação de senha.",
+      "role": "Tema claro/escuro.",
+      "security": "aria-pressed + title descrevem o estado para leitores de ecrã."
+    },
+    "frontend/src/theme/PoolWater.jsx": {
+      "status": "ok",
+      "summary": "Camada decorativa da piscina: azulejos, quatro ondas e três manchas de luz (causticas) em CSS puro. Só é montada no tema claro.",
+      "role": "Animação do modo claro.",
+      "notes": "aria-hidden + pointer-events:none: nunca interfere com cliques nem com leitores de ecrã. Fica parada em prefers-reduced-motion."
+    },
+    "frontend/src/ui/theme-light.css": {
+      "status": "ok",
+      "summary": "Tema claro azul-piscina: reescreve os mesmos tokens do tema escuro em [data-theme=\"light\"] (fundos brancos, marca ciano, sombras de luz do dia) e ajusta o brilho ambiente do corpo.",
+      "role": "Tokens do tema claro.",
+      "notes": "Trocar o atributo muda a aplicação inteira de uma vez porque nada escreve hex a mao e não existe uma única classe dark: do Tailwind."
+    },
+    "frontend/src/ui/theme-toggle.css": {
+      "status": "ok",
+      "summary": "Estilo do botão de tema e das três camadas da piscina (keyframes de deriva, onda e caustica).",
+      "role": "Estilo do tema claro."
+    },
+    "admin-frontend/src/theme.js": {
+      "status": "ok",
+      "summary": "Leitura, aplicação e gravação do tema no painel de super admin, com a MESMA chave localStorage do produto.",
+      "role": "Tema do painel admin."
+    },
+    "admin-frontend/src/ThemeToggle.jsx": {
+      "status": "ok",
+      "summary": "Botão lua/sol do painel de super admin, com os ícones em SVG inline (o admin-frontend não tem lucide-react e a regra é não adicionar dependências).",
+      "role": "Tema do painel admin."
+    },
+    "backend/scripts/check_mail.js": {
+      "status": "ok",
+      "summary": "Verificação do SMTP em 4 passos: configuração lida do .env, nodemailer instalado, ligação real ao servidor e envio de um email de recuperação para o endereço indicado.",
+      "role": "Diagnóstico de e-mail.",
+      "notes": "Uso: node scripts/check_mail.js --to omeu@email.com. Ainda em AVISO porque MAIL_USER/MAIL_PASS estão vazios à espera da senha de aplicativo do fundador."
+    },
+    "backend/scripts/run_checks.js": {
+      "status": "ok",
+      "summary": "Harness: sobe o backend numa porta livre com SQLite, corre os testes E2E (auth, fecho de turno) e a verificação de SMTP, e depois mata o servidor.",
+      "role": "Automatismo de testes.",
+      "notes": "Uso: node scripts/run_checks.js [--port=4020]. Não deixa processos pendurados."
+    }
+  }
+}

@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Building2, Globe, Lock, ShieldCheck, Sparkles, Store } from 'lucide-react';
 import axios from '../utils/api';
 import { AmbientLayer, SheenBar } from '../components/ui';
+import ThemeToggle from '../theme/ThemeToggle';
 import { setLang, useLang } from '../i18n';
+
 
 // Client ID do Google Identity Services. Fica em frontend/.env como
 // VITE_GOOGLE_CLIENT_ID e tem de ter formato XXXX.apps.googleusercontent.com.
@@ -237,6 +239,8 @@ const Login = ({ mode = 'owner' }) => {
                 aria-pressed={lang === 'en'}
               >EN</button>
             </div>
+
+            <ThemeToggle compact />
           </div>
 
           <div className="auth-content">

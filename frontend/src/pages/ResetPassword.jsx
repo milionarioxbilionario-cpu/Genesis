@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Globe, KeyRound, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import api from '../utils/api';
 import { AmbientLayer, SheenBar } from '../components/ui';
+import SecurityGateIcon from '../components/SecurityGateIcon';
+import ThemeToggle from '../theme/ThemeToggle';
 import { setLang, useLang } from '../i18n';
 
 // Normaliza os erros: o backend devolve string OU array do Zod.
@@ -17,6 +19,13 @@ const messageOf = (err, fallback) => {
   return fallback;
 };
 
+// Este ecrã tem duas fases, sem atalhos:
+//   1. `!verified` — o utilizador pede o código e confirma-o. Só aqui é que
+//      o botão/inputs da nova senha existem sequer no DOM.
+//   2. `verified`  — com o código do email validado, escolhe a nova senha.
+//
+// O servidor continua a exigir o código em /api/auth/reset-password; o
+// browser apenas não mostra a nova senha antes disso.
 const inputClass =
   'w-full rounded-xl border border-line-strong bg-elev2 px-3.5 py-3 text-base text-ink ' +
   'outline-none transition-all duration-200 placeholder:text-muted focus:border-brand ' +
@@ -33,7 +42,9 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [sent, setSent] = useState(false);
+  const [verified, setVerified] = useState(false);
 
+  // Verificar o código de 6 dígitos recebido por email.
   // Solicitar envio de codigo de 6 digitos (email com fallback whatsapp)
   const requestCode = async (event) => {
     event.preventDefault();
@@ -42,6 +53,7 @@ export default function ResetPassword() {
     try {
       await api.post('/api/auth/forgot-password', { email });
       setSent(true);
+      setVerified(false);
     } catch (err) {
       setError(messageOf(err, t('reset.invalid') || 'Erro ao solicitar código de recuperação.'));
     } finally {
@@ -49,10 +61,34 @@ export default function ResetPassword() {
     }
   };
 
-  // Validar codigo e redefinir palavra-passe
+  // 1ª fase: confirmar o código do email, SEM trocar a senha.
+  // (legado — mantido para referência; o fluxo usa confirmCode/applyPassword)
   const applyCode = async (event) => {
     event.preventDefault();
+    confirmCode();
+  };
+
+  // 2ª fase: confirmar o código do email, SEM pedir a senha ainda.
+  const confirmCode = () => {
     setError('');
+    if (!/^\d{6}$/.test(code.trim())) {
+      setError(t('reset.invalid') || 'Código inválido ou expirado.');
+      return;
+    }
+    setVerified(true);
+  };
+
+  // 3ª fase: só corre com o código já confirmado pelo utilizador.
+  // O servidor volta a exigir { email, code, password } e conta tentativas;
+  // um código errado aqui não troca nada e mostra o erro do backend.
+  const applyPassword = async (event) => {
+    event.preventDefault();
+    setError('');
+    if (!verified) return;
+    if (password.length < 6) {
+      setError(t('reset.invalid') || 'A palavra-passe deve ter pelo menos 6 caracteres.');
+      return;
+    }
     if (password !== confirm) {
       setError(t('reset.mismatch') || 'As palavras-passe não coincidem.');
       return;
@@ -60,9 +96,11 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      await api.post('/api/auth/reset-password', { email, code, password });
+      await api.post('/api/auth/reset-password', { email, code: code.trim(), password });
       setDone(true);
     } catch (err) {
+      // Código errado/expirado ou conta alterada: volta à fase do código.
+      setVerified(false);
       setError(messageOf(err, t('reset.invalid') || 'Código inválido ou expirado.'));
     } finally {
       setLoading(false);
@@ -118,14 +156,8 @@ export default function ResetPassword() {
             <h1 className="auth-title">{t('reset.title')}</h1>
             <p className="auth-subtitle" style={{ marginTop: 0 }}>{t('reset.lead')}</p>
 
-            {/* Aviso PERMANENTE enquanto o modo directo estiver ligado. */}
-            <div className="auth-warning" role="alert">
-              <ShieldAlert size={16} strokeWidth={2.3} aria-hidden="true" />
-              <div>
-                <strong>{t('reset.warningTitle')}</strong>
-                <span>{t('reset.warning')}</span>
-              </div>
-            </div>
+            {/* O cadeado só "abre" depois do código do email confirmado. */}
+            <SecurityGateIcon unlocked={verified} />
 
             {error && <div className="auth-error" role="alert">{error}</div>}
 
@@ -134,57 +166,12 @@ export default function ResetPassword() {
                 <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
                 <h2>{t('reset.doneTitle')}</h2>
                 <p>{t('reset.doneLead')}</p>
-                {warning && <p className="auth-warning-inline">{warning}</p>}
                 <Link to="/login" className="auth-submit">
                   <span>{t('reset.goLogin')}</span>
                   <ArrowRight size={17} strokeWidth={2.3} aria-hidden="true" />
                 </Link>
               </div>
-              <div className="auth-done">
-                <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
-                <h2>{t('reset.doneTitle')}</h2>
-                <p>{t('reset.doneLead')}</p>
-                {/* O aviso do servidor não é escondido: mostra-se sempre. */}
-                {warning && <p className="auth-warning-inline">{warning}</p>}
-                <Link to="/login" className="auth-submit">
-                  <span>{t('reset.goLogin')}</span>
-                  <ArrowRight size={17} strokeWidth={2.3} aria-hidden="true" />
-                </Link>
-              </div>
-            ) : !codeMode ? (
-              <form onSubmit={handleInstantReset} className="auth-form">
-                <div className="field-group">
-                  <label htmlFor="rp-email" className="field-label">{t('reset.email')}</label>
-                  <input id="rp-email" type="email" value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className={inputClass} placeholder={t('reset.emailPlaceholder')}
-                    autoComplete="username" required />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="rp-pass" className="field-label">{t('reset.newPassword')}</label>
-                  <input id="rp-pass" type="password" value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    className={inputClass} placeholder="Mínimo 8 caracteres"
-                    autoComplete="new-password" minLength={8} required />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="rp-confirm" className="field-label">{t('reset.confirmPassword')}</label>
-                  <input id="rp-confirm" type="password" value={confirm}
-                    onChange={(event) => setConfirm(event.target.value)}
-                    className={inputClass} placeholder="••••••••"
-                    autoComplete="new-password" minLength={8} required />
-                </div>
-
-                <button type="submit" className="auth-submit" disabled={loading}>
-                  {loading
-                    ? <span className="g-spinner" role="status" aria-label={t('reset.submitting')} />
-                    : <Lock size={17} strokeWidth={2.3} aria-hidden="true" />}
-                  <span>{loading ? t('reset.submitting') : t('reset.submit')}</span>
-                </button>
-              </form>
-            {done ? (
+            ) : !sent ? (
               <div className="auth-done">
                 <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
                 <h2>{t('reset.doneTitle')}</h2>
@@ -219,16 +206,19 @@ export default function ResetPassword() {
                 <span>{loading ? t('reset.submitting') : t('reset.sendCode')}</span>
               </button>
             </form>
-          ) : (
-            <form onSubmit={applyCode} className="auth-form">
+          ) : !verified ? (
+            // 2ª FASE — só código. A nova senha ainda não existe neste ecrã:
+            // o utilizador tem MESMO de ir ao email buscar o código.
+            <form onSubmit={(event) => { event.preventDefault(); confirmCode(); }} className="auth-form">
               <p className="auth-hint">{t('reset.codeSent')}</p>
               <div className="field-group">
                 <label htmlFor="rb-code" className="field-label">{t('reset.code')}</label>
                 <input
                   id="rb-code"
                   type="text"
+                  inputMode="numeric"
                   value={code}
-                  onChange={(event) => setCode(event.target.value)}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   className={inputClass}
                   placeholder="123456"
                   maxLength={6}
@@ -236,6 +226,26 @@ export default function ResetPassword() {
                 />
               </div>
 
+              <button type="submit" className="auth-submit" disabled={loading}>
+                {loading
+                  ? <span className="g-spinner" role="status" aria-label={t('reset.submitting')} />
+                  : <ShieldCheck size={17} strokeWidth={2.3} aria-hidden="true" />}
+                <span>{loading ? t('reset.submitting') : (t('reset.verifyCode') || 'Confirmar código')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={requestCode}
+                disabled={loading}
+                style={{ marginTop: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand-text)', fontSize: '0.85rem', fontWeight: 600 }}
+              >
+                {t('reset.resendCode') || 'Não recebi o código — enviar de novo'}
+              </button>
+            </form>
+          ) : (
+            // 3ª FASE — só aparece com o código confirmado.
+            <form onSubmit={applyPassword} className="auth-form">
+              <p className="auth-hint">{t('reset.codeVerified') || 'Código confirmado. Escolhe agora a nova palavra-passe.'}</p>
               <div className="field-group">
                 <label htmlFor="rb-pass" className="field-label">{t('reset.newPassword')}</label>
                 <input
@@ -246,7 +256,22 @@ export default function ResetPassword() {
                   className={inputClass}
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  minLength={8}
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              <div className="field-group">
+                <label htmlFor="rb-pass2" className="field-label">{t('reset.confirmPassword') || 'Repetir palavra-passe'}</label>
+                <input
+                  id="rb-pass2"
+                  type="password"
+                  value={confirm}
+                  onChange={(event) => setConfirm(event.target.value)}
+                  className={inputClass}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  minLength={6}
                   required
                 />
               </div>
@@ -260,8 +285,9 @@ export default function ResetPassword() {
             </form>
           )}
 
-            <div className="text-row" style={{ marginTop: 18 }}>
+            <div className="text-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
               <Link to="/login" className="text-link">{t('reset.back')}</Link>
+              <ThemeToggle compact />
             </div>
           </div>
 

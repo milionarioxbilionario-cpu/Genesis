@@ -44,7 +44,7 @@ async function computeExpected(tenantId, cashierId) {
   });
   const since = lastClosing ? lastClosing.closed_at : startOfDay;
 
-  const [cashAgg, totalAgg] = await Promise.all([
+  const [cashAgg, totalAgg, openCount] = await Promise.all([
     prisma.sale.aggregate({
       where: {
         tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed',
@@ -59,12 +59,22 @@ async function computeExpected(tenantId, cashierId) {
       },
       _sum: { total_amount: true },
     }),
+    prisma.sale.count({
+      where: {
+        tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed',
+        created_at: { gt: since },
+      },
+    }),
   ]);
 
   return {
     expectedCash: Number(cashAgg._sum.total_amount || 0),
     totalSoldToday: Number(totalAgg._sum.total_amount || 0),
     since,
+    lastClosing,
+    // Há vendas (de qualquer tipo de pagamento) depois do último fecho?
+    // É isto que define "turno aberto" em todo o sistema.
+    openSales: openCount,
   };
 }
 
@@ -107,7 +117,20 @@ router.post('/', async (req, res) => {
 
     // O esperado é calculado AQUI. Ignora-se por completo qualquer
     // `expected_amount` que o cliente tenha enviado.
-    const { expectedCash, totalSoldToday } = await computeExpected(req.user.tenantId, closingUserId);
+    const { expectedCash, totalSoldToday, lastClosing, openSales } = await computeExpected(req.user.tenantId, closingUserId);
+
+    // Turno já fechado: se já existe um fecho E não houve nenhuma venda
+    // depois dele, não há turno aberto para fechar. Sem esta guarda dava para
+    // gravar um segundo fecho do MESMO dinheiro (o esperado passava a 0 e a
+    // diferença ficava "a mais"), o que envenena os relatórios de caixa.
+    // Regra coerente com o resto do sistema: "vendas sem fecho posterior =
+    // turno aberto" (ver owner.js GET /cashiers/:id/open-shift).
+    if (lastClosing && openSales === 0) {
+      return res.status(400).json({
+        error: 'Este turno já está fechado. Não há vendas desde o último fecho.',
+        code: 'NO_OPEN_SHIFT',
+      });
+    }
 
     // Contagem abaixo do esperado = tentativa falhada, com a MESMA regra de
     // bloqueio do fecho cego (3 falhas depois do ultimo desbloqueio).
