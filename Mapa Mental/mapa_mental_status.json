@@ -1,18 +1,20 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
-  "version": "1.0",
-  "updatedAt": "2026-09-27",
+  "version": "1.1",
+  "updatedAt": "2026-09-28",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
       "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
       "role": "Ponto de entrada do backend.",
-      "notes": "O fecho de turno esta montado so com requireRole('owner')."
+      "notes": "O fecho de turno esta montado so com requireRole('owner').",
+      "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor."
     },
     "backend/src/utils/prisma.js": {
       "status": "ok",
       "summary": "Cliente Prisma unico (singleton) partilhado por todo o backend.",
-      "role": "Acesso a base de dados."
+      "role": "Acesso a base de dados.",
+      "notes": "CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada."
     },
     "backend/src/utils/dbEngine.js": {
       "status": "ok",
@@ -36,7 +38,7 @@
       "summary": "Envio de emails por SMTP Gmail (App Password). sendPasswordResetEmail entrega o codigo de 6 digitos. require('nodemailer') e lazy, dentro de try/catch.",
       "role": "Entrega do codigo de recuperacao.",
       "security": "Nunca deita o backend abaixo se faltar o nodemailer.",
-      "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao)."
+      "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao). ESTE ERA O BLOQUEIO DO 'ESQUECI A SENHA': sem SMTP o utilizador pedia o codigo e nunca recebia. Mitigado a 28/09 com DEV_SHOW_RESET_CODE=true, que devolve o codigo no proprio ecra quando nao foi entregue a ninguem (so em desenvolvimento)."
     },
     "backend/src/utils/shiftLock.js": {
       "status": "ok",
@@ -84,8 +86,9 @@
       "status": "ok",
       "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
       "role": "Autenticacao.",
-      "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes.",
-      "notes": "Le GOOGLE_CLIENT_ID de backend/.env."
+      "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
+      "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production.",
+      "bugsFixed": "28/09: (a) CAUSA-RAIZ dos 500 — faltava a coluna Tenant.onboarding_completed no Postgres, e toda a query de login faz include:{tenant:true} que traz todas as colunas de Tenant; o Prisma lancava 'The column Tenant.onboarding_completed does not exist' e o catch devolvia 500 'Erro interno no servidor'. Corrigido com prisma/fix_2026-09-28_colunas.sql. (b) O pedido de conta tambem falhava pelo mesmo motivo (tenant.create escreve essa coluna) — devolvia 201 em vez de 500. (c) CLOCK_SKEW no login Google."
     },
     "backend/src/services/passwordResetStore.js": {
       "status": "ok",
@@ -219,14 +222,14 @@
       "status": "partial",
       "summary": "Login do dono: email/senha, botao Google Identity Services e ligacao para recuperacao de senha.",
       "role": "Autenticacao.",
-      "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console."
+      "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console. CORRIGIDO 28/09: quando o backend responde code=CLOCK_SKEW, o ecra passa a explicar que a HORA DO COMPUTADOR esta errada em vez de mostrar o generico 'nao foi possivel validar a sessao do Google'."
     },
     "frontend/src/pages/ResetPassword.jsx": {
       "status": "ok",
       "summary": "Recuperacao de senha em 3 fases separadas: pedir codigo, confirmar codigo (so com 6 digitos), e so entao escolher a nova senha com repeticao. O cadeado abre no ecra depois do codigo confirmado.",
       "role": "Recuperacao de conta.",
       "security": "A fase da nova senha nem existe no DOM antes do codigo ser confirmado; o servidor continua a exigir { email, code, password } e conta tentativas. A 26/09 o bug que impedia QUALQUER reposicao foi corrigido.",
-      "notes": "Fluxo antigo sem codigo eliminado a 27/09 (rota do backend ja removida antes)."
+      "notes": "BUG GRAVE CORRIGIDO 28/09: a cadeia de ternarios do JSX tinha um ramo `: !sent ?` DUPLICADO logo a seguir ao `done ?`, e esse ramo renderizava o ecra de 'Senha redefinida com sucesso'. Como `sent` comeca a false, ao abrir /forgot-password aparecia de imediato a mensagem de sucesso — sem pedir email, sem campo de codigo e sem nunca passar pela fase 1. O ramo duplicado foi removido e a cadeia ficou done ? !sent ? !verified ? (nova senha). Agora, sem SMTP, o codigo devolvido em modo desenvolvimento (DEV_SHOW_RESET_CODE) aparece no ecra para o utilizador poder copiar."
     },
     "frontend/src/pages/CashierDashboard.jsx": {
       "status": "partial",
@@ -253,7 +256,8 @@
     "frontend/src/pages/RequestAccount.jsx": {
       "status": "ok",
       "summary": "Pedido publico de conta de loja, aprovado depois no painel de super admin.",
-      "role": "Aquisicao."
+      "role": "Aquisicao.",
+      "notes": "CORRIGIDO 28/09 (backend): o formulario nao avancava porque o POST /api/auth/request-account devolvia 500. Causa: faltava a coluna Tenant.onboarding_completed no Postgres e o tenant.create escreve-a. Validado: devolve 201 'Pedido recebido' e o registo de teste foi apagado."
     },
     "frontend/src/pages/Owner/Dashboard.jsx": {
       "status": "ok",
@@ -739,6 +743,32 @@
       "summary": "Corre os testes Playwright num contentor, para ambientes sem browser instalado.",
       "role": "Automatismo."
     },
+    "backend/prisma/fix_2026-09-28_colunas.sql": {
+      "status": "ok",
+      "summary": "MIGRACAO CIRURGICA de 28/09. Adiciona apenas o que faltava na base de dados: a coluna Tenant.onboarding_completed, as colunas Sale.daily_number e Sale.discount_amount, o indice Sale_tenant_created_idx e a tabela device_keys.",
+      "role": "Correccao da base de dados.",
+      "security": "So faz ADD COLUMN IF NOT EXISTS / CREATE TABLE IF NOT EXISTS. Nunca apaga nem altera dados.",
+      "notes": "PORQUE NAO FOI FEITO COM `prisma db push`? O push completo tentava converter varias colunas de uuid para text e o Postgres recusa: 'ERROR: cannot alter type of a column used in a policy definition / DETAIL: policy tenant_isolation_auditlog on table AuditLog depends on column tenant_id'. As politicas de RLS que isolam os dados entre empresas nao podem ser destruidas so por mudar um tipo de coluna. Antes de aplicar, foi verificada a integridade referencial (zero linhas orfas), para o ADD CONSTRAINT nao falhar a meio. Executar com: npx prisma db execute --file prisma/fix_2026-09-28_colunas.sql --schema prisma/schema.prisma"
+    },
+    "backend/scripts/gerir_contas.js": {
+      "status": "ok",
+      "summary": "Gestao de contas e senhas pela linha de comando: lista todas as contas com papel, estado e loja; permite verificar se uma senha bate certo, definir uma senha nova, gerar uma senha forte, repor a senha do .env e activar/desactivar contas. Modo --list|--verificar|--definir para automacao.",
+      "role": "Ferramenta de administracao.",
+      "security": "As senhas nunca sao escritas no ecra (mascara de asteriscos com raw mode) e o hash nunca e impresso por inteiro, so o prefixo $2b$12$. Cada alteracao e registada em AuditLog como PASSWORD_CHANGED_VIA_SCRIPT e o script volta a ler a base de dados para provar que gravou.",
+      "notes": "As senhas do Genesis estao em BCRYPT custo 12 (bcrypt.hash(password, 12)), um hash de sentido UNICO: nao existe forma de o reverter nem de listar as senhas guardadas. O script faz o unico possivel — testar, definir ou gerar. Exige no minimo 8 caracteres com minusculas, maiusculas, numeros e simbolos (o mesmo minimo que o resetPasswordSchema aceita). A listagem e instantanea; a identificacao de a que conta pertence cada senha do .env e a opcao 7 e demora alguns segundos (~50 comparacoes bcrypt), por isso NAO corre de arranque."
+    },
+    "gerir-contas.bat": {
+      "status": "ok",
+      "summary": "Atalho de Windows para o script de gestao de contas: localiza o Node.js (incluindo os locais habituais se nao estiver no PATH), avisa se faltar o backend/node_modules e arranca o menu interactivo.",
+      "role": "Infra de administracao.",
+      "notes": "Define UV_THREADPOOL_SIZE=16 para acelerar as comparacoes bcrypt. Passa os argumentos ao script, por isso tambem aceita --list, --verificar e --definir."
+    },
+    "gerir-contas.sh": {
+      "status": "ok",
+      "summary": "Atalho Linux/macOS para o script de gestao de contas: verifica o Node.js e as dependencias e arranca o menu interactivo.",
+      "role": "Infra de administracao.",
+      "notes": "Equivalente exacto ao .bat, com export UV_THREADPOOL_SIZE=16 para acelerar o bcrypt."
+    },
     "run-localhost.sh": {
       "status": "ok",
       "summary": "Launcher local: arranca backend, frontend e admin-frontend e abre o browser quando o frontend responde.",
@@ -853,7 +883,7 @@
       "status": "ok",
       "summary": "Mapa mental / rede neural 3D do sistema: cada ponto é um ficheiro, cada linha é um import real, agrupado por directoria. Roda, tem zoom, clique, pesquisa, filtro por estado/grupo e tema escuro/claro (claro = azul-piscina).",
       "role": "Ferramenta de leitura do código.",
-      "notes": "Ficheiro independente: abre com duplo-clique, sem servidor, sem internet e sem CDN. Lê os dados de mapa_mental_data.js (ao lado). Validado com 16 verificações automáticas: 144 nós, 182 ligações, 5 planeados, 2 vermelhos."
+      "notes": "Ficheiro independente: abre com duplo-clique, sem servidor, sem internet e sem CDN. Lê os dados de mapa_mental_data.js (ao lado). Validado com 16 verificações automáticas: 144 nós, 182 ligações, 5 planeados, 2 vermelhos. CORRIGIDO 28/09: a barra de estado / legenda não se escondiam e tapavam o mapa — agora escondem-se sozinhas ao fim de 3,5 s sem movimento do rato (qualquer movimento fá-las voltar), e existe um modo limpo permanente com o botão vassoura (topbar) ou a tecla H. Sai-se com o botão flutuante 'Ver controlos' ou outra vez com H. A preferência é guardada em localStorage, tal como o tema; respeita prefers-reduced-motion."
     },
     "Mapa Mental/mapa_mental_status.json": {
       "status": "ok",

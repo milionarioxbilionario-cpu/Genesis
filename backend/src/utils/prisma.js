@@ -65,11 +65,24 @@ const proxy = new Proxy({}, {
       const value = client[prop];
       return typeof value === 'function' ? value.bind(client) : value;
     }
-    // Antes de estar pronto, qualquer acesso dispara a inicializacao.
-    return (...args) => init().then((c) => {
-      const v = c[prop];
-      return typeof v === 'function' ? v.apply(c, args) : v;
+    // Antes de `ready()` resolver, devolvia-se uma FUNCAO para tudo e
+    // `prisma.user.findUnique` ficava `undefined` — rebentava com
+    // "TypeError: prisma.user.findUnique is not a function" e a rota devolvia
+    // 500. Aqui cada acesso e ADIADO: `prisma.tenant.findFirst(...)` so vai
+    // buscar o model delegate ao cliente quando a chamada acontece.
+    const lazy = (resolver) => new Proxy(function () {}, {
+      get(_t, sub) {
+        // `then` nao e uma propriedade do delegate: devolvemos undefined para
+        // o objecto NAO ser considerado thenable (senao o await entra em laco).
+        if (sub === 'then' || typeof sub === 'symbol') return undefined;
+        return lazy(() => resolver().then((v) => (v == null ? v : v[sub])));
+      },
+      apply(_t, _this, args) {
+        return resolver().then((v) => (typeof v === 'function' ? v.apply(v, args) : v));
+      }
     });
+
+    return lazy(() => init().then((c) => c[prop]));
   },
   has(_target, prop) {
     return client ? prop in client : true;

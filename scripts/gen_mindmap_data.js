@@ -43,7 +43,7 @@ const SKIP_DIRS = new Set([
 ]);
 
 const CODE_EXT = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs']);
-const ASSET_EXT = new Set(['.css', '.html', '.json', '.sql', '.prisma', '.sh', '.cmd', '.ps1', '.md', '.txt', '.yml', '.yaml']);
+const ASSET_EXT = new Set(['.css', '.html', '.json', '.sql', '.prisma', '.sh', '.cmd', '.bat', '.ps1', '.md', '.txt', '.yml', '.yaml']);
 
 const SKIP_FILES = new Set([
   'mapa_mental_data.js',
@@ -56,8 +56,11 @@ const SKIP_FILES = new Set([
   'test.sh',
   'stop.sh',
   'stop.ps1',
+  'stop.bat',
   'run-local.sh',
   'run-local.ps1',
+  'run-local.bat',
+  'run-admin.bat',
 ]);
 
 // Ficheiros de rascunho/auditoria que nunca devem poluir o mapa.

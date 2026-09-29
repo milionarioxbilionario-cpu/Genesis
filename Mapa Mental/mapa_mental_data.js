@@ -1,18 +1,18 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-09-26T23:49:31.458Z */
+   Gerado em: 2026-09-29T01:50:23.881Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-09-26T23:49:31.458Z",
+ "generatedAt": "2026-09-29T01:50:23.881Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 156,
+  "files": 160,
   "planned": 5,
-  "links": 189,
-  "lines": 24846,
+  "links": 190,
+  "lines": 25751,
   "byStatus": {
-   "ok": 135,
+   "ok": 139,
    "partial": 21,
    "broken": 0,
    "planned": 5,
@@ -20,9 +20,9 @@ window.GENESIS_MINDMAP = {
   },
   "byGroup": {
    "docs": 11,
-   "infra": 6,
+   "infra": 8,
    "admin": 8,
-   "backend-data": 41,
+   "backend-data": 43,
    "backend": 34,
    "frontend-pub": 4,
    "frontend": 54,
@@ -36,11 +36,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "dotenv",
-   "count": 19
+   "count": 20
   },
   {
    "pkg": "bcrypt",
-   "count": 18
+   "count": 19
   },
   {
    "pkg": "lucide-react",
@@ -67,11 +67,11 @@ window.GENESIS_MINDMAP = {
    "count": 7
   },
   {
-   "pkg": "node-fetch",
-   "count": 6
+   "pkg": "crypto",
+   "count": 7
   },
   {
-   "pkg": "crypto",
+   "pkg": "node-fetch",
    "count": 6
   },
   {
@@ -143,9 +143,9 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 6,
+   "nodes": 8,
    "clusters": {
-    ".": 4,
+    ".": 6,
     "backend": 1,
     "frontend": 1
    }
@@ -164,14 +164,14 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 41,
+   "nodes": 43,
    "clusters": {
     "backend/data": 1,
-    "backend/prisma": 5,
+    "backend/prisma": 6,
     "backend/prisma/migrations/20260905141627_init": 1,
     "backend/prisma/migrations/20260905200000_add_device_keys": 1,
     "backend/prisma/migrations/20260919_add_sale_discount_daily": 1,
-    "backend/scripts": 27,
+    "backend/scripts": 28,
     "backend/tests": 3,
     "backend": 1,
     "backend/prisma/migrations/postgres/0001_init": 1
@@ -249,8 +249,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 334,
-   "size": 52283,
+   "lines": 406,
+   "size": 58950,
    "externals": [
     "@prisma/client"
    ],
@@ -268,12 +268,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".html",
    "status": "ok",
    "summary": "Mapa mental / rede neural 3D do sistema: cada ponto é um ficheiro, cada linha é um import real, agrupado por directoria. Roda, tem zoom, clique, pesquisa, filtro por estado/grupo e tema escuro/claro (claro = azul-piscina).",
-   "notes": "Ficheiro independente: abre com duplo-clique, sem servidor, sem internet e sem CDN. Lê os dados de mapa_mental_data.js (ao lado). Validado com 16 verificações automáticas: 144 nós, 182 ligações, 5 planeados, 2 vermelhos.",
+   "notes": "Ficheiro independente: abre com duplo-clique, sem servidor, sem internet e sem CDN. Lê os dados de mapa_mental_data.js (ao lado). Validado com 16 verificações automáticas: 144 nós, 182 ligações, 5 planeados, 2 vermelhos. CORRIGIDO 28/09: a barra de estado / legenda não se escondiam e tapavam o mapa — agora escondem-se sozinhas ao fim de 3,5 s sem movimento do rato (qualquer movimento fá-las voltar), e existe um modo limpo permanente com o botão vassoura (topbar) ou a tecla H. Sai-se com o botão flutuante 'Ver controlos' ou outra vez com H. A preferência é guardada em localStorage, tal como o tema; respeita prefers-reduced-motion.",
    "role": "Ferramenta de leitura do código.",
    "security": "",
    "planned": false,
-   "lines": 1061,
-   "size": 44476,
+   "lines": 1149,
+   "size": 48552,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -293,8 +293,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 957,
-   "size": 43278,
+   "lines": 987,
+   "size": 49914,
    "externals": [
     "nodemailer"
    ],
@@ -603,6 +603,27 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 33,
    "size": 1426,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "backend/prisma/fix_2026-09-28_colunas.sql",
+   "path": "backend/prisma/fix_2026-09-28_colunas.sql",
+   "label": "fix_2026-09-28_colunas.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma",
+   "ext": ".sql",
+   "status": "ok",
+   "summary": "MIGRACAO CIRURGICA de 28/09. Adiciona apenas o que faltava na base de dados: a coluna Tenant.onboarding_completed, as colunas Sale.daily_number e Sale.discount_amount, o indice Sale_tenant_created_idx e a tabela device_keys.",
+   "notes": "PORQUE NAO FOI FEITO COM `prisma db push`? O push completo tentava converter varias colunas de uuid para text e o Postgres recusa: 'ERROR: cannot alter type of a column used in a policy definition / DETAIL: policy tenant_isolation_auditlog on table AuditLog depends on column tenant_id'. As politicas de RLS que isolam os dados entre empresas nao podem ser destruidas so por mudar um tipo de coluna. Antes de aplicar, foi verificada a integridade referencial (zero linhas orfas), para o ADD CONSTRAINT nao falhar a meio. Executar com: npx prisma db execute --file prisma/fix_2026-09-28_colunas.sql --schema prisma/schema.prisma",
+   "role": "Correccao da base de dados.",
+   "security": "So faz ADD COLUMN IF NOT EXISTS / CREATE TABLE IF NOT EXISTS. Nunca apaga nem altera dados.",
+   "planned": false,
+   "lines": 43,
+   "size": 2175,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1059,6 +1080,34 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/scripts/gerir_contas.js",
+   "path": "backend/scripts/gerir_contas.js",
+   "label": "gerir_contas.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Gestao de contas e senhas pela linha de comando: lista todas as contas com papel, estado e loja; permite verificar se uma senha bate certo, definir uma senha nova, gerar uma senha forte, repor a senha do .env e activar/desactivar contas. Modo --list|--verificar|--definir para automacao.",
+   "notes": "As senhas do Genesis estao em BCRYPT custo 12 (bcrypt.hash(password, 12)), um hash de sentido UNICO: nao existe forma de o reverter nem de listar as senhas guardadas. O script faz o unico possivel — testar, definir ou gerar. Exige no minimo 8 caracteres com minusculas, maiusculas, numeros e simbolos (o mesmo minimo que o resetPasswordSchema aceita). A listagem e instantanea; a identificacao de a que conta pertence cada senha do .env e a opcao 7 e demora alguns segundos (~50 comparacoes bcrypt), por isso NAO corre de arranque.",
+   "role": "Ferramenta de administracao.",
+   "security": "As senhas nunca sao escritas no ecra (mascara de asteriscos com raw mode) e o hash nunca e impresso por inteiro, so o prefixo $2b$12$. Cada alteracao e registada em AuditLog como PASSWORD_CHANGED_VIA_SCRIPT e o script volta a ler a base de dados para provar que gravou.",
+   "planned": false,
+   "lines": 459,
+   "size": 20113,
+   "externals": [
+    "dotenv",
+    "crypto",
+    "bcrypt",
+    "readline"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "backend/scripts/insert_product_7777.js",
    "path": "backend/scripts/insert_product_7777.js",
    "label": "insert_product_7777.js",
@@ -1439,10 +1488,10 @@ window.GENESIS_MINDMAP = {
    "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
    "notes": "O fecho de turno esta montado so com requireRole('owner').",
    "role": "Ponto de entrada do backend.",
-   "security": "",
+   "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 240,
-   "size": 8897,
+   "lines": 244,
+   "size": 9173,
    "externals": [
     "dotenv",
     "express",
@@ -1652,12 +1701,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
-   "notes": "Le GOOGLE_CLIENT_ID de backend/.env.",
+   "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production.",
    "role": "Autenticacao.",
-   "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes.",
+   "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 533,
-   "size": 18240,
+   "lines": 590,
+   "size": 21464,
    "externals": [
     "express",
     "jsonwebtoken",
@@ -2207,7 +2256,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "partial",
    "summary": "Envio de emails por SMTP Gmail (App Password). sendPasswordResetEmail entrega o codigo de 6 digitos. require('nodemailer') e lazy, dentro de try/catch.",
-   "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao).",
+   "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao). ESTE ERA O BLOQUEIO DO 'ESQUECI A SENHA': sem SMTP o utilizador pedia o codigo e nunca recebia. Mitigado a 28/09 com DEV_SHOW_RESET_CODE=true, que devolve o codigo no proprio ecra quando nao foi entregue a ninguem (so em desenvolvimento).",
    "role": "Entrega do codigo de recuperacao.",
    "security": "Nunca deita o backend abaixo se faltar o nodemailer.",
    "planned": false,
@@ -2257,12 +2306,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Cliente Prisma unico (singleton) partilhado por todo o backend.",
-   "notes": "",
+   "notes": "CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada.",
    "role": "Acesso a base de dados.",
    "security": "",
    "planned": false,
-   "lines": 80,
-   "size": 2933,
+   "lines": 93,
+   "size": 3676,
    "externals": [
     "@prisma/client"
    ],
@@ -2275,6 +2324,7 @@ window.GENESIS_MINDMAP = {
     "backend/scripts/create_tenant_7777.js",
     "backend/scripts/create_test_tenant.js",
     "backend/scripts/ensure_device_keys.js",
+    "backend/scripts/gerir_contas.js",
     "backend/scripts/insert_product_7777.js",
     "backend/scripts/seed_demo.js",
     "backend/scripts/shift_closing_e2e.js",
@@ -2296,7 +2346,7 @@ window.GENESIS_MINDMAP = {
     "backend/tests/device_key_service.test.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 25,
+   "inbound": 26,
    "outbound": 1
   },
   {
@@ -3209,12 +3259,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "partial",
    "summary": "Login do dono: email/senha, botao Google Identity Services e ligacao para recuperacao de senha.",
-   "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console.",
+   "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console. CORRIGIDO 28/09: quando o backend responde code=CLOCK_SKEW, o ecra passa a explicar que a HORA DO COMPUTADOR esta errada em vez de mostrar o generico 'nao foi possivel validar a sessao do Google'.",
    "role": "Autenticacao.",
    "security": "",
    "planned": false,
-   "lines": 348,
-   "size": 14259,
+   "lines": 357,
+   "size": 14844,
    "externals": [
     "react",
     "react-router-dom",
@@ -3655,7 +3705,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Pedido publico de conta de loja, aprovado depois no painel de super admin.",
-   "notes": "",
+   "notes": "CORRIGIDO 28/09 (backend): o formulario nao avancava porque o POST /api/auth/request-account devolvia 500. Causa: faltava a coluna Tenant.onboarding_completed no Postgres e o tenant.create escreve-a. Validado: devolve 201 'Pedido recebido' e o registo de teste foi apagado.",
    "role": "Aquisicao.",
    "security": "",
    "planned": false,
@@ -3682,12 +3732,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Recuperacao de senha em 3 fases separadas: pedir codigo, confirmar codigo (so com 6 digitos), e so entao escolher a nova senha com repeticao. O cadeado abre no ecra depois do codigo confirmado.",
-   "notes": "Fluxo antigo sem codigo eliminado a 27/09 (rota do backend ja removida antes).",
+   "notes": "BUG GRAVE CORRIGIDO 28/09: a cadeia de ternarios do JSX tinha um ramo `: !sent ?` DUPLICADO logo a seguir ao `done ?`, e esse ramo renderizava o ecra de 'Senha redefinida com sucesso'. Como `sent` comeca a false, ao abrir /forgot-password aparecia de imediato a mensagem de sucesso — sem pedir email, sem campo de codigo e sem nunca passar pela fase 1. O ramo duplicado foi removido e a cadeia ficou done ? !sent ? !verified ? (nova senha). Agora, sem SMTP, o codigo devolvido em modo desenvolvimento (DEV_SHOW_RESET_CODE) aparece no ecra para o utilizador poder copiar.",
    "role": "Recuperacao de conta.",
    "security": "A fase da nova senha nem existe no DOM antes do codigo ser confirmado; o servidor continua a exigir { email, code, password } e conta tentativas. A 26/09 o bug que impedia QUALQUER reposicao foi corrigido.",
    "planned": false,
-   "lines": 303,
-   "size": 12886,
+   "lines": 319,
+   "size": 13836,
    "externals": [
     "react",
     "react-router-dom",
@@ -4184,6 +4234,48 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "gerir-contas.bat",
+   "path": "gerir-contas.bat",
+   "label": "gerir-contas.bat",
+   "group": "infra",
+   "dir": ".",
+   "ext": ".bat",
+   "status": "ok",
+   "summary": "Atalho de Windows para o script de gestao de contas: localiza o Node.js (incluindo os locais habituais se nao estiver no PATH), avisa se faltar o backend/node_modules e arranca o menu interactivo.",
+   "notes": "Define UV_THREADPOOL_SIZE=16 para acelerar as comparacoes bcrypt. Passa os argumentos ao script, por isso tambem aceita --list, --verificar e --definir.",
+   "role": "Infra de administracao.",
+   "security": "",
+   "planned": false,
+   "lines": 70,
+   "size": 2163,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "gerir-contas.sh",
+   "path": "gerir-contas.sh",
+   "label": "gerir-contas.sh",
+   "group": "infra",
+   "dir": ".",
+   "ext": ".sh",
+   "status": "ok",
+   "summary": "Atalho Linux/macOS para o script de gestao de contas: verifica o Node.js e as dependencias e arranca o menu interactivo.",
+   "notes": "Equivalente exacto ao .bat, com export UV_THREADPOOL_SIZE=16 para acelerar o bcrypt.",
+   "role": "Infra de administracao.",
+   "security": "",
+   "planned": false,
+   "lines": 41,
+   "size": 1241,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "plan.md",
    "path": "plan.md",
    "label": "plan.md",
@@ -4305,8 +4397,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ferramenta de documentacao.",
    "security": "",
    "planned": false,
-   "lines": 394,
-   "size": 15114,
+   "lines": 397,
+   "size": 15177,
    "externals": [
     "fs",
     "path"
@@ -4498,6 +4590,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/scripts/ensure_device_keys.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/scripts/gerir_contas.js",
    "target": "backend/src/utils/prisma.js"
   },
   {

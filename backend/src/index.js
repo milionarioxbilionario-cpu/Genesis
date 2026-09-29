@@ -216,10 +216,14 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);               //  imprime o stack no terminal
+  // Se a resposta ja foi iniciada (ex.: streaming ou headers ja enviados),
+  // nao vale a pena tentar escrever outro 500 — delegamos ao Express fechar.
+  if (res.headersSent) return next(err);
+  console.error(`[erro] ${req.method} ${req.originalUrl}`, err.stack || err);
   res.status(500).json({
-    error: 'Internal Server Error',
-    details: err.message || err.stack   //  devolve detalhes opcionalmente
+    error: 'Internal Server Error'
+    // NOTA: `details` deixou de ser devolvido ao cliente. Enviava a mensagem
+    // interna (nomes de tabelas/colunas, host da BD) a qualquer pessoa.
   });
 });
 

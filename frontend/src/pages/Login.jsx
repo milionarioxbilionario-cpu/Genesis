@@ -131,6 +131,15 @@ const Login = ({ mode = 'owner' }) => {
         // "pedir conta". Nenhuma conta é criada em silêncio.
         setError(messageOf(err, t('login.googleNotRegistered')));
         setHint('request-account');
+      } else if (code === 'CLOCK_SKEW') {
+        // O servidor recusou o token porque a HORA deste computador está errada
+        // (o Google emite o token com o "agora" verdadeiro). Mostramos a
+        // mensagem do backend, que diz o desvio medido — em vez do genérico
+        // "não foi possível validar a sessão do Google".
+        setError(messageOf(err,
+          'A hora deste computador está errada e por isso o login com Google é recusado. '
+          + 'Vá a Definições → Hora e idioma → ative "Definir hora automaticamente" e tente de novo.'
+        ));
       } else {
         setError(messageOf(err, t('login.googleNotRegistered')));
       }

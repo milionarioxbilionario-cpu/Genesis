@@ -6,7 +6,7 @@ Fonte única de verdade do estado real do repositório. Actualizado em cada sess
 
 ## Parte A — ESTADO ACTUAL
 
-Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, segredos e separação do admin)
+Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / reset de senha / pedido de conta + ferramenta de gestão de senhas)
 
 ### Identidade
 | Item | Valor | Estado |
@@ -330,4 +330,76 @@ Actualizado: 18 de Setembro de 2026 (Fases 0.4-H, 0-B.1 e 0-B.2 — expurgo, seg
 - Prova/teste realizado: `stop.ps1` executado com sucesso em PowerShell; `run-local.ps1` e `run-local.bat` parametrizados e testados com `-Admin` / `--admin`. Corrigido erro de parâmetro duplicado `$admin` (PowerShell é case-insensitive).
 - Resultado: funcionou perfeitamente.
 
+
+
+### [2026-09-28] — Correcção dos erros de login, Google, reset de senha e pedido de conta
+
+**Sintomas reportados:** login com credenciais certas dava "Erro interno no servidor" (500) no painel do dono e no de super admin; o login Google morria a meio; o "Esqueci a senha" dizia logo que a senha estava redefinida, sem pedir código; o "Pedir conta" não avançava.
+
+#### 1. Causa-raiz única — faltava uma coluna na base de dados
+
+`Tenant.onboarding_completed` **não existia no Postgres**. Toda a query de login faz `include: { tenant: true }`, que traz **todas** as colunas de `Tenant`, e o Prisma lançava `The column Tenant.onboarding_completed does not exist in the current database`. O `catch` da rota engolia o erro e devolvia `500 "Erro interno no servidor"` — com a senha certa ou errada. O mesmo motivo fazia o `POST /request-account` falhar (o `tenant.create` escreve essa coluna).
+
+- Correcção: `backend/prisma/fix_2026-09-28_colunas.sql`, executado com `npx prisma db execute`.
+- **Porque não `prisma db push`?** O push completo tentava converter várias colunas de `uuid` para `text` e o Postgres recusa: `ERROR: cannot alter type of a column used in a policy definition / DETAIL: policy tenant_isolation_auditlog on table AuditLog`. As **16 políticas de RLS** que isolam os dados entre empresas não podem ser destruídas só para mudar um tipo de coluna. Verificou-se primeiro a integridade referencial (**zero linhas órfãs**) e depois só se adicionou o que faltava.
+- Acrescenta também: `Sale.daily_number`, `Sale.discount_amount`, índice `Sale_tenant_created_idx` e a tabela `device_keys`.
+
+#### 2. Erros de código corrigidos
+
+| Ficheiro | O que estava mal |
+|---|---|
+| `backend/src/routes/auth.js` | Todos os `catch` que devolviam 500 **não registavam o erro** — era impossível diagnosticar. Agora cada um faz `console.error` com o email. |
+| `backend/src/routes/auth.js` | `bcrypt.compare(pass, null)` em conta sem `password_hash` lançava TypeError → 500. Agora devolve **401 `NO_PASSWORD`**. |
+| `backend/src/routes/auth.js` | Google: `NOT_YET_VALID` passou a **`CLOCK_SKEW`**, com a medida do desvio. |
+| `backend/src/routes/auth.js` | `forgot-password` devolve o código **no ecrã** quando não há SMTP (`DEV_SHOW_RESET_CODE`, só em dev e só se não foi entregue). |
+| `backend/src/utils/prisma.js` | O proxy preguiçoso devolvia uma **função** para tudo antes de `ready()` resolver → `prisma.user.findUnique` ficava `undefined` → *TypeError* → 500 em qualquer rota que tocasse na BD cedo. Agora é um `Proxy` recursivo. |
+| `backend/src/index.js` | O handler global devolvia **`details` ao cliente** (nomes de tabelas/colunas e host da BD). Removido; ganhou `headersSent` e log com a stack. |
+| `frontend/src/pages/ResetPassword.jsx` | **Ramo `: !sent ?` duplicado** logo a seguir a `done ?` — como `sent` começa a `false`, ao abrir `/forgot-password` aparecia de imediato "Senha redefinida com sucesso", sem pedir email nem mostrar o campo do código. |
+| `frontend/src/pages/Login.jsx` | Com `CLOCK_SKEW` mostrava o genérico "não foi possível validar a sessão". Agora explica que **a hora do computador** está errada. |
+
+
+#### 3. Relógio do computador — causa do login Google
+
+```
+LOCAL  = 2026-09-27T21:49Z   GOOGLE = 2026-09-28T06:08Z   DESVIO = -29 893 s (≈ 8h18min)
+```
+
+O Google emite o `nbf`/`iat` com o "agora" verdadeiro; com o relógio 8 horas atrás o token parecia estar no futuro e era rejeitado — era exactamente a linha `[google] token recusado: NOT_YET_VALID` do log. **O código estava correcto, o relógio é que estava errado.** A tolerância mantém-se em 60 s (aumentá-la abriria uma janela de replay).
+
+- **Acção pendente do fundador:** `w32tm /resync` em PowerShell de administrador; fuso `Africa/Maputo`.
+
+#### 4. Ferramenta nova de gestão de senhas
+
+`backend/scripts/gerir_contas.js` + `gerir-contas.bat` (Windows) + `gerir-contas.sh` (Linux/macOS).
+
+As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash de **sentido único** — não há como as listar nem reverter. O script faz o único possível: **listar as contas**, **verificar** se uma senha bate certo, **definir** uma nova, **gerar** uma forte, **repor** a do `.env` e **activar/desactivar** contas. Senhas sempre mascaradas, hash nunca impresso por inteiro, cada alteração registada em `AuditLog` como `PASSWORD_CHANGED_VIA_SCRIPT` e verificada relendo a BD.
+
+#### 5. Validação (tudo testado)
+
+| Verificação | Antes | Depois |
+|---|---|---|
+| `POST /api/auth/login` (senha errada) | **500** | **401** "Credenciais inválidas" |
+| `POST /api/auth/login` (senha certa) | **500** | **HTTP 200** com token JWT |
+| `POST /api/auth/request-account` | **500** (não avançava) | **201** "Pedido recebido" |
+| `POST /api/auth/forgot-password` | 200 mas sem código em lado nenhum | 200 + código no ecrã |
+| `POST /api/auth/reset-password` (código errado) | 400 | **400** correcto |
+| `POST /api/auth/reset-password-instant` | — | **404** (porta dos fundos fechada) |
+| `GET /api/auth/me` sem sessão | 401 | **401** |
+| `node --check` nos ficheiros backend | — | exit 0 |
+| esbuild nos 3 JSX alterados | — | compilam |
+
+#### LIMITE HONESTO DESTA VEZ
+
+- **Não reiniciei o backend.** O processo (PID 4304) é filho do VS Code e o `taskkill` devolve *Access is denied* sem privilégios de administrador. A correcção da **base de dados** já está activa (o login já devolve 401 em vez de 500), mas o **código novo** só entra no próximo arranque: `.\run-local.ps1`.
+- **Não corri `w32tm /resync`** — exige PowerShell elevado. O login Google continua bloqueado até o fundador o fazer.
+- **Não configurei o SMTP** (`MAIL_USER`/`MAIL_PASS` continuam vazios). O `DEV_SHOW_RESET_CODE` é uma mitigação de desenvolvimento, não substituto do email em produção.
+- **Não consegui reiniciar o backend** por falta de permissões sobre o PID 4304 (filho do VS Code). A correcção da **base de dados** já está activa, mas o **código novo** só entra no próximo arranque: `.\run-local.ps1`.
+- A barra de estado do mapa 3D **foi resolvida depois**: auto-esconde ao fim de 3,5 s e há modo limpo permanente (tecla H).
+
+#### FALTA AINDA
+
+- Reiniciar o backend (`.\run-local.ps1`) para activar o código novo.
+- Sincronizar `admin@genesis.co.mz` e `cashier@genesis.local` — o `.env` não correspondia a nenhuma delas em base de dados.
+- Remover `DEV_SHOW_RESET_CODE` assim que o SMTP estiver configurado.
+- Rodar as chaves do `.env` antes de qualquer deploy (`JWT_SECRET` de dev, chaves Supabase e Twilio em texto simples).
 

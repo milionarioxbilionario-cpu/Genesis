@@ -143,13 +143,48 @@ html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2
 }
 .warn.show{display:block}
 .warn code{font-family:ui-monospace,Consolas,monospace}
+
+/* --------------------- BARRA AUTO-ESCONDIDA / MODO LIMPO ------------------
+   O pedido do fundador: poder ver o mapa livremente, sem a barra de estado a
+   tapar. Duas coisas resolvem:
+     1. idle   -> sem movimento do rato durante 3,5 s, a barra, a legenda e a
+                  dica inferior recolhem-se sozinhas; qualquer movimento
+                  faz-las voltar.
+     2. clean  -> modo limpo permanente: fica SO o mapa. Sai-se com o botao
+                  flutuante de restaurar ou com a tecla H.
+   O painel de detalhes acompanha o modo limpo (continua a abrir-se
+   normalmente fora dele).
+---------------------------------------------------------------------------- */
+.topbar,.legend,.hint{transition:opacity .35s ease,transform .35s ease}
+body.idle .topbar{opacity:0;pointer-events:none;transform:translateY(-10px)}
+body.idle .legend{opacity:0;pointer-events:none;transform:translateY(10px)}
+body.idle .hint{opacity:0;pointer-events:none}
+body.clean .topbar,
+body.clean .legend,
+body.clean .hint,
+body.clean .warn{opacity:0;pointer-events:none}
+body.clean .panel{transform:translateX(112%)}
+body.clean .tip{opacity:0}
+.restore{
+  position:fixed;z-index:12;right:14px;bottom:14px;display:none;
+  align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink);border-radius:999px;padding:9px 14px;cursor:pointer;
+  backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:13px;
+}
+body.clean .restore{display:inline-flex}
+.restore:hover{border-color:var(--accent);box-shadow:var(--glow)}
+
 @media (max-width:900px){
   .search{min-width:120px}
   .panel{width:min(92vw,372px)}
   .hint{display:none}
   .stat.hide-sm{display:none}
 }
-@media (prefers-reduced-motion:reduce){ .btn{transition:none} .panel{transition:none} }
+@media (prefers-reduced-motion:reduce){
+  .btn{transition:none}
+  .panel{transition:none}
+  .topbar,.legend,.hint{transition:none}
+}
 </style>
 </head>
 <body>
@@ -175,7 +210,8 @@ html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2
   <button class="btn hide-sm" id="bRotate" title="Rodar automaticamente">⟳ <span id="rotLbl">Rodar</span></button>
   <button class="btn hide-sm" id="bLabels">🏷 Nomes</button>
   <button class="btn hide-sm" id="bReset">⤾ Recentrar</button>
-  <button class="btn icon" id="bFull" title="Ecrã inteiro">⛶</button>
+  <button class="btn icon" id="bFull" title="Ecrã inteiro (F11 ou o botão fecho tudo e fica só o mapa)">⛶</button>
+  <button class="btn icon" id="bClean" title="Modo limpo: esconder a barra, a legenda e a dica (tecla H)">🧹</button>
   <button class="btn icon" id="bTheme" title="Alternar modo escuro / claro (claro = azul-piscina)">🌙</button>
 </header>
 
@@ -185,8 +221,10 @@ html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2
 <div class="tip" id="tip"></div>
 <div class="hint">
   <kbd>arrastar</kbd> rodar · <kbd>roda</kbd> zoom · <kbd>shift+arrastar</kbd> mover ·
-  <kbd>clique</kbd> detalhes · <kbd>duplo clique</kbd> focar vizinhos · <kbd>Esc</kbd> limpar
+  <kbd>clique</kbd> detalhes · <kbd>duplo clique</kbd> focar vizinhos · <kbd>Esc</kbd> limpar ·
+  <kbd>H</kbd> só o mapa
 </div>
+<button class="restore" id="bRestore" title="Mostrar a barra e a legenda (tecla H)">🧹 Ver controlos</button>
 
 <!-- DADOS: ficheiro ao lado (gerado por scripts/gen_mindmap_data.js) -->
 <script src="mapa_mental_data.js"></script>
@@ -722,6 +760,11 @@ html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2
   window.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { selected = null; matched = null; $('q').value = ''; query = ''; renderPanel(); renderLegend(); }
     if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
+    // H = so o mapa (esconder/mostrar a barra, a legenda e a dica).
+    if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement !== $('q')) {
+      e.preventDefault();
+      setClean(!cleanMode, true);
+    }
   });
 
   /* ------------------- 6. Tooltip, painel, legenda, stats ---------------- */
@@ -991,6 +1034,51 @@ html[data-theme="light"] .mark{background:linear-gradient(140deg,#22d3ee,#0891b2
     renderPanel();
   }
   bTheme.addEventListener('click', function () { setTheme(theme === 'dark' ? 'light' : 'dark', true); });
+
+  /* ---------------- Modo limpo e barra auto-escondida ----------------------
+     Duas formas de ver o mapa livremente, sem a barra de estado a tapar:
+
+       - sem mexer no rato 3,5 s  -> barra, legenda e dica recolhem-se sozinhas
+         (qualquer movimento faz-las voltar);
+       - tecla H ou o botao 🧹     -> modo limpo permanente, fica so o mapa;
+         sai-se com o botao flutuante "Ver controlos" ou outra vez com H.
+
+     O estado e guardado em localStorage, tal como o tema.                       */
+  var cleanMode = false;
+  var idleTimer = null;
+  var IDLE_MS = 3500;
+
+  function setClean(v, save) {
+    cleanMode = !!v;
+    document.body.classList.toggle('clean', cleanMode);
+    // Em modo limpo a barra NAO volta por acaso ao mexer o rato: so quando o
+    // utilizador pedir. Fora dele, o idle é que manda.
+    if (cleanMode) document.body.classList.remove('idle');
+    $('bClean').classList.toggle('on', cleanMode);
+    if (save) { try { localStorage.setItem('genesis.map.clean', cleanMode ? '1' : '0'); } catch (e) { /* ignorar */ } }
+    if (cleanMode) hideTip();
+  }
+
+  function wake() {
+    document.body.classList.remove('idle');
+    if (idleTimer) clearTimeout(idleTimer);
+    if (cleanMode) return;
+    idleTimer = setTimeout(function () {
+      document.body.classList.add('idle');
+      hideTip();
+    }, IDLE_MS);
+  }
+
+  $('bClean').addEventListener('click', function () { setClean(!cleanMode, true); });
+  $('bRestore').addEventListener('click', function () { setClean(false, true); });
+
+  ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'touchmove'].forEach(function (ev) {
+    window.addEventListener(ev, wake, { passive: true });
+  });
+
+  try { setClean(localStorage.getItem('genesis.map.clean') === '1', false); } catch (e) { setClean(false, false); }
+  wake();
+
   /* --------------------------- 8. Arranque ------------------------------- */
   function resize() {
     DPR = Math.min(2, window.devicePixelRatio || 1);

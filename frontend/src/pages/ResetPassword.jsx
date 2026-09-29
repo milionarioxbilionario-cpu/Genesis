@@ -43,6 +43,9 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false);
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
+  // Só é preenchido em desenvolvimento sem SMTP configurado (ver .env
+  // DEV_SHOW_RESET_CODE). Com email a funcionar fica sempre vazio.
+  const [devCode, setDevCode] = useState('');
 
   // Verificar o código de 6 dígitos recebido por email.
   // Solicitar envio de codigo de 6 digitos (email com fallback whatsapp)
@@ -50,10 +53,17 @@ export default function ResetPassword() {
     event.preventDefault();
     setLoading(true);
     setError('');
+    setDevCode('');
     try {
-      await api.post('/api/auth/forgot-password', { email });
+      const resposta = await api.post('/api/auth/forgot-password', { email });
       setSent(true);
       setVerified(false);
+      // Sem SMTP configurado, o backend devolve o código no próprio ecrã em vez
+      // de o mandar para o email. Sem isto o fluxo ficava travado: pedia-se o
+      // codigo e nunca aparecia onde o utilizador o pudesse copiar.
+      if (resposta && resposta.data && resposta.data.devCode) {
+        setDevCode(String(resposta.data.devCode));
+      }
     } catch (err) {
       setError(messageOf(err, t('reset.invalid') || 'Erro ao solicitar código de recuperação.'));
     } finally {
@@ -172,45 +182,51 @@ export default function ResetPassword() {
                 </Link>
               </div>
             ) : !sent ? (
-              <div className="auth-done">
-                <div className="auth-done-icon"><ShieldCheck size={22} strokeWidth={2.4} aria-hidden="true" /></div>
-                <h2>{t('reset.doneTitle')}</h2>
-                <p>{t('reset.doneLead')}</p>
-                <Link to="/login" className="auth-submit">
-                  <span>{t('reset.goLogin')}</span>
-                  <ArrowRight size={17} strokeWidth={2.3} aria-hidden="true" />
-                </Link>
-              </div>
-            ) : !sent ? (
+              // 1ª FASE — pedir o email. Só passamos à fase do código DEPOIS
+              // de o backend responder ao /forgot-password. Era aqui que estava
+              // o bug reportado: um ramo `: !sent ?` duplicado renderizava o
+              // ecrã "Senha redefinida" logo à abertura, sem pedir o email e
+              // sem nunca existir o campo do código.
               <form onSubmit={requestCode} className="auth-form">
                 <p className="auth-hint">{t('reset.fallbackLead')}</p>
 
-              <div className="field-group">
-                <label htmlFor="rb-email" className="field-label">{t('reset.email')}</label>
-                <input
-                  id="rb-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className={inputClass}
-                  placeholder={t('reset.emailPlaceholder')}
-                  autoComplete="username"
-                  required
-                />
-              </div>
+                <div className="field-group">
+                  <label htmlFor="rb-email" className="field-label">{t('reset.email')}</label>
+                  <input
+                    id="rb-email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className={inputClass}
+                    placeholder={t('reset.emailPlaceholder')}
+                    autoComplete="username"
+                    required
+                  />
+                </div>
 
-              <button type="submit" className="auth-submit" disabled={loading}>
-                {loading
-                  ? <span className="g-spinner" role="status" aria-label={t('reset.submitting')} />
-                  : <KeyRound size={17} strokeWidth={2.3} aria-hidden="true" />}
-                <span>{loading ? t('reset.submitting') : t('reset.sendCode')}</span>
-              </button>
-            </form>
+                <button type="submit" className="auth-submit" disabled={loading}>
+                  {loading
+                    ? <span className="g-spinner" role="status" aria-label={t('reset.submitting')} />
+                    : <KeyRound size={17} strokeWidth={2.3} aria-hidden="true" />}
+                  <span>{loading ? t('reset.submitting') : t('reset.sendCode')}</span>
+                </button>
+              </form>
           ) : !verified ? (
             // 2ª FASE — só código. A nova senha ainda não existe neste ecrã:
             // o utilizador tem MESMO de ir ao email buscar o código.
             <form onSubmit={(event) => { event.preventDefault(); confirmCode(); }} className="auth-form">
               <p className="auth-hint">{t('reset.codeSent')}</p>
+
+              {devCode && (
+                <div className="auth-hint" style={{ marginBottom: 12 }}>
+                  <strong>Email ainda não configurado.</strong> O teu código é{' '}
+                  <code style={{ fontSize: '1.25rem', letterSpacing: '0.3rem', fontWeight: 800, color: 'var(--brand)' }}>
+                    {devCode}
+                  </code>
+                  . (Isto aparece só em desenvolvimento.)
+                </div>
+              )}
+
               <div className="field-group">
                 <label htmlFor="rb-code" className="field-label">{t('reset.code')}</label>
                 <input
