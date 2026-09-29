@@ -188,8 +188,18 @@ async function verifyGoogleCredential(credential) {
     throw err;
   }
   if (payload.nbf && payload.nbf > now + 60) {
-    const err = new Error('Token ainda nao valido');
-    err.code = 'NOT_YET_VALID';
+    // O Google emite iat/nbf com o "agora" verdadeiro. Se o token parece estar
+    // no futuro, em 99% dos casos o relogio da MAQUINA esta errado (ex.: atras
+    // 8 horas por bateria CMOS) e nao o token. A tolerancia de 60 s acima e o
+    // maximo aceitavel: aumentar muito abriria uma janela de replay.
+    const skew = payload.nbf - now;
+    const err = new Error(
+      `Token ainda nao valido: o relogio do sistema parece estar ` +
+      `${Math.round(skew / 60)} min atrasado. Sincroniza a hora do computador ` +
+      `(w32tm /resync) e tenta de novo.`
+    );
+    err.code = 'CLOCK_SKEW';
+    err.skewSeconds = skew;
     throw err;
   }
   if (!payload.email || payload.email_verified !== true) {
@@ -262,6 +272,17 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
+    // `bcrypt.compare(pass, null)` LANÇA TypeError. Uma conta criada pelo
+    // Google (ou aprovada sem senha) tem password_hash NULL, e o catch de
+    // baixo devolvia 500 "Erro interno no servidor" ao utilizador — que é
+    // exactamente o sintoma reportado. Aqui dizemos o que se passa.
+    if (!user.password_hash) {
+      return res.status(401).json({
+        error: 'Esta conta ainda não tem palavra-passe. Entra com Google ou usa "Esqueci a senha" para definires uma.',
+        code: 'NO_PASSWORD'
+      });
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
@@ -294,6 +315,9 @@ router.post('/login', loginLimiter, async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });
     }
+    // A resposta ao cliente continua genérica, mas o erro REAL fica no log.
+    // Sem isto, um 500 era impossível de diagnosticar.
+    console.error('[auth:login] falha para', normalizedEmail || '(email ausente)', '->', err);
     return res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
@@ -312,7 +336,17 @@ router.post('/google', async (req, res) => {
           code: 'GOOGLE_NOT_CONFIGURED'
         });
       }
-      console.warn('[google] token recusado:', err.code || err.message);
+      // Relógio da máquina errado: o token do Google é legítimo, mas o
+      // servidor acha que foi emitido no futuro. Devolvemos a causa real em
+      // vez de um "não foi possível validar" genérico que não ajuda ninguém.
+      if (err.code === 'CLOCK_SKEW') {
+        console.error('[google] token recusado por desvio do relogio:', err.skewSeconds, 's ->', err.message);
+        return res.status(401).json({
+          error: err.message,
+          code: 'CLOCK_SKEW'
+        });
+      }
+      console.warn('[google] token recusado:', err.code || err.message, err.stack || '');
       return res.status(401).json({
         error: 'Não foi possível validar a sessão do Google.',
         code: 'GOOGLE_INVALID'
@@ -366,6 +400,7 @@ router.post('/google', async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });
     }
+    console.error('[auth:google] falha apos validar o token ->', err);
     return res.status(500).json({ error: 'Erro ao iniciar sessão com Google' });
   }
 });
@@ -395,9 +430,11 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
     // Prioridade 2: WhatsApp (se o utilizador tiver telefone configurado).
     // Em desenvolvimento (nao prod): regista no log para viabilizar testes offline.
     const isProduction = process.env.NODE_ENV === 'production';
+    let entregue = false;
     try {
       const mailResult = await sendPasswordResetEmail(normalizedEmail, code);
       if (mailResult.ok) {
+        entregue = true;
         console.info('[reset] Codigo de recuperacao enviado por email para', normalizedEmail);
       } else if (user.phone) {
         const waResult = await sendWhatsAppAlert({
@@ -405,10 +442,14 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
           message: `Genesis: codigo de recuperacao ${code}. Valido 15 minutos.`
         });
         if (waResult.ok) {
+          entregue = true;
           console.info('[reset] Codigo de recuperacao enviado por WhatsApp para', user.phone);
         }
       }
 
+      if (!entregue) {
+        console.warn('[reset] codigo NAO entregue (sem SMTP/WhatsApp configurado).');
+      }
       if (!isProduction) {
         console.info('[reset] Codigo de recuperacao (modo teste local) para', normalizedEmail, '->', code);
       }
@@ -416,11 +457,21 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
       console.error('Falha ao entregar codigo de recuperacao', err.message || err);
     }
 
+    // O SMTP ainda nao esta configurado (MAIL_USER/MAIL_PASS vazios), logo o
+    // utilizador NUNCA recebe o codigo e o fluxo fica parado no ecra
+    // "introduza o codigo" sem forma de o obter. Com DEV_SHOW_RESET_CODE=true
+    // devolvemos o codigo no proprio ecra — SO em desenvolvimento e so quando
+    // o codigo nao foi entregue a ninguem. Em producao isto nunca corre.
+    if (!entregue && process.env.DEV_SHOW_RESET_CODE === 'true' && !isProduction) {
+      return res.json({ ...genericResponse, devCode: code, devOnly: true });
+    }
+
     return res.json(genericResponse);
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });
     }
+    console.error('[auth:forgot-password] falha para', normalizedEmail || '(email ausente)', '->', err);
     return res.status(500).json({ error: 'Não foi possível processar a recuperação de senha.' });
   }
 });
@@ -448,6 +499,7 @@ router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });
     }
+    console.error('[auth:reset-password] falha para', normalizedEmail || '(email ausente)', '->', err);
     return res.status(500).json({ error: 'Não foi possível redefinir a senha.' });
   }
 });
@@ -492,6 +544,7 @@ router.get('/me', async (req, res) => {
 
     return res.json({ user });
   } catch (err) {
+    console.error('[auth:me] falha ao validar a sessao ->', err);
     return res.status(500).json({ error: 'Erro interno' });
   }
 });
@@ -521,6 +574,10 @@ router.post('/request-account', async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors });
     }
+    // Este era o "Erro ao processar pedido" mudo que impedia o fundador de ver
+    // o pedido de conta. O `tenant.create` falhava (coluna em falta no Postgres
+    // ou constraint) e o erro real nunca chegava ao log nem ao ecrã.
+    console.error('[auth:request-account] falha ao criar o pedido ->', err);
     return res.status(500).json({ error: 'Erro ao processar pedido' });
   }
 });

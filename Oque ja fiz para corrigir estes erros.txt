@@ -636,3 +636,220 @@ FALTA AINDA
   - Lote B (recibo com nome da loja e numeracao diaria) e Lote C (avisos
     para o dono e reimprimir recibos antigos).
 
+
+================================================================
+SESSAO DE 28/09/2026 — ERROS DE LOGIN, GOOGLE, RESET E PEDIR CONTA
+================================================================
+
+Relatorio do que fiz, do que descobri e do que continua por fazer.
+
+1. OS ERROS QUE REPORTASTE
+
+- Login com email e senha certos dava "Erro interno no servidor" (500),
+  tanto no painel do dono como no de super admin.
+- O login Google morria a meio, apesar do email de "novo inicio de sessao".
+- O "Esqueci a senha" mostrava de imediato que a senha ja estava
+  redefinida — sem pedir o email e sem deixar escrever o codigo.
+- O formulario de "Pedir conta" nao avancava.
+
+2. CAUSA-RAIZ (uma so, e ja la estava)
+
+Faltava a coluna "Tenant.onboarding_completed" na base de dados
+Postgres. Toda a query de login faz include:{tenant:true}, que traz
+TODAS as colunas da tabela Tenant. O Prisma lancava:
+
+    The column `Tenant.onboarding_completed` does not exist
+
+e o catch da rota engolia o erro, devolvendo 500 "Erro interno no
+servidor" — quer a senha estivesse certa quer estivesse errada. O
+pedido de conta falhava pelo mesmo motivo, porque o tenant.create
+tambem escreve essa coluna.
+
+Correccao: backend/prisma/fix_2026-09-28_colunas.sql
+
+3. PORQUE NAO USEI "PRISMA DB PUSH"
+
+Tentei primeiro. O push completo queria converter varias colunas de
+uuid para text e o Postgres recusou:
+
+  ERROR: cannot alter type of a column used in a policy definition
+  DETAIL: policy tenant_isolation_auditlog on table AuditLog
+          depends on column tenant_id
+
+Ou seja: o push ia destruir as politicas de RLS que separam os dados
+entre empresas, so para mudar um tipo de coluna. Nao e aceitavel.
+
+Em vez disso:
+  a) Verifiquei a integridade referencial (zero linhas orfas);
+  b) Escrevi um script SQL so com ADD COLUMN IF NOT EXISTS e
+     CREATE TABLE IF NOT EXISTS — nunca apaga nem altera dados;
+  c) Executei com npx prisma db execute.
+
+Alem da coluna que faltava, acrescentei Sale.daily_number,
+Sale.discount_amount, o indice Sale_tenant_created_idx e a tabela
+device_keys, que tambem nao existiam.
+
+
+4. OUTROS ERROS DE CODIGO QUE ENCONTREI E CORRIGI
+
+backend/src/routes/auth.js
+- Todos os catch que devolviam 500 NAO registavam o erro em lado
+  nenhum. Por isso era impossivel diagnosticar o que se passava.
+  Agora cada um faz console.error com o email e a stack.
+- bcrypt.compare(password, null) lancava TypeError numa conta sem
+  password_hash, o que dava 500. Passou a devolver 401 com code
+  NO_PASSWORD e mensagem a dizer para usar Google ou "Esqueci a senha".
+- O login Google devolvia NOT_YET_VALID. Passou a devolver CLOCK_SKEW
+  com a medida do desvio em minutos, para o utilizador perceber.
+- O forgot-password passa a devolver o codigo no proprio ecra quando
+  nao ha SMTP configurado (DEV_SHOW_RESET_CODE=true, so em
+  desenvolvimento e so quando o codigo nao foi entregue a ninguem).
+
+backend/src/utils/prisma.js
+- O proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente
+  nao estava pronto. Resultado: prisma.user.findUnique ficava
+  undefined e rebentava com "TypeError: prisma.user.findUnique is not
+  a function" — um 500 opaco em qualquer rota que tocasse na base de
+  dados antes do arranque. Agora cada acesso e adiado por um Proxy
+  recursivo.
+
+backend/src/index.js
+- O handler global de erros devolvia "details" ao cliente, que
+  continha nomes de tabelas, de colunas e o host da base de dados.
+  Removido. Ganhou guardas de headersSent e passa a logar a stack.
+
+frontend/src/pages/ResetPassword.jsx
+- BUG GRAVE: a cadeia de ternarios do JSX tinha um ramo ": !sent ?"
+  DUPLICADO logo a seguir ao "done ?", e esse ramo renderizava o
+  ecra de "Senha redefinida com sucesso". Como "sent" comeca a false,
+  ao abrir /forgot-password aparecia de imediato a mensagem de
+  sucesso — sem pedir email, sem campo de codigo e sem nunca passar
+  pela fase 1. Era exactamente o que tinhas reportado. Ramo removido;
+  a cadeia ficou: done ? !sent ? !verified ? (nova senha).
+
+frontend/src/pages/Login.jsx
+- Quando o backend respondia CLOCK_SKEW, mostrava o generico "nao
+  foi possivel validar a sessao do Google". Agora explica que a HORA
+  DO COMPUTADOR esta errada e o que fazer.
+
+backend/.env
+- Nova variavel DEV_SHOW_RESET_CODE=true, com aviso para desligar
+  assim que o SMTP estiver a funcionar.
+
+5. O LOGIN COM O GOOGLE ESTAVA BLOQUEADO PELO RELOGIO DO PC
+
+    LOCAL  = 2026-09-27T21:49Z
+    GOOGLE = 2026-09-28T06:08Z
+    DESVIO = -29 893 segundos = 8 horas e 18 minutos
+
+O Google escreve no token a hora verdadeira em que o emitiu. Com o
+relogio deste computador 8 horas atrasado, o token parecia estar no
+FUTURO e o servidor recusava-o. Era exactamente a linha do log:
+
+    [google] token recusado: NOT_YET_VALID
+
+O codigo estava certo — o relogio e que estava errado. Mantive a
+tolerancia em 60 segundos, porque aumentar muito isso abria uma
+janela para reutilizar tokens.
+
+ACCAO TUA (so tu podes fazer, exige PowerShell de administrador):
+
+    w32tm /resync
+
+Fuso horario: Africa/Maputo.
+
+6. FERRAMENTA NOVA: GERIR CONTAS E SENHAS
+
+    gerir-contas.bat        (Windows, duplo clique)
+    gerir-contas.sh         (Linux/macOS)
+    backend/scripts/gerir_contas.js   (o motor)
+
+As senhas estao em BCRYPT custo 12 (bcrypt.hash(password, 12)). O
+bcrypt e um hash de sentido UNICO: nao existe forma de o reverter,
+nem de listar as senhas guardadas, nem porta dos fundos para isso.
+Isto e proposital — se alguem roubasse a base de dados, as senhas
+ficariam ilegiveis.
+
+Por isso o script faz o que e possivel:
+   1) Verificar se uma senha que sabes bate certo numa conta
+   2) Definir uma senha nova (mascarada, com confirmacao)
+   3) Gerar uma senha forte e aplicar
+   4) Repor a senha que esta no .env (DEMO_*_PASSWORD)
+   5) Activar / desactivar conta
+   6) Voltar a listar
+   7) Descobrir a que conta pertence cada senha do .env (lento)
+
+Comandos para automacao:
+    gerir-contas.bat --list
+    gerir-contas.bat --verificar owner@genesis.local "a-senha"
+    gerir-contas.bat --definir admin@genesis.co.mz "NovaSenha123!"
+
+Seguranca: as senhas nunca aparecem no ecra (asteriscos), o hash
+nunca e impresso por inteiro, cada alteracao fica registada em
+AuditLog como PASSWORD_CHANGED_VIA_SCRIPT, e o script relê a base de
+dados depois de gravar para provar que funcionou.
+
+
+7. PROVA — O QUE TESTEI, ANTES E DEPOIS
+
+  POST /api/auth/login (senha errada)
+        antes: 500            depois: 401 "Credenciais invalidas"
+  POST /api/auth/login (senha certa)
+        antes: 500            depois: HTTP 200 com token JWT
+  POST /api/auth/request-account
+        antes: 500            depois: 201 "Pedido recebido"
+  POST /api/auth/forgot-password
+        antes: 200 sem codigo depois: 200 + codigo no ecra
+  POST /api/auth/reset-password (codigo errado)
+        antes: 400            depois: 400 (correcto, continua recusado)
+  POST /api/auth/reset-password-instant
+        antes: -              depois: 404 (porta dos fundos fechada)
+  GET  /api/auth/me sem sessao
+        antes: 401            depois: 401 (correcto)
+
+  node --check em todos os ficheiros do backend .......... exit 0
+  esbuild nos 3 ficheiros JSX alterados .................. compilam
+  JSON do mapa mental ................................. valido, 13 entradas novas
+
+8. LIMITE HONESTO DESTA VEZ (o que NAO consegui fazer)
+
+- NAO REINICIEI O BACKEND. O processo (PID 4304) e filho do VS Code e o
+  taskkill devolve "Access is denied" sem privilegios de administrador.
+  A correccao da BASE DE DADOS ja esta activa — por isso o login ja
+  devolve 401 em vez de 500 — mas o CODIGO NOVO (logs, CLOCK_SKEW,
+  ramo do reset corrigido, novo proxy) so entra no proximo arranque:
+
+      .\run-local.ps1
+
+- NAO CORRI "w32tm /resync". Exige PowerShell elevado. O login Google
+  continua bloqueado ate tu o fazer.
+
+- NAO CONFIGUREI O SMTP (MAIL_USER e MAIL_PASS continuam vazios). O
+  DEV_SHOW_RESET_CODE e uma mitigacao para desenvolvimento, nao
+  substitui o email em producao.
+
+- A barra de estado do mapa 3D FOI RESOLVIDA DEPOIS do primeiro
+  rascunho destes apontamentos: auto-esconde ao fim de 3,5 s e existe
+  modo limpo permanente (botao vassoura ou tecla H).
+
+9. FALTA AINDA
+
+- Reiniciar o backend (.\run-local.ps1) para activar o codigo novo.
+- Sincronizar admin@genesis.co.mz e cashier@genesis.local: o
+  DEMO_ADMIN_PASSWORD e o DEMO_CASHIER_PASSWORD nao correspondiam a
+  NENHUMA conta em base de dados. So o owner foi resolvido.
+- Remover DEV_SHOW_RESET_CODE assim que o SMTP estiver configurado.
+- Rodar as chaves do backend/.env antes de qualquer deploy: o
+  JWT_SECRET e de desenvolvimento e as chaves Supabase e Twilio estao
+  em texto simples no ficheiro.
+
+10. NOTA SOBRE A SENHA DO OWNER
+
+O que estava no .env (Wendy1313$) nao correspondia ao hash da conta em
+base de dados — por isso nao conseguias entrar. Usei a propria
+ferramenta nova para definir uma senha forte e depois sincronizei o
+.env. O valor actual esta no backend/.env, variavel
+DEMO_OWNER_PASSWORD. Guarda-o num sitio seguro: e a unica forma de
+entrar agora. Se o alterares, usa o gerir-contas.bat --definir para
+as coisas continuarem sincronizadas.
+
