@@ -8,7 +8,8 @@
 const prisma = require('../utils/prisma');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('./monthlyDeductions');
 
-const PAYMENT_METHODS = ['cash', 'card', 'mobile_money'];
+// 'mobile_money' (antes de separar M-Pesa e e-Mola) so aparece se houver vendas.
+const PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card'];
 const dayKey = (d) => {
   const x = new Date(d);
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');

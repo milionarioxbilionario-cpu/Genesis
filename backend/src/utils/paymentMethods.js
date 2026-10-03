@@ -7,7 +7,10 @@
 // diferentes nos relatorios e os filtros (ex.: payment_method: 'cash') falham
 // em silencio.
 
-const CANONICAL_PAYMENT_METHODS = ['cash', 'card', 'mobile_money'];
+// Genesis 2.1: M-Pesa (Vodacom) e e-Mola (Movitel) separados — a reconciliacao
+// do fecho e feita por conta. 'mobile_money' fica ACEITE como valor antigo: ha
+// vendas offline em terminais com esse valor e recusa-las (4xx) perdia-as.
+const CANONICAL_PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'mobile_money'];
 
 const ALIASES = {
   cash: 'cash',
@@ -22,10 +25,12 @@ const ALIASES = {
   transferencia: 'card',
   'transferência': 'card',
   mobile_money: 'mobile_money',
-  mpesa: 'mobile_money',
-  'm-pesa': 'mobile_money',
-  emola: 'mobile_money',
-  e_mola: 'mobile_money'
+  mpesa: 'mpesa',
+  'm-pesa': 'mpesa',
+  m_pesa: 'mpesa',
+  emola: 'emola',
+  'e-mola': 'emola',
+  e_mola: 'emola'
 };
 
 function normalizePaymentMethod(value) {

@@ -39,7 +39,8 @@ export function isoDay(d = new Date()) {
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
 }
 
-export const PAYMENT_LABEL = { cash: 'Dinheiro', card: 'Cartão / POS', mobile_money: 'M-Pesa / e-Mola' };
+// mobile_money = vendas de antes de separar M-Pesa e e-Mola (2.1).
+export const PAYMENT_LABEL = { cash: 'Dinheiro', mpesa: 'M-Pesa', emola: 'e-Mola', card: 'Cartão / POS', mobile_money: 'M-Pesa/e-Mola (antigo)' };
 
 export function errorMessage(err, fallback = 'Ocorreu um erro. Tente de novo.') {
   const raw = err?.response?.data?.error;

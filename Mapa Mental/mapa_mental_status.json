@@ -49,8 +49,9 @@
     },
     "backend/src/utils/paymentMethods.js": {
       "status": "ok",
-      "summary": "Canonicalizacao das formas de pagamento (cash, card, mpesa...).",
-      "role": "Dominio de vendas."
+      "summary": "Normaliza payment_method: cash, mpesa, emola, card (+ mobile_money antigo).",
+      "role": "Dominio de vendas.",
+      "notes": "04/10: paymentMethods.test.js 4/4."
     },
     "backend/src/utils/whatsapp.js": {
       "status": "partial",
@@ -991,6 +992,29 @@
       "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
       "role": "Onboarding do dono.",
       "notes": "04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
+    },
+    "frontend/src/pages/pos/PosScreen.jsx": {
+      "status": "ok",
+      "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas.",
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+    },
+    "frontend/src/components/ui/ProductImage.jsx": {
+      "status": "ok",
+      "summary": "Foto do produto ou icone da categoria.",
+      "role": "UI kit.",
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+    },
+    "frontend/src/utils/imageResize.js": {
+      "status": "ok",
+      "summary": "Reduz a foto do dono para WebP/JPEG <= 256 px e < 60 000 caracteres.",
+      "role": "Utilitario.",
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+    },
+    "backend/src/utils/productImage.js": {
+      "status": "ok",
+      "summary": "Regra unica de imagem de produto (https ou data:image, < 60 000 car.).",
+      "role": "Validacao.",
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
     }
   }
 }

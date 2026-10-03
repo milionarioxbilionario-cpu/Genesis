@@ -1,19 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Lock, Minus, Plus, Search, Trash2, WifiOff } from 'lucide-react';
+import { CircleAlert, Lock, Minus, Plus, ScanBarcode, Search, Trash2, WifiOff } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import useOfflineSync from '../../hooks/useOfflineSync';
 import { newUuid, shouldQueueOffline, SYNC_STATE } from '../../utils/syncPolicy';
 import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
-import { Alert, Button, IconButton, MoneyInput, Segmented, useToast, cx } from '../../components/ui';
+import { Alert, Button, IconButton, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
 
 const PAYMENTS = [
   { value: 'cash', label: 'Dinheiro' },
-  { value: 'mobile_money', label: 'M-Pesa / e-Mola' },
+  { value: 'mpesa', label: 'M-Pesa' },
+  { value: 'emola', label: 'e-Mola' },
   { value: 'card', label: 'Cartão' },
 ];
+
+// Atalhos de teclado (todos com tecla de funcao ou modificador: o leitor de
+// codigo de barras so escreve digitos + Enter, logo nunca os dispara).
+const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], ['Ctrl+Enter', 'cobrar'], ['Alt+1…9', 'categoria'], ['Esc', 'pesquisa']];
 
 // Ecra de vendas do terminal. Regras de interface:
 //  - o campo de pesquisa recebe o leitor de codigo de barras (Enter = adiciona
@@ -38,8 +43,10 @@ export default function PosScreen({ info, cashier, onLock }) {
   const [busy, setBusy] = useState(false);
   const [shift, setShift] = useState(null);
   const [dialog, setDialog] = useState(null); // 'pin' | 'close' | 'recent' | 'shrink' | 'demand' | {receipt}
+  const [scan, setScan] = useState(null); // ultima leitura: { code, name?, ok, at }
   const pendingSale = useRef(null);
   const searchRef = useRef(null);
+  const gridRef = useRef(null);
 
   const refreshCatalog = useCallback(async () => {
     try {
@@ -81,18 +88,84 @@ export default function PosScreen({ info, cashier, onLock }) {
   const setQty = (id, q) => setCart((c) => c.flatMap((l) => (l.product_id !== id ? [l] : q <= 0 ? [] : [{ ...l, quantity: Math.min(q, l.stock) }])));
 
   function onSearchKey(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); focusTile(0); return; }
     if (e.key !== 'Enter') return;
     e.preventDefault();
     const q = query.trim().toLowerCase();
     if (!q) return;
     const exact = products.find((p) => (p.barcode || '').toLowerCase() === q);
-    const pick = exact || (visible.length === 1 ? visible[0] : null);
-    if (pick) { add(pick); setQuery(''); }
+    if (exact) {
+      add(exact);
+      setScan({ code: query.trim(), name: exact.name, ok: true, at: Date.now() });
+      setQuery('');
+      return;
+    }
+    // So digitos (6+) = veio do leitor: dizer que o codigo nao existe em vez de nada.
+    if (/^\d{6,}$/.test(q)) { setScan({ code: query.trim(), ok: false, at: Date.now() }); setQuery(''); return; }
+    if (visible.length === 1) { add(visible[0]); setQuery(''); }
+  }
+
+  // A faixa da ultima leitura desaparece sozinha.
+  useEffect(() => {
+    if (!scan) return undefined;
+    const t = setTimeout(() => setScan(null), scan.ok ? 2500 : 5000);
+    return () => clearTimeout(t);
+  }, [scan]);
+
+  // Setas na grelha: a mesma linha visual = mesmo offsetTop.
+  const tiles = () => [...(gridRef.current?.querySelectorAll('button[data-tile]') || [])];
+  function focusTile(i) { tiles()[i]?.focus(); }
+  function onGridKey(e) {
+    const list = tiles();
+    const i = list.indexOf(document.activeElement);
+    if (i < 0) return;
+    const cols = list.filter((b) => b.offsetTop === list[0].offsetTop).length || 1;
+    const move = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+    if (move === undefined) return;
+    e.preventDefault();
+    if (e.key === 'ArrowUp' && i - cols < 0) { searchRef.current?.focus(); return; }
+    list[Math.max(0, Math.min(list.length - 1, i + move))]?.focus();
   }
 
   function resetSale() {
     setCart([]); setDiscount(0); setShowDiscount(false); setReceived(0); setPayment('cash'); setQuery(''); setError('');
   }
+
+  // Atalhos globais do terminal (desligados quando ha um dialogo aberto).
+  const shortcutState = useRef({});
+  shortcutState.current = { dialog, canCharge, payment, categories, cart };
+  useEffect(() => {
+    function onKey(e) {
+      const s = shortcutState.current;
+      if (s.dialog) return;
+      const focusById = (id) => setTimeout(() => { const el = document.getElementById(id); el?.focus(); el?.select?.(); }, 0);
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (!s.cart.length) return;
+        setShowDiscount(true); focusById('pos-discount');
+      } else if (e.key === 'F3') {
+        e.preventDefault();
+        if (s.payment !== 'cash') { setPayment('cash'); setReceived(0); }
+        focusById('pos-received');
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        const i = PAYMENTS.findIndex((p) => p.value === s.payment);
+        setPayment(PAYMENTS[(i + 1) % PAYMENTS.length].value); setReceived(0);
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (s.canCharge) chargeRef.current();
+      } else if (e.altKey && /^[1-9]$/.test(e.key)) {
+        const list = ['', ...s.categories];
+        const n = Number(e.key) - 1;
+        if (n < list.length) { e.preventDefault(); setCategory(list[n]); }
+      } else if (e.key === 'Escape') {
+        searchRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  const chargeRef = useRef(null);
 
   async function charge(authorizationPin) {
     setBusy(true); setError('');
@@ -132,6 +205,7 @@ export default function PosScreen({ info, cashier, onLock }) {
       }
     } finally { setBusy(false); }
   }
+  chargeRef.current = () => charge();
 
   return (
     <div className="flex h-screen flex-col bg-bg">
@@ -192,15 +266,25 @@ export default function PosScreen({ info, cashier, onLock }) {
               ))}
             </div>
           )}
-          <div className="mt-3 grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3 xl:grid-cols-4">
+          {scan && (
+            <div role="status" aria-live="polite" className={cx('pos-scan mt-3 flex items-center gap-3 rounded-lg border px-3 py-2', scan.ok ? 'border-accent bg-accent-soft' : 'border-warning bg-warning-soft')}>
+              {scan.ok ? <ScanBarcode size={18} className="shrink-0 text-accent" /> : <CircleAlert size={18} className="shrink-0 text-warning" />}
+              <span className="num shrink-0 rounded bg-surface px-2 py-0.5 text-sm tracking-wider text-ink">{scan.code}</span>
+              <span className="min-w-0 truncate text-sm text-ink">
+                {scan.ok ? <><span className="font-medium">{scan.name}</span> adicionado</> : 'Este código não existe no catálogo. O dono regista-o em Produtos.'}
+              </span>
+            </div>
+          )}
+          <div ref={gridRef} onKeyDown={onGridKey} className="mt-3 grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto p-0.5 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {visible.map((p) => {
               const out = (p.stock_qty || 0) <= 0;
               const low = !out && p.stock_qty <= (p.min_stock || 5);
               return (
-                <button key={p.id} type="button" disabled={out || locked} onClick={() => add(p)} className="flex min-h-[88px] flex-col justify-between rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-border-strong hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-50">
-                  <span className="line-clamp-2 text-base font-medium text-ink">{p.name}</span>
-                  <span className="mt-2 flex items-baseline justify-between gap-2">
-                    <span className="num font-semibold text-ink">{money(p.sell_price)}</span>
+                <button key={p.id} data-tile type="button" disabled={out || locked} onClick={() => add(p)} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-border-strong hover:bg-subtle focus-visible:border-accent focus-visible:shadow-focus focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50">
+                  <ProductImage product={p} size={56} className="self-center" />
+                  <span className="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-ink">{p.name}</span>
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="num text-base font-semibold text-ink">{money(p.sell_price)}</span>
                     <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? 'Esgotado' : `${p.stock_qty} un.`}</span>
                   </span>
                 </button>
@@ -243,7 +327,7 @@ export default function PosScreen({ info, cashier, onLock }) {
             <div className="flex justify-between py-1 text-base text-ink-2"><span>Subtotal</span><span className="num">{money(subtotal)}</span></div>
             {showDiscount ? (
               <div className="py-1">
-                <MoneyInput label="Desconto" valueCents={discount} onChangeCents={setDiscount} hint={`Até ${money(freeLimit)} sem autorização. Acima disso pede o PIN do dono.`} />
+                <MoneyInput id="pos-discount" label="Desconto" valueCents={discount} onChangeCents={setDiscount} hint={`Até ${money(freeLimit)} sem autorização. Acima disso pede o PIN do dono.`} />
               </div>
             ) : (
               <button type="button" disabled={!cart.length} className="py-1 text-sm text-accent hover:text-accent-hover disabled:text-ink-faint" onClick={() => setShowDiscount(true)}>Aplicar desconto</button>
@@ -254,7 +338,7 @@ export default function PosScreen({ info, cashier, onLock }) {
             <Segmented className="mt-3 flex w-full" size="lg" options={PAYMENTS} value={payment} onChange={(v) => { setPayment(v); setReceived(0); }} />
             {payment === 'cash' && (
               <div className="mt-3 grid grid-cols-2 items-end gap-3">
-                <MoneyInput label="Recebido" valueCents={received} onChangeCents={setReceived} placeholder={total ? String(total / 100).replace('.', ',') : ''} />
+                <MoneyInput id="pos-received" label="Recebido" valueCents={received} onChangeCents={setReceived} placeholder={total ? String(total / 100).replace('.', ',') : ''} />
                 <div className="pb-1.5 text-right">
                   <p className="text-xs text-ink-muted">Troco</p>
                   <p className={cx('num text-lg font-semibold', received && received < total ? 'text-danger' : 'text-ink')}>{received && received < total ? 'Falta ' + money(total - received) : money(change)}</p>
@@ -265,6 +349,9 @@ export default function PosScreen({ info, cashier, onLock }) {
             <Button variant="primary" size="xl" block className="mt-3" disabled={!canCharge} loading={busy} onClick={() => charge()}>
               {total > 0 ? `Cobrar ${money(total)}` : 'Cobrar'}
             </Button>
+            <p className="mt-2 hidden flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-ink-muted lg:flex" aria-label="Atalhos de teclado">
+              {SHORTCUTS.map(([k, label]) => <span key={k}><kbd className="rounded border border-border-strong bg-subtle px-1 font-sans text-[11px] text-ink-2">{k}</kbd> {label}</span>)}
+            </p>
           </div>
         </aside>
       </div>

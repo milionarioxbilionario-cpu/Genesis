@@ -4,3 +4,4 @@ export { Button, IconButton, Spinner } from './Button';
 export { Field, Input, Select, Textarea, MoneyInput, PinPad, Segmented } from './Form';
 export { Card, CardHeader, Stat, Badge, Table, Pagination, EmptyState, Skeleton, Alert, ProgressBar, Tabs, PageHeader, Toolbar, KeyValue } from './Data';
 export { Dialog, Drawer, ConfirmProvider, useConfirm, ToastProvider, useToast } from './Overlay';
+export { ProductImage, categoryIcon } from './ProductImage';
