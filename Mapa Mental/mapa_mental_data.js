@@ -1,8 +1,8 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-03T21:07:08.249Z */
+   Gerado em: 2026-10-03T21:34:44.983Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-03T21:07:08.249Z",
+ "generatedAt": "2026-10-03T21:34:44.983Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
@@ -10,7 +10,7 @@ window.GENESIS_MINDMAP = {
   "files": 157,
   "planned": 5,
   "links": 252,
-  "lines": 21524,
+  "lines": 21548,
   "byStatus": {
    "ok": 88,
    "partial": 13,
@@ -271,8 +271,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 460,
-   "size": 70473,
+   "lines": 484,
+   "size": 75138,
    "externals": [
     "@prisma/client"
    ],

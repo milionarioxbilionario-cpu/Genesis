@@ -1086,3 +1086,17 @@ O QUE PRECISO QUE DECIDAS
   6543 (so o numero da porta, as senhas ficam iguais).
 - Desligar a base de reserva (DB_ALLOW_SQLITE_FALLBACK=false), para o
   servidor nunca mais trabalhar em silencio numa base errada.
+
+03/10/2026 (noite, continuacao) — FASE 0 TERMINADA
+- Com a tua autorizacao mudei o backend/.env: a porta da base de dados
+  passou de 5432 para 6543, e a base de reserva ficou desligada. Guardei
+  uma copia do .env antigo em genesis-backup-20261003 (na tua pasta de
+  utilizador).
+- Depois testei tudo outra vez: os 13 grupos de testes do sistema
+  passaram; no browser, vender, desconto com PIN, vender sem internet,
+  sincronizar, fechar turno e o onboarding passaram todos; e o servidor
+  nao registou nenhum erro de ligacao a base de dados.
+- Importante: quando voltares a arrancar o run-local, ele ja usa a porta
+  nova. Se a internet daqui falhar no arranque, o servidor agora recusa
+  arrancar com uma mensagem clara, em vez de abrir a base errada. Basta
+  arrancar de novo.
