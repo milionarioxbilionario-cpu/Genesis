@@ -177,7 +177,7 @@ router.post('/terminals/:id/revoke', asyncHandler(async (req, res) => {
 router.get('/sales', asyncHandler(async (req, res) => {
   const q = z.object({
     from: isoDate.optional(), to: isoDate.optional(), cashier_id: z.string().uuid().optional(),
-    method: z.enum(['cash', 'card', 'mobile_money']).optional(), status: z.enum(['completed', 'cancelled']).optional(),
+    method: z.enum(['cash', 'mpesa', 'emola', 'card', 'mobile_money']).optional(), status: z.enum(['completed', 'cancelled']).optional(),
     page: z.coerce.number().int().min(1).default(1), page_size: z.coerce.number().int().min(1).max(100).default(25),
   }).parse(req.query);
   const where = { tenant_id: tenantOf(req) };

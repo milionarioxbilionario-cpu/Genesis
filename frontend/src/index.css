@@ -35,6 +35,10 @@
   .scrollbar-none::-webkit-scrollbar { display: none; }
 }
 
+/* POS: a faixa da ultima leitura do leitor entra de cima (feedback, nao decoracao). */
+.pos-scan { animation: pos-scan-in var(--dur) var(--ease); }
+@keyframes pos-scan-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
 /* Relatorios: "Imprimir / Guardar PDF" usa o dialogo do browser. */
 @media print {
   @page { margin: 14mm; }

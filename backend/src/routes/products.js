@@ -4,11 +4,13 @@ const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
+const { imageUrlSchema } = require('../utils/productImage');
 
 const productSchema = z.object({
   name: z.string().min(1),
   category: z.string().min(1).default('Geral'),
   barcode: z.string().optional().nullable(),
+  image_url: imageUrlSchema,
   sell_price: z.number().int().nonnegative().default(0),
   cost_price: z.number().int().nonnegative().default(0),
   stock_qty: z.number().int().nonnegative().default(0),
@@ -49,6 +51,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
         name: data.name,
         category: data.category,
         barcode: data.barcode || null,
+        image_url: data.image_url || null,
         cost_price: data.cost_price,
         sell_price: data.sell_price,
         stock_qty: data.stock_qty,
@@ -92,6 +95,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.name !== 'undefined') updateData.name = data.name;
     if (typeof data.category !== 'undefined') updateData.category = data.category;
     if (typeof data.barcode !== 'undefined') updateData.barcode = data.barcode || null;
+    if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
     if (typeof data.sell_price !== 'undefined') updateData.sell_price = data.sell_price;
     if (typeof data.stock_qty !== 'undefined') updateData.stock_qty = data.stock_qty;

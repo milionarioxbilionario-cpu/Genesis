@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Camera, Plus, Search } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
-import { Badge, Button, Drawer, Input, MoneyInput, PageHeader, Select, Table, Tabs, Toolbar, useConfirm, useToast, Alert } from '../../components/ui';
+import { photoToDataUrl } from '../../utils/imageResize';
+import { Badge, Button, Drawer, Input, MoneyInput, PageHeader, ProductImage, Select, Table, Tabs, Toolbar, useConfirm, useToast, Alert } from '../../components/ui';
 
 const stockTone = (p) => (p.stock_qty <= 0 ? 'danger' : p.stock_qty <= 10 ? 'danger' : p.stock_qty <= 20 ? 'warning' : p.stock_qty <= (p.min_stock || 0) ? 'warning' : 'neutral');
 
@@ -27,7 +28,7 @@ export default function Products() {
   );
 }
 
-const EMPTY = { name: '', category: 'Geral', barcode: '', sell_price: 0, cost_price: 0, stock_qty: 0, min_stock: 5, has_expiry: false, expiry_date: '' };
+const EMPTY = { name: '', category: 'Geral', barcode: '', image_url: null, sell_price: 0, cost_price: 0, stock_qty: 0, min_stock: 5, has_expiry: false, expiry_date: '' };
 
 function Catalog({ products }) {
   const toast = useToast();
@@ -36,6 +37,14 @@ function Catalog({ products }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const photoInput = useRef(null);
+
+  async function onPhoto(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try { const url = await photoToDataUrl(file); setEditing((x) => ({ ...x, image_url: url })); } catch (err) { setError(err.message); }
+  }
   const list = useMemo(() => (products.data || []).filter((p) => p.is_active && (!q || p.name.toLowerCase().includes(q.toLowerCase()) || (p.barcode || '').includes(q))), [products.data, q]);
   const categories = useMemo(() => [...new Set((products.data || []).map((p) => p.category))].sort(), [products.data]);
 
@@ -44,6 +53,7 @@ function Catalog({ products }) {
     setSaving(true); setError('');
     const body = {
       name: editing.name.trim(), category: editing.category.trim() || 'Geral', barcode: editing.barcode.trim() || null,
+      image_url: editing.image_url || null,
       sell_price: editing.sell_price, cost_price: editing.cost_price, min_stock: Number(editing.min_stock) || 0,
       has_expiry: editing.has_expiry, expiry_date: editing.has_expiry && editing.expiry_date ? editing.expiry_date : null,
     };
@@ -61,7 +71,7 @@ function Catalog({ products }) {
   }
 
   const columns = [
-    { key: 'name', header: 'Produto', render: (p) => <div><p className="text-ink">{p.name}</p>{p.barcode && <p className="num text-xs text-ink-muted">{p.barcode}</p>}</div> },
+    { key: 'name', header: 'Produto', render: (p) => <div className="flex items-center gap-3"><ProductImage product={p} size={36} /><div><p className="text-ink">{p.name}</p>{p.barcode && <p className="num text-xs text-ink-muted">{p.barcode}</p>}</div></div> },
     { key: 'category', header: 'Categoria', render: (p) => <span className="text-ink-2">{p.category}</span> },
     { key: 'sell', header: 'Preço', align: 'right', render: (p) => money(p.sell_price) },
     { key: 'cost', header: 'Custo', align: 'right', render: (p) => <span className="text-ink-2">{money(p.cost_price)}</span> },
@@ -95,6 +105,15 @@ function Catalog({ products }) {
         {editing && (
           <div className="flex flex-col gap-4">
             {error && <Alert tone="danger">{error}</Alert>}
+            <div className="flex items-center gap-4">
+              <ProductImage product={editing} size={72} />
+              <div className="flex flex-col items-start gap-1.5">
+                <Button size="sm" icon={Camera} onClick={() => photoInput.current?.click()}>{editing.image_url ? 'Trocar foto' : 'Tirar ou carregar foto'}</Button>
+                {editing.image_url && <Button size="sm" variant="ghost" onClick={() => set('image_url')(null)}>Remover foto</Button>}
+                <p className="text-xs text-ink-muted">Aparece no terminal do balcão. Sem foto, mostra o ícone da categoria.</p>
+              </div>
+              <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Foto do produto" onChange={onPhoto} />
+            </div>
             <Input label="Nome" value={editing.name} onChange={(e) => set('name')(e.target.value)} autoFocus />
             <div className="grid grid-cols-2 gap-3">
               <Input label="Categoria" list="categorias" value={editing.category} onChange={(e) => set('category')(e.target.value)} />

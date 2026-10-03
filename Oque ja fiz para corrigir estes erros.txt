@@ -1144,3 +1144,39 @@ O QUE PRECISO QUE DECIDAS
 COMO PROVEI
 - Onboarding inteiro no browser: 18 verificacoes, todas passaram. Os testes
   de venda/terminal continuam a passar (24 de 24).
+
+==========================================================================
+04/10/2026 — FASE 2: TERMINAL DO BALCAO (POS)
+==========================================================================
+
+1. M-PESA E E-MOLA SEPARADOS
+   - O terminal tem agora 4 botoes: Dinheiro, M-Pesa, e-Mola, Cartao.
+   - Os relatorios mostram quanto entrou por M-Pesa e quanto por e-Mola.
+   - Vendas antigas ou que estavam a espera de internet continuam a ser
+     aceites; aparecem como "M-Pesa/e-Mola (antigo)".
+
+2. IMAGENS DOS PRODUTOS
+   - Em Produtos, ao editar um produto, ha o botao "Tirar ou carregar
+     foto". No telemovel abre a camara. A foto e reduzida automaticamente
+     e funciona no terminal mesmo sem internet.
+   - Produto sem foto mostra um icone da categoria (cerveja, agua, pao,
+     carne...), para o caixista reconhecer de relance.
+
+3. LEITOR DE CODIGO DE BARRAS
+   - Ao passar um produto no leitor, aparece uma faixa com o codigo lido e
+     o nome do produto adicionado.
+   - Se o codigo nao existir no catalogo, avisa (antes nao acontecia nada).
+
+4. TECLADO (sem rato)
+   - F2 = desconto · F3 = valor recebido · F4 = muda a forma de pagamento
+     (Dinheiro, M-Pesa, e-Mola, Cartao) · Ctrl+Enter = cobrar ·
+     Alt+1...9 = categoria · setas = andar pelos produtos (Enter adiciona) ·
+     Esc = volta a pesquisa. A lista aparece por baixo do botao Cobrar.
+   - Nao usei Ctrl+W, Ctrl+2 nem Ctrl+P porque o browser nao os larga
+     (fecham o separador, mudam de separador, imprimem).
+
+COMO PROVEI
+- Teste no browser a fazer tudo isto como um caixista: 21 verificacoes,
+  todas passaram, incluindo uma venda por e-Mola que ficou gravada como
+  e-Mola. Os testes antigos (venda, desconto, offline, fecho) continuam a
+  passar.

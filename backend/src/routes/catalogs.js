@@ -5,6 +5,7 @@ const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
+const { imageUrlSchema } = require('../utils/productImage');
 
 // Fonte unica: tabela MasterCatalog (carregada por scripts/seed_master_catalogs.js
 // a partir de data/master_catalogs.json). Ja nao ha templates escritos aqui.
@@ -35,8 +36,7 @@ const productSchema = z.object({
   stock: z.number().int('stock tem de ser um número inteiro').nonnegative('stock não pode ser negativo').max(1_000_000).optional().default(0),
   category: z.string().trim().max(60).optional(),
   barcode: z.string().trim().regex(/^[0-9A-Za-z-]{4,32}$/, 'código de barras inválido').nullish(),
-  // So imagens http(s) ou data:image (foto do dono); nada de javascript: e afins.
-  image_url: z.string().max(60_000, 'imagem demasiado grande').regex(/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/, 'imagem inválida').nullish(),
+  image_url: imageUrlSchema,
 });
 const importSchema = z.object({ products: z.array(productSchema).max(1000) });
 

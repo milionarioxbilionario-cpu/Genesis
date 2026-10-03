@@ -1,38 +1,38 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-03T23:26:28.700Z */
+   Gerado em: 2026-10-03T23:56:38.875Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-03T23:26:28.700Z",
+ "generatedAt": "2026-10-03T23:56:38.875Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 158,
+  "files": 163,
   "planned": 5,
-  "links": 254,
-  "lines": 23314,
+  "links": 259,
+  "lines": 23752,
   "byStatus": {
-   "ok": 90,
+   "ok": 94,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 56
+   "untracked": 57
   },
   "byGroup": {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 39,
-   "backend": 42,
+   "backend-data": 40,
+   "backend": 43,
    "frontend-pub": 4,
-   "frontend": 46,
+   "frontend": 49,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 30
+   "count": 31
   },
   {
    "pkg": "dotenv",
@@ -44,7 +44,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "lucide-react",
-   "count": 17
+   "count": 18
   },
   {
    "pkg": "react-router-dom",
@@ -55,6 +55,10 @@ window.GENESIS_MINDMAP = {
    "count": 15
   },
   {
+   "pkg": "zod",
+   "count": 14
+  },
+  {
    "pkg": "@prisma/client",
    "count": 13
   },
@@ -63,15 +67,15 @@ window.GENESIS_MINDMAP = {
    "count": 13
   },
   {
-   "pkg": "zod",
-   "count": 13
-  },
-  {
    "pkg": "path",
    "count": 7
   },
   {
    "pkg": "node:path",
+   "count": 6
+  },
+  {
+   "pkg": "node:fs",
    "count": 5
   },
   {
@@ -80,10 +84,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "nodemailer",
-   "count": 4
-  },
-  {
-   "pkg": "node:fs",
    "count": 4
   },
   {
@@ -111,19 +111,19 @@ window.GENESIS_MINDMAP = {
    "count": 3
   },
   {
+   "pkg": "node:test",
+   "count": 3
+  },
+  {
+   "pkg": "node:assert",
+   "count": 3
+  },
+  {
+   "pkg": "@playwright/test",
+   "count": 3
+  },
+  {
    "pkg": "axios",
-   "count": 2
-  },
-  {
-   "pkg": "@fontsource-variable/inter",
-   "count": 2
-  },
-  {
-   "pkg": "vite",
-   "count": 2
-  },
-  {
-   "pkg": "net",
    "count": 2
   }
  ],
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 39,
+   "nodes": 40,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -175,7 +175,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261003_genesis2": 1,
     "backend/prisma/migrations/20261004_catalogo_mz": 1,
     "backend/scripts": 25,
-    "backend/tests": 2,
+    "backend/tests": 3,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -183,13 +183,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 42,
+   "nodes": 43,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 14,
     "backend/src/services": 5,
-    "backend/src/utils": 16,
+    "backend/src/utils": 17,
     "backend/src/jobs": 1
    }
   },
@@ -206,11 +206,11 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 46,
+   "nodes": 49,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
-    "frontend/src/components/ui": 6,
+    "frontend/src/components/ui": 7,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
     "frontend/src/layouts": 1,
@@ -218,8 +218,8 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner": 9,
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
-    "frontend/src/utils": 9,
-    "frontend/tests/e2e": 2,
+    "frontend/src/utils": 10,
+    "frontend/tests/e2e": 3,
     "frontend/tests": 2,
     "frontend/src/pages": 1
    }
@@ -272,8 +272,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 484,
-   "size": 75138,
+   "lines": 509,
+   "size": 82232,
    "externals": [
     "@prisma/client"
    ],
@@ -316,8 +316,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 997,
-   "size": 52072,
+   "lines": 1021,
+   "size": 53205,
    "externals": [
     "nodemailer"
    ],
@@ -1771,7 +1771,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 97,
-   "size": 4913,
+   "size": 4767,
    "externals": [
     "express",
     "zod"
@@ -1780,13 +1780,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js",
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
-    "backend/src/utils/http.js"
+    "backend/src/utils/http.js",
+    "backend/src/utils/productImage.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "backend/src/routes/dashboard.js",
@@ -1920,7 +1921,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 382,
-   "size": 21357,
+   "size": 21375,
    "externals": [
     "express",
     "crypto",
@@ -2000,8 +2001,8 @@ window.GENESIS_MINDMAP = {
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 253,
-   "size": 9854,
+   "lines": 257,
+   "size": 10081,
    "externals": [
     "express",
     "zod"
@@ -2009,13 +2010,14 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/middleware/auth.js",
-    "backend/src/middleware/rbac.js"
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/productImage.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "backend/src/routes/refresh.js",
@@ -2205,8 +2207,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 157,
-   "size": 8362,
+   "lines": 158,
+   "size": 8446,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -2370,19 +2372,20 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/utils",
    "ext": ".js",
    "status": "ok",
-   "summary": "Canonicalizacao das formas de pagamento (cash, card, mpesa...).",
-   "notes": "",
+   "summary": "Normaliza payment_method: cash, mpesa, emola, card (+ mobile_money antigo).",
+   "notes": "04/10: paymentMethods.test.js 4/4.",
    "role": "Dominio de vendas.",
    "security": "",
    "planned": false,
-   "lines": 43,
-   "size": 1344,
+   "lines": 48,
+   "size": 1617,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "backend/src/routes/sales.js"
+    "backend/src/routes/sales.js",
+    "backend/tests/paymentMethods.test.js"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
   },
   {
@@ -2445,6 +2448,32 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 34,
    "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/productImage.js",
+   "path": "backend/src/utils/productImage.js",
+   "label": "productImage.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Regra unica de imagem de produto (https ou data:image, < 60 000 car.).",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
+   "role": "Validacao.",
+   "security": "",
+   "planned": false,
+   "lines": 15,
+   "size": 588,
+   "externals": [
+    "zod"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/catalogs.js",
+    "backend/src/routes/products.js"
+   ],
+   "inbound": 2,
+   "outbound": 0
   },
   {
    "id": "backend/src/utils/sessionScopes.js",
@@ -2741,6 +2770,32 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/services/monthlyDeductions.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/paymentMethods.test.js",
+   "path": "backend/tests/paymentMethods.test.js",
+   "label": "paymentMethods.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 24,
+   "size": 953,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/paymentMethods.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -3114,6 +3169,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 2
   },
   {
+   "id": "frontend/src/components/ui/ProductImage.jsx",
+   "path": "frontend/src/components/ui/ProductImage.jsx",
+   "label": "ProductImage.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Foto do produto ou icone da categoria.",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
+   "role": "UI kit.",
+   "security": "",
+   "planned": false,
+   "lines": 46,
+   "size": 2001,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/components/ui/cx.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "frontend/src/components/ui/cx.js",
    "path": "frontend/src/components/ui/cx.js",
    "label": "cx.js",
@@ -3134,9 +3215,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/ui/Button.jsx",
     "frontend/src/components/ui/Data.jsx",
     "frontend/src/components/ui/Form.jsx",
-    "frontend/src/components/ui/Overlay.jsx"
+    "frontend/src/components/ui/Overlay.jsx",
+    "frontend/src/components/ui/ProductImage.jsx"
    ],
-   "inbound": 4,
+   "inbound": 5,
    "outbound": 0
   },
   {
@@ -3152,8 +3234,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 7,
-   "size": 493,
+   "lines": 8,
+   "size": 554,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -3250,8 +3332,8 @@ window.GENESIS_MINDMAP = {
    "role": "Estilo.",
    "security": "",
    "planned": false,
-   "lines": 45,
-   "size": 1599,
+   "lines": 49,
+   "size": 1862,
    "externals": [
     "@fontsource-variable/inter"
    ],
@@ -3589,8 +3671,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 249,
-   "size": 15129,
+   "lines": 268,
+   "size": 16463,
    "externals": [
     "react",
     "react-router-dom",
@@ -3600,13 +3682,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/utils/imageResize.js",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/owner/Reports.jsx",
@@ -3806,14 +3889,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
+   "status": "ok",
+   "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas.",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 289,
-   "size": 17478,
+   "lines": 376,
+   "size": 22304,
    "externals": [
     "react",
     "lucide-react"
@@ -3970,8 +4053,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 50,
-   "size": 1975,
+   "lines": 51,
+   "size": 2084,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -3994,6 +4077,29 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js"
    ],
    "inbound": 17,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/imageResize.js",
+   "path": "frontend/src/utils/imageResize.js",
+   "label": "imageResize.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Reduz a foto do dono para WebP/JPEG <= 256 px e < 60 000 caracteres.",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
+   "role": "Utilitario.",
+   "security": "",
+   "planned": false,
+   "lines": 26,
+   "size": 1342,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/src/pages/owner/Products.jsx"
+   ],
+   "inbound": 1,
    "outbound": 0
   },
   {
@@ -4257,6 +4363,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 128,
    "size": 7685,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/pos.mjs",
+   "path": "frontend/tests/e2e/pos.mjs",
+   "label": "pos.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 156,
+   "size": 9402,
    "externals": [
     "node:fs",
     "node:path",
@@ -4932,6 +5063,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/http.js"
   },
   {
+   "source": "backend/src/routes/catalogs.js",
+   "target": "backend/src/utils/productImage.js"
+  },
+  {
    "source": "backend/src/routes/dashboard.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -5076,6 +5211,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/middleware/rbac.js"
   },
   {
+   "source": "backend/src/routes/products.js",
+   "target": "backend/src/utils/productImage.js"
+  },
+  {
    "source": "backend/src/routes/refresh.js",
    "target": "backend/src/utils/tokens.js"
   },
@@ -5188,6 +5327,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/monthlyDeductions.js"
   },
   {
+   "source": "backend/tests/paymentMethods.test.js",
+   "target": "backend/src/utils/paymentMethods.js"
+  },
+  {
    "source": "frontend/src/App.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
@@ -5278,6 +5421,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/components/ui/Overlay.jsx",
    "target": "frontend/src/components/ui/Button.jsx"
+  },
+  {
+   "source": "frontend/src/components/ui/ProductImage.jsx",
+   "target": "frontend/src/components/ui/cx.js"
   },
   {
    "source": "frontend/src/hooks/useOfflineSync.js",
@@ -5450,6 +5597,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Products.jsx",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/utils/imageResize.js"
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
