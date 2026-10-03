@@ -21,15 +21,17 @@ export function Field({ label, hint, error, children, htmlFor, className }) {
   );
 }
 
-export function Input({ label, hint, error, className, inputClassName, id, ...rest }) {
+// forwardRef: quem precisa de mover o foco (ex.: leitor de codigo de barras no
+// onboarding salta para a linha seguinte) recebe o <input> real.
+export const Input = React.forwardRef(function Input({ label, hint, error, className, inputClassName, id, ...rest }, ref) {
   const auto = useId();
   const fid = id || auto;
   if (!label && !hint && !error) {
-    return <input id={fid} aria-invalid={Boolean(error)} className={cx(control, widthOf(className), inputClassName, className)} {...rest} />;
+    return <input ref={ref} id={fid} aria-invalid={Boolean(error)} className={cx(control, widthOf(className), inputClassName, className)} {...rest} />;
   }
-  const input = <input id={fid} aria-invalid={Boolean(error)} className={cx(control, 'w-full', inputClassName)} {...rest} />;
+  const input = <input ref={ref} id={fid} aria-invalid={Boolean(error)} className={cx(control, 'w-full', inputClassName)} {...rest} />;
   return <Field label={label} hint={hint} error={error} htmlFor={fid} className={className}>{input}</Field>;
-}
+});
 
 // Seta desenhada com um icone (a classe com SVG em URL nao era gerada).
 export function Select({ label, hint, error, className, selectClassName, id, children, ...rest }) {

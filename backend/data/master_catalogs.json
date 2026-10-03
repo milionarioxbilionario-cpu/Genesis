@@ -1,67 +1,1880 @@
 {
-  "templates": [
-    {
-      "id": "bottle_store-default",
-      "name": "Bottle Store - Básico",
-      "businessType": "bottle_store",
-      "categories": ["Bebidas", "Cervejas", "Águas e Sucos", "Outros"],
-      "sampleProducts": [
-        { "name": "2M", "sku": "2M-330", "price_mzn": 45, "cost_mzn": 25, "stock": 20, "category": "Cervejas" },
-        { "name": "Manica", "sku": "MANICA-330", "price_mzn": 42, "cost_mzn": 24, "stock": 20, "category": "Cervejas" },
-        { "name": "Txilar", "sku": "TXILAR-330", "price_mzn": 43, "cost_mzn": 25, "stock": 18, "category": "Cervejas" },
-        { "name": "Laurentina", "sku": "LAURENTINA-330", "price_mzn": 46, "cost_mzn": 24, "stock": 12, "category": "Cervejas" },
-        { "name": "Heineken", "sku": "HEINEKEN-330", "price_mzn": 52, "cost_mzn": 29, "stock": 15, "category": "Cervejas" },
-        { "name": "Coca-Cola 330ml", "sku": "CC-330", "price_mzn": 32, "cost_mzn": 18, "stock": 30, "category": "Bebidas" },
-        { "name": "Coca-Cola 500ml", "sku": "CC-500", "price_mzn": 45, "cost_mzn": 25, "stock": 28, "category": "Bebidas" },
-        { "name": "Água Mineral 500ml", "sku": "AGUA-500", "price_mzn": 20, "cost_mzn": 9, "stock": 40, "category": "Águas e Sucos" },
-        { "name": "Água Mineral 1.5L", "sku": "AGUA-1500", "price_mzn": 38, "cost_mzn": 18, "stock": 25, "category": "Águas e Sucos" },
-        { "name": "Sumol Laranja", "sku": "SUMOL-LAR-330", "price_mzn": 35, "cost_mzn": 16, "stock": 30, "category": "Bebidas" }
-      ]
-    },
-    {
-      "id": "mercearia-default",
-      "name": "Mercearia - Básico",
-      "businessType": "mercearia",
-      "categories": ["Arroz", "Açúcar e Óleos", "Higiene", "Peixe e Enlatados"],
-      "sampleProducts": [
-        { "name": "Arroz Mariana 1kg", "sku": "ARROZ-1K", "price_mzn": 75, "cost_mzn": 48, "stock": 40, "category": "Arroz" },
-        { "name": "Arroz Mariana 5kg", "sku": "ARROZ-5K", "price_mzn": 330, "cost_mzn": 250, "stock": 20, "category": "Arroz" },
-        { "name": "Açúcar 1kg", "sku": "ACUCAR-1K", "price_mzn": 70, "cost_mzn": 45, "stock": 30, "category": "Açúcar e Óleos" },
-        { "name": "Óleo Palmoil 1L", "sku": "OLEO-1L", "price_mzn": 82, "cost_mzn": 52, "stock": 25, "category": "Açúcar e Óleos" },
-        { "name": "Feijão 1kg", "sku": "FEIJAO-1K", "price_mzn": 80, "cost_mzn": 49, "stock": 25, "category": "Mercearia" },
-        { "name": "Ovos (unidade)", "sku": "OVO-U", "price_mzn": 9, "cost_mzn": 5, "stock": 100, "category": "Mercearia" },
-        { "name": "Sardinha Lata", "sku": "SARDINHA", "price_mzn": 48, "cost_mzn": 30, "stock": 40, "category": "Peixe e Enlatados" },
-        { "name": "Atum Lata", "sku": "ATUM", "price_mzn": 55, "cost_mzn": 32, "stock": 35, "category": "Peixe e Enlatados" }
-      ]
-    },
-    {
-      "id": "padaria-default",
-      "name": "Padaria - Básico",
-      "businessType": "padaria",
-      "categories": ["Pães", "Confeitaria", "Bebidas", "Laticínios"],
-      "sampleProducts": [
-        { "name": "Pão de Forma", "sku": "PAO-FORMA", "price_mzn": 35, "cost_mzn": 18, "stock": 50, "category": "Pães" },
-        { "name": "Pão de Metro", "sku": "PAO-METRO", "price_mzn": 55, "cost_mzn": 28, "stock": 32, "category": "Pães" },
-        { "name": "Bolo Simples", "sku": "BOLO-SIMPLES", "price_mzn": 85, "cost_mzn": 41, "stock": 18, "category": "Confeitaria" },
-        { "name": "Croissant", "sku": "CROISSANT", "price_mzn": 45, "cost_mzn": 22, "stock": 25, "category": "Confeitaria" },
-        { "name": "Café Expresso", "sku": "CAFE-EXP", "price_mzn": 40, "cost_mzn": 18, "stock": 40, "category": "Bebidas" },
-        { "name": "Manteiga", "sku": "MANTEIGA", "price_mzn": 90, "cost_mzn": 48, "stock": 22, "category": "Laticínios" },
-        { "name": "Queijo", "sku": "QUEIJO", "price_mzn": 120, "cost_mzn": 65, "stock": 18, "category": "Laticínios" }
-      ]
-    },
-    {
-      "id": "talho-default",
-      "name": "Talho - Básico",
-      "businessType": "talho",
-      "categories": ["Frango", "Bovino", "Suíno", "Embutidos"],
-      "sampleProducts": [
-        { "name": "Frango Inteiro", "sku": "FRANGO-INT", "price_mzn": 450, "cost_mzn": 260, "stock": 12, "category": "Frango" },
-        { "name": "Frango Peito", "sku": "FRANGO-PEITO", "price_mzn": 230, "cost_mzn": 140, "stock": 18, "category": "Frango" },
-        { "name": "Carne Bovina 1kg", "sku": "BOVINA-1K", "price_mzn": 520, "cost_mzn": 330, "stock": 14, "category": "Bovino" },
-        { "name": "Carne de Porco 1kg", "sku": "PORCO-1K", "price_mzn": 500, "cost_mzn": 300, "stock": 12, "category": "Suíno" },
-        { "name": "Chouriço", "sku": "CHOURISCO", "price_mzn": 160, "cost_mzn": 95, "stock": 26, "category": "Embutidos" },
-        { "name": "Linguiça", "sku": "LINGUICA", "price_mzn": 170, "cost_mzn": 100, "stock": 25, "category": "Embutidos" }
-      ]
-    }
-  ]
+  "_nota": "Catalogo pre-definido por tipo de negocio (onboarding). Precos SUGERIDOS em MZN, editaveis pelo dono no passo do catalogo. \"source\" diz de onde veio o preco de venda; \"estimativa — confirmar\" significa que nao ha fonte publica. Custo sugerido = venda x margem tipica (cerveja 78%, refresco 72%, agua 65%, destilado 75%, mercearia 82%, higiene 80%, comida 40%, padaria 45%, talho 75%). Codigos de barras ficam a null de proposito: nao se inventam EAN; o dono le-os com o leitor no onboarding. Gerado a 2026-10-03.",
+  "catalogs": {
+    "bottle_store": [
+      {
+        "name": "Cerveja 2M 340ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Cerveja 2M lata 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja 2M Txoti 250ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Laurentina Clara 340ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Cerveja Laurentina Preta 250ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Manica 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Impala Milho 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Txilar 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 55,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Heineken 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 85,
+        "cost_mzn": 66,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Castle Lite 340ml",
+        "category": "Cervejas",
+        "sell_mzn": 75,
+        "cost_mzn": 59,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Cerveja Corona 335ml",
+        "category": "Cervejas",
+        "sell_mzn": 95,
+        "cost_mzn": 74,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cidra Flying Fish 330ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 80,
+        "cost_mzn": 62,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cidra Brutal Fruit 275ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 85,
+        "cost_mzn": 66,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Savanna Dry 330ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 110,
+        "cost_mzn": 86,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Hunters Gold 330ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 100,
+        "cost_mzn": 78,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Coca-Cola 330ml (vidro)",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola lata 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 50,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola 1L",
+        "category": "Refrescos",
+        "sell_mzn": 80,
+        "cost_mzn": 58,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola 2L",
+        "category": "Refrescos",
+        "sell_mzn": 110,
+        "cost_mzn": 79,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Fanta Laranja 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Fanta Ananás 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sprite 2L",
+        "category": "Refrescos",
+        "sell_mzn": 120,
+        "cost_mzn": 86,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Tónica Schweppes 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumol Ananás 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 60,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumo Cappy Manga 330ml",
+        "category": "Sumos",
+        "sell_mzn": 60,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumo Ceres 1L",
+        "category": "Sumos",
+        "sell_mzn": 180,
+        "cost_mzn": 130,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Compalinho 180ml",
+        "category": "Sumos",
+        "sell_mzn": 30,
+        "cost_mzn": 22,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 500ml",
+        "category": "Águas",
+        "sell_mzn": 30,
+        "cost_mzn": 20,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 1,5L",
+        "category": "Águas",
+        "sell_mzn": 45,
+        "cost_mzn": 29,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 5L",
+        "category": "Águas",
+        "sell_mzn": 85,
+        "cost_mzn": 55,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Monster Energy 500ml",
+        "category": "Energéticas",
+        "sell_mzn": 95,
+        "cost_mzn": 68,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Red Bull 250ml",
+        "category": "Energéticas",
+        "sell_mzn": 120,
+        "cost_mzn": 86,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Tipo Tinto 750ml",
+        "category": "Destilados",
+        "sell_mzn": 450,
+        "cost_mzn": 338,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Amarula 750ml",
+        "category": "Destilados",
+        "sell_mzn": 1100,
+        "cost_mzn": 825,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Gin Gordon's 750ml",
+        "category": "Destilados",
+        "sell_mzn": 900,
+        "cost_mzn": 675,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Vodka Smirnoff 750ml",
+        "category": "Destilados",
+        "sell_mzn": 750,
+        "cost_mzn": 563,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Whisky Johnnie Walker Red 750ml",
+        "category": "Destilados",
+        "sell_mzn": 1300,
+        "cost_mzn": 975,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Whisky Ballantine's 750ml",
+        "category": "Destilados",
+        "sell_mzn": 850,
+        "cost_mzn": 638,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Brandy KWV 3 anos 750ml",
+        "category": "Destilados",
+        "sell_mzn": 729,
+        "cost_mzn": 547,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Vodka Absolut 750ml",
+        "category": "Destilados",
+        "sell_mzn": 1265,
+        "cost_mzn": 949,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Gelo (saco 2kg)",
+        "category": "Outros",
+        "sell_mzn": 50,
+        "cost_mzn": 30,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Amendoim torrado (saquinho)",
+        "category": "Petiscos",
+        "sell_mzn": 20,
+        "cost_mzn": 12,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Batata frita de pacote",
+        "category": "Petiscos",
+        "sell_mzn": 60,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      }
+    ],
+    "restaurante": [
+      {
+        "name": "Frango assado inteiro",
+        "category": "Grelhados",
+        "sell_mzn": 900,
+        "cost_mzn": 360,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Meio frango assado",
+        "category": "Grelhados",
+        "sell_mzn": 480,
+        "cost_mzn": 192,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Quarto de frango assado",
+        "category": "Grelhados",
+        "sell_mzn": 260,
+        "cost_mzn": 104,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Galinha cafreal (inteira)",
+        "category": "Grelhados",
+        "sell_mzn": 950,
+        "cost_mzn": 380,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Espetada de vaca",
+        "category": "Grelhados",
+        "sell_mzn": 350,
+        "cost_mzn": 140,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Costeleta de porco",
+        "category": "Grelhados",
+        "sell_mzn": 380,
+        "cost_mzn": 152,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carapau grelhado",
+        "category": "Grelhados",
+        "sell_mzn": 400,
+        "cost_mzn": 160,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Camarão grelhado (dose)",
+        "category": "Grelhados",
+        "sell_mzn": 900,
+        "cost_mzn": 360,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Prego no pão",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 200,
+        "cost_mzn": 80,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Hambúrguer completo",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 280,
+        "cost_mzn": 112,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pão com chouriço",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 80,
+        "cost_mzn": 32,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Tosta mista",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 150,
+        "cost_mzn": 60,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chamussa (unidade)",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 25,
+        "cost_mzn": 10,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Rissol (unidade)",
+        "category": "Sandes e petiscos",
+        "sell_mzn": 25,
+        "cost_mzn": 10,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Caril de frango com amendoim",
+        "category": "Pratos",
+        "sell_mzn": 350,
+        "cost_mzn": 140,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Matapa (dose)",
+        "category": "Pratos",
+        "sell_mzn": 200,
+        "cost_mzn": 80,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Feijoada",
+        "category": "Pratos",
+        "sell_mzn": 300,
+        "cost_mzn": 120,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bife com batata frita",
+        "category": "Pratos",
+        "sell_mzn": 450,
+        "cost_mzn": 180,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sopa do dia",
+        "category": "Pratos",
+        "sell_mzn": 120,
+        "cost_mzn": 48,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Batata frita (dose)",
+        "category": "Acompanhamentos",
+        "sell_mzn": 150,
+        "cost_mzn": 60,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Xima (dose)",
+        "category": "Acompanhamentos",
+        "sell_mzn": 60,
+        "cost_mzn": 24,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Arroz (dose)",
+        "category": "Acompanhamentos",
+        "sell_mzn": 80,
+        "cost_mzn": 32,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Salada mista",
+        "category": "Acompanhamentos",
+        "sell_mzn": 120,
+        "cost_mzn": 48,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Ovo estrelado",
+        "category": "Acompanhamentos",
+        "sell_mzn": 40,
+        "cost_mzn": 16,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Café expresso",
+        "category": "Bebidas quentes",
+        "sell_mzn": 60,
+        "cost_mzn": 24,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      }
+    ],
+    "mercearia": [
+      {
+        "name": "Arroz Don Pato 1kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Arroz Don Pato 5kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 375,
+        "cost_mzn": 308,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Arroz Dona Ana 5kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 560,
+        "cost_mzn": 459,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Farinha de milho 1kg",
+        "category": "Farinhas",
+        "sell_mzn": 55,
+        "cost_mzn": 45,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Farinha de trigo 1kg",
+        "category": "Farinhas",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Açúcar castanho 1kg",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 75,
+        "cost_mzn": 61,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Açúcar branco 1kg",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Óleo alimentar 1L",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 150,
+        "cost_mzn": 123,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Óleo de girassol 5L",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 834,
+        "cost_mzn": 684,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Feijão manteiga 1kg",
+        "category": "Feijão e massas",
+        "sell_mzn": 140,
+        "cost_mzn": 115,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Feijão nhemba 1kg",
+        "category": "Feijão e massas",
+        "sell_mzn": 120,
+        "cost_mzn": 98,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Esparguete 500g",
+        "category": "Feijão e massas",
+        "sell_mzn": 60,
+        "cost_mzn": 49,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sal fino 500g",
+        "category": "Temperos",
+        "sell_mzn": 95,
+        "cost_mzn": 78,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Caldo Knorrox (24 cubos)",
+        "category": "Temperos",
+        "sell_mzn": 140,
+        "cost_mzn": 115,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Maionese 750g",
+        "category": "Temperos",
+        "sell_mzn": 215,
+        "cost_mzn": 176,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Margarina 500g",
+        "category": "Temperos",
+        "sell_mzn": 190,
+        "cost_mzn": 156,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sardinha Lucky Star 155g",
+        "category": "Enlatados",
+        "sell_mzn": 144,
+        "cost_mzn": 118,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Atum Sun Dip 160g",
+        "category": "Enlatados",
+        "sell_mzn": 90,
+        "cost_mzn": 74,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Feijão em molho Koo 420g",
+        "category": "Enlatados",
+        "sell_mzn": 100,
+        "cost_mzn": 82,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Leite em pó 400g",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 450,
+        "cost_mzn": 369,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chá (100 saquetas)",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 150,
+        "cost_mzn": 123,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bolacha Maria 200g",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 60,
+        "cost_mzn": 49,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Ovos (unidade)",
+        "category": "Frescos",
+        "sell_mzn": 12,
+        "cost_mzn": 10,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pão (unidade)",
+        "category": "Frescos",
+        "sell_mzn": 12,
+        "cost_mzn": 5,
+        "barcode": null,
+        "image_url": null,
+        "source": "noticias (pao 12-15 MT, canal.co.mz 05/2025)"
+      },
+      {
+        "name": "Sabão em barra Sunlight 500g",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 140,
+        "cost_mzn": 112,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Detergente OMO 1kg",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 185,
+        "cost_mzn": 148,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Lixívia Domestos 750ml",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 121,
+        "cost_mzn": 97,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Papel higiénico (rolo)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 45,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Velas (pacote)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 60,
+        "cost_mzn": 48,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Fósforos (caixa)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 10,
+        "cost_mzn": 8,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Insecticida Kingtox 325ml",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 105,
+        "cost_mzn": 84,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      }
+    ],
+    "padaria": [
+      {
+        "name": "Pão (unidade)",
+        "category": "Pão",
+        "sell_mzn": 12,
+        "cost_mzn": 5,
+        "barcode": null,
+        "image_url": null,
+        "source": "noticias (pao 12-15 MT, canal.co.mz 05/2025)"
+      },
+      {
+        "name": "Pão de leite",
+        "category": "Pão",
+        "sell_mzn": 15,
+        "cost_mzn": 7,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pão de forma 500g",
+        "category": "Pão",
+        "sell_mzn": 74,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "hikersbay Maputo 2026"
+      },
+      {
+        "name": "Pão de forma integral",
+        "category": "Pão",
+        "sell_mzn": 90,
+        "cost_mzn": 41,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pão com chouriço",
+        "category": "Salgados",
+        "sell_mzn": 80,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chamussa (unidade)",
+        "category": "Salgados",
+        "sell_mzn": 25,
+        "cost_mzn": 11,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Rissol (unidade)",
+        "category": "Salgados",
+        "sell_mzn": 25,
+        "cost_mzn": 11,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pizza (fatia)",
+        "category": "Salgados",
+        "sell_mzn": 120,
+        "cost_mzn": 54,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sandes mista",
+        "category": "Salgados",
+        "sell_mzn": 150,
+        "cost_mzn": 68,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Torrada",
+        "category": "Salgados",
+        "sell_mzn": 60,
+        "cost_mzn": 27,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Croissant",
+        "category": "Doces",
+        "sell_mzn": 60,
+        "cost_mzn": 27,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pastel de nata",
+        "category": "Doces",
+        "sell_mzn": 50,
+        "cost_mzn": 23,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bolo de arroz",
+        "category": "Doces",
+        "sell_mzn": 50,
+        "cost_mzn": 23,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Donut",
+        "category": "Doces",
+        "sell_mzn": 45,
+        "cost_mzn": 20,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Queque",
+        "category": "Doces",
+        "sell_mzn": 30,
+        "cost_mzn": 14,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Fatia de bolo",
+        "category": "Doces",
+        "sell_mzn": 80,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bolo inteiro",
+        "category": "Doces",
+        "sell_mzn": 600,
+        "cost_mzn": 270,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Biscoitos de coco (saco)",
+        "category": "Doces",
+        "sell_mzn": 100,
+        "cost_mzn": 45,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Café expresso",
+        "category": "Cafetaria",
+        "sell_mzn": 60,
+        "cost_mzn": 27,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Galão",
+        "category": "Cafetaria",
+        "sell_mzn": 90,
+        "cost_mzn": 41,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chá",
+        "category": "Cafetaria",
+        "sell_mzn": 50,
+        "cost_mzn": 23,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Leite com chocolate",
+        "category": "Cafetaria",
+        "sell_mzn": 80,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sumo natural",
+        "category": "Cafetaria",
+        "sell_mzn": 120,
+        "cost_mzn": 54,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Coca-Cola 330ml (vidro)",
+        "category": "Bebidas",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 500ml",
+        "category": "Bebidas",
+        "sell_mzn": 30,
+        "cost_mzn": 20,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      }
+    ],
+    "talho": [
+      {
+        "name": "Frango inteiro congelado (un.)",
+        "category": "Frango",
+        "sell_mzn": 450,
+        "cost_mzn": 338,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Peito de frango 1kg",
+        "category": "Frango",
+        "sell_mzn": 344,
+        "cost_mzn": 258,
+        "barcode": null,
+        "image_url": null,
+        "source": "hikersbay Maputo 2026"
+      },
+      {
+        "name": "Coxas de frango 1kg",
+        "category": "Frango",
+        "sell_mzn": 280,
+        "cost_mzn": 210,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Asas de frango 1kg",
+        "category": "Frango",
+        "sell_mzn": 260,
+        "cost_mzn": 195,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Moelas 1kg",
+        "category": "Frango",
+        "sell_mzn": 220,
+        "cost_mzn": 165,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pés de galinha 1kg",
+        "category": "Frango",
+        "sell_mzn": 120,
+        "cost_mzn": 90,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carne de vaca com osso 1kg",
+        "category": "Vaca",
+        "sell_mzn": 450,
+        "cost_mzn": 338,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carne de vaca sem osso 1kg",
+        "category": "Vaca",
+        "sell_mzn": 600,
+        "cost_mzn": 450,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carne picada 1kg",
+        "category": "Vaca",
+        "sell_mzn": 550,
+        "cost_mzn": 413,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bife 1kg",
+        "category": "Vaca",
+        "sell_mzn": 700,
+        "cost_mzn": 525,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Costela de vaca 1kg",
+        "category": "Vaca",
+        "sell_mzn": 420,
+        "cost_mzn": 315,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Fígado 1kg",
+        "category": "Vaca",
+        "sell_mzn": 300,
+        "cost_mzn": 225,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Tripas 1kg",
+        "category": "Vaca",
+        "sell_mzn": 250,
+        "cost_mzn": 188,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carne de porco 1kg",
+        "category": "Porco",
+        "sell_mzn": 500,
+        "cost_mzn": 375,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Costeleta de porco 1kg",
+        "category": "Porco",
+        "sell_mzn": 520,
+        "cost_mzn": 390,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Entremeada 1kg",
+        "category": "Porco",
+        "sell_mzn": 480,
+        "cost_mzn": 360,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carne de cabrito 1kg",
+        "category": "Cabrito",
+        "sell_mzn": 650,
+        "cost_mzn": 488,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chouriço 1kg",
+        "category": "Enchidos",
+        "sell_mzn": 450,
+        "cost_mzn": 338,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Linguiça 1kg",
+        "category": "Enchidos",
+        "sell_mzn": 480,
+        "cost_mzn": 360,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Salsichas (pacote)",
+        "category": "Enchidos",
+        "sell_mzn": 150,
+        "cost_mzn": 113,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Hambúrguer de vaca (un.)",
+        "category": "Enchidos",
+        "sell_mzn": 60,
+        "cost_mzn": 45,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carapau 1kg",
+        "category": "Peixe",
+        "sell_mzn": 280,
+        "cost_mzn": 210,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pescada 1kg",
+        "category": "Peixe",
+        "sell_mzn": 450,
+        "cost_mzn": 338,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Camarão 1kg",
+        "category": "Peixe",
+        "sell_mzn": 900,
+        "cost_mzn": 675,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Carvão (saco)",
+        "category": "Outros",
+        "sell_mzn": 150,
+        "cost_mzn": 90,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      }
+    ],
+    "supermercado": [
+      {
+        "name": "Arroz Don Pato 1kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Arroz Don Pato 5kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 375,
+        "cost_mzn": 308,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Arroz Dona Ana 5kg",
+        "category": "Arroz e cereais",
+        "sell_mzn": 560,
+        "cost_mzn": 459,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Farinha de milho 1kg",
+        "category": "Farinhas",
+        "sell_mzn": 55,
+        "cost_mzn": 45,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Farinha de trigo 1kg",
+        "category": "Farinhas",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Açúcar castanho 1kg",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 75,
+        "cost_mzn": 61,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Açúcar branco 1kg",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 85,
+        "cost_mzn": 70,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Óleo alimentar 1L",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 150,
+        "cost_mzn": 123,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Óleo de girassol 5L",
+        "category": "Açúcar e óleo",
+        "sell_mzn": 834,
+        "cost_mzn": 684,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Feijão manteiga 1kg",
+        "category": "Feijão e massas",
+        "sell_mzn": 140,
+        "cost_mzn": 115,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Feijão nhemba 1kg",
+        "category": "Feijão e massas",
+        "sell_mzn": 120,
+        "cost_mzn": 98,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Esparguete 500g",
+        "category": "Feijão e massas",
+        "sell_mzn": 60,
+        "cost_mzn": 49,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sal fino 500g",
+        "category": "Temperos",
+        "sell_mzn": 95,
+        "cost_mzn": 78,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Caldo Knorrox (24 cubos)",
+        "category": "Temperos",
+        "sell_mzn": 140,
+        "cost_mzn": 115,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Maionese 750g",
+        "category": "Temperos",
+        "sell_mzn": 215,
+        "cost_mzn": 176,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Margarina 500g",
+        "category": "Temperos",
+        "sell_mzn": 190,
+        "cost_mzn": 156,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Sardinha Lucky Star 155g",
+        "category": "Enlatados",
+        "sell_mzn": 144,
+        "cost_mzn": 118,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Atum Sun Dip 160g",
+        "category": "Enlatados",
+        "sell_mzn": 90,
+        "cost_mzn": 74,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Feijão em molho Koo 420g",
+        "category": "Enlatados",
+        "sell_mzn": 100,
+        "cost_mzn": 82,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Leite em pó 400g",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 450,
+        "cost_mzn": 369,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Chá (100 saquetas)",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 150,
+        "cost_mzn": 123,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Bolacha Maria 200g",
+        "category": "Pequeno-almoço",
+        "sell_mzn": 60,
+        "cost_mzn": 49,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Ovos (unidade)",
+        "category": "Frescos",
+        "sell_mzn": 12,
+        "cost_mzn": 10,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Pão (unidade)",
+        "category": "Frescos",
+        "sell_mzn": 12,
+        "cost_mzn": 5,
+        "barcode": null,
+        "image_url": null,
+        "source": "noticias (pao 12-15 MT, canal.co.mz 05/2025)"
+      },
+      {
+        "name": "Sabão em barra Sunlight 500g",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 140,
+        "cost_mzn": 112,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Detergente OMO 1kg",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 185,
+        "cost_mzn": 148,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Lixívia Domestos 750ml",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 121,
+        "cost_mzn": 97,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Papel higiénico (rolo)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 45,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Velas (pacote)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 60,
+        "cost_mzn": 48,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Fósforos (caixa)",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 10,
+        "cost_mzn": 8,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Insecticida Kingtox 325ml",
+        "category": "Higiene e limpeza",
+        "sell_mzn": 105,
+        "cost_mzn": 84,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja 2M 340ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Cerveja 2M lata 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Laurentina Clara 340ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Cerveja Laurentina Preta 250ml",
+        "category": "Cervejas",
+        "sell_mzn": 60,
+        "cost_mzn": 47,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Manica 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Impala Milho 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 65,
+        "cost_mzn": 51,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Txilar 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 55,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cerveja Heineken 330ml",
+        "category": "Cervejas",
+        "sell_mzn": 85,
+        "cost_mzn": 66,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cidra Flying Fish 330ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 80,
+        "cost_mzn": 62,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Cidra Brutal Fruit 275ml",
+        "category": "Cidras e misturas",
+        "sell_mzn": 85,
+        "cost_mzn": 66,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola 330ml (vidro)",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola lata 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 50,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola 1L",
+        "category": "Refrescos",
+        "sell_mzn": 80,
+        "cost_mzn": 58,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Coca-Cola 2L",
+        "category": "Refrescos",
+        "sell_mzn": 110,
+        "cost_mzn": 79,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Fanta Laranja 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Fanta Ananás 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sprite 2L",
+        "category": "Refrescos",
+        "sell_mzn": 120,
+        "cost_mzn": 86,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Tónica Schweppes 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 46,
+        "cost_mzn": 33,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumol Ananás 330ml",
+        "category": "Refrescos",
+        "sell_mzn": 60,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumo Cappy Manga 330ml",
+        "category": "Sumos",
+        "sell_mzn": 60,
+        "cost_mzn": 43,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Sumo Ceres 1L",
+        "category": "Sumos",
+        "sell_mzn": 180,
+        "cost_mzn": 130,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Compalinho 180ml",
+        "category": "Sumos",
+        "sell_mzn": 30,
+        "cost_mzn": 22,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 500ml",
+        "category": "Águas",
+        "sell_mzn": 30,
+        "cost_mzn": 20,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 1,5L",
+        "category": "Águas",
+        "sell_mzn": 45,
+        "cost_mzn": 29,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Água Namaacha 5L",
+        "category": "Águas",
+        "sell_mzn": 85,
+        "cost_mzn": 55,
+        "barcode": null,
+        "image_url": null,
+        "source": "bazara.co.mz (out/2026)"
+      },
+      {
+        "name": "Red Bull 250ml",
+        "category": "Energéticas",
+        "sell_mzn": 120,
+        "cost_mzn": 86,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      },
+      {
+        "name": "Batata frita de pacote",
+        "category": "Petiscos",
+        "sell_mzn": 60,
+        "cost_mzn": 36,
+        "barcode": null,
+        "image_url": null,
+        "source": "estimativa — confirmar"
+      }
+    ]
+  }
 }

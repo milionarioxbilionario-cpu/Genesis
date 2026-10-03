@@ -1100,3 +1100,47 @@ O QUE PRECISO QUE DECIDAS
   nova. Se a internet daqui falhar no arranque, o servidor agora recusa
   arrancar com uma mensagem clara, em vez de abrir a base errada. Basta
   arrancar de novo.
+
+==========================================================================
+04/10/2026 — FASE 1: CATALOGO MOCAMBICANO, ONBOARDING E ARRANQUE
+==========================================================================
+
+1. RUN-ADMIN.BAT (e RUN-LOCAL.BAT)
+   - Abriam uma pagina que ja nao existe (/login). Agora abrem /entrar.
+   - Diziam "Genesis a rodar com sucesso!" mesmo quando o servidor nao
+     arrancava. Agora esperam ate 2 minutos e meio e, se falhar, dizem que
+     falhou e mostram porque.
+   - A janela ja nao fecha sozinha quando ha erro.
+   - No fim mostram tambem o endereco do terminal do balcao (/terminal).
+   Testei os dois casos: arranque normal (7 segundos) e arranque sem base
+   de dados (mostrou o erro e nao fingiu sucesso).
+
+2. CATALOGO DE PRODUTOS DE MOCAMBIQUE
+   - Antes: 10 produtos para bottle store e NENHUM para restaurante.
+   - Agora: 207 produtos. Bottle store 43, restaurante/churrasqueira 25,
+     mercearia 31, padaria 25, talho 25, supermercado 58.
+   - Precos: bebidas e mercearia vem sobretudo da loja online bazara.co.mz
+     (Maputo, Outubro 2026); o pao das noticias (12-15 MT). Pratos de
+     restaurante, cortes de talho e alguns produtos nao tem preco publico:
+     estao marcados como ESTIMATIVA. O onboarding diz "precos sugeridos —
+     confirme-os com os seus".
+   - Codigos de barras: nao os inventei (um codigo errado faz o leitor
+     vender o produto errado). O dono le-os no onboarding.
+   - Imagens: a base aberta de imagens quase nao tem produtos
+     mocambicanos. Ficam para a Fase 2 (icone da categoria + foto do dono).
+   - Erro encontrado: uma mercearia nova recebia so 2 produtos de teste
+     antigos. Ja nao acontece. Essas 2 linhas ("Cerveja 500ml" e "Agua
+     500ml") continuam; podes apaga-las no painel de Super Admin.
+
+3. ONBOARDING
+   - Coluna "Codigo de barras": clicas na primeira linha e passas os
+     produtos no leitor; salta sozinho para a linha seguinte. Codigo
+     repetido em dois produtos: avisa e nao deixa continuar.
+   - Produtos agrupados por categoria, com o nome inteiro.
+   - Cada passo explica para que serve.
+   - O passo 4 tem agora Fornecedores (nome, WhatsApp, custo por entrega).
+   - Se um dado estiver errado, a mensagem diz qual produto e qual campo.
+
+COMO PROVEI
+- Onboarding inteiro no browser: 18 verificacoes, todas passaram. Os testes
+  de venda/terminal continuam a passar (24 de 24).
