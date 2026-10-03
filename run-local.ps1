@@ -129,7 +129,34 @@ function Wait-ForUrl {
     return $false
 }
 
-[void](Wait-ForUrl "http://127.0.0.1:4000/" "Backend")
+# O backend so abre a porta depois de ligar a base de dados (ate 3 tentativas
+# a partir de Maputo). Se o processo terminar, a base nao respondeu: nao
+# fingir que esta tudo bem.
+function Wait-ForBackend {
+    param([int]$maxSeconds = 150)
+    Write-Host -NoNewline "  -> Aguardando Backend (liga a base de dados; pode levar 1-2 minutos)... "
+    $deadline = (Get-Date).AddSeconds($maxSeconds)
+    while ((Get-Date) -lt $deadline) {
+        if ($backendProcess.HasExited) { Write-Host "FALHOU" -ForegroundColor Red; return $false }
+        try {
+            $resp = Invoke-WebRequest -Uri "http://127.0.0.1:4000/" -UseBasicParsing -TimeoutSec 3 -ErrorAction SilentlyContinue
+            if ($resp -and $resp.StatusCode -eq 200) { Write-Host "PRONTO!" -ForegroundColor Green; return $true }
+        } catch {}
+        Start-Sleep -Seconds 2
+    }
+    Write-Host "SEM RESPOSTA" -ForegroundColor Red
+    return $false
+}
+
+$backendOk = Wait-ForBackend
+if (-not $backendOk) {
+    Write-Host "`n[ERRO] O backend nao arrancou. Ultimas linhas de logs\backend.log:" -ForegroundColor Red
+    if (Test-Path $backendLog) { Get-Content $backendLog -Tail 12 | ForEach-Object { Write-Host "   $_" -ForegroundColor Gray } }
+    Write-Host "`n  Causa mais comum: a internet nao chegou a base de dados (Supabase)." -ForegroundColor Yellow
+    Write-Host "  Verifique a ligacao e corra este script outra vez." -ForegroundColor Yellow
+    Write-Host "  (Os frontends ficam a correr; o stop.bat para tudo.)" -ForegroundColor Gray
+    exit 1
+}
 [void](Wait-ForUrl "http://127.0.0.1:5173/" "Frontend Owner/Cashier")
 [void](Wait-ForUrl "http://127.0.0.1:5175/" "Admin Frontend")
 
@@ -139,8 +166,8 @@ function Wait-ForUrl {
 
 Write-Host "`nA abrir o navegador..." -ForegroundColor Cyan
 
-$UrlFrontend = "http://localhost:5173/login"
-$UrlAdmin = "http://localhost:5175/login"
+$UrlFrontend = "http://localhost:5173/entrar"
+$UrlAdmin = "http://localhost:5175/entrar"
 
 if ($OpenAdmin) {
     Write-Host "[MODO --admin ACTIVADO] A abrir 2 abas no navegador:" -ForegroundColor Magenta
@@ -157,8 +184,9 @@ if ($OpenAdmin) {
 
 Write-Host "`n==================================================" -ForegroundColor Cyan
 Write-Host " Genesis a rodar com sucesso!" -ForegroundColor Green
-Write-Host " Frontend Owner/Cashier: http://localhost:5173" -ForegroundColor Gray
-Write-Host " Super Admin Frontend:  http://localhost:5175" -ForegroundColor Gray
+Write-Host " Painel do dono:         http://localhost:5173/entrar" -ForegroundColor Gray
+Write-Host " Terminal do balcao:     http://localhost:5173/terminal" -ForegroundColor Gray
+Write-Host " Super Admin:            http://localhost:5175/entrar" -ForegroundColor Gray
 Write-Host " Backend API:            http://localhost:4000" -ForegroundColor Gray
 Write-Host " Logs gravados em:       logs/" -ForegroundColor Gray
 Write-Host "==================================================" -ForegroundColor Cyan
