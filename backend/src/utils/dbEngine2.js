@@ -148,8 +148,8 @@ async function resolveDatabaseUrl() {
     return process.env.DATABASE_URL;
   }
   throw new Error(
-    'Postgres inacessivel e DB_ALLOW_SQLITE_FALLBACK nao esta activo. ' +
-    'Para desenvolvimento local, defina DB_ALLOW_SQLITE_FALLBACK=true no .env.'
+    'Postgres inacessivel depois de ' + PROBE_ATTEMPTS + ' tentativas. ' +
+    'Verifique a internet e arranque outra vez (a base local SQLite esta desligada de proposito: tem outros dados).'
   );
 }
 
