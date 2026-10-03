@@ -1,19 +1,19 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-03T21:34:44.983Z */
+   Gerado em: 2026-10-03T23:26:28.700Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-03T21:34:44.983Z",
+ "generatedAt": "2026-10-03T23:26:28.700Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 157,
+  "files": 158,
   "planned": 5,
-  "links": 252,
-  "lines": 21548,
+  "links": 254,
+  "lines": 23314,
   "byStatus": {
-   "ok": 88,
-   "partial": 13,
+   "ok": 90,
+   "partial": 12,
    "broken": 0,
    "planned": 5,
    "untracked": 56
@@ -22,7 +22,7 @@ window.GENESIS_MINDMAP = {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 38,
+   "backend-data": 39,
    "backend": 42,
    "frontend-pub": 4,
    "frontend": 46,
@@ -56,7 +56,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "@prisma/client",
-   "count": 14
+   "count": 13
   },
   {
    "pkg": "crypto",
@@ -71,11 +71,11 @@ window.GENESIS_MINDMAP = {
    "count": 7
   },
   {
-   "pkg": "fs",
-   "count": 6
+   "pkg": "node:path",
+   "count": 5
   },
   {
-   "pkg": "node:path",
+   "pkg": "fs",
    "count": 5
   },
   {
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 38,
+   "nodes": 39,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -173,6 +173,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20260905200000_add_device_keys": 1,
     "backend/prisma/migrations/20260919_add_sale_discount_daily": 1,
     "backend/prisma/migrations/20261003_genesis2": 1,
+    "backend/prisma/migrations/20261004_catalogo_mz": 1,
     "backend/scripts": 25,
     "backend/tests": 2,
     "backend/prisma/migrations/postgres/0001_init": 1
@@ -315,8 +316,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 989,
-   "size": 50819,
+   "lines": 997,
+   "size": 52072,
    "externals": [
     "nodemailer"
    ],
@@ -598,13 +599,13 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/data",
    "ext": ".json",
    "status": "ok",
-   "summary": "Fonte dos catalogos mestres semeada na base de dados.",
-   "notes": "",
+   "summary": "Catalogo mocambicano: bottle store 43, restaurante 25, mercearia 31, padaria 25, talho 25, supermercado 58.",
+   "notes": "Precos sugeridos em MZN com fonte por produto (bazara.co.mz out/2026, noticias, hikersbay) ou \"estimativa — confirmar\". Codigos de barras a null de proposito (nao se inventam EAN). Imagens: Open Food Facts quase nao tem produtos mocambicanos — sem imagens pre-definidas por agora.",
    "role": "Dados.",
    "security": "",
    "planned": false,
-   "lines": 68,
-   "size": 4863,
+   "lines": 1881,
+   "size": 49294,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -759,6 +760,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261004_catalogo_mz/migration.sql",
+   "path": "backend/prisma/migrations/20261004_catalogo_mz/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261004_catalogo_mz",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 5,
+   "size": 281,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -792,8 +814,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 319,
-   "size": 10955,
+   "lines": 321,
+   "size": 11005,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -815,8 +837,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 336,
-   "size": 11837,
+   "lines": 338,
+   "size": 11887,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1259,23 +1281,23 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/scripts",
    "ext": ".js",
    "status": "ok",
-   "summary": "Popula/actualiza a tabela de catalogos mestres sem duplicar.",
-   "notes": "",
+   "summary": "Carrega data/master_catalogs.json para a tabela MasterCatalog.",
+   "notes": "Reescrito 04/10: usa o cliente do projecto (nao new PrismaClient), so insere o que falta, nunca apaga. 207 inseridos; 2.a execucao = 0 (idempotente).",
    "role": "Semear dados.",
    "security": "",
    "planned": false,
-   "lines": 124,
-   "size": 6205,
+   "lines": 45,
+   "size": 2119,
    "externals": [
     "dotenv",
-    "@prisma/client",
-    "fs",
     "path"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 0
+   "outbound": 1
   },
   {
    "id": "backend/scripts/shift_closing_e2e.js",
@@ -1742,14 +1764,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "partial",
-   "summary": "Importacao do catalogo sugerido no onboarding.",
-   "notes": "Validado a mao; sem testes automatizados.",
+   "status": "ok",
+   "summary": "Catalogo pre-definido por tipo de negocio (GET publico) e importacao para a loja no fim do onboarding.",
+   "notes": "Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo.",
    "role": "Onboarding.",
    "security": "",
    "planned": false,
-   "lines": 170,
-   "size": 8395,
+   "lines": 97,
+   "size": 4913,
    "externals": [
     "express",
     "zod"
@@ -1757,13 +1779,14 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/middleware/auth.js",
-    "backend/src/middleware/rbac.js"
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/http.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "backend/src/routes/dashboard.js",
@@ -2265,7 +2288,7 @@ window.GENESIS_MINDMAP = {
    "security": "Com DB_ALLOW_SQLITE_FALLBACK=true no .env o servidor ainda pode cair para a SQLite local se as 3 tentativas falharem; recomendado false.",
    "planned": false,
    "lines": 165,
-   "size": 6445,
+   "size": 6483,
    "externals": [
     "path",
     "fs",
@@ -2303,12 +2326,13 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/src/index.js",
     "backend/src/routes/admin.js",
+    "backend/src/routes/catalogs.js",
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 6,
+   "inbound": 7,
    "outbound": 0
   },
   {
@@ -2391,6 +2415,7 @@ window.GENESIS_MINDMAP = {
     "backend/scripts/ensure_device_keys.js",
     "backend/scripts/gerir_contas.js",
     "backend/scripts/seed_demo.js",
+    "backend/scripts/seed_master_catalogs.js",
     "backend/scripts/shift_closing_e2e.js",
     "backend/scripts/verify_system.js",
     "backend/src/index.js",
@@ -2418,7 +2443,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 33,
+   "inbound": 34,
    "outbound": 1
   },
   {
@@ -3046,8 +3071,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 155,
-   "size": 7085,
+   "lines": 157,
+   "size": 7289,
    "externals": [
     "react",
     "lucide-react"
@@ -3525,14 +3550,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
+   "notes": "04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo.",
+   "role": "Onboarding do dono.",
    "security": "",
    "planned": false,
-   "lines": 201,
-   "size": 12500,
+   "lines": 258,
+   "size": 18087,
    "externals": [
     "react",
     "react-router-dom",
@@ -4230,8 +4255,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 99,
-   "size": 5332,
+   "lines": 128,
+   "size": 7685,
    "externals": [
     "node:fs",
     "node:path",
@@ -4683,6 +4708,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/prisma.js"
   },
   {
+   "source": "backend/scripts/seed_master_catalogs.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
    "source": "backend/scripts/shift_closing_e2e.js",
    "target": "backend/src/utils/dbEngine2.js"
   },
@@ -4897,6 +4926,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/catalogs.js",
    "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/catalogs.js",
+   "target": "backend/src/utils/http.js"
   },
   {
    "source": "backend/src/routes/dashboard.js",

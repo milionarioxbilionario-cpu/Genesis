@@ -270,6 +270,8 @@ model MasterCatalog {
   category       String
   suggested_cost Int
   suggested_sell Int
+  barcode        String?
+  image_url      String?
 }
 
 model ProductPriceHistory {

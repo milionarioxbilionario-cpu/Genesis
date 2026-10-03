@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-03",
+  "updatedAt": "2026-10-04",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -140,10 +140,10 @@
       "role": "Stock."
     },
     "backend/src/routes/catalogs.js": {
-      "status": "partial",
-      "summary": "Importacao do catalogo sugerido no onboarding.",
+      "status": "ok",
+      "summary": "Catalogo pre-definido por tipo de negocio (GET publico) e importacao para a loja no fim do onboarding.",
       "role": "Onboarding.",
-      "notes": "Validado a mao; sem testes automatizados."
+      "notes": "Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
     },
     "backend/src/routes/master_catalogs.js": {
       "status": "ok",
@@ -608,8 +608,9 @@
     },
     "backend/scripts/seed_master_catalogs.js": {
       "status": "ok",
-      "summary": "Popula/actualiza a tabela de catalogos mestres sem duplicar.",
-      "role": "Semear dados."
+      "summary": "Carrega data/master_catalogs.json para a tabela MasterCatalog.",
+      "role": "Semear dados.",
+      "notes": "Reescrito 04/10: usa o cliente do projecto (nao new PrismaClient), so insere o que falta, nunca apaga. 207 inseridos; 2.a execucao = 0 (idempotente)."
     },
     "backend/scripts/restore_owner_password.js": {
       "status": "ok",
@@ -799,8 +800,9 @@
     },
     "backend/data/master_catalogs.json": {
       "status": "ok",
-      "summary": "Fonte dos catalogos mestres semeada na base de dados.",
-      "role": "Dados."
+      "summary": "Catalogo mocambicano: bottle store 43, restaurante 25, mercearia 31, padaria 25, talho 25, supermercado 58.",
+      "role": "Dados.",
+      "notes": "Precos sugeridos em MZN com fonte por produto (bazara.co.mz out/2026, noticias, hikersbay) ou \"estimativa — confirmar\". Codigos de barras a null de proposito (nao se inventam EAN). Imagens: Open Food Facts quase nao tem produtos mocambicanos — sem imagens pre-definidas por agora."
     },
     "backend/verify_hash.js": {
       "status": "ok",
@@ -983,6 +985,12 @@
       "summary": "Harness: sobe o backend numa porta livre com SQLite, corre os testes E2E (auth, fecho de turno) e a verificação de SMTP, e depois mata o servidor.",
       "role": "Automatismo de testes.",
       "notes": "Uso: node scripts/run_checks.js [--port=4020]. Não deixa processos pendurados."
+    },
+    "frontend/src/pages/owner/Onboarding.jsx": {
+      "status": "ok",
+      "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
+      "role": "Onboarding do dono.",
+      "notes": "04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
     }
   }
 }

@@ -55,13 +55,34 @@ try {
   await page.getByText('O seu catálogo').waitFor();
   await page.getByText(/produto\(s\) a importar/).waitFor({ timeout: T });
   const count = Number((await page.getByText(/produto\(s\) a importar/).textContent()).match(/\d+/)[0]);
-  ok(count > 0, 'passo 3: catalogo carregado', count + ' produtos');
+  ok(count >= 25 + 25, 'passo 3: catalogo bottle store + restaurante carregado (>= 50)', count + ' produtos');
+  ok(await page.getByLabel('Nome').first().inputValue() !== '', 'passo 3: linhas com nome');
+
+  // Leitor de codigo de barras: escreve o codigo + Enter -> foco salta para a linha seguinte.
+  const codes = page.getByLabel(/^Código de barras de /);
+  await codes.nth(0).click();
+  await page.keyboard.type('6001234500017');
+  await page.keyboard.press('Enter');
+  const focusedLabel = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
+  ok(focusedLabel === (await codes.nth(1).getAttribute('aria-label')), 'passo 3: Enter do leitor salta para o codigo da linha seguinte', focusedLabel);
+  await page.keyboard.type('6001234500024');
+  await page.keyboard.press('Enter');
+  // Codigo repetido: bloqueia o Continuar ate corrigir.
+  await page.keyboard.type('6001234500017');
+  ok(await page.getByText(/está em mais do que um produto/).isVisible(), 'passo 3: codigo repetido e assinalado');
+  ok(await page.getByRole('button', { name: 'Continuar' }).isDisabled(), 'passo 3: Continuar bloqueado com codigo repetido');
+  await codes.nth(2).fill('');
+  ok(await page.getByText(/2 com código de barras/).isVisible(), 'passo 3: contador de codigos = 2');
   await shot(page, 'o3-catalogo');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
-  // Passo 4: custos.
+  // Passo 4: custos + fornecedor.
   await page.getByText('Custos fixos e equipa').waitFor();
   await page.getByLabel('Renda mensal do local').fill('15000');
+  await page.getByRole('button', { name: 'Fornecedor' }).click();
+  await page.getByLabel('Nome do fornecedor').fill('Distribuidora Teste');
+  await page.getByLabel('WhatsApp do fornecedor').fill('841112233');
+  await page.getByLabel('Custo por entrega').fill('500');
   await shot(page, 'o4-custos');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
@@ -83,7 +104,15 @@ try {
     ok(list.length === count, 'produtos gravados = produtos escolhidos', `${list.length} vs ${count}`);
     const cats = [...new Set(list.map((p) => p.category))].sort();
     console.log('  categorias gravadas: ' + cats.join(', '));
-    ok(!cats.includes('Higiene'), 'sem categoria Higiene numa bottle store + restaurante');
+    ok(!cats.some((c) => /Higiene/.test(c)), 'sem categoria Higiene numa bottle store + restaurante');
+    ok(cats.includes('Grelhados'), 'categoria adicional (restaurante) importada: Grelhados');
+    const withCode = list.filter((p) => p.barcode).map((p) => p.barcode).sort();
+    ok(withCode.join(',') === '6001234500017,6001234500024', 'codigos de barras lidos ficaram gravados', withCode.join(','));
+    const beer = list.find((p) => p.name === 'Cerveja Txilar 330ml');
+    ok(beer && beer.sell_price === 5500, 'preco em centavos: Txilar 55 MT = 5500', beer && beer.sell_price);
+    const sup = await page.evaluate(async () => (await fetch('/api/inventory/suppliers', { credentials: 'include' })).json());
+    const s = (Array.isArray(sup) ? sup : []).find((x) => x.name === 'Distribuidora Teste');
+    ok(s && s.delivery_cost_per_visit === 50000 && s.phone === '841112233', 'fornecedor gravado (entrega 500 MT = 50000)', JSON.stringify(s));
   }
   if (apiErrors.length) { console.log('  respostas de erro da API:'); for (const e of apiErrors) console.log('    ' + e); }
 } catch (e) {
