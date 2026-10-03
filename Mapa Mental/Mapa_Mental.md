@@ -113,6 +113,15 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | Senha exposta no GitHub | Removida dos ficheiros; contas ainda por rodar | 🔴 CONHECIDO COMO QUEBRADO até o fundador rodar as senhas | 03/10 |
 | Inglês (especificação 6.10) | O i18n antigo (só login) foi removido; a app está só em português | ❌ NÃO EXISTE AINDA | 03/10 |
 
+### Genesis 2.1 — Fase 0 (03/10/2026, noite) — plano `~/.claude/plans/a-malha-entrou-dentro-effervescent-honey.md`
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| Onboarding (`pages/owner/Onboarding.jsx` + `routes/catalogs.js`) | 5 passos; categorias adicionais; importar catálogo | ✅ CONFIRMADO FUNCIONAL no browser (os bugs relatados — botões das categorias adicionais e "Dados inválidos" — NÃO se reproduzem no 2.0). ⚠️ catálogo pequeno (10 produtos bottle store; "restaurante" não traz nenhum) → Fase 1 | 03/10 — `frontend/tests/e2e/onboarding.mjs` 8/8 OK, 0 erros JS |
+| `backend/src/utils/dbEngine2.js` | Sondagem do Postgres com 3 tentativas antes de cair para SQLite | ✅ CONFIRMADO FUNCIONAL | 03/10 — host inexistente: 3 tentativas + recusa em 4 s; rede real: 1.ª falhou, 2.ª OK → postgresql |
+| `backend/src/utils/prisma.js` | `connect_timeout=30` e `pool_timeout=30` acrescentados aos URLs | ⚠️ código feito; 🔴 ligações à BD continuam a esgotar (ver linha seguinte) | 03/10 — `node --check` OK |
+| Ligações à BD (Supabase) | `max_connections`=60; o pooler 5432 (modo sessão) recusa acima de ~15 clientes (`EMAXCONNSESSION`, mostrado pelo Prisma como P1001 "Can't reach database server"); P2024 por espera > 10 s | 🔴 CONHECIDO COMO QUEBRADO — causa provável do "servidor indisponível" no POS. A porta 6543 (modo transacção) foi provada com o papel `genesis_app` + `set_config` do RLS (24/24 em 3 s). Mudar o `.env` aguarda decisão do fundador | 03/10 — teste de 24 ligações em paralelo; `pg_stat_activity` 59/60 |
+| `DB_ALLOW_SQLITE_FALLBACK=true` no `.env` | Se o Postgres falhar 3×, o servidor serve de `backend/data/genesis.db` (outra base, esquema antigo, sem as lojas reais) e regenera o cliente Prisma partilhado para SQLite | 🔴 risco activo em dev — recomendado `false` (aguarda fundador) | 03/10 — reproduzido: o fixture caiu para SQLite e falhou com "column discount_free_pct does not exist" |
+
 ---
 
 ## Parte B — JORNAL CRONOLÓGICO
@@ -457,3 +466,18 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Prova: `verify_system.js` com RLS activo — 129 verificações OK; secção 8 isolada da 3 e repetida (OK). Browser real: dono+terminal 25/25 passos, 0 erros de JS; admin 5/5, 0 erros de JS. `offline_queue.test.mjs` 8/8, `monthlyDeductions.test.js` 6/6, `prisma validate` OK, builds OK (POS ~375 KB; gráficos só no painel).
 - Resultado: funcionou. Pendentes: rodar as 3 senhas expostas (fundador), inglês (6.10), percorrer no browser o onboarding e o fim de sessão por senha mudada, lojas de teste antigas na BD (não criadas nesta sessão), latência de ~1–2,5 s por query (alojar o backend em eu-central-1).
 - Segue-se: o fundador valida no balcão real (emparelhar um PC, criar PIN em Equipa) e decide o alojamento.
+
+### [2026-10-03] — Genesis 2.1, Fase 0: commit do 2.0 + reprodução dos bugs relatados (onboarding OK; causa real do "servidor indisponível")
+- Plano aprovado: `~/.claude/plans/a-malha-entrou-dentro-effervescent-honey.md` (acrescento ao 2.0; não desfaz nada — sem modo escuro, onboarding continua no 1.º login).
+- Ficheiros alterados: commit `0cf0d30` (Genesis 2.0, ~190 ficheiros, varredura de segredos = 0); `backend/scripts/e2e_fixture.js` (modo `onboarding`); novo `frontend/tests/e2e/onboarding.mjs`; `backend/src/utils/dbEngine2.js` (3 tentativas); `backend/src/utils/prisma.js` (`connect_timeout`/`pool_timeout`).
+- Porquê: o fundador relatou (versão antiga) onboarding partido, "servidor indisponível" ao vender e fecho de turno a dizer "já fechado".
+- Prova real:
+  - Onboarding no browser: login → `/onboarding` → bottle store → categoria adicional selecciona/desselecciona → catálogo carregado → concluir → `/app`; produtos gravados = escolhidos; sem "Higiene". **8/8 OK, 0 erros JS.** Os bugs do relato não existem no 2.0.
+  - **Causa 1 (reproduzida):** com `DB_ALLOW_SQLITE_FALLBACK=true`, uma falha de rede na sondagem mandou o fixture para a SQLite local → `column discount_free_pct does not exist`, e o cliente Prisma partilhado foi regenerado para `sqlite` (`activeProvider: "sqlite"`, reposto para `postgresql` com `prisma generate`). Correcção: 3 tentativas; prova com rede real (1.ª falhou "timeout expired", 2.ª OK).
+  - **Causa 2:** P2024 "Timed out fetching a new connection from the connection pool (timeout 10, limit 5)" no Início após o onboarding (500 em `/reports/daily`, 503 em `/goals/current`). Correcção parcial: `pool_timeout=30`, `connect_timeout=30`.
+  - **Causa 3 (a de fundo):** Postgres com `max_connections=60`; o pooler 5432 está em **modo sessão** → `EMAXCONNSESSION max clients reached` acima de ~15 clientes (o Prisma mostra isto como P1001). Medido: 9/24 ligações paralelas entram. A 6543 (modo transacção, já compatível com o `pgbouncer=true` do `.env`) aceitou 24/24 em 3 s com `genesis_app` e o `set_config` do RLS dentro da transacção.
+  - Erro meu, corrigido: subi `connection_limit` para 8 e revertí — num servidor de 60 ligações piora o problema. Os meus testes de 24 ligações deixaram ~49 ligações inactivas presas no Supavisor (59/60); nenhum backend local estava a correr.
+  - Bateria `flows.mjs` falhou no relatório diário por esta falta de ligações (sessão caiu para `/entrar`); não é regressão de código.
+  - Lojas de teste `5e25b39e…` e `f1945b22…` apagadas.
+- Resultado: onboarding provado; 2 correcções de código provadas; a causa de fundo exige mudar o `.env` → **parado para decisão do fundador**.
+- Segue-se: (1) fundador decide `APP_DATABASE_URL`/`DATABASE_URL` na porta 6543 e `DB_ALLOW_SQLITE_FALLBACK=false`; (2) libertar as ligações presas (esperar pelo Supavisor ou reiniciar o pooler no painel do Supabase); (3) repetir `flows.mjs` + `verify_system.js`; (4) Fase 1.

@@ -60,6 +60,27 @@ const txOptions = () => ({
   timeout: Number(process.env.DB_TX_TIMEOUT_MS || 45000),
 });
 
+// Abrir uma ligacao nova ao Supabase a partir de Maputo (TCP + TLS + auth)
+// passa muitas vezes dos 5 s que o Prisma da por omissao -> P1001 "Can't reach
+// database server" -> 500 numa venda -> o POS diz "servidor indisponivel".
+// A espera por uma ligacao livre do pool (10 s por omissao) tambem esgota: com
+// ~1-2,5 s por query, 6 pedidos em paralelo do Inicio (ou venda + catalogo +
+// sync no POS) davam P2024 -> 500. O NUMERO de ligacoes nao sobe: o Postgres do
+// Supabase so tem 60 (max_connections) para todos os processos.
+// Valores so acrescentados se o URL nao os trouxer.
+function withConnectTimeout(url) {
+  if (!url || url.startsWith('file:')) return url;
+  try {
+    const u = new URL(url);
+    const defaults = {
+      connect_timeout: process.env.DB_CONNECT_TIMEOUT_S || 30,
+      pool_timeout: process.env.DB_POOL_TIMEOUT_S || 30,
+    };
+    for (const [k, v] of Object.entries(defaults)) if (!u.searchParams.has(k)) u.searchParams.set(k, String(Number(v)));
+    return u.toString();
+  } catch (_) { return url; }
+}
+
 async function init() {
   if (client) return client;
   if (initPromise) return initPromise;
@@ -68,10 +89,10 @@ async function init() {
     const { engine } = await prepareDatabase();
     // Require tardio e intencional: so depois de o cliente estar gerado.
     const { PrismaClient } = require('@prisma/client');
-    client = new PrismaClient({ transactionOptions: txOptions() });
+    client = new PrismaClient({ transactionOptions: txOptions(), datasources: { db: { url: withConnectTimeout(process.env.DATABASE_URL) } } });
     const rlsWanted = engine === 'postgresql' && process.env.APP_DATABASE_URL && String(process.env.DB_RLS_ENFORCE).toLowerCase() !== 'false';
     if (rlsWanted) {
-      appClient = new PrismaClient({ transactionOptions: txOptions(), datasources: { db: { url: process.env.APP_DATABASE_URL } } });
+      appClient = new PrismaClient({ transactionOptions: txOptions(), datasources: { db: { url: withConnectTimeout(process.env.APP_DATABASE_URL) } } });
       console.log('[db] RLS activo: pedidos de loja usam o papel sem bypassrls');
     } else if (engine === 'postgresql') {
       const msg = '[db] AVISO: RLS NAO aplicado (APP_DATABASE_URL em falta ou DB_RLS_ENFORCE=false). O isolamento depende so dos filtros da aplicacao.';

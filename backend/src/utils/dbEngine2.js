@@ -7,6 +7,11 @@ const path = require('path');
 const BACKEND_ROOT = path.resolve(__dirname, '..', '..');
 const FALLBACK_URL = 'file:' + path.join(BACKEND_ROOT, 'data', 'genesis.db').replace(/\\/g, '/');
 const PROBE_TIMEOUT_MS = Number(process.env.DB_PROBE_TIMEOUT_MS || 6000);
+// A ligacao Maputo -> Supabase falha de forma intermitente. Uma so falha na
+// sondagem mandava o servidor para a SQLite local (outra base, esquema antigo):
+// vendas com 500 -> "servidor indisponivel" no POS. Tentar varias vezes primeiro.
+const PROBE_ATTEMPTS = Math.max(1, Number(process.env.DB_PROBE_ATTEMPTS || 3));
+const PROBE_RETRY_DELAY_MS = 2000;
 const SCHEMA_SQLITE = 'prisma/schema.sqlite.prisma';
 const SCHEMA_PG = 'prisma/schema.prisma';
 
@@ -128,12 +133,18 @@ async function resolveDatabaseUrl() {
     console.warn('[db] FORCE_DB=sqlite -> a usar a base local de desenvolvimento');
     return process.env.DATABASE_URL;
   }
-  const reachable = await canReachPostgres();
-  if (reachable) return url;
+  for (let attempt = 1; attempt <= PROBE_ATTEMPTS; attempt++) {
+    if (await canReachPostgres()) return url;
+    if (attempt < PROBE_ATTEMPTS) {
+      console.warn('[db] tentativa ' + attempt + '/' + PROBE_ATTEMPTS + ' falhou; nova tentativa em ' + PROBE_RETRY_DELAY_MS / 1000 + ' s');
+      await new Promise((r) => setTimeout(r, PROBE_RETRY_DELAY_MS));
+    }
+  }
   if (allowFallback) {
     process.env.DATABASE_URL = FALLBACK_URL;
     console.warn('[db] a cair para SQLite de desenvolvimento (' + FALLBACK_URL + ')');
-    console.warn('[db] ATENCAO: os dados ficam so nesta maquina e o RLS do Postgres nao se aplica.');
+    console.warn('[db] ATENCAO: esta NAO e a base de dados real. Os produtos, vendas e lojas do Postgres nao estao aqui');
+    console.warn('[db] e o RLS nao se aplica. Para nunca cair em silencio: DB_ALLOW_SQLITE_FALLBACK=false no .env.');
     return process.env.DATABASE_URL;
   }
   throw new Error(

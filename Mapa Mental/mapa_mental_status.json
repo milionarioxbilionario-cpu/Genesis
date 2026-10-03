@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-09-28",
+  "updatedAt": "2026-10-03",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -11,10 +11,11 @@
       "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor."
     },
     "backend/src/utils/prisma.js": {
-      "status": "ok",
+      "status": "partial",
       "summary": "Cliente Prisma unico (singleton) partilhado por todo o backend.",
       "role": "Acesso a base de dados.",
-      "notes": "CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada."
+      "issue": "03/10: o Postgres do Supabase tem max_connections=60 e o pooler na porta 5432 (modo sessao) recusa acima de ~15 clientes (EMAXCONNSESSION -> P1001 'Can't reach database server'). Causa provavel do 'servidor indisponivel' no POS. Correccao de configuracao (APP_DATABASE_URL na porta 6543, modo transaccao) provada mas pendente de decisao do fundador.",
+      "notes": "03/10: acrescenta connect_timeout=30 e pool_timeout=30 aos URLs (o Prisma desistia aos 5 s / 10 s a partir de Maputo). CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada."
     },
     "backend/src/utils/dbEngine.js": {
       "status": "ok",
@@ -25,7 +26,8 @@
       "status": "ok",
       "summary": "Deteccao de provedor resiliente: aceita SQLite local e Postgres/Supabase sem rebentar no arranque.",
       "role": "Infra de dados.",
-      "notes": "Escrito a 26/09 para desbloquear o 'servidor offline'."
+      "notes": "Escrito a 26/09 para desbloquear o 'servidor offline'. 03/10: a sondagem do Postgres passa a tentar 3 vezes antes de cair para SQLite (uma unica falha de rede mandava o servidor para outra base, com esquema antigo e sem as lojas reais). Provado: arranque real com 1.a tentativa falhada e 2.a OK -> postgresql.",
+      "security": "Com DB_ALLOW_SQLITE_FALLBACK=true no .env o servidor ainda pode cair para a SQLite local se as 3 tentativas falharem; recomendado false."
     },
     "backend/src/utils/tenantRls.js": {
       "status": "ok",
