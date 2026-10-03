@@ -6,7 +6,7 @@ Fonte única de verdade do estado real do repositório. Actualizado em cada sess
 
 ## Parte A — ESTADO ACTUAL
 
-Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / reset de senha / pedido de conta + ferramenta de gestão de senhas)
+Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PIN, design system novo)
 
 ### Identidade
 | Item | Valor | Estado |
@@ -69,7 +69,7 @@ Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / r
 | `frontend/src/components/ProtectedRoute.jsx` (`roleRedirects`) | Tinha entrada `super_admin: '/admin-forbidden'` (rota inexistente) | ✅ CORRIGIDO 18/09 (super_admin cai em `/login` por omissão) | 18/09/2026 — leitura directa |
 | `frontend/src/layouts/CRMLayout.jsx` | Barra lateral tinha item `Super Admin` → `/admin` visível a Owner/Cashier | ✅ CORRIGIDO 18/09 (item removido) | 18/09/2026 — leitura directa |
 | `admin-frontend/` | Projecto Super Admin separado, porta 5175, **auto-contido** (`src/App.jsx` 344 linhas, sem imports do `frontend/`) | ✅ CONFIRMADO FUNCIONAL (estrutura + build OK 18/09) | 18/09/2026 — leitura integral de `App.jsx`, `main.jsx`, `vite.config.js` + `vite build` 1.63s + `node --check` em `routes/admin.js` e `adminOriginCheck.js` |
-| `backend/src/routes/sales.js` | Cancelamento com PIN + restauro de stock, reescrito de SQL cru → ORM | ⚠️ NÃO VERIFICADO (sintaxe OK; **sem prova funcional**) | 18/09/2026 — `node --check` OK; commitado por outro agente sem registo no Mapa |
+| `backend/src/routes/sales.js` | Venda (preço = catálogo, idempotente por id, erros 4xx com `code`) + cancelamento com PIN (falhas gravadas FORA da transacção; 3/venda → 423; 5/loja/15 min → 429) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — `node scripts/verify_security_fixes.js 3 4 6` contra Postgres real |
 
 ### Roadmap — o que falta (não fazer nesta sessão)
 - **Fase 0.1** — dois `App.jsx` → feita (commitada em `f58b30b` por outro agente).
@@ -81,6 +81,37 @@ Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / r
 - **Segue-se: Fase 0-B.3** — prova funcional do cancelamento com PIN (`backend/src/routes/sales.js`, reescrito para ORM sem prova).
 - **Pendente (SECÇÃO 11)** — `Mapa Mental/mapa_mental_3d.html` não existe ainda.
 - Fases 1–7 conforme Prompt Mestre.
+
+### Correcções de segurança — 03/10/2026 (prova: `backend/scripts/verify_security_fixes.js`, 6 secções, contra servidor real + Supabase)
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| Senha exposta no GitHub (`[SENHA-REMOVIDA]`) | Removida dos ficheiros versionados. **Ainda válida em 3 contas** (super_admin, owner demo, kleyton) e presente no histórico do git | 🔴 CONHECIDO COMO QUEBRADO até o fundador rodar as senhas e limpar o histórico | 03/10/2026 — bcrypt.compare contra as 18 contas: 3 aceitam |
+| `backend/src/utils/tokens.js` | Fonte única de emissão de tokens; claims `pv` (versão da senha) e `scope` | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secções 2 e 7 |
+| `backend/src/utils/kioskScope.js` + `middleware/auth.js` | Sessão `kiosk` do PC do balcão só chega às rotas do POS/Hub (403 KIOSK_RESTRICTED) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 2 (9 rotas do dono bloqueadas; POS funciona; refresh mantém o modo) |
+| `backend/src/routes/owner.js` `/kiosk/enter`, `/kiosk/exit` + rate limit em verify-password/unlock-shift | Entrar/sair do modo balcão; força bruta da senha do dono → 429 | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 2 |
+| `frontend/src/pages/Hub.jsx`, `components/ProtectedRoute.jsx` | Hub activa o modo balcão; sessão kiosk em página do dono → volta ao /hub | ✅ build OK; ⚠️ NÃO VERIFICADO no browser | 03/10/2026 — `vite build` |
+| `backend/src/routes/products.js` `PATCH /:id/stock` | Só owner; increment atómico com guarda; auditoria STOCK_ADJUSTMENT | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 5 (incl. 5 ajustes em paralelo) |
+| `backend/src/utils/sessionUser.js` + `middleware/auth.js` + `routes/refresh.js` | Cada pedido/refresh valida conta activa + senha actual (pv); logout apaga access e refresh | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 7 |
+| `backend/src/utils/prisma.js` | Timeout das transacções 45 s (antes 5 s: ~1,2 s/query → TODAS as vendas davam 500) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — venda 201 em Postgres real |
+| `frontend/src/db/localDb.js` (v6), `utils/syncPolicy.js`, `utils/offlineQueue.js`, `hooks/useOfflineSync.js` | Fila offline com `sync_state` (o booleano lançava DataError e nada sincronizava); id fixo por venda; só rede/5xx vão para a fila; recusas visíveis | ✅ CONFIRMADO FUNCIONAL (lógica); ⚠️ NÃO VERIFICADO no browser | 03/10/2026 — `node --test tests/offline_queue.test.mjs` 8/8 + secção 6 ponta-a-ponta |
+| `backend/src/routes/shrinkage_records.js`, `demand_captures.js` | Idempotentes por id; atómicos; só regras de negócio são 4xx (BD em baixo = 500) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 6 |
+| RLS no Postgres | `postgres` tem `rolbypassrls=true`, nenhuma tabela com FORCE | 🔴 CONHECIDO COMO QUEBRADO (decorativo) | 03/10/2026 — consulta a pg_roles/pg_class |
+
+### Genesis 2.0 — 03/10/2026 (prova: `scripts/verify_system.js` 13 secções + browser real `frontend/tests/e2e/flows.mjs` e `admin-frontend/tests/admin_flows.mjs`)
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| RLS Postgres (`prisma/rls_v2.sql`, papel `genesis_app`, `utils/prisma.js` cliente sistema/aplicação + AsyncLocalStorage) | Isolamento entre lojas aplicado pela BD (antes decorativo: `postgres` tem bypassrls) | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 13 + toda a bateria a correr com RLS activo (129 OK) |
+| Terminal POS (`routes/pos.js`, `utils/terminals.js`, `middleware/terminalAuth.js`, `middleware/posWriteAuth.js`, `pages/pos/*`) | Emparelhamento por código + PIN do caixista; a conta do dono sai do balcão. Substitui Hub/quiosque/device keys (removidos) | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 2 + browser (emparelhar, PIN, vender, offline, fecho cego) |
+| Descontos (`routes/sales.js`, `routes/settings.js`) | Até X% livre (10% por omissão), acima exige PIN do dono; falhas gravadas e bloqueadas | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 8 + browser |
+| Custos fixos / renda (`routes/settings.js`, onboarding) | A renda passa a ser registada e deduzida no lucro líquido | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 9 + browser (cascata mensal) |
+| Exposição do caixista (`products`, `sales`, `dashboard`, `inventory`) | Caixista sem custos, sem vendas de outros, sem dashboard financeiro | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 10 |
+| Painel admin (`routes/admin.js` + `admin-frontend`) | asyncHandler (erro não derruba o servidor), aprovações só em pendentes, reactivar repõe estado anterior, modo suporte só leitura, métricas | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 11 + browser admin |
+| Trial (`utils/tenantStatus.js`, `middleware/auth.js`) | Trial expirado = só leitura (402) | ✅ CONFIRMADO FUNCIONAL | 03/10 — secção 12 |
+| Sessão que cai (`utils/api.js`, `App.jsx`) | Refresh automático; mensagem com o motivo; terminal volta ao PIN | ✅ build + lógica; ⚠️ cenário de senha mudada não percorrido no browser | 03/10 |
+| Design system (`ui/tokens.css`, `tailwind.config.js`, `components/ui/*`) | Tema único grafite + verde-esmeralda; tema escuro, animações e Printer3D removidos | ✅ CONFIRMADO (build + revisão visual de 25 capturas, desktop e 390 px) | 03/10 |
+| Ecrãs do dono (`layouts/AppShell.jsx`, `pages/owner/*`) | Início, Vendas, Produtos, Fornecedores, Chenecas, Equipa, Relatórios, Definições, Onboarding | ✅ abertos no browser sem erros de JS; ⚠️ onboarding de 5 passos não percorrido no browser | 03/10 |
+| Senha exposta no GitHub | Removida dos ficheiros; contas ainda por rodar | 🔴 CONHECIDO COMO QUEBRADO até o fundador rodar as senhas | 03/10 |
+| Inglês (especificação 6.10) | O i18n antigo (só login) foi removido; a app está só em português | ❌ NÃO EXISTE AINDA | 03/10 |
 
 ---
 
@@ -190,10 +221,10 @@ Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / r
 - Segue-se: Fase 0-B.3 (prova funcional do cancelamento com PIN). **Publicada em `cbf2e1a`** (`git ls-remote` confirma `origin/main = cbf2e1a`).
 
 ### [2026-09-18] — Fase 0-C.1: PC do balcão estacionado no Hub (fim do bug "Vendas volta a Visão Geral")
-- Causa do bug reportado pelo fundador (login owner `Wendy1313$` -> clicar Vendas/POS -> volta a Visão Geral): `CRMLayout.jsx` mostrava `Vendas / POS -> /pos` a toda a gente, mas `App.jsx` guardava `/pos` com `requiredRole="cashier"`; `ProtectedRoute` fazia `owner != cashier -> wrong-role -> /owner`. Não era a senha — era o guarda a funcionar como escrito.
+- Causa do bug reportado pelo fundador (login owner `[SENHA-REMOVIDA]` -> clicar Vendas/POS -> volta a Visão Geral): `CRMLayout.jsx` mostrava `Vendas / POS -> /pos` a toda a gente, mas `App.jsx` guardava `/pos` com `requiredRole="cashier"`; `ProtectedRoute` fazia `owner != cashier -> wrong-role -> /owner`. Não era a senha — era o guarda a funcionar como escrito.
 - Alterações: `CRMLayout.jsx` passa a consciente de role (`/api/auth/me`): cashier vê só `Caixa -> Vendas / POS`; owner vê `Visão Geral`, `Caixistas (Hub do Balcão)`, `Stock` (link corrigido, antes apontava para `/owner`), `Onboarding`, gestão. Novo `frontend/src/components/PosGate.jsx`: cashier -> POS directo; owner -> redirect para `/owner/cashiers` (Hub estilo Netflix, a construir na Fase 0-C.2); anónimo -> `/login`. Rota `/pos` no `App.jsx` passa a `<PosGate />` (sem `ProtectedRoute` directo).
 - Porquê assim e não "abrir /pos ao owner": o modelo aprovado pelo fundador diz que o owner NÃO vai directo ao POS — vai ao Hub, escolhe perfil do caixista + senha, vende, fecha turno para sair; voltar ao menu owner só com senha do owner.
-- Verificação (output real): `vite build` OK; login real owner (`Wendy1313$`) -> `/api/auth/me` = `role=owner`; sem sessão -> 401; decisão PosGate simulada: owner->HUB, cashier->POS, anon->LOGIN, super_admin->LOGIN; `PosGate.jsx` + `App.jsx` com PosGate confirmados servidos pelo vite em 5173 (HMR activo, sem restart).
+- Verificação (output real): `vite build` OK; login real owner (`[SENHA-REMOVIDA]`) -> `/api/auth/me` = `role=owner`; sem sessão -> 401; decisão PosGate simulada: owner->HUB, cashier->POS, anon->LOGIN, super_admin->LOGIN; `PosGate.jsx` + `App.jsx` com PosGate confirmados servidos pelo vite em 5173 (HMR activo, sem restart).
 - Segue-se: Fase 0-C.2 (Hub de Caixistas: endurecer `deactivate` com `tenant_id`, `reactivate`, reset password caixista, `verify-password` owner, sessão de turno + fecho obrigatório).
 
 ### [2026-09-18] — Fase 0-C.2: Hub de Caixistas Netflix + portas com senha + vendedor atribuído
@@ -201,13 +232,13 @@ Actualizado: 28 de Setembro de 2026 (correcção dos erros de login / Google / r
 - Backend `sales.js`: novo campo opcional `seller_user_id`; owner via Hub pode indicar vendedor (validado na transacção: tem de ser cashier activo do mesmo tenant); cashier que tentar forjar é ignorado (usa o próprio id). `sale.cashier_user_id` = vendedor; `audit CREATE_SALE.user_id` = quem operou (dono); `new_value` leva `cashier_user_id` + `operated_by`. `GET /api/sales?cashier_id=` filtra por vendedor + inclui nome do caixista.
 - Frontend: `Cashiers.jsx` reescrito (grelha de perfis, criar, entrar com senha do caixista via login de prova + operate, desactivar/reactivar, nova senha, voltar ao menu com senha do dono). Novo `utils/hubSession.js` (vendedor activo em sessionStorage). `PosGate.jsx` reescrito (owner sem vendedor -> Hub; owner com vendedor -> POS com banner + botão Sair que consulta open-shift e bloqueia sem fecho). `CashierDashboard` aceita `hubSeller` e envia `seller_user_id`.
 - Provas reais (output): criar->operate->verify correcta `{ok:true}`->verify errada 401->reset pw->deactivate(false)->reactivate(true)->6 audits novos; venda owner-com-seller: `cashier_user_id=vendedor true`, `operated_by=dono true`, filtro inclui a nova, `open-shift={open:true,salesToday:2}`; ANTI-FORJA: cashier tentou seller=outro, gravado=próprio `true`. Limpeza: vendas de teste removidas, stock Arroz reposto a 35, vendedor desactivado, 24 sales / 1 cashier activo (estado igual ao inicial). `vite build` OK (3.31s); PosGate + Cashiers novos confirmados servidos em 5173.
-- Nota: login com `Wendy1313$` deu 401 porque o restart com `SEED_DEMO_DATA=true` fez upsert da password do `.env` (rotação anterior) — comportamento esperado do seed, não regressão. Testes usaram a sessão existente + password do `.env` sem a imprimir.
+- Nota: login com `[SENHA-REMOVIDA]` deu 401 porque o restart com `SEED_DEMO_DATA=true` fez upsert da password do `.env` (rotação anterior) — comportamento esperado do seed, não regressão. Testes usaram a sessão existente + password do `.env` sem a imprimir.
 - Segue-se: Fase 0-B.3 (prova funcional do cancelamento com PIN) ou barra de meta realtime + cascata do lucro real.
 
-### [2026-09-18] — Passwords demo alinhadas (Wendy1313$) + causa raiz dos resets
+### [2026-09-18] — Passwords demo alinhadas ([SENHA-REMOVIDA]) + causa raiz dos resets
 - Ficheiros alterados: `backend/.env` (DEMO_ADMIN_PASSWORD, DEMO_OWNER_PASSWORD), `Oque ja fiz…txt`.
 - Porquê: o seed demo faz UPSERT das contas demo no arranque com as passwords do .env — resets manuais (ex: OTP) eram sobrepostos. Alinhar o .env resolve.
-- Prova: login admin+owner com Wendy1313$ = 200 + /me correcto (curl, backend 4000).
+- Prova: login admin+owner com [SENHA-REMOVIDA] = 200 + /me correcto (curl, backend 4000).
 - Resultado: funcionou. Passwords demo estáveis em restarts.
 - Segue-se: Fase 0-C.2 Hub de Caixistas (sessão de turno + senha do caixista/owner).
 
@@ -403,3 +434,26 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Remover `DEV_SHOW_RESET_CODE` assim que o SMTP estiver configurado.
 - Rodar as chaves do `.env` antes de qualquer deploy (`JWT_SECRET` de dev, chaves Supabase e Twilio em texto simples).
 
+
+### [2026-10-03] — Organização da memória persistente: CLAUDE.md + skills do Prompt Mestre
+- Ficheiros alterados: `CLAUDE.md` (criado e depois expandido); novos `.claude/skills/genesis-spec/SKILL.md`, `.claude/skills/genesis-guia-tecnico/SKILL.md`, `.claude/skills/genesis-historico-auditoria/SKILL.md`.
+- Porquê: o `Prompt_Mestre.txt` (2198 linhas) é demasiado grande para carregar em todas as sessões. O essencial (Regras Invioláveis da Secção 8, regra dos centavos, regra do RLS/isolamento, hierarquia de 3 níveis da Secção 4, protocolo Mapa Mental + ficheiro "Oque ja fiz…") foi fundido no `CLAUDE.md`, que o Claude Code lê sempre. As Secções 6 (spec funcional), 18 (guia técnico) e 12-13 (auditoria/bugs) foram copiadas literalmente para skills que só carregam quando invocadas.
+- Prova: `wc -l CLAUDE.md` abaixo de 200 linhas; as três skills criadas com `sed -n` sobre as linhas exactas do `Prompt_Mestre.txt` (491-726, 1542-1949, 959-1268). Verificado que `Mapa Mental/` e `Oque ja fiz para corrigir estes erros.txt` já existiam (Secção 0 / Secção 22) — nada foi recriado.
+- Resultado: funcionou. Nenhum ficheiro de código foi tocado.
+- Segue-se: aguardar o fundador para escolher a próxima mini-meta.
+
+### [2026-10-03] — Análise crítica + correcção dos 7 problemas prioritários
+- Ficheiros alterados: backend `middleware/auth.js`, `middleware/deviceKeyAuth.js`, `routes/{auth,admin,owner,refresh,sales,products,shrinkage_records,demand_captures}.js`, `utils/prisma.js`; novos `utils/{tokens,kioskScope,sessionUser}.js`, `scripts/verify_security_fixes.js`. Frontend `App.jsx`, `components/ProtectedRoute.jsx`, `pages/{Hub,CashierDashboard}.jsx`, `db/localDb.js`, `hooks/useOfflineSync.js`; novos `utils/{syncPolicy,offlineQueue}.js`, `tests/offline_queue.test.mjs`; devDependency `fake-indexeddb`.
+- Porquê: análise crítica do sistema (sessão de 03/10) — 7 falhas prioritárias (senha exposta, quiosque só no frontend, PIN sem bloqueio real, venda abaixo do catálogo, caixista a mexer no stock, fila offline, sessões de contas desactivadas).
+- Descobertas durante a correcção: (a) a senha exposta ainda abre 3 contas; (b) TODAS as vendas em Postgres falhavam com 500 (timeout de transacção 5 s vs ~1,2 s/query); (c) a fila offline NUNCA sincronizou (booleano indexado → DataError) e o hook de sync não estava montado em lado nenhum — pedidos de reposição e quebras nunca saíam do browser; (d) o RLS não se aplica (bypassrls) — o comentário em `scripts/_limpar_teste_venda.js` que diz o contrário está errado.
+- Prova: `node scripts/verify_security_fixes.js` (servidor real na porta 4100 + Supabase, loja de teste criada e apagada) → "RESULTADO: todas as verificacoes passaram" nas secções 2-7 em conjunto; `node --test tests/offline_queue.test.mjs` 8/8; `vite build` OK; testes unitários antigos 6/6 + device keys 2/2 (com `-r dotenv/config`).
+- Resultado: pontos 2-7 funcionaram. Ponto 1 parcial: literal removido dos ficheiros versionados; a rotação das senhas foi BLOQUEADA pelo sistema de permissões e fica para o fundador; histórico do git por limpar.
+- Segue-se: fundador roda as 3 senhas (`gerir-contas.bat`) e decide a limpeza do histórico; validar Hub e fila offline no browser real; política de descontos (precisa de decisão — REGRA 8).
+
+### [2026-10-03] — Genesis 2.0: RLS real, terminal POS com PIN, descontos, custos fixos, design system novo, painel admin
+- Ficheiros: backend — `utils/{prisma,http,audit,shift,terminals,sessionScopes,supportCodes,tenantStatus,tokens}.js`, `middleware/{auth,terminalAuth,posWriteAuth,rbac}.js`, `routes/{pos,settings,owner,admin,sales,products,inventory,dashboard,catalogs,auth,refresh}.js`, `services/reports.js`, `prisma/{schema*.prisma,rls_v2.sql,migrations/20261003_genesis2}`, `scripts/{verify_system,e2e_fixture,e2e_admin_fixture}.js`; removidos device keys, shift_closings, kioskScope, dbEngine.js, rls.sql/rls_policies.sql e 60 ficheiros de lixo. Frontend reescrito (design system, AppShell, pages/auth|owner|pos, App com lazy-loading); removidos tema escuro, Hub, CashierDashboard, Printer3D, i18n, jsPDF. Admin-frontend reescrito sobre o mesmo kit (@ui).
+- Porquê: pedido do fundador — fechar as 4 lacunas (browser, descontos, sessão, resto da análise) e dar ao produto um aspecto profissional (decisões: grafite + verde, terminal + PIN, descontos até X%, admin no mesmo sistema).
+- Descobertas: drift do esquema (tenant ids `uuid`, nenhuma FK para Tenant) — migração aplicada só com SQL aditivo; o `migrate diff` propunha recriar a PK do Tenant. Animação de barras do Recharts desenhava a barra no dia errado durante a captura — animações desligadas. Em localhost os cookies não distinguem portas: o modo suporte substitui a sessão do admin no mesmo browser (em produção cada painel no seu domínio com proxy /api).
+- Prova: `verify_system.js` com RLS activo — 129 verificações OK; secção 8 isolada da 3 e repetida (OK). Browser real: dono+terminal 25/25 passos, 0 erros de JS; admin 5/5, 0 erros de JS. `offline_queue.test.mjs` 8/8, `monthlyDeductions.test.js` 6/6, `prisma validate` OK, builds OK (POS ~375 KB; gráficos só no painel).
+- Resultado: funcionou. Pendentes: rodar as 3 senhas expostas (fundador), inglês (6.10), percorrer no browser o onboarding e o fim de sessão por senha mudada, lojas de teste antigas na BD (não criadas nesta sessão), latência de ~1–2,5 s por query (alojar o backend em eu-central-1).
+- Segue-se: o fundador valida no balcão real (emparelhar um PC, criar PIN em Equipa) e decide o alojamento.

@@ -84,3 +84,18 @@ backend/data/
 *.db-journal
 *.sqlite
 *.sqlite3
+
+# ============================================================================
+# Instaladores e binarios (NUNCA versionar: inflacionam o repo e nao pertencem)
+# Foi encontrado um node-v24.21.0-x64.msi / .rar versionado.
+*.msi
+*.rar
+*.7z
+*.exe
+node-v*
+
+# Rascunhos / notas de trabalho (nao sao codigo).
+# Nota: ficheiros *.txt JA versionados antes desta regra mantem-se no
+# historico; novos deixa de ser apanhados.
+*.txt
+

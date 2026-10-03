@@ -1,27 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
+const { setSessionCookies, verifyRefreshToken, REFRESH_COOKIE, clearSessionCookies } = require('../utils/tokens');
+const { validateSessionClaims } = require('../utils/sessionUser');
+const { blockedTenantStatus } = require('../utils/tenantStatus');
 
+// Renova a sessao a partir do refresh token.
+//
+// Antes: confiava cegamente no refresh token (30 dias) e reemitia um access token
+// SEM scope e sem olhar para a BD. Consequencias: uma conta desactivada renovava
+// a sessao para sempre, e um PC em modo quiosque recuperava a sessao COMPLETA do
+// dono so por chamar esta rota.
+//
+// Agora: a conta tem de estar activa, a senha nao pode ter mudado (claim pv), a
+// loja nao pode estar suspensa, e o scope (ex.: 'kiosk') e preservado.
 router.post('/', async (req, res) => {
   try {
-    const refresh = req.cookies && req.cookies.refreshToken ? req.cookies.refreshToken : null;
+    const refresh = req.cookies && req.cookies[REFRESH_COOKIE] ? req.cookies[REFRESH_COOKIE] : null;
     if (!refresh) return res.status(401).json({ error: 'Refresh token not provided' });
 
-    const decoded = jwt.verify(refresh, process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET + 'refresh'));
-    // issue new access token
-    const token = jwt.sign({ userId: decoded.userId, tenantId: decoded.tenantId, role: decoded.role, name: decoded.name }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRY });
-    // rotate refresh token
-    const newRefresh = jwt.sign({ userId: decoded.userId, tenantId: decoded.tenantId, role: decoded.role, name: decoded.name }, process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET + 'refresh'), { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '30d' });
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refresh);
+    } catch (err) {
+      clearSessionCookies(res);
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
 
-    const cookieOptions = { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 };
-    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-    res.cookie('token', token, cookieOptions);
-    res.cookie('refreshToken', newRefresh, cookieOptions);
+    const check = await validateSessionClaims(decoded);
+    if (!check.ok) {
+      clearSessionCookies(res);
+      return res.status(check.status).json({ error: check.error, code: check.code });
+    }
+    const user = check.user;
 
+    if (user.role !== 'super_admin' && user.tenant_id) {
+      const blocked = await blockedTenantStatus(user.tenant_id);
+      if (blocked) {
+        clearSessionCookies(res);
+        return res.status(403).json({ error: 'Conta suspensa. Contacte o suporte.' });
+      }
+    }
+
+    const token = setSessionCookies(res, user, { scope: decoded.scope || undefined, tid: decoded.tid || undefined });
     return res.json({ token });
   } catch (err) {
     console.error('Refresh token error', err.message || err);
-    return res.status(401).json({ error: 'Invalid refresh token' });
+    return res.status(500).json({ error: 'Erro ao renovar a sessão' });
   }
 });
 

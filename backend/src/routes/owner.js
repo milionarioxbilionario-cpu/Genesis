@@ -1,949 +1,381 @@
+// Painel do dono (Genesis 2.0).
+//
+// Mudancas estruturais face a versao anterior:
+//  - O balcao deixou de usar a sessao do dono (modo quiosque/Hub). O POS corre
+//    num TERMINAL emparelhado e cada caixista entra com o seu PIN (routes/pos.js).
+//    Sairam daqui: kiosk/*, operate, open-shift, verify-password,
+//    cashiers/:id/verify-password, shift-state e close-shift-blind.
+//  - O dono desbloqueia um caixista a partir do PROPRIO painel (ja autenticado),
+//    por isso a senha do dono nunca e escrita no balcao.
+//  - Validacao com zod em todas as escritas; auditoria via utils/audit.js.
+//  - Horario e definicoes vivem na BD (routes/settings.js), nao num Map.
 const express = require('express');
-const router = express.Router();
+const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const { z } = require('zod');
+const rateLimit = require('express-rate-limit');
 const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
-const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('../services/monthlyDeductions');
+const { dailyReport, weeklyReport, monthlyReport, totalReport } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
+const { invalidateSessionUser } = require('../utils/sessionUser');
+const { asyncHandler, httpError } = require('../utils/http');
+const { writeAudit } = require('../utils/audit');
+const { createPairingCode } = require('../utils/terminals');
 
-const normalizeRole = (role) => String(role || '').trim();
-const money = (v) => Number(v || 0);
-const businessHoursStore = new Map();
-
-const getTenantBusinessHours = (tenantId) => {
-  return businessHoursStore.get(tenantId) || { opening: '08:00', closing: '18:00' };
-};
-
-const updateDebtStatus = (debt) => {
-  const total = money(debt.total_amount);
-  const paid = money(debt.amount_paid);
-  const remaining = total - paid;
-  const today = new Date();
-  const due = new Date(debt.due_date);
-
-  if (remaining <= 0) return 'paid';
-  if (due < today) return 'overdue';
-  if (paid > 0) return 'partially_paid';
-  return 'active';
-};
-
-const ensureTenantScope = (req) => req.user?.tenantId;
-
-const createOwnerAudit = async (req, action, entityType, entityId, extra = {}) => {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        tenant_id: ensureTenantScope(req),
-        user_id: req.user?.userId || 'system',
-        action,
-        entity_type: entityType,
-        entity_id: entityId || null,
-        old_value: extra.old_value ? JSON.stringify(extra.old_value) : null,
-        new_value: extra.new_value ? JSON.stringify(extra.new_value) : null,
-        ip_address: req.ip || '0.0.0.0',
-      },
-    });
-  } catch (e) {
-    console.error('Owner audit failed', action, e.message || e);
-  }
-};
-
+const router = express.Router();
 router.use(auth);
 router.use(requireRole('owner'));
 
-// Perfil do estabelecimento — o NOME REAL da loja para a sidebar (antes
-// vinha de dados de demonstracao em window.GENESIS_DATA). Serve tambem as
-// Definicoes e a futura pagina de perfil do Super Admin.
-// Nunca devolver cancel_pin_hash.
-router.get('/tenant', async (req, res) => {
-  try {
-    const tenant = await prisma.tenant.findUnique({ where: { id: ensureTenantScope(req) } });
-    if (!tenant) return res.status(404).json({ error: 'Estabelecimento nao encontrado' });
-    res.json({
-      id: tenant.id,
-      name: tenant.name,
-      owner_name: tenant.owner_name,
-      business_type: tenant.business_type,
-      location: tenant.location,
-      phone: tenant.phone,
-      email: tenant.email,
-      status: tenant.status,
-      trial_ends_at: tenant.trial_ends_at,
-      subscription_price: tenant.subscription_price,
-      onboarding_completed: tenant.onboarding_completed,
-      created_at: tenant.created_at,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao carregar o estabelecimento' });
-  }
+const tenantOf = (req) => req.user.tenantId;
+// PIN do caixista: exactamente 4 digitos (o teclado do terminal submete ao 4.o).
+const PIN = z.string().regex(/^\d{4}$/, 'O PIN tem 4 dígitos');
+const isoDate = z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Data inválida');
+
+// Envio de WhatsApp pela conta da plataforma: limitado e SO para o telefone da
+// propria loja (antes qualquer dono enviava qualquer texto para qualquer numero
+// a custa da conta Twilio do fundador).
+const whatsappLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.tenantId || req.ip,
+  message: { error: 'Limite de mensagens WhatsApp atingido. Tente daqui a 1 hora.', code: 'TOO_MANY_MESSAGES' },
 });
 
-router.get('/audit', async (req, res) => {
-  try {
-    const logs = await prisma.auditLog.findMany({
-      where: { tenant_id: ensureTenantScope(req) },
-      orderBy: { created_at: 'desc' },
-      take: 40,
-      include: { user: true }
-    });
-
-    res.json(logs.map((log) => ({
-      id: log.id,
-      action: log.action,
-      entity_type: log.entity_type,
-      entity_id: log.entity_id,
-      user_name: log.user?.name || 'Sistema',
-      ip_address: log.ip_address,
-      created_at: log.created_at,
-      old_value: log.old_value ? JSON.parse(log.old_value) : null,
-      new_value: log.new_value ? JSON.parse(log.new_value) : null,
-    })));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao carregar histórico de auditoria' });
-  }
-});
-
-router.get('/cashiers', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const cashiers = await prisma.user.findMany({
-      where: { tenant_id: tenantId, role: 'cashier' },
-      orderBy: { created_at: 'desc' }
-    });
-    // Estado de bloqueio (fecho cego). O Hub mostra BLOQUEADO e exige a
-    // senha do dono antes de deixar voltar a entrar nesse perfil.
-    // NB: nunca devolver password_hash (a versao anterior devolvia o user
-    // completo, incluindo o hash).
-    const withLock = await Promise.all(cashiers.map(async (c) => {
-      const lock = await getShiftLock(prisma, tenantId, c.id);
-      return {
-        id: c.id,
-        name: c.name,
-        email: c.email,
-        phone: c.phone,
-        is_active: c.is_active,
-        created_at: c.created_at,
-        attempts: lock.attempts,
-        maxAttempts: lock.maxAttempts,
-        locked: lock.locked,
-      };
-    }));
-    res.json(withLock);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao listar caixistas' });
-  }
-});
-
-router.post('/cashiers', async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body || {};
-    if (!name || !password) {
-      return res.status(400).json({ error: 'Nome e senha são obrigatórios.' });
-    }
-
-    const targetEmail = (email || `${String(name).trim().toLowerCase().replace(/\s+/g, '.')}@tenant.local`).toLowerCase();
-    const hash = await bcrypt.hash(String(password), 12);
-    const user = await prisma.user.create({
-      data: {
-        tenant_id: ensureTenantScope(req),
-        role: 'cashier',
-        name: String(name).trim(),
-        email: targetEmail,
-        phone: phone ? String(phone) : null,
-        password_hash: hash,
-        is_active: true,
-      }
-    });
-
-    return res.status(201).json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, is_active: user.is_active } });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Erro ao criar caixista' });
-  }
-});
-
-router.put('/cashiers/:id/deactivate', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const check = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true, is_active: true },
-    });
-    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
-    const user = await prisma.user.update({
-      where: { id: check.id },
-      data: { is_active: false }
-    });
-    await createOwnerAudit(req, 'DEACTIVATE_CASHIER', 'user', user.id, { old_value: { is_active: check.is_active }, new_value: { is_active: false } });
-    res.json({ ok: true, user });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao desactivar caixista' });
-  }
-});
-
-router.put('/cashiers/:id/reactivate', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const check = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true, is_active: true },
-    });
-    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
-    const user = await prisma.user.update({
-      where: { id: check.id },
-      data: { is_active: true }
-    });
-    await createOwnerAudit(req, 'REACTIVATE_CASHIER', 'user', user.id, { old_value: { is_active: check.is_active }, new_value: { is_active: true } });
-    res.json({ ok: true, user });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao reactivar caixista' });
-  }
-});
-
-router.put('/cashiers/:id/password', async (req, res) => {
-  try {
-    const { password } = req.body || {};
-    if (!password || String(password).length < 6) {
-      return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
-    }
-    const tenantId = ensureTenantScope(req);
-    const check = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true },
-    });
-    if (!check) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
-    const hash = await bcrypt.hash(String(password), 12);
-    const user = await prisma.user.update({
-      where: { id: check.id },
-      data: { password_hash: hash }
-    });
-    await createOwnerAudit(req, 'RESET_CASHIER_PASSWORD', 'user', user.id, { new_value: { reset: true } });
-    res.json({ ok: true, user: { id: user.id, name: user.name } });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao redefinir senha do caixista' });
-  }
-});
-
-// Entrada "Vender como": o dono continua logado como owner, mas o POS
-// ganha um vendedor activo. Regista audit OPERATE_AS_CASHIER e devolve
-// o contexto. Sair do perfil exige fecho de turno (frontend impõe;
-// backend valida via /api/owner/cashiers/:id/open-shift).
-router.post('/cashiers/:id/operate', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const cashier = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier', is_active: true },
-      select: { id: true, name: true, email: true, is_active: true },
-    });
-    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado ou inactivo neste estabelecimento' });
-    await createOwnerAudit(req, 'OPERATE_AS_CASHIER', 'user', cashier.id, {
-      new_value: { cashierId: cashier.id, cashierName: cashier.name, device: req.headers['user-agent'] || 'hub' },
-    });
-    return res.json({ ok: true, cashier });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao entrar no perfil do caixista' });
-  }
-});
-
-// Há turno aberto para este caixista? O Hub usa isto para bloquear a
-// troca de perfil sem fecho de turno. Regra: vendas de hoje sem fecho
-// de turno posterior = turno aberto.
-router.get('/cashiers/:id/open-shift', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const cashier = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true },
-    });
-    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const saleWhere = { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gte: startOfDay } };
-    const [salesToday, lastSale, lastClosing] = await Promise.all([
-      prisma.sale.count({ where: saleWhere }),
-      prisma.sale.findFirst({ where: saleWhere, orderBy: { created_at: 'desc' }, select: { created_at: true } }),
-      prisma.shiftClosing.findFirst({ where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' } }),
-    ]);
-    // Turno aberto = há venda de hoje POSTERIOR ao último fecho de turno.
-    // Não basta comparar o fecho com o início do dia: vender -> fechar ->
-    // voltar a vender tem de voltar a exigir fecho antes de sair.
-    const open = Boolean(lastSale && (!lastClosing || new Date(lastClosing.closed_at) < new Date(lastSale.created_at)));
-    return res.json({ open, salesToday, lastSaleAt: lastSale?.created_at || null, lastClosingAt: lastClosing?.closed_at || null });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao verificar turno' });
-  }
-});
-
-// A fechadura da porta Hub -> menu Owner: verifica a senha do owner
-// sem trocar de sessão. O PC do balcão fica logado como owner o dia
-// todo; só volta ao menu com esta senha.
-router.post('/verify-password', async (req, res) => {
-  try {
-    const { password } = req.body || {};
-    if (!password) return res.status(400).json({ error: 'Senha obrigatória.' });
-    const me = await prisma.user.findUnique({ where: { id: req.user?.userId } });
-    if (!me || me.role !== 'owner' || me.tenant_id !== ensureTenantScope(req)) {
-      return res.status(403).json({ error: 'Só o dono pode usar esta verificação.' });
-    }
-    const ok = await bcrypt.compare(String(password), me.password_hash);
-    if (!ok) {
-      await createOwnerAudit(req, 'VERIFY_OWNER_PASSWORD_FAIL', 'user', me.id, {});
-      return res.status(401).json({ error: 'Senha do dono incorrecta.' });
-    }
-    await createOwnerAudit(req, 'VERIFY_OWNER_PASSWORD', 'user', me.id, {});
-    return res.json({ ok: true });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao verificar senha do dono' });
-  }
-});
-
-// Entrada no perfil do caixista: valida a SENHA DO CAIXISTA SEM criar
-// sessão — o PC do balcão continua logado como OWNER (modelo quiosque).
-// Nunca usar /api/auth/login aqui: trocaria o cookie httpOnly do dono.
-router.post('/cashiers/:id/verify-password', async (req, res) => {
-  try {
-    const { password } = req.body || {};
-    if (!password) return res.status(400).json({ error: 'Senha obrigatória.' });
-    const tenantId = ensureTenantScope(req);
-    const cashier = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-    });
-    if (!cashier) return res.status(404).json({ error: 'Caixista não encontrado neste estabelecimento' });
-    if (cashier.is_active === false) return res.status(403).json({ error: 'Caixista inactivo.' });
-    const ok = await bcrypt.compare(String(password), cashier.password_hash);
-    if (!ok) {
-      await createOwnerAudit(req, 'VERIFY_CASHIER_PASSWORD_FAIL', 'user', cashier.id, {});
-      return res.status(401).json({ error: 'Senha do caixista incorrecta.' });
-    }
-    await createOwnerAudit(req, 'VERIFY_CASHIER_PASSWORD', 'user', cashier.id, {});
-    return res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name, email: cashier.email } });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao verificar senha do caixista' });
-  }
-});
-
-// ESTADO DO TURNO (caixa cego): o backend sabe o valor real acumulado
-// (vendas em DINHEIRO desde o ultimo fecho deste caixista). Nao devolve o
-// valor ao frontend — o caixista nao pode ver quanto o sistema espera.
-// Devolve apenas: ha vendas sem fecho? quantas tentativas falhadas? bloqueado?
-router.get('/cashiers/:id/shift-state', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const cashier = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true, name: true },
-    });
-    if (!cashier) return res.status(404).json({ error: 'Caixista nao encontrado neste estabelecimento' });
-    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-    const lastClosing = await prisma.shiftClosing.findFirst({
-      where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' },
-    });
-    const since = lastClosing ? lastClosing.closed_at : startOfDay;
-    const salesSince = await prisma.sale.aggregate({
-      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
-      _sum: { total_amount: true },
-    });
-    const realCash = Number(salesSince._sum.total_amount || 0);
-    // Regra imutavel: contam-se falhas DEPOIS do ultimo desbloqueio (nunca se apaga audit)
-    const lastUnlock = await prisma.auditLog.findFirst({
-      where: { tenant_id: tenantId, action: 'CASHIER_UNLOCKED', entity_id: cashier.id }, orderBy: { created_at: 'desc' },
-    });
-    const failSince = lastUnlock ? lastUnlock.created_at : startOfDay;
-    const attempts = await prisma.auditLog.count({
-      where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', entity_id: cashier.id, created_at: { gt: failSince } },
-    });
-    const hasOpenSales = await prisma.sale.count({
-      where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gt: since } },
-    });
-    return res.json({
-      cashier: { id: cashier.id, name: cashier.name },
-      hasOpenSales: hasOpenSales > 0,
-      attempts, maxAttempts: 3,
-      locked: attempts >= 3,
-      lastClosingAt: lastClosing?.closed_at || null,
-    });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao verificar turno' });
-  }
-});
-
-// FECHO CEGO: o caixista declara quanto fez; o backend compara com o real.
-// - Menor -> tentativa falhada (audit SHIFT_ATTEMPT_FAIL com valores);
-//   3 falhas = bloqueado ate o dono desbloquear com a senha dele.
-// - Igual ou a mais -> fecho aceite em nome do caixista; a diferenca fica
-//   registada para o dono (valor a mais tambem e reportado).
-router.post('/cashiers/:id/close-shift-blind', async (req, res) => {
-  try {
-    const declared = Number(req.body?.declared_amount);
-    if (!Number.isInteger(declared) || declared < 0) {
-      return res.status(400).json({ error: 'Valor invalido' });
-    }
-    const tenantId = ensureTenantScope(req);
-    const cashier = await prisma.user.findFirst({
-      where: { id: req.params.id, tenant_id: tenantId, role: 'cashier' },
-      select: { id: true, name: true },
-    });
-    if (!cashier) return res.status(404).json({ error: 'Caixista nao encontrado neste estabelecimento' });
-    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-    const lastClosing = await prisma.shiftClosing.findFirst({
-      where: { tenant_id: tenantId, cashier_user_id: cashier.id }, orderBy: { closed_at: 'desc' },
-    });
-    const since = lastClosing ? lastClosing.closed_at : startOfDay;
-    const [salesSince, openCount] = await Promise.all([
-      prisma.sale.aggregate({
-        where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', payment_method: 'cash', created_at: { gt: since } },
-        _sum: { total_amount: true },
-      }),
-      prisma.sale.count({
-        where: { tenant_id: tenantId, cashier_user_id: cashier.id, status: 'completed', created_at: { gt: since } },
-      }),
-    ]);
-    const realCash = Number(salesSince._sum.total_amount || 0);
-
-    // Mesma guarda do POST /api/shift_closings: sem vendas depois do último
-    // fecho não há turno aberto. Sem isto, fechar duas vezes seguidas gravava
-    // o MESMO dinheiro duas vezes (no segundo fecho o esperado ia a 0 e a
-    // diferença ficava "a mais"), poluindo o relatório de caixa.
-    if (lastClosing && openCount === 0) {
-      return res.status(400).json({
-        ok: false, accepted: false, code: 'NO_OPEN_SHIFT',
-        error: 'Este turno já está fechado. Não há vendas desde o último fecho.',
-      });
-    }
-    if (declared < realCash) {
-      const lastUnlock = await prisma.auditLog.findFirst({
-        where: { tenant_id: tenantId, action: 'CASHIER_UNLOCKED', entity_id: cashier.id }, orderBy: { created_at: 'desc' },
-      });
-      const failSince = lastUnlock ? lastUnlock.created_at : startOfDay;
-      const attemptNo = (await prisma.auditLog.count({
-        where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', entity_id: cashier.id, created_at: { gt: failSince } },
-      })) + 1;
-      await createOwnerAudit(req, 'SHIFT_ATTEMPT_FAIL', 'user', cashier.id, {
-        new_value: JSON.stringify({ cashierName: cashier.name, attempt: attemptNo, declared: declared, real: realCash }),
-      });
-      const locked = attemptNo >= 3;
-      await createOwnerAudit(req, locked ? 'CASHIER_LOCKED' : 'CASHIER_ATTEMPT_ALERT', 'user', cashier.id, {
-        new_value: JSON.stringify({ cashierName: cashier.name, attempt: attemptNo, declared: declared, real: realCash }),
-      });
-      return res.status(400).json({
-        ok: false, accepted: false, locked, attemptNo, maxAttempts: 3,
-        remaining: Math.max(0, 3 - attemptNo),
-        error: locked
-          ? 'Valor incorrecto 3 vezes. Perfil bloqueado — o dono tem de desbloquear com a senha dele.'
-          : 'Valor incorrecto: e MENOR do que o dinheiro feito hoje. Restam ' + (3 - attemptNo) + ' tentativa(s).',
-      });
-    }
-    const difference = declared - realCash;
-    const record = await prisma.shiftClosing.create({
-      data: {
-        tenant_id: tenantId, cashier_user_id: cashier.id,
-        counted_amount: declared, expected_amount: realCash, difference,
-      }
-    });
-    await createOwnerAudit(req, 'SHIFT_CLOSING_OK', 'user', cashier.id, {
-      new_value: JSON.stringify({ cashierName: cashier.name, declared: declared, real: realCash, difference, exact: difference === 0 }),
-    });
-    return res.status(201).json({
-      ok: true, accepted: true, exact: difference === 0, difference,
-      closed_at: record.closed_at,
-      message: difference === 0
-        ? 'Fecho correcto — valor exacto.'
-        : 'Fecho aceite. Registaste um valor SUPERIOR ao real; a diferenca ficou registada para o dono.',
-    });
-  } catch (err) {
-    console.error('Blind close error', err);
-    return res.status(500).json({ error: 'Erro ao fechar turno' });
-  }
-});
-
-// Desbloqueio pelo dono (senha do owner). Nao apaga auditoria — apenas
-// regista CASHIER_UNLOCKED; a contagem de falhas passa a valer a partir dele.
-router.post('/cashiers/:id/unlock-shift', async (req, res) => {
-  try {
-    const { password } = req.body || {};
-    if (!password) return res.status(400).json({ error: 'Senha do dono obrigatoria.' });
-    const me = await prisma.user.findUnique({ where: { id: req.user?.userId } });
-    if (!me || me.role !== 'owner') return res.status(403).json({ error: 'So o dono pode desbloquear.' });
-    const ok = await bcrypt.compare(String(password), me.password_hash);
-    if (!ok) {
-      await createOwnerAudit(req, 'CASHIER_UNLOCK_FAIL', 'user', req.params.id, {});
-      return res.status(401).json({ error: 'Senha do dono incorrecta.' });
-    }
-    await createOwnerAudit(req, 'CASHIER_UNLOCKED', 'user', req.params.id, {
-      new_value: JSON.stringify({ cashierId: req.params.id }),
-    });
-    return res.json({ ok: true });
-  } catch (error) {
-    return res.status(500).json({ error: 'Erro ao desbloquear' });
-  }
-});
-
-
-router.get('/employees', async (req, res) => {
-  try {
-    const employees = await prisma.employee.findMany({
-      where: { tenant_id: ensureTenantScope(req) },
-      orderBy: { start_date: 'desc' }
-    });
-    res.json(employees);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao listar trabalhadores' });
-  }
-});
-
-router.get('/payroll', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const employees = await prisma.employee.findMany({
-      where: { tenant_id: tenantId, is_active: true },
-      orderBy: { name: 'asc' }
-    });
-
-    const monthlyTotal = employees.reduce((sum, employee) => sum + money(employee.monthly_salary), 0);
-    const averageSalary = employees.length ? Math.round(monthlyTotal / employees.length) : 0;
-
-    res.json({
-      employeeCount: employees.length,
-      monthlyTotal,
-      averageSalary,
-      employees: employees.map((employee) => ({
-        id: employee.id,
-        name: employee.name,
-        role: employee.role,
-        phone: employee.phone,
-        monthly_salary: Number(employee.monthly_salary || 0),
-        start_date: employee.start_date,
-        is_active: employee.is_active,
-      }))
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao calcular folha salarial' });
-  }
-});
-
-router.post('/employees', async (req, res) => {
-  try {
-    const { name, role, monthly_salary, phone, start_date } = req.body || {};
-    if (!name || !role) {
-      return res.status(400).json({ error: 'Nome e função são obrigatórios.' });
-    }
-
-    const employee = await prisma.employee.create({
-      data: {
-        tenant_id: ensureTenantScope(req),
-        name: String(name).trim(),
-        role: String(role).trim(),
-        monthly_salary: Number(monthly_salary || 0),
-        phone: phone ? String(phone) : null,
-        start_date: start_date ? new Date(start_date) : new Date(),
-        is_active: true,
-      }
-    });
-
-    res.status(201).json(employee);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao criar trabalhador' });
-  }
-});
-
-router.post('/whatsapp/test', async (req, res) => {
-  try {
-    const { phone, message } = req.body || {};
-    if (!phone || !message) {
-      return res.status(400).json({ error: 'Número e mensagem são obrigatórios.' });
-    }
-
-    const tenant = await prisma.tenant.findUnique({ where: { id: ensureTenantScope(req) } });
-    const result = await sendWhatsAppAlert({
-      to: String(phone).trim(),
-      message: String(message).trim(),
-      tenantName: tenant?.name || 'Genesis',
-    });
-
-    res.json({ ok: result.ok ?? false, ...result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message || 'Erro ao enviar WhatsApp' });
-  }
-});
-
-router.get('/debts', async (req, res) => {
-  try {
-    const debts = await prisma.debt.findMany({
-      where: { tenant_id: ensureTenantScope(req) },
-      orderBy: { created_at: 'desc' },
-      include: { payments: true }
-    });
-
-    const normalized = debts.map((debt) => {
-      const status = updateDebtStatus(debt);
-      return { ...debt, status };
-    });
-
-    res.json(normalized);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao listar chenecas' });
-  }
-});
-
-router.post('/debts', async (req, res) => {
-  try {
-    const { debtor_name, debtor_phone, total_amount, due_date } = req.body || {};
-    if (!debtor_name || !due_date || !total_amount) {
-      return res.status(400).json({ error: 'Dados do devedor, vencimento e valor são obrigatórios.' });
-    }
-
-    const debt = await prisma.debt.create({
-      data: {
-        tenant_id: ensureTenantScope(req),
-        debtor_name: String(debtor_name).trim(),
-        debtor_phone: debtor_phone ? String(debtor_phone) : '',
-        total_amount: Number(total_amount),
-        amount_paid: 0,
-        due_date: new Date(due_date),
-        status: 'active',
-        created_by: req.user.userId,
-      }
-    });
-
-    res.status(201).json({ ...debt, status: 'active' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao registar cheneca' });
-  }
-});
-
-router.post('/debts/:id/payment', async (req, res) => {
-  try {
-    const amount = Number(req.body?.amount ?? 0);
-    if (!Number.isInteger(amount) || amount <= 0) {
-      return res.status(400).json({ error: 'Valor do pagamento inválido.' });
-    }
-
-    const tenantId = ensureTenantScope(req);
-    if (!tenantId) {
-      return res.status(400).json({ error: 'Tenant não identificado na sessão' });
-    }
-
-    // Leitura e escrita no mesmo tenant. Sem o filtro, qualquer utilizador
-    // autenticado pagava a cheneca de outro estabelecimento só por conhecer o
-    // id, e o DebtPayment ficava a apontar para dados de outro tenant.
-    const updated = await prisma.$transaction(async (tx) => {
-      // updateDebtStatus le o acumulado: a cheneca e relida dentro da transacao
-      // em vez de confiar no valor que o cliente tinha em ecra.
-      const debt = await tx.debt.findFirst({
-        where: { id: req.params.id, tenant_id: tenantId }
-      });
-      if (!debt) {
-        const notFound = new Error('Cheneca não encontrada');
-        notFound.statusCode = 404;
-        throw notFound;
-      }
-
-      const amountPaid = Number(debt.amount_paid || 0);
-      const totalAmount = Number(debt.total_amount || 0);
-      if (amountPaid + amount > totalAmount) {
-        const overpay = new Error('Pagamento superior ao valor em falta.');
-        overpay.statusCode = 400;
-        throw overpay;
-      }
-
-      const next = await tx.debt.update({
-        where: { id: debt.id },
-        data: {
-          amount_paid: { increment: amount },
-          status: updateDebtStatus({ ...debt, amount_paid: amountPaid + amount }),
-        }
-      });
-
-      await tx.debtPayment.create({
-        data: {
-          debt_id: debt.id,
-          amount,
-          recorded_by: req.user.userId,
-        }
-      });
-
-      return next;
-    });
-
-    res.json({ ok: true, debt: updated });
-  } catch (error) {
-    if (error && error.statusCode) {
-      return res.status(error.statusCode).json({ error: error.message });
-    }
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao registar pagamento' });
-  }
-});
-
-router.get('/goals/current', async (req, res) => {
-  try {
-    const month = new Date().getMonth() + 1;
-    const year = new Date().getFullYear();
-    const goal = await prisma.saleGoal.findFirst({
-      where: { tenant_id: ensureTenantScope(req), month, year },
-      orderBy: { created_at: 'desc' }
-    });
-
-    const latestSales = await prisma.sale.aggregate({
-      where: { tenant_id: ensureTenantScope(req), created_at: { gte: new Date(year, month - 1, 1), lte: new Date(year, month, 0, 23, 59, 59) } },
-      _sum: { total_amount: true }
-    });
-
-    res.json({
-      target: goal?.target_amount || 200000,
-      current: Number(latestSales._sum.total_amount || 0),
-      projected: Number(latestSales._sum.total_amount || 0),
-      month,
-      year,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao carregar meta' });
-  }
-});
-
-router.post('/goals', async (req, res) => {
-  try {
-    const { target_amount } = req.body || {};
-    const month = new Date().getMonth() + 1;
-    const year = new Date().getFullYear();
-
-    const goal = await prisma.saleGoal.upsert({
-      where: {
-        id: (await prisma.saleGoal.findFirst({ where: { tenant_id: ensureTenantScope(req), month, year }, select: { id: true } }))?.id || '00000000-0000-0000-0000-000000000000',
-      },
-      update: { target_amount: Number(target_amount || 0) },
-      create: {
-        tenant_id: ensureTenantScope(req),
-        month,
-        year,
-        target_amount: Number(target_amount || 0),
-      },
-    });
-
-    res.status(201).json(goal);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao guardar meta' });
-  }
-});
-
-const getPeriodRange = (dateStr) => {
-  const start = dateStr ? new Date(dateStr) : new Date();
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
-  start.setHours(0, 0, 0, 0);
-  return { start, end };
-};
-
-const buildReportSummary = async (tenantId, start, end) => {
-  const sales = await prisma.sale.findMany({
-    where: { tenant_id: tenantId, created_at: { gte: start, lte: end }, status: 'completed' },
-    include: { items: true }
+// ---------------------------------------------------------------- loja
+router.get('/tenant', asyncHandler(async (req, res) => {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
+  if (!t) throw httpError(404, 'Estabelecimento não encontrado');
+  res.json({
+    id: t.id, name: t.name, owner_name: t.owner_name, business_type: t.business_type, location: t.location,
+    phone: t.phone, email: t.email, status: t.status, trial_ends_at: t.trial_ends_at,
+    subscription_price: t.subscription_price, onboarding_completed: t.onboarding_completed, created_at: t.created_at,
   });
+}));
 
-  const gross_revenue = sales.reduce((sum, sale) => sum + money(sale.total_amount), 0);
-  const cost_of_goods_sold = sales.reduce((sum, sale) => {
-    const line = sale.items.reduce((itemSum, item) => itemSum + (money(item.unit_cost_price) * money(item.quantity)), 0);
-    return sum + line;
-  }, 0);
-  const gross_profit = gross_revenue - cost_of_goods_sold;
-  const sales_count = sales.length;
+router.get('/audit', asyncHandler(async (req, res) => {
+  const take = Math.min(Number(req.query.limit) || 100, 300);
+  const where = { tenant_id: tenantOf(req) };
+  if (typeof req.query.action === 'string' && req.query.action) where.action = req.query.action;
+  const logs = await prisma.auditLog.findMany({ where, orderBy: { created_at: 'desc' }, take, include: { user: { select: { name: true } } } });
+  const parse = (v) => { try { return v ? JSON.parse(v) : null; } catch { return v; } };
+  res.json(logs.map((l) => ({
+    id: l.id, action: l.action, entity_type: l.entity_type, entity_id: l.entity_id,
+    user_name: l.user?.name || '—', ip_address: l.ip_address, created_at: l.created_at,
+    old_value: parse(l.old_value), new_value: parse(l.new_value),
+  })));
+}));
 
-  return {
-    sales_count,
-    gross_revenue,
-    gross_profit,
-    cost_of_goods_sold,
-    cost_of_goods: cost_of_goods_sold,
-    total_orders: sales_count,
-    sales,
-  };
-};
+// ---------------------------------------------------------------- equipa: caixistas
+async function ownCashier(req, id = req.params.id) {
+  const c = await prisma.user.findFirst({ where: { id, tenant_id: tenantOf(req), role: 'cashier' } });
+  if (!c) throw httpError(404, 'Caixista não encontrado nesta loja');
+  return c;
+}
 
-router.get('/reports/daily', async (req, res) => {
-  try {
-    const { date } = req.query;
-    const { start, end } = getPeriodRange(date || new Date().toISOString().slice(0, 10));
-    const report = await buildReportSummary(ensureTenantScope(req), start, end);
-    res.json({ ...report, date: start.toISOString().slice(0, 10) });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao gerar relatório diário' });
-  }
-});
-
-router.get('/reports/weekly', async (req, res) => {
-  try {
-    const startDate = req.query.start ? new Date(req.query.start) : new Date();
-    const endDate = req.query.end ? new Date(req.query.end) : new Date();
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-    const report = await buildReportSummary(ensureTenantScope(req), startDate, endDate);
-    res.json({ ...report, start: startDate.toISOString().slice(0, 10), end: endDate.toISOString().slice(0, 10) });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao gerar relatório semanal' });
-  }
-});
-
-router.get('/reports/monthly', async (req, res) => {
-  try {
-    const year = Number(req.query.year || new Date().getFullYear());
-    const month = Number(req.query.month || (new Date().getMonth() + 1));
-    const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-    const end = new Date(year, month, 0, 23, 59, 59, 999);
-
-    const tenantId = ensureTenantScope(req);
-    const report = await buildReportSummary(tenantId, start, end);
-    const [employees, fixedCosts, suppliers, stockEntries] = await Promise.all([
-      prisma.employee.findMany({ where: { tenant_id: tenantId, is_active: true } }),
-      prisma.fixedCost.findMany({ where: { tenant_id: tenantId } }),
-      prisma.supplier.findMany({ where: { tenant_id: tenantId } }),
-      prisma.stockEntry.findMany({
-        where: { tenant_id: tenantId, created_at: { gte: start, lte: end } },
-        select: { supplier_id: true, created_at: true },
-      }),
+router.get('/cashiers', asyncHandler(async (req, res) => {
+  const tenantId = tenantOf(req);
+  const cashiers = await prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier' }, orderBy: { name: 'asc' } });
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const rows = await Promise.all(cashiers.map(async (c) => {
+    const [lock, today] = await Promise.all([
+      getShiftLock(prisma, tenantId, c.id),
+      prisma.sale.aggregate({ where: { tenant_id: tenantId, cashier_user_id: c.id, status: 'completed', created_at: { gte: start } }, _sum: { total_amount: true }, _count: true }),
     ]);
-    const deductionsCalc = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries });
-    const {
-      total_salaries,
-      total_fixed,
-      total_supplier_delivery,
-      total_rent,
-      total_other_fixed,
-      operating_expenses,
-    } = deductionsCalc;
-    const net_profit = computeMonthlyNetProfit(report.gross_profit, deductionsCalc);
+    return {
+      id: c.id, name: c.name, phone: c.phone, is_active: c.is_active, created_at: c.created_at,
+      has_pin: Boolean(c.pin_hash), locked: lock.locked, attempts: lock.attempts, max_attempts: lock.maxAttempts,
+      today_sales: today._count, today_revenue: Number(today._sum.total_amount || 0),
+    };
+  }));
+  res.json(rows);
+}));
 
-    res.json({
-      period: { year, month },
-      gross_revenue: report.gross_revenue,
-      gross_profit: report.gross_profit,
-      cost_of_goods: report.cost_of_goods_sold,
-      cost_of_goods_sold: report.cost_of_goods_sold,
-      total_salaries,
-      total_fixed,
-      total_supplier_delivery,
-      total_rent,
-      total_other_fixed,
-      operating_expenses,
-      net_profit,
-      sales_count: report.sales_count,
-      deductions: {
-        total_salaries,
-        total_rent,
-        total_other_fixed,
-        total_fixed,
-        total_supplier_delivery,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao gerar relatório mensal' });
+// Caixistas entram no terminal com nome + PIN. Nao precisam de email nem de
+// senha: a conta recebe um email interno e uma senha aleatoria inutilizavel
+// (o login por email recusa o papel cashier — ver routes/auth.js).
+router.post('/cashiers', asyncHandler(async (req, res) => {
+  const data = z.object({ name: z.string().trim().min(2).max(80), phone: z.string().trim().max(20).optional().nullable(), pin: PIN }).parse(req.body);
+  const user = await prisma.user.create({ data: {
+    tenant_id: tenantOf(req), role: 'cashier', name: data.name, phone: data.phone || null,
+    email: `caixa-${crypto.randomUUID()}@pos.genesis.local`,
+    password_hash: await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10),
+    pin_hash: await bcrypt.hash(data.pin, 10), is_active: true,
+  } });
+  await writeAudit({ req, action: 'CREATE_CASHIER', entityType: 'user', entityId: user.id, newValue: { name: user.name } });
+  res.status(201).json({ id: user.id, name: user.name, is_active: true, has_pin: true });
+}));
+
+router.put('/cashiers/:id', asyncHandler(async (req, res) => {
+  const c = await ownCashier(req);
+  const data = z.object({ name: z.string().trim().min(2).max(80).optional(), phone: z.string().trim().max(20).optional().nullable() }).parse(req.body);
+  await prisma.user.update({ where: { id: c.id }, data });
+  invalidateSessionUser(c.id);
+  await writeAudit({ req, action: 'UPDATE_CASHIER', entityType: 'user', entityId: c.id, oldValue: { name: c.name, phone: c.phone }, newValue: data });
+  res.json({ ok: true });
+}));
+
+// Novo PIN: tambem roda a password_hash (aleatoria) para que o claim `pv` mude
+// e todas as sessoes abertas desse caixista caiam no pedido seguinte.
+router.put('/cashiers/:id/pin', asyncHandler(async (req, res) => {
+  const c = await ownCashier(req);
+  const { pin } = z.object({ pin: PIN }).parse(req.body);
+  await prisma.user.update({ where: { id: c.id }, data: {
+    pin_hash: await bcrypt.hash(pin, 10),
+    password_hash: await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10),
+  } });
+  invalidateSessionUser(c.id);
+  await writeAudit({ req, action: 'RESET_CASHIER_PIN', entityType: 'user', entityId: c.id });
+  res.json({ ok: true });
+}));
+
+async function setCashierActive(req, res, active) {
+  const c = await ownCashier(req);
+  await prisma.user.update({ where: { id: c.id }, data: { is_active: active } });
+  invalidateSessionUser(c.id); // efeito imediato na sessao aberta
+  await writeAudit({ req, action: active ? 'REACTIVATE_CASHIER' : 'DEACTIVATE_CASHIER', entityType: 'user', entityId: c.id, oldValue: { is_active: c.is_active }, newValue: { is_active: active } });
+  res.json({ ok: true, user: { id: c.id, name: c.name, is_active: active } });
+}
+router.put('/cashiers/:id/deactivate', asyncHandler((req, res) => setCashierActive(req, res, false)));
+router.put('/cashiers/:id/reactivate', asyncHandler((req, res) => setCashierActive(req, res, true)));
+
+// Desbloqueio apos 3 erros no fecho cego. Nao apaga auditoria: regista
+// CASHIER_UNLOCKED e a contagem de falhas recomeca a partir dai.
+router.post('/cashiers/:id/unlock', asyncHandler(async (req, res) => {
+  const c = await ownCashier(req);
+  await writeAudit({ req, action: 'CASHIER_UNLOCKED', entityType: 'user', entityId: c.id, newValue: { cashierName: c.name } });
+  res.json({ ok: true });
+}));
+
+// ---------------------------------------------------------------- terminais
+router.get('/terminals', asyncHandler(async (req, res) => {
+  const rows = await prisma.posTerminal.findMany({ where: { tenant_id: tenantOf(req) }, orderBy: { created_at: 'desc' } });
+  res.json(rows.map(({ secret_hash, ...t }) => t));
+}));
+
+router.post('/terminals/pairing-code', asyncHandler(async (req, res) => {
+  const { name } = z.object({ name: z.string().trim().min(2).max(60) }).parse(req.body);
+  const pairing = createPairingCode({ tenantId: tenantOf(req), name, createdBy: req.user.userId });
+  await writeAudit({ req, action: 'TERMINAL_PAIRING_CODE', entityType: 'terminal', newValue: { name } });
+  res.status(201).json(pairing);
+}));
+
+router.post('/terminals/:id/revoke', asyncHandler(async (req, res) => {
+  const t = await prisma.posTerminal.findFirst({ where: { id: req.params.id, tenant_id: tenantOf(req) } });
+  if (!t) throw httpError(404, 'Terminal não encontrado');
+  if (!t.revoked_at) await prisma.posTerminal.update({ where: { id: t.id }, data: { revoked_at: new Date() } });
+  await writeAudit({ req, action: 'TERMINAL_REVOKED', entityType: 'terminal', entityId: t.id, newValue: { name: t.name } });
+  res.json({ ok: true });
+}));
+
+// ---------------------------------------------------------------- vendas e turnos
+router.get('/sales', asyncHandler(async (req, res) => {
+  const q = z.object({
+    from: isoDate.optional(), to: isoDate.optional(), cashier_id: z.string().uuid().optional(),
+    method: z.enum(['cash', 'card', 'mobile_money']).optional(), status: z.enum(['completed', 'cancelled']).optional(),
+    page: z.coerce.number().int().min(1).default(1), page_size: z.coerce.number().int().min(1).max(100).default(25),
+  }).parse(req.query);
+  const where = { tenant_id: tenantOf(req) };
+  if (q.from || q.to) {
+    where.created_at = {};
+    if (q.from) { const d = new Date(q.from); d.setHours(0, 0, 0, 0); where.created_at.gte = d; }
+    if (q.to) { const d = new Date(q.to); d.setHours(23, 59, 59, 999); where.created_at.lte = d; }
   }
+  if (q.cashier_id) where.cashier_user_id = q.cashier_id;
+  if (q.method) where.payment_method = q.method;
+  if (q.status) where.status = q.status;
+  const [rows, total] = await Promise.all([
+    prisma.sale.findMany({ where, include: { items: true, cashier: { select: { id: true, name: true } } }, orderBy: { created_at: 'desc' }, skip: (q.page - 1) * q.page_size, take: q.page_size }),
+    prisma.sale.count({ where }),
+  ]);
+  res.json({ rows, total, page: q.page, page_size: q.page_size });
+}));
+
+router.get('/shift-closings', asyncHandler(async (req, res) => {
+  const rows = await prisma.shiftClosing.findMany({
+    where: { tenant_id: tenantOf(req) }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' }, take: 100,
+  });
+  res.json(rows.map((r) => ({ ...r, cashier_name: r.cashier?.name || '—' })));
+}));
+
+// ---------------------------------------------------------------- trabalhadores
+const employeeSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  role: z.string().trim().min(2).max(60),
+  monthly_salary: z.number().int().nonnegative(), // centavos
+  phone: z.string().trim().max(20).optional().nullable(),
+  start_date: isoDate.optional().nullable(),
+  is_active: z.boolean().optional(),
 });
 
-router.get('/reports/total', async (req, res) => {
-  try {
-    const sales = await prisma.sale.findMany({
-      where: { tenant_id: ensureTenantScope(req), status: 'completed' },
-      include: { items: true }
-    });
-    const total = sales.reduce((sum, sale) => sum + money(sale.total_amount), 0);
-    res.json({ total_revenue: total, sales_count: sales.length });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao obter total acumulado' });
-  }
-});
+router.get('/employees', asyncHandler(async (req, res) => {
+  res.json(await prisma.employee.findMany({ where: { tenant_id: tenantOf(req) }, orderBy: [{ is_active: 'desc' }, { name: 'asc' }] }));
+}));
 
-router.get('/alerts', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const snapshot = await getTenantAlertSnapshot(tenantId);
+router.get('/payroll', asyncHandler(async (req, res) => {
+  const employees = await prisma.employee.findMany({ where: { tenant_id: tenantOf(req), is_active: true }, orderBy: { name: 'asc' } });
+  const monthlyTotal = employees.reduce((s, e) => s + e.monthly_salary, 0);
+  res.json({ employeeCount: employees.length, monthlyTotal, averageSalary: employees.length ? Math.round(monthlyTotal / employees.length) : 0, employees });
+}));
 
-    res.json({
-      lowStockProducts: snapshot.lowStockProducts.map((product) => ({
-        id: product.id,
-        name: product.name,
-        stock_qty: Number(product.stock_qty || 0),
-        min_stock: Number(product.min_stock || 0),
-      })),
-      expiredProducts: snapshot.expiredProducts.map((product) => ({
-        id: product.id,
-        name: product.name,
-        expiry_date: product.expiry_date,
-        stock_qty: Number(product.stock_qty || 0),
-      })),
-      totalAlerts: snapshot.totalAlerts,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao carregar alertas' });
-  }
-});
+router.post('/employees', asyncHandler(async (req, res) => {
+  const d = employeeSchema.parse(req.body);
+  const e = await prisma.employee.create({ data: {
+    tenant_id: tenantOf(req), name: d.name, role: d.role, monthly_salary: d.monthly_salary, phone: d.phone || null,
+    start_date: d.start_date ? new Date(d.start_date) : new Date(), is_active: d.is_active ?? true,
+  } });
+  await writeAudit({ req, action: 'CREATE_EMPLOYEE', entityType: 'employee', entityId: e.id, newValue: { name: e.name, monthly_salary: e.monthly_salary } });
+  res.status(201).json(e);
+}));
 
-router.post('/alerts/send', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
-    const phone = String(req.body?.phone || tenant?.phone || '').trim();
-    const snapshot = await getTenantAlertSnapshot(tenantId);
+router.put('/employees/:id', asyncHandler(async (req, res) => {
+  const before = await prisma.employee.findFirst({ where: { id: req.params.id, tenant_id: tenantOf(req) } });
+  if (!before) throw httpError(404, 'Trabalhador não encontrado');
+  const d = employeeSchema.partial().parse(req.body);
+  const e = await prisma.employee.update({ where: { id: before.id }, data: { ...d, start_date: d.start_date ? new Date(d.start_date) : undefined } });
+  await writeAudit({ req, action: 'UPDATE_EMPLOYEE', entityType: 'employee', entityId: e.id, oldValue: { monthly_salary: before.monthly_salary, is_active: before.is_active }, newValue: d });
+  res.json(e);
+}));
 
-    if (!snapshot.totalAlerts) {
-      return res.json({ ok: true, sent: 0, message: 'Sem alertas para enviar.' });
-    }
+// ---------------------------------------------------------------- chenecas
+// Estado pela DATA (nao pela hora): no proprio dia do vencimento ainda nao
+// esta vencida (antes ficava "overdue" logo as 00:00 do dia limite).
+function debtStatus(debt) {
+  const remaining = debt.total_amount - debt.amount_paid;
+  if (remaining <= 0) return 'paid';
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const due = new Date(debt.due_date); due.setHours(0, 0, 0, 0);
+  if (due < today) return 'overdue';
+  return debt.amount_paid > 0 ? 'partially_paid' : 'active';
+}
 
-    if (!phone) {
-      return res.status(400).json({ error: 'Telefone do dono da loja não encontrado para envio do WhatsApp.' });
-    }
+router.get('/debts', asyncHandler(async (req, res) => {
+  const debts = await prisma.debt.findMany({ where: { tenant_id: tenantOf(req) }, orderBy: { due_date: 'asc' }, include: { payments: { orderBy: { paid_at: 'desc' } } } });
+  res.json(debts.map((d) => ({ ...d, status: debtStatus(d), remaining: d.total_amount - d.amount_paid })));
+}));
 
-    const summary = buildAlertSummary(tenant, snapshot);
-    const result = await sendWhatsAppAlert({
-      to: phone,
-      message: summary,
-      tenantName: tenant?.name || 'Genesis',
-    });
+router.post('/debts', asyncHandler(async (req, res) => {
+  const d = z.object({
+    debtor_name: z.string().trim().min(2).max(80),
+    debtor_phone: z.string().trim().min(8).max(20),
+    total_amount: z.number().int().positive(), // centavos
+    due_date: isoDate,
+    notes: z.string().trim().max(200).optional(),
+  }).parse(req.body);
+  const debt = await prisma.debt.create({ data: {
+    tenant_id: tenantOf(req), debtor_name: d.debtor_name, debtor_phone: d.debtor_phone, total_amount: d.total_amount,
+    amount_paid: 0, due_date: new Date(d.due_date), status: 'active', created_by: req.user.userId,
+  } });
+  await writeAudit({ req, action: 'CREATE_DEBT', entityType: 'debt', entityId: debt.id, newValue: { debtor_name: d.debtor_name, total_amount: d.total_amount } });
+  res.status(201).json({ ...debt, status: debtStatus(debt), remaining: debt.total_amount });
+}));
 
-    res.json({ ok: true, sent: snapshot.totalAlerts, message: summary, ...result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message || 'Erro ao enviar alertas do WhatsApp' });
-  }
-});
+router.post('/debts/:id/payment', asyncHandler(async (req, res) => {
+  const { amount } = z.object({ amount: z.number().int().positive() }).parse(req.body);
+  const tenantId = tenantOf(req);
+  const updated = await prisma.$transaction(async (tx) => {
+    const debt = await tx.debt.findFirst({ where: { id: req.params.id, tenant_id: tenantId } });
+    if (!debt) throw httpError(404, 'Cheneca não encontrada');
+    if (debt.amount_paid + amount > debt.total_amount) throw httpError(400, 'Pagamento superior ao valor em falta.');
+    const next = await tx.debt.update({ where: { id: debt.id }, data: {
+      amount_paid: { increment: amount }, status: debtStatus({ ...debt, amount_paid: debt.amount_paid + amount }),
+    } });
+    await tx.debtPayment.create({ data: { debt_id: debt.id, amount, recorded_by: req.user.userId } });
+    await writeAudit({ db: tx, req, action: 'DEBT_PAYMENT', entityType: 'debt', entityId: debt.id, newValue: { amount } });
+    return next;
+  });
+  res.json({ ok: true, debt: { ...updated, status: debtStatus(updated), remaining: updated.total_amount - updated.amount_paid } });
+}));
 
-router.get('/settings/hours', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    res.json(getTenantBusinessHours(tenantId));
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao carregar horário' });
-  }
-});
+// ---------------------------------------------------------------- metas
+router.get('/goals/current', asyncHandler(async (req, res) => {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const [goal, agg] = await Promise.all([
+    prisma.saleGoal.findFirst({ where: { tenant_id: tenantOf(req), month, year }, orderBy: { created_at: 'desc' } }),
+    // So vendas concluidas (antes contava as canceladas).
+    prisma.sale.aggregate({ where: { tenant_id: tenantOf(req), status: 'completed', created_at: { gte: new Date(year, month - 1, 1), lte: new Date(year, month, 0, 23, 59, 59, 999) } }, _sum: { total_amount: true } }),
+  ]);
+  const current = Number(agg._sum.total_amount || 0);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const day = now.getDate();
+  // Projeccao linear pelo ritmo actual (especificacao 6.8).
+  const projected = Math.round((current / day) * daysInMonth);
+  const target = goal?.target_amount || 0;
+  const dailyPace = current / day;
+  const reachDay = target > 0 && dailyPace > 0 ? Math.ceil(target / dailyPace) : null;
+  res.json({
+    target, current, projected, month, year, has_goal: Boolean(goal),
+    pct: target > 0 ? Math.round((current / target) * 1000) / 10 : 0,
+    reach_day: reachDay && reachDay <= daysInMonth ? reachDay : null,
+  });
+}));
 
-router.post('/settings/hours', async (req, res) => {
-  try {
-    const tenantId = ensureTenantScope(req);
-    const { opening, closing } = req.body || {};
-    const payload = { opening: opening || '08:00', closing: closing || '18:00' };
-    businessHoursStore.set(tenantId, payload);
-    res.json({ ok: true, ...payload });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao guardar horário' });
-  }
-});
+router.post('/goals', asyncHandler(async (req, res) => {
+  const { target_amount } = z.object({ target_amount: z.number().int().positive() }).parse(req.body);
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const existing = await prisma.saleGoal.findFirst({ where: { tenant_id: tenantOf(req), month, year } });
+  const goal = existing
+    ? await prisma.saleGoal.update({ where: { id: existing.id }, data: { target_amount } })
+    : await prisma.saleGoal.create({ data: { tenant_id: tenantOf(req), month, year, target_amount } });
+  await writeAudit({ req, action: 'SET_GOAL', entityType: 'sale_goal', entityId: goal.id, oldValue: existing ? { target_amount: existing.target_amount } : null, newValue: { target_amount } });
+  res.status(201).json(goal);
+}));
+
+// ---------------------------------------------------------------- relatorios
+router.get('/reports/daily', asyncHandler(async (req, res) => {
+  res.json(await dailyReport(tenantOf(req), typeof req.query.date === 'string' ? req.query.date : undefined));
+}));
+router.get('/reports/weekly', asyncHandler(async (req, res) => {
+  res.json(await weeklyReport(tenantOf(req), req.query.start, req.query.end));
+}));
+router.get('/reports/monthly', asyncHandler(async (req, res) => {
+  const now = new Date();
+  const year = Number(req.query.year) || now.getFullYear();
+  const month = Number(req.query.month) || now.getMonth() + 1;
+  if (month < 1 || month > 12) throw httpError(400, 'Mês inválido');
+  res.json(await monthlyReport(tenantOf(req), year, month));
+}));
+router.get('/reports/total', asyncHandler(async (req, res) => {
+  res.json(await totalReport(tenantOf(req)));
+}));
+
+// ---------------------------------------------------------------- alertas
+router.get('/alerts', asyncHandler(async (req, res) => {
+  const snapshot = await getTenantAlertSnapshot(tenantOf(req));
+  const level = (p) => (p.stock_qty <= 10 ? 'critical' : p.stock_qty <= 20 ? 'severe' : 'low');
+  res.json({
+    lowStockProducts: snapshot.lowStockProducts.map((p) => ({ ...p, level: level(p) })),
+    expiredProducts: snapshot.expiredProducts,
+    totalAlerts: snapshot.totalAlerts,
+  });
+}));
+
+router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
+  if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
+  const snapshot = await getTenantAlertSnapshot(tenant.id);
+  if (!snapshot.totalAlerts) return res.json({ ok: true, sent: 0, message: 'Sem alertas para enviar.' });
+  const summary = buildAlertSummary(tenant, snapshot);
+  const result = await sendWhatsAppAlert({ to: tenant.phone, message: summary, tenantName: tenant.name });
+  await writeAudit({ req, action: 'WHATSAPP_ALERTS_SENT', entityType: 'tenant', entityId: tenant.id, newValue: { alerts: snapshot.totalAlerts } });
+  res.json({ ok: true, sent: snapshot.totalAlerts, ...result });
+}));
+
+// Mensagem de teste: so para o telefone da propria loja, texto fixo.
+router.post('/whatsapp/test', whatsappLimiter, asyncHandler(async (req, res) => {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
+  if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
+  const result = await sendWhatsAppAlert({ to: tenant.phone, message: `Genesis: teste de ligação WhatsApp da loja ${tenant.name}.`, tenantName: tenant.name });
+  res.json({ ok: result.ok ?? false, ...result });
+}));
 
 module.exports = router;

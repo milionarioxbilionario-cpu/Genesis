@@ -1,2 +1,0 @@
-[db] FORCE_DB=sqlite -> a usar a base local de desenvolvimento
-[reset-instant] senha redefinida para owner@genesis.local (role=owner)

@@ -1,26 +1,11 @@
 <!doctype html>
-<html lang="pt" data-theme="dark">
+<html lang="pt">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <style>html { background: #FAFAF9; }</style>
     <title>Genesis Admin</title>
-    <!--
-      ANTI-FLASH DO TEMA — corre antes do primeiro pixel. Usa a MESMA chave
-      (genesis.theme) que o frontend do produto, por isso o tema escolhido
-      no login do dono acompanha o painel de super admin.
-    -->
-    <script>
-      (function () {
-        try {
-          var t = null;
-          try { t = window.localStorage.getItem('genesis.theme'); } catch (e) { t = null; }
-          if (t !== 'light' && t !== 'dark') t = 'dark';
-          document.documentElement.setAttribute('data-theme', t);
-        } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

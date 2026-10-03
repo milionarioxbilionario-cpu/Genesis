@@ -13,19 +13,55 @@ const productsRoutes = require('./routes/products');
 const ownerRoutes = require('./routes/owner');
 const dashboardRoutes = require('./routes/dashboard');
 const inventoryRoutes = require('./routes/inventory');
-const shiftClosingsRoutes = require('./routes/shift_closings');
 const demandCapturesRoutes = require('./routes/demand_captures');
-const deviceKeysRoutes = require('./routes/device_keys');
-const deviceKeyAuth = require('./middleware/deviceKeyAuth');
 const shrinkageRoutes = require('./routes/shrinkage_records');
 const authMiddleware = require('./middleware/auth');
-const authOrDevice = require('./middleware/authOrDevice');
 const requireRole = require('./middleware/rbac');
 const adminOriginCheck = require('./middleware/adminOriginCheck');
 const refreshRoute = require('./routes/refresh');
+const settingsRoutes = require('./routes/settings');
+const posRoutes = require('./routes/pos');
+const posWriteAuth = require('./middleware/posWriteAuth');
+const helmet = require('helmet');
+const { errorHandler } = require('./utils/http');
 
 const app = express();
 const port = process.env.PORT || 4000;
+
+// Atras de um proxy (nginx) o IP real vem em X-Forwarded-For. Sem isto, todas
+// as lojas partilhavam o IP do proxy e 5 logins errados bloqueavam o pais
+// inteiro. So se activa por env: sem proxy, confiar no header deixaria
+// qualquer cliente falsificar o IP e fugir ao rate limit.
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
+app.disable('x-powered-by');
+
+// Uma rejeicao nao tratada terminava o processo (Node 24) — todas as lojas
+// ficavam sem servidor. Regista-se e o servidor continua.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason && (reason.stack || reason));
+});
+
+// Guarda de arranque (fail-closed em producao): um JWT_SECRET ausente, curto ou
+// previsivel permite FORJAR tokens de qualquer tenant/role — todo o isolamento
+// multi-tenant cai. Em desenvolvimento avisa-se; em producao aborta-se.
+function assertSecureConfig() {
+  const secret = process.env.JWT_SECRET || '';
+  const weakSecret = secret.length < 32 || /dev-only|trocar|changeme|example|secret-trocar/i.test(secret);
+  const sqliteFallback = String(process.env.DB_ALLOW_SQLITE_FALLBACK).toLowerCase() === 'true';
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (weakSecret) {
+    const msg = 'JWT_SECRET inseguro (ausente, curto ou previsivel). Gera um valor aleatorio de 48 bytes — ver backend/.env.example.';
+    if (isProd) throw new Error(msg);
+    console.warn('[config] ' + msg);
+  }
+
+  // Em producao, o fallback SQLite nao tem RLS nem isolamento entre lojas. Se
+  // o Postgres falhar uma sondagem, o servidor passaria a servir dados locais.
+  if (isProd && sqliteFallback) {
+    throw new Error('DB_ALLOW_SQLITE_FALLBACK=true em producao: desliga-o para nunca servir a base SQLite local (sem RLS).');
+  }
+}
 
 async function ensureDemoData() {
   // O seed de demonstração é OPT-IN e NUNCA deve correr em produção:
@@ -168,10 +204,20 @@ async function ensureDemoData() {
   console.log('Demo data ensured: owner@genesis.local, cashier@genesis.local, admin@genesis.co.mz (passwords lidas de DEMO_*_PASSWORD; não são impressas)');
 }
 
-// CORS: allow credentials (cookies) and accept requests from frontend (origin can be tightened)
-app.use(cors({ origin: true, credentials: true }));
+// CORS com lista fechada de origens (antes: qualquer origem, com cookies).
+// Pedidos sem Origin (mesma origem via proxy do Vite, curl, scripts) passam.
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5175,http://127.0.0.1:5175')
+  .split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
+app.use(helmet());
+app.use(cors({
+  credentials: true,
+  origin(origin, cb) {
+    if (!origin || CORS_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(null, false);
+  },
+}));
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Rotas Públicas
 app.use('/api/auth', authRoutes);
@@ -183,30 +229,21 @@ app.use('/api/master_catalogs', masterCatalogRoutes);
 // Produtos do tenant
 app.use('/api/products', productsRoutes);
 app.use('/api/owner', ownerRoutes);
+// Definicoes da loja: horario, descontos, custos fixos (renda), PIN.
+app.use('/api/settings', settingsRoutes);
 // Resumo operacional
 app.use('/api/dashboard', dashboardRoutes);
 // Gestão de stock e fornecedores
 app.use('/api/inventory', inventoryRoutes);
-// Demand captures (offlines / requisicoes) - require auth
-app.use('/api/demand_captures', authOrDevice, requireRole('owner', 'cashier'), demandCapturesRoutes);
-// Shrinkage records (stock loss) - require auth
-app.use('/api/shrinkage_records', authOrDevice, requireRole('owner', 'cashier'), shrinkageRoutes);
-// Fechos de turno (caixa cego).
-// Só OWNER: o caixista fecha pelo POS via /api/owner/cashiers/:id/close-shift-blind,
-// onde o dono valida com a senha dele. Deixar o caixista entrar aqui permitia-lhe
-// gravar o seu proprio fecho com os numeros que quisesse — ver o cabecalho de
-// src/routes/shift_closings.js.
-app.use('/api/shift_closings', authOrDevice, requireRole('owner'), shiftClosingsRoutes);
+// Escritas do POS: sessao do caixista (PIN no terminal) ou, para a fila
+// offline, o cookie do terminal emparelhado + seller_user_id (ver
+// middleware/posWriteAuth.js). Substitui as antigas device keys.
+app.use('/api/demand_captures', posWriteAuth, requireRole('owner', 'cashier'), demandCapturesRoutes);
+app.use('/api/shrinkage_records', posWriteAuth, requireRole('owner', 'cashier'), shrinkageRoutes);
+app.use('/api/sales', posWriteAuth, requireRole('owner', 'cashier'), salesRoutes);
 
-// Rotas de Sales - require auth
-app.use('/api/sales', authOrDevice, requireRole('owner', 'cashier'), salesRoutes);
-
-// Device Keys management (owner only)
-app.use('/api/device-keys', authMiddleware, requireRole('owner'), deviceKeysRoutes);
-
-// Example: if you want sync endpoints to allow device key auth, you can mount them alongside JWT auth on dedicated paths.
-// For example, allow POST /api/sync/sales to accept Device <secret> header via deviceKeyAuth middleware.
-// (No sync routes added here automatically; add per-need)
+// Terminal POS: emparelhamento, PIN do caixista, turno e fecho cego.
+app.use('/api/pos', posRoutes);
 
 // Rotas Protegidas de Admin
 app.use('/api/admin', adminOriginCheck, authMiddleware, requireRole('super_admin'), adminRoutes);
@@ -215,22 +252,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'Genesis API - v1.0' });
 });
 
-app.use((err, req, res, next) => {
-  // Se a resposta ja foi iniciada (ex.: streaming ou headers ja enviados),
-  // nao vale a pena tentar escrever outro 500 — delegamos ao Express fechar.
-  if (res.headersSent) return next(err);
-  console.error(`[erro] ${req.method} ${req.originalUrl}`, err.stack || err);
-  res.status(500).json({
-    error: 'Internal Server Error'
-    // NOTA: `details` deixou de ser devolvido ao cliente. Enviava a mensagem
-    // interna (nomes de tabelas/colunas, host da BD) a qualquer pessoa.
-  });
-});
+app.use(errorHandler);
 
-// Escolhe o motor ANTES de qualquer query (ver src/utils/dbEngine.js).
+// Escolhe o motor ANTES de qualquer query (ver src/utils/dbEngine2.js).
 // Se a base nao responder, a falha e explicita e o processo termina — e
 // preferivel a um servidor que arranque sem base de dados.
 prisma.ready()
+  .then(() => assertSecureConfig())
   .then(() => ensureDemoData())
   .then(() => {
     app.listen(port, () => {

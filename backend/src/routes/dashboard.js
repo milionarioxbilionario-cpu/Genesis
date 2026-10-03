@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
+
+// Chave do dia na hora LOCAL do servidor (antes toISOString = UTC: as vendas
+// entre 00:00 e 02:00 em Maputo caiam no dia anterior).
+const dayKey = (d) => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
 const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 
-router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) => {
+router.get('/summary', auth, requireRole('owner'), async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const todayStart = new Date();
@@ -28,18 +32,21 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
       prisma.sale.count({
         where: {
           tenant_id: tenantId,
+          status: 'completed',
           created_at: { gte: todayStart }
         }
       }),
       prisma.sale.count({
         where: {
           tenant_id: tenantId,
+          status: 'completed',
           created_at: { gte: monthStart }
         }
       }),
       prisma.sale.aggregate({
         where: {
           tenant_id: tenantId,
+          status: 'completed',
           created_at: { gte: todayStart }
         },
         _sum: { total_amount: true }
@@ -47,6 +54,7 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
       prisma.sale.aggregate({
         where: {
           tenant_id: tenantId,
+          status: 'completed',
           created_at: { gte: monthStart }
         },
         _sum: { total_amount: true }
@@ -79,6 +87,7 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
         id: sale.id,
         total_amount: sale.total_amount,
         payment_method: sale.payment_method,
+        status: sale.status,
         created_at: sale.created_at,
         itemCount: sale.items.length
       }))
@@ -89,7 +98,7 @@ router.get('/summary', auth, requireRole('owner', 'cashier'), async (req, res) =
   }
 });
 
-router.get('/reports', auth, requireRole('owner', 'cashier'), async (req, res) => {
+router.get('/reports', auth, requireRole('owner'), async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const days = 7;
@@ -100,6 +109,7 @@ router.get('/reports', auth, requireRole('owner', 'cashier'), async (req, res) =
     const sales = await prisma.sale.findMany({
       where: {
         tenant_id: tenantId,
+        status: 'completed',
         created_at: { gte: start }
       },
       orderBy: { created_at: 'asc' },
@@ -108,7 +118,7 @@ router.get('/reports', auth, requireRole('owner', 'cashier'), async (req, res) =
 
     const dailyMap = new Map();
     for (const sale of sales) {
-      const key = new Date(sale.created_at).toISOString().slice(0, 10);
+      const key = dayKey(sale.created_at);
       const existing = dailyMap.get(key) || { date: key, revenue: 0, orders: 0 };
       existing.revenue += Number(sale.total_amount || 0);
       existing.orders += 1;
@@ -118,7 +128,7 @@ router.get('/reports', auth, requireRole('owner', 'cashier'), async (req, res) =
     const salesByDay = Array.from({ length: days }, (_, index) => {
       const date = new Date(start);
       date.setDate(start.getDate() + index);
-      const key = date.toISOString().slice(0, 10);
+      const key = dayKey(date);
       const entry = dailyMap.get(key) || { revenue: 0, orders: 0 };
       return {
         label: date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' }),

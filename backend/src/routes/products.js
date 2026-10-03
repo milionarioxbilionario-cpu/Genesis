@@ -25,8 +25,12 @@ router.get('/', auth, requireRole('owner', 'cashier'), async (req, res) => {
     const tenantId = req.user.tenantId;
     const products = await prisma.product.findMany({
       where: { tenant_id: tenantId },
-      orderBy: { created_at: 'desc' }
+      orderBy: { name: 'asc' }
     });
+    // O caixista nunca ve custos nem margens (especificacao 4.3).
+    if (req.user.role !== 'owner') {
+      return res.json(products.map(({ cost_price, ...p }) => p));
+    }
     return res.json(products);
   } catch (err) {
     console.error('List products error', err);
@@ -99,6 +103,15 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     const updated = await prisma.$transaction(async (tx) => {
       const p = await tx.product.update({ where: { id }, data: updateData });
 
+      // Historico de custo (especificacao 6.4): rastrear quando o preco de
+      // compra mudou. Antes a tabela existia mas nada a escrevia.
+      if (typeof updateData.cost_price === 'number' && updateData.cost_price !== existing.cost_price) {
+        await tx.productPriceHistory.create({ data: {
+          tenant_id: tenantId, product_id: id, old_cost: existing.cost_price,
+          new_cost: updateData.cost_price, changed_by: req.user.userId,
+        } });
+      }
+
       // Audit log
       await tx.auditLog.create({
         data: {
@@ -107,8 +120,11 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
           action: 'UPDATE_PRODUCT',
           entity_type: 'product',
           entity_id: id,
-          old_value: existing,
-          new_value: updateData,
+          // AuditLog.old_value/new_value sao String? — gravar OBJETOS fazia o
+          // Prisma rejeitar a query (500 "Erro ao atualizar produto"). As outras
+          // rotas ja usam JSON.stringify; aqui faltava.
+          old_value: JSON.stringify(existing),
+          new_value: JSON.stringify(updateData),
           ip_address: req.ip || '0.0.0.0'
         }
       });
@@ -146,8 +162,9 @@ router.delete('/:id', auth, requireRole('owner'), async (req, res) => {
           action: 'DELETE_PRODUCT',
           entity_type: 'product',
           entity_id: id,
-          old_value: existing,
-          new_value: { is_active: false },
+          // Ver nota no UPDATE: String? exige string, nao objeto.
+          old_value: JSON.stringify(existing),
+          new_value: JSON.stringify({ is_active: false }),
           ip_address: req.ip || '0.0.0.0'
         }
       });
@@ -161,47 +178,63 @@ router.delete('/:id', auth, requireRole('owner'), async (req, res) => {
   }
 });
 
-router.patch('/:id/stock', auth, requireRole('owner', 'cashier'), async (req, res) => {
+// Ajuste manual de stock — SO O DONO (2026-10-03).
+//
+// Antes aceitava o papel 'cashier' com qualquer delta (positivo ou negativo) e
+// sem auditoria: um caixista "abatia" mercadoria roubada com um clique. Perdas
+// do balcao fazem-se por /api/shrinkage_records (motivo + auditoria).
+//
+// Tambem era ler-calcular-escrever (stock_qty = lido + delta) FORA da
+// transacao: uma venda pelo meio perdia-se e o stock ficava inflacionado.
+// Agora e um increment atomico com guarda contra stock negativo.
+router.patch('/:id/stock', auth, requireRole('owner'), async (req, res) => {
   try {
     const productId = req.params.id;
     const tenantId = req.user.tenantId;
     const deltaSchema = z.object({
-      delta: z.number().int(),
+      delta: z.number().int().refine((v) => v !== 0, 'delta nao pode ser 0'),
       unit_cost: z.number().int().nonnegative().optional(),
-      reason: z.string().optional().default('stock_adjustment')
+      reason: z.string().min(3).max(200).optional().default('manual_adjustment')
     });
-
     const data = deltaSchema.parse(req.body);
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.tenant_id !== tenantId) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-
-    const nextQty = product.stock_qty + data.delta;
-    if (nextQty < 0) {
-      return res.status(400).json({ error: 'Estoque insuficiente para esta operação' });
-    }
 
     const updated = await prisma.$transaction(async (tx) => {
-      const current = await tx.product.update({
-        where: { id: productId },
-        data: { stock_qty: nextQty }
-      });
-
-      if (data.delta !== 0) {
-        await tx.stockEntry.create({
-          data: {
-            tenant_id: tenantId,
-            product_id: productId,
-            quantity: data.delta,
-            unit_cost: data.unit_cost ?? product.cost_price,
-            recorded_by: req.user.userId,
-            supplier_id: null,
-            created_at: new Date()
-          }
-        });
+      const before = await tx.product.findFirst({ where: { id: productId, tenant_id: tenantId } });
+      if (!before) {
+        const e = new Error('Produto não encontrado'); e.statusCode = 404; throw e;
       }
+      const guard = data.delta < 0 ? { stock_qty: { gte: -data.delta } } : {};
+      const result = await tx.product.updateMany({
+        where: { id: productId, tenant_id: tenantId, ...guard },
+        data: { stock_qty: { increment: data.delta } }
+      });
+      if (result.count !== 1) {
+        const e = new Error('Estoque insuficiente para esta operação'); e.statusCode = 400; throw e;
+      }
+      const current = await tx.product.findUnique({ where: { id: productId } });
 
+      await tx.stockEntry.create({
+        data: {
+          tenant_id: tenantId,
+          product_id: productId,
+          quantity: data.delta,
+          unit_cost: data.unit_cost ?? before.cost_price,
+          recorded_by: req.user.userId,
+          supplier_id: null,
+        }
+      });
+      await tx.auditLog.create({
+        data: {
+          tenant_id: tenantId,
+          user_id: req.user.userId,
+          action: 'STOCK_ADJUSTMENT',
+          entity_type: 'product',
+          entity_id: productId,
+          old_value: JSON.stringify({ stock_qty: before.stock_qty }),
+          new_value: JSON.stringify({ stock_qty: current.stock_qty, delta: data.delta, reason: data.reason }),
+          ip_address: req.ip || '0.0.0.0'
+        }
+      });
       return current;
     });
 
@@ -210,6 +243,7 @@ router.patch('/:id/stock', auth, requireRole('owner', 'cashier'), async (req, re
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
     }
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     console.error('Stock adjustment error', err);
     return res.status(500).json({ error: 'Erro ao ajustar stock' });
   }
