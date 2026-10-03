@@ -1,42 +1,42 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-09-29T01:50:23.881Z */
+   Gerado em: 2026-10-03T21:07:08.249Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-09-29T01:50:23.881Z",
+ "generatedAt": "2026-10-03T21:07:08.249Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 160,
+  "files": 157,
   "planned": 5,
-  "links": 190,
-  "lines": 25751,
+  "links": 252,
+  "lines": 21524,
   "byStatus": {
-   "ok": 139,
-   "partial": 21,
+   "ok": 88,
+   "partial": 13,
    "broken": 0,
    "planned": 5,
-   "untracked": 0
+   "untracked": 56
   },
   "byGroup": {
+   "infra": 9,
    "docs": 11,
-   "infra": 8,
-   "admin": 8,
-   "backend-data": 43,
-   "backend": 34,
+   "admin": 9,
+   "backend-data": 38,
+   "backend": 42,
    "frontend-pub": 4,
-   "frontend": 54,
+   "frontend": 46,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 38
+   "count": 30
   },
   {
    "pkg": "dotenv",
-   "count": 20
+   "count": 19
   },
   {
    "pkg": "bcrypt",
@@ -44,10 +44,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "lucide-react",
-   "count": 18
+   "count": 17
   },
   {
-   "pkg": "@prisma/client",
+   "pkg": "react-router-dom",
    "count": 16
   },
   {
@@ -55,27 +55,27 @@ window.GENESIS_MINDMAP = {
    "count": 15
   },
   {
-   "pkg": "react-router-dom",
+   "pkg": "@prisma/client",
+   "count": 14
+  },
+  {
+   "pkg": "crypto",
    "count": 13
   },
   {
    "pkg": "zod",
-   "count": 9
+   "count": 13
   },
   {
    "pkg": "path",
    "count": 7
   },
   {
-   "pkg": "crypto",
-   "count": 7
-  },
-  {
-   "pkg": "node-fetch",
+   "pkg": "fs",
    "count": 6
   },
   {
-   "pkg": "fs",
+   "pkg": "node:path",
    "count": 5
   },
   {
@@ -83,11 +83,15 @@ window.GENESIS_MINDMAP = {
    "count": 4
   },
   {
-   "pkg": "child_process",
+   "pkg": "node:fs",
    "count": 4
   },
   {
-   "pkg": "jsonwebtoken",
+   "pkg": "node-fetch",
+   "count": 4
+  },
+  {
+   "pkg": "express-rate-limit",
    "count": 4
   },
   {
@@ -95,7 +99,15 @@ window.GENESIS_MINDMAP = {
    "count": 3
   },
   {
-   "pkg": "net",
+   "pkg": "react-dom",
+   "count": 3
+  },
+  {
+   "pkg": "child_process",
+   "count": 3
+  },
+  {
+   "pkg": "jsonwebtoken",
    "count": 3
   },
   {
@@ -103,7 +115,7 @@ window.GENESIS_MINDMAP = {
    "count": 2
   },
   {
-   "pkg": "react-dom",
+   "pkg": "@fontsource-variable/inter",
    "count": 2
   },
   {
@@ -111,23 +123,22 @@ window.GENESIS_MINDMAP = {
    "count": 2
   },
   {
-   "pkg": "pg",
+   "pkg": "net",
    "count": 2
-  },
-  {
-   "pkg": "node:test",
-   "count": 2
-  },
-  {
-   "pkg": "node:assert",
-   "count": 2
-  },
-  {
-   "pkg": "twilio",
-   "count": 1
   }
  ],
  "groups": [
+  {
+   "id": "infra",
+   "label": "Infra / Raiz",
+   "tone": "#94a3b8",
+   "nodes": 9,
+   "clusters": {
+    ".": 7,
+    "backend": 1,
+    "frontend": 1
+   }
+  },
   {
    "id": "docs",
    "label": "Documentos",
@@ -140,40 +151,30 @@ window.GENESIS_MINDMAP = {
    }
   },
   {
-   "id": "infra",
-   "label": "Infra / Raiz",
-   "tone": "#94a3b8",
-   "nodes": 8,
-   "clusters": {
-    ".": 6,
-    "backend": 1,
-    "frontend": 1
-   }
-  },
-  {
    "id": "admin",
    "label": "Super Admin",
    "tone": "#a855f7",
-   "nodes": 8,
+   "nodes": 9,
    "clusters": {
-    "admin-frontend": 3,
-    "admin-frontend/src": 5
+    "admin-frontend": 5,
+    "admin-frontend/src": 3,
+    "admin-frontend/tests": 1
    }
   },
   {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 43,
+   "nodes": 38,
    "clusters": {
     "backend/data": 1,
-    "backend/prisma": 6,
+    "backend/prisma": 5,
     "backend/prisma/migrations/20260905141627_init": 1,
     "backend/prisma/migrations/20260905200000_add_device_keys": 1,
     "backend/prisma/migrations/20260919_add_sale_discount_daily": 1,
-    "backend/scripts": 28,
-    "backend/tests": 3,
-    "backend": 1,
+    "backend/prisma/migrations/20261003_genesis2": 1,
+    "backend/scripts": 25,
+    "backend/tests": 2,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -181,13 +182,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 34,
+   "nodes": 42,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 14,
     "backend/src/services": 5,
-    "backend/src/utils": 8,
+    "backend/src/utils": 16,
     "backend/src/jobs": 1
    }
   },
@@ -204,24 +205,22 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 54,
+   "nodes": 46,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
-    "frontend/src/components": 4,
-    "frontend/src/components/ui": 1,
-    "frontend/src/data": 1,
+    "frontend/src/components/ui": 6,
     "frontend/src/db": 1,
-    "frontend/src/hooks": 3,
-    "frontend/src/i18n": 1,
+    "frontend/src/hooks": 1,
     "frontend/src/layouts": 1,
-    "frontend/src/pages": 8,
-    "frontend/src/pages/Owner": 10,
-    "frontend/src/pages/Owner/Reports": 3,
-    "frontend/src/theme": 3,
-    "frontend/src/ui": 6,
-    "frontend/src/utils": 6,
-    "frontend/tests": 1
+    "frontend/src/pages/auth": 5,
+    "frontend/src/pages/owner": 9,
+    "frontend/src/pages/pos": 3,
+    "frontend/src/ui": 1,
+    "frontend/src/utils": 9,
+    "frontend/tests/e2e": 2,
+    "frontend/tests": 2,
+    "frontend/src/pages": 1
    }
   },
   {
@@ -237,6 +236,29 @@ window.GENESIS_MINDMAP = {
  ],
  "nodes": [
   {
+   "id": "CLAUDE.md",
+   "path": "CLAUDE.md",
+   "label": "CLAUDE.md",
+   "group": "infra",
+   "dir": ".",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 120,
+   "size": 15121,
+   "externals": [
+    "@prisma/client"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "Mapa Mental/Mapa_Mental.md",
    "path": "Mapa Mental/Mapa_Mental.md",
    "label": "Mapa_Mental.md",
@@ -249,8 +271,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 406,
-   "size": 58950,
+   "lines": 460,
+   "size": 70473,
    "externals": [
     "@prisma/client"
    ],
@@ -293,8 +315,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 987,
-   "size": 49914,
+   "lines": 989,
+   "size": 50819,
    "externals": [
     "nodemailer"
    ],
@@ -363,8 +385,8 @@ window.GENESIS_MINDMAP = {
    "role": "HTML.",
    "security": "",
    "planned": false,
-   "lines": 30,
-   "size": 962,
+   "lines": 15,
+   "size": 404,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -384,8 +406,29 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 22,
-   "size": 448,
+   "lines": 27,
+   "size": 610,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "admin-frontend/postcss.config.cjs",
+   "path": "admin-frontend/postcss.config.cjs",
+   "label": "postcss.config.cjs",
+   "group": "admin",
+   "dir": "admin-frontend",
+   "ext": ".cjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 7,
+   "size": 83,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -405,48 +448,21 @@ window.GENESIS_MINDMAP = {
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 476,
-   "size": 19144,
+   "lines": 405,
+   "size": 23519,
    "externals": [
     "react",
     "react-router-dom",
-    "axios"
+    "axios",
+    "lucide-react",
+    "@ui"
    ],
-   "dependsOn": [
-    "admin-frontend/src/ThemeToggle.jsx"
-   ],
+   "dependsOn": [],
    "usedBy": [
     "admin-frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 1
-  },
-  {
-   "id": "admin-frontend/src/ThemeToggle.jsx",
-   "path": "admin-frontend/src/ThemeToggle.jsx",
-   "label": "ThemeToggle.jsx",
-   "group": "admin",
-   "dir": "admin-frontend/src",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Botão lua/sol do painel de super admin, com os ícones em SVG inline (o admin-frontend não tem lucide-react e a regra é não adicionar dependências).",
-   "notes": "",
-   "role": "Tema do painel admin.",
-   "security": "",
-   "planned": false,
-   "lines": 50,
-   "size": 2220,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "admin-frontend/src/theme.js"
-   ],
-   "usedBy": [
-    "admin-frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 1
+   "outbound": 0
   },
   {
    "id": "admin-frontend/src/index.css",
@@ -461,9 +477,12 @@ window.GENESIS_MINDMAP = {
    "role": "Estilo.",
    "security": "",
    "planned": false,
-   "lines": 336,
-   "size": 12870,
-   "externals": [],
+   "lines": 16,
+   "size": 525,
+   "externals": [
+    "@fontsource-variable/inter",
+    "@tokens"
+   ],
    "dependsOn": [],
    "usedBy": [
     "admin-frontend/src/main.jsx"
@@ -484,12 +503,11 @@ window.GENESIS_MINDMAP = {
    "role": "Bootstrap.",
    "security": "",
    "planned": false,
-   "lines": 14,
-   "size": 328,
+   "lines": 11,
+   "size": 240,
    "externals": [
     "react",
-    "react-dom",
-    "react-router-dom"
+    "react-dom"
    ],
    "dependsOn": [
     "admin-frontend/src/App.jsx",
@@ -500,26 +518,51 @@ window.GENESIS_MINDMAP = {
    "outbound": 2
   },
   {
-   "id": "admin-frontend/src/theme.js",
-   "path": "admin-frontend/src/theme.js",
-   "label": "theme.js",
+   "id": "admin-frontend/tailwind.config.cjs",
+   "path": "admin-frontend/tailwind.config.cjs",
+   "label": "tailwind.config.cjs",
    "group": "admin",
-   "dir": "admin-frontend/src",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Leitura, aplicação e gravação do tema no painel de super admin, com a MESMA chave localStorage do produto.",
+   "dir": "admin-frontend",
+   "ext": ".cjs",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Tema do painel admin.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 32,
-   "size": 1266,
+   "lines": 8,
+   "size": 259,
    "externals": [],
-   "dependsOn": [],
-   "usedBy": [
-    "admin-frontend/src/ThemeToggle.jsx"
+   "dependsOn": [
+    "frontend/tailwind.config.js"
    ],
-   "inbound": 1,
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "admin-frontend/tests/admin_flows.mjs",
+   "path": "admin-frontend/tests/admin_flows.mjs",
+   "label": "admin_flows.mjs",
+   "group": "admin",
+   "dir": "admin-frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 89,
+   "size": 4653,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:module"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
    "outbound": 0
   },
   {
@@ -535,9 +578,10 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 16,
-   "size": 267,
+   "lines": 30,
+   "size": 960,
    "externals": [
+    "node:path",
     "vite",
     "@vitejs/plugin-react"
    ],
@@ -580,8 +624,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 35,
-   "size": 1068,
+   "lines": 36,
+   "size": 1092,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -694,20 +738,20 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
-   "id": "backend/prisma/rls.sql",
-   "path": "backend/prisma/rls.sql",
-   "label": "rls.sql",
+   "id": "backend/prisma/migrations/20261003_genesis2/migration.sql",
+   "path": "backend/prisma/migrations/20261003_genesis2/migration.sql",
+   "label": "migration.sql",
    "group": "backend-data",
-   "dir": "backend/prisma",
+   "dir": "backend/prisma/migrations/20261003_genesis2",
    "ext": ".sql",
-   "status": "partial",
-   "summary": "Script auxiliar de activacao de RLS.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Seguranca de dados.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 120,
-   "size": 4415,
+   "lines": 34,
+   "size": 1681,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -715,26 +759,24 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
-   "id": "backend/prisma/rls_policies.sql",
-   "path": "backend/prisma/rls_policies.sql",
-   "label": "rls_policies.sql",
+   "id": "backend/prisma/rls_v2.sql",
+   "path": "backend/prisma/rls_v2.sql",
+   "label": "rls_v2.sql",
    "group": "backend-data",
    "dir": "backend/prisma",
    "ext": ".sql",
-   "status": "partial",
-   "summary": "Politicas de Row Level Security para 16 tabelas (isolamento por tenant).",
-   "notes": "Enquanto nao forem aplicadas, o isolamento depende do scoping da aplicacao (tenantRls).",
-   "role": "Seguranca de dados.",
-   "security": "Escritas e prontas; FALTA APLICAR no Supabase (prisma db push + rls_policies.sql).",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
    "planned": false,
-   "lines": 118,
-   "size": 5195,
+   "lines": 91,
+   "size": 5062,
    "externals": [],
    "dependsOn": [],
-   "usedBy": [
-    "backend/prisma/migrations/postgres/0001_init/migration.sql"
-   ],
-   "inbound": 1,
+   "usedBy": [],
+   "inbound": 0,
    "outbound": 0
   },
   {
@@ -750,8 +792,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 295,
-   "size": 10048,
+   "lines": 319,
+   "size": 10955,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -773,8 +815,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 312,
-   "size": 10930,
+   "lines": 336,
+   "size": 11837,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -833,29 +875,6 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
-   "id": "backend/scripts/check_sale.js",
-   "path": "backend/scripts/check_sale.js",
-   "label": "check_sale.js",
-   "group": "backend-data",
-   "dir": "backend/scripts",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Inspecciona uma venda na base de dados.",
-   "notes": "",
-   "role": "Diagnostico.",
-   "security": "",
-   "planned": false,
-   "lines": 16,
-   "size": 555,
-   "externals": [],
-   "dependsOn": [
-    "backend/src/utils/prisma.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 1
-  },
-  {
    "id": "backend/scripts/create_owner_user.js",
    "path": "backend/scripts/create_owner_user.js",
    "label": "create_owner_user.js",
@@ -906,29 +925,6 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
-   "id": "backend/scripts/create_tenant_7777.js",
-   "path": "backend/scripts/create_tenant_7777.js",
-   "label": "create_tenant_7777.js",
-   "group": "backend-data",
-   "dir": "backend/scripts",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Cria o tenant de teste 7777.",
-   "notes": "",
-   "role": "Semear dados.",
-   "security": "",
-   "planned": false,
-   "lines": 22,
-   "size": 528,
-   "externals": [],
-   "dependsOn": [
-    "backend/src/utils/prisma.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 1
-  },
-  {
    "id": "backend/scripts/create_test_tenant.js",
    "path": "backend/scripts/create_test_tenant.js",
    "label": "create_test_tenant.js",
@@ -952,29 +948,60 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
-   "id": "backend/scripts/diag_login.js",
-   "path": "backend/scripts/diag_login.js",
-   "label": "diag_login.js",
+   "id": "backend/scripts/e2e_admin_fixture.js",
+   "path": "backend/scripts/e2e_admin_fixture.js",
+   "label": "e2e_admin_fixture.js",
    "group": "backend-data",
    "dir": "backend/scripts",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Diagnostico de problemas de login (hash, tenant, estado da conta).",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Diagnostico.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 54,
-   "size": 1836,
+   "lines": 32,
+   "size": 2067,
    "externals": [
     "dotenv",
-    "bcrypt",
-    "@prisma/client"
+    "fs",
+    "crypto",
+    "bcrypt"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 0
+   "outbound": 1
+  },
+  {
+   "id": "backend/scripts/e2e_fixture.js",
+   "path": "backend/scripts/e2e_fixture.js",
+   "label": "e2e_fixture.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 71,
+   "size": 4988,
+   "externals": [
+    "dotenv",
+    "fs",
+    "crypto",
+    "bcrypt"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "backend/scripts/e2e_test.js",
@@ -996,58 +1023,6 @@ window.GENESIS_MINDMAP = {
     "node-fetch",
     "@prisma/client",
     "bcrypt"
-   ],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "backend/scripts/e2e_test2.fixed.js",
-   "path": "backend/scripts/e2e_test2.fixed.js",
-   "label": "e2e_test2.fixed.js",
-   "group": "backend-data",
-   "dir": "backend/scripts",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Versao corrigida do E2E2.",
-   "notes": "",
-   "role": "Teste.",
-   "security": "",
-   "planned": false,
-   "lines": 163,
-   "size": 5606,
-   "externals": [
-    "dotenv",
-    "@prisma/client",
-    "bcrypt",
-    "node-fetch"
-   ],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "backend/scripts/e2e_test2.js",
-   "path": "backend/scripts/e2e_test2.js",
-   "label": "e2e_test2.js",
-   "group": "backend-data",
-   "dir": "backend/scripts",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Fluxo E2E mais completo, com cabecalho Authorization.",
-   "notes": "",
-   "role": "Teste.",
-   "security": "",
-   "planned": false,
-   "lines": 164,
-   "size": 5607,
-   "externals": [
-    "dotenv",
-    "@prisma/client",
-    "bcrypt",
-    "node-fetch"
    ],
    "dependsOn": [],
    "usedBy": [],
@@ -1100,29 +1075,6 @@ window.GENESIS_MINDMAP = {
     "bcrypt",
     "readline"
    ],
-   "dependsOn": [
-    "backend/src/utils/prisma.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 1
-  },
-  {
-   "id": "backend/scripts/insert_product_7777.js",
-   "path": "backend/scripts/insert_product_7777.js",
-   "label": "insert_product_7777.js",
-   "group": "backend-data",
-   "dir": "backend/scripts",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Insere um produto de teste no tenant 7777.",
-   "notes": "",
-   "role": "Apoio.",
-   "security": "",
-   "planned": false,
-   "lines": 22,
-   "size": 551,
-   "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js"
    ],
@@ -1478,6 +1430,39 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/scripts/verify_system.js",
+   "path": "backend/scripts/verify_system.js",
+   "label": "verify_system.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 565,
+   "size": 39997,
+   "externals": [
+    "dotenv",
+    "crypto",
+    "bcrypt",
+    "path",
+    "url",
+    "module",
+    "jsonwebtoken",
+    "@prisma/client"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/tokens.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
+  },
+  {
    "id": "backend/src/index.js",
    "path": "backend/src/index.js",
    "label": "index.js",
@@ -1490,14 +1475,15 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 244,
-   "size": 9173,
+   "lines": 272,
+   "size": 10412,
    "externals": [
     "dotenv",
     "express",
     "cors",
     "cookie-parser",
-    "bcrypt"
+    "bcrypt",
+    "helmet"
    ],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -1510,16 +1496,16 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
-    "backend/src/routes/shift_closings.js",
     "backend/src/routes/demand_captures.js",
-    "backend/src/routes/device_keys.js",
-    "backend/src/middleware/deviceKeyAuth.js",
     "backend/src/routes/shrinkage_records.js",
     "backend/src/middleware/auth.js",
-    "backend/src/middleware/authOrDevice.js",
     "backend/src/middleware/rbac.js",
     "backend/src/middleware/adminOriginCheck.js",
-    "backend/src/routes/refresh.js"
+    "backend/src/routes/refresh.js",
+    "backend/src/routes/settings.js",
+    "backend/src/routes/pos.js",
+    "backend/src/middleware/posWriteAuth.js",
+    "backend/src/utils/http.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -1538,8 +1524,8 @@ window.GENESIS_MINDMAP = {
    "role": "Autorizacao.",
    "security": "Separacao fisica do painel admin da plataforma.",
    "planned": false,
-   "lines": 12,
-   "size": 440,
+   "lines": 37,
+   "size": 1497,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1561,77 +1547,60 @@ window.GENESIS_MINDMAP = {
    "role": "Autenticacao.",
    "security": "",
    "planned": false,
-   "lines": 47,
-   "size": 1519,
+   "lines": 72,
+   "size": 3295,
    "externals": [
     "jsonwebtoken"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/tenantStatus.js",
+    "backend/src/utils/sessionScopes.js",
+    "backend/src/utils/sessionUser.js"
+   ],
    "usedBy": [
     "backend/src/index.js",
-    "backend/src/middleware/authOrDevice.js",
+    "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/catalogs.js",
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
     "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
-    "backend/src/routes/products.js"
+    "backend/src/routes/pos.js",
+    "backend/src/routes/products.js",
+    "backend/src/routes/settings.js"
    ],
-   "inbound": 8,
-   "outbound": 0
+   "inbound": 10,
+   "outbound": 4
   },
   {
-   "id": "backend/src/middleware/authOrDevice.js",
-   "path": "backend/src/middleware/authOrDevice.js",
-   "label": "authOrDevice.js",
+   "id": "backend/src/middleware/posWriteAuth.js",
+   "path": "backend/src/middleware/posWriteAuth.js",
+   "label": "posWriteAuth.js",
    "group": "backend",
    "dir": "backend/src/middleware",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Aceita JWT OU chave de dispositivo (POS offline).",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Autenticacao do POS.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 16,
-   "size": 461,
+   "lines": 46,
+   "size": 2428,
    "externals": [],
    "dependsOn": [
     "backend/src/middleware/auth.js",
-    "backend/src/middleware/deviceKeyAuth.js"
+    "backend/src/middleware/terminalAuth.js",
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/terminals.js",
+    "backend/src/utils/sessionUser.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 2
-  },
-  {
-   "id": "backend/src/middleware/deviceKeyAuth.js",
-   "path": "backend/src/middleware/deviceKeyAuth.js",
-   "label": "deviceKeyAuth.js",
-   "group": "backend",
-   "dir": "backend/src/middleware",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Valida chaves de dispositivo registadas para lojas sem sessao de utilizador.",
-   "notes": "",
-   "role": "Autenticacao de dispositivos.",
-   "security": "",
-   "planned": false,
-   "lines": 32,
-   "size": 1216,
-   "externals": [],
-   "dependsOn": [
-    "backend/src/services/deviceKeyService.js"
-   ],
-   "usedBy": [
-    "backend/src/index.js",
-    "backend/src/middleware/authOrDevice.js",
-    "backend/tests/device_key_service.test.js"
-   ],
-   "inbound": 3,
-   "outbound": 1
+   "outbound": 5
   },
   {
    "id": "backend/src/middleware/rbac.js",
@@ -1646,8 +1615,8 @@ window.GENESIS_MINDMAP = {
    "role": "Autorizacao.",
    "security": "",
    "planned": false,
-   "lines": 21,
-   "size": 510,
+   "lines": 13,
+   "size": 587,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1657,10 +1626,40 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/inventory.js",
     "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
-    "backend/src/routes/products.js"
+    "backend/src/routes/pos.js",
+    "backend/src/routes/products.js",
+    "backend/src/routes/settings.js"
    ],
-   "inbound": 7,
+   "inbound": 9,
    "outbound": 0
+  },
+  {
+   "id": "backend/src/middleware/terminalAuth.js",
+   "path": "backend/src/middleware/terminalAuth.js",
+   "label": "terminalAuth.js",
+   "group": "backend",
+   "dir": "backend/src/middleware",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 23,
+   "size": 1163,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/terminals.js",
+    "backend/src/utils/tenantStatus.js",
+    "backend/src/utils/prisma.js"
+   ],
+   "usedBy": [
+    "backend/src/middleware/posWriteAuth.js",
+    "backend/src/routes/pos.js"
+   ],
+   "inbound": 2,
+   "outbound": 3
   },
   {
    "id": "backend/src/routes/admin.js",
@@ -1675,22 +1674,27 @@ window.GENESIS_MINDMAP = {
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 334,
-   "size": 11211,
+   "lines": 185,
+   "size": 11386,
    "externals": [
     "express",
     "bcrypt",
     "crypto",
-    "jsonwebtoken"
+    "zod"
    ],
    "dependsOn": [
-    "backend/src/utils/prisma.js"
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/tenantStatus.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/supportCodes.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 1
+   "outbound": 6
   },
   {
    "id": "backend/src/routes/auth.js",
@@ -1705,11 +1709,10 @@ window.GENESIS_MINDMAP = {
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 590,
-   "size": 21464,
+   "lines": 601,
+   "size": 23355,
    "externals": [
     "express",
-    "jsonwebtoken",
     "bcrypt",
     "zod",
     "express-rate-limit",
@@ -1719,14 +1722,18 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js",
     "backend/src/services/passwordResetStore.js",
     "backend/src/utils/whatsapp.js",
-    "backend/src/utils/mailer.js"
+    "backend/src/utils/mailer.js",
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/supportCodes.js",
+    "backend/src/utils/audit.js"
    ],
    "usedBy": [
     "backend/scripts/test_google.js",
     "backend/src/index.js"
    ],
    "inbound": 2,
-   "outbound": 4
+   "outbound": 8
   },
   {
    "id": "backend/src/routes/catalogs.js",
@@ -1741,8 +1748,8 @@ window.GENESIS_MINDMAP = {
    "role": "Onboarding.",
    "security": "",
    "planned": false,
-   "lines": 171,
-   "size": 8111,
+   "lines": 170,
+   "size": 8395,
    "externals": [
     "express",
     "zod"
@@ -1771,8 +1778,8 @@ window.GENESIS_MINDMAP = {
    "role": "Leitura.",
    "security": "",
    "planned": false,
-   "lines": 161,
-   "size": 5305,
+   "lines": 171,
+   "size": 5722,
    "externals": [
     "express"
    ],
@@ -1800,8 +1807,8 @@ window.GENESIS_MINDMAP = {
    "role": "Inteligencia comercial.",
    "security": "",
    "planned": false,
-   "lines": 73,
-   "size": 2621,
+   "lines": 78,
+   "size": 2750,
    "externals": [
     "express",
     "zod"
@@ -1817,33 +1824,6 @@ window.GENESIS_MINDMAP = {
    "outbound": 2
   },
   {
-   "id": "backend/src/routes/device_keys.js",
-   "path": "backend/src/routes/device_keys.js",
-   "label": "device_keys.js",
-   "group": "backend",
-   "dir": "backend/src/routes",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Emissao e revogacao de chaves de dispositivo para o POS.",
-   "notes": "",
-   "role": "Dispositivos.",
-   "security": "",
-   "planned": false,
-   "lines": 53,
-   "size": 2286,
-   "externals": [
-    "express"
-   ],
-   "dependsOn": [
-    "backend/src/services/deviceKeyService.js"
-   ],
-   "usedBy": [
-    "backend/src/index.js"
-   ],
-   "inbound": 1,
-   "outbound": 1
-  },
-  {
    "id": "backend/src/routes/inventory.js",
    "path": "backend/src/routes/inventory.js",
    "label": "inventory.js",
@@ -1856,8 +1836,8 @@ window.GENESIS_MINDMAP = {
    "role": "Stock.",
    "security": "",
    "planned": false,
-   "lines": 117,
-   "size": 3804,
+   "lines": 184,
+   "size": 7094,
    "externals": [
     "express",
     "zod"
@@ -1916,11 +1896,14 @@ window.GENESIS_MINDMAP = {
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 950,
-   "size": 36862,
+   "lines": 382,
+   "size": 21357,
    "externals": [
     "express",
-    "bcrypt"
+    "crypto",
+    "bcrypt",
+    "zod",
+    "express-rate-limit"
    ],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -1928,14 +1911,58 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/rbac.js",
     "backend/src/utils/whatsapp.js",
     "backend/src/services/tenantAlerts.js",
-    "backend/src/services/monthlyDeductions.js",
-    "backend/src/utils/shiftLock.js"
+    "backend/src/services/reports.js",
+    "backend/src/utils/shiftLock.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/terminals.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 11
+  },
+  {
+   "id": "backend/src/routes/pos.js",
+   "path": "backend/src/routes/pos.js",
+   "label": "pos.js",
+   "group": "backend",
+   "dir": "backend/src/routes",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 117,
+   "size": 6836,
+   "externals": [
+    "express",
+    "bcrypt",
+    "zod",
+    "express-rate-limit"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/rbac.js",
+    "backend/src/middleware/terminalAuth.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/terminals.js",
+    "backend/src/utils/shiftLock.js",
+    "backend/src/utils/shift.js",
+    "backend/src/utils/tenantStatus.js"
+   ],
+   "usedBy": [
+    "backend/src/index.js"
+   ],
+   "inbound": 1,
+   "outbound": 11
   },
   {
    "id": "backend/src/routes/products.js",
@@ -1950,8 +1977,8 @@ window.GENESIS_MINDMAP = {
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 219,
-   "size": 7669,
+   "lines": 253,
+   "size": 9854,
    "externals": [
     "express",
     "zod"
@@ -1980,18 +2007,21 @@ window.GENESIS_MINDMAP = {
    "role": "Sincronizacao.",
    "security": "",
    "planned": false,
-   "lines": 29,
-   "size": 1455,
+   "lines": 53,
+   "size": 2089,
    "externals": [
-    "express",
-    "jsonwebtoken"
+    "express"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/tenantStatus.js"
+   ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 0
+   "outbound": 3
   },
   {
    "id": "backend/src/routes/sales.js",
@@ -2006,12 +2036,13 @@ window.GENESIS_MINDMAP = {
    "role": "Nucleo do POS.",
    "security": "",
    "planned": false,
-   "lines": 430,
-   "size": 17908,
+   "lines": 498,
+   "size": 22764,
    "externals": [
     "express",
     "zod",
     "bcrypt",
+    "express-rate-limit",
     "crypto"
    ],
    "dependsOn": [
@@ -2027,33 +2058,37 @@ window.GENESIS_MINDMAP = {
    "outbound": 4
   },
   {
-   "id": "backend/src/routes/shift_closings.js",
-   "path": "backend/src/routes/shift_closings.js",
-   "label": "shift_closings.js",
+   "id": "backend/src/routes/settings.js",
+   "path": "backend/src/routes/settings.js",
+   "label": "settings.js",
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Fecho de turno: o SERVIDOR calcula o esperado (vendas em dinheiro desde o ultimo fecho) e RECUSA qualquer contagem abaixo disso, com auditoria da tentativa falhada.",
-   "notes": "Correcao directa do bug 'permite fechar abaixo do que foi vendido'.",
-   "role": "Fecho de caixa.",
-   "security": "BURACO FECHADO a 26/09: o expected_amount do corpo do pedido e ignorado e a rota esta montada apenas para o dono.",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
    "planned": false,
-   "lines": 255,
-   "size": 9503,
+   "lines": 132,
+   "size": 6323,
    "externals": [
     "express",
+    "bcrypt",
     "zod"
    ],
    "dependsOn": [
     "backend/src/utils/prisma.js",
-    "backend/src/utils/shiftLock.js"
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 5
   },
   {
    "id": "backend/src/routes/shrinkage_records.js",
@@ -2068,8 +2103,8 @@ window.GENESIS_MINDMAP = {
    "role": "Controlo de perdas.",
    "security": "",
    "planned": false,
-   "lines": 75,
-   "size": 2874,
+   "lines": 96,
+   "size": 3905,
    "externals": [
     "express",
     "zod"
@@ -2083,36 +2118,6 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 1,
    "outbound": 2
-  },
-  {
-   "id": "backend/src/services/deviceKeyService.js",
-   "path": "backend/src/services/deviceKeyService.js",
-   "label": "deviceKeyService.js",
-   "group": "backend",
-   "dir": "backend/src/services",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Criacao e validacao de chaves de dispositivo.",
-   "notes": "",
-   "role": "Servico.",
-   "security": "",
-   "planned": false,
-   "lines": 64,
-   "size": 2302,
-   "externals": [
-    "crypto",
-    "bcrypt"
-   ],
-   "dependsOn": [
-    "backend/src/utils/prisma.js"
-   ],
-   "usedBy": [
-    "backend/src/middleware/deviceKeyAuth.js",
-    "backend/src/routes/device_keys.js",
-    "backend/tests/device_key_service.test.js"
-   ],
-   "inbound": 3,
-   "outbound": 1
   },
   {
    "id": "backend/src/services/monthlyDeductions.js",
@@ -2132,7 +2137,7 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "backend/src/routes/owner.js",
+    "backend/src/services/reports.js",
     "backend/tests/monthlyDeductions.test.js",
     "backend/src/services/report.service.js"
    ],
@@ -2165,6 +2170,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/services/reports.js",
+   "path": "backend/src/services/reports.js",
+   "label": "reports.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 157,
+   "size": 8362,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/services/monthlyDeductions.js"
+   ],
+   "usedBy": [
+    "backend/src/routes/owner.js"
+   ],
+   "inbound": 1,
+   "outbound": 2
+  },
+  {
    "id": "backend/src/services/tenantAlerts.js",
    "path": "backend/src/services/tenantAlerts.js",
    "label": "tenantAlerts.js",
@@ -2191,31 +2222,34 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
-   "id": "backend/src/utils/dbEngine.js",
-   "path": "backend/src/utils/dbEngine.js",
-   "label": "dbEngine.js",
+   "id": "backend/src/utils/audit.js",
+   "path": "backend/src/utils/audit.js",
+   "label": "audit.js",
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Deteta o motor da base de dados a partir do DATABASE_URL (sqlite vs postgres).",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Infra de dados.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 247,
-   "size": 10869,
-   "externals": [
-    "path",
-    "child_process",
-    "fs",
-    "net",
-    "pg"
+   "lines": 32,
+   "size": 1154,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
    ],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
+   "usedBy": [
+    "backend/src/routes/admin.js",
+    "backend/src/routes/auth.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/pos.js",
+    "backend/src/routes/settings.js",
+    "backend/src/utils/shift.js"
+   ],
+   "inbound": 6,
+   "outbound": 1
   },
   {
    "id": "backend/src/utils/dbEngine2.js",
@@ -2226,12 +2260,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Deteccao de provedor resiliente: aceita SQLite local e Postgres/Supabase sem rebentar no arranque.",
-   "notes": "Escrito a 26/09 para desbloquear o 'servidor offline'.",
+   "notes": "Escrito a 26/09 para desbloquear o 'servidor offline'. 03/10: a sondagem do Postgres passa a tentar 3 vezes antes de cair para SQLite (uma unica falha de rede mandava o servidor para outra base, com esquema antigo e sem as lojas reais). Provado: arranque real com 1.a tentativa falhada e 2.a OK -> postgresql.",
    "role": "Infra de dados.",
-   "security": "",
+   "security": "Com DB_ALLOW_SQLITE_FALLBACK=true no .env o servidor ainda pode cair para a SQLite local se as 3 tentativas falharem; recomendado false.",
    "planned": false,
-   "lines": 154,
-   "size": 5648,
+   "lines": 165,
+   "size": 6445,
    "externals": [
     "path",
     "fs",
@@ -2245,6 +2279,36 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js"
    ],
    "inbound": 2,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/http.js",
+   "path": "backend/src/utils/http.js",
+   "label": "http.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 37,
+   "size": 1644,
+   "externals": [
+    "zod"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/index.js",
+    "backend/src/routes/admin.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/pos.js",
+    "backend/src/routes/settings.js",
+    "backend/src/utils/shift.js"
+   ],
+   "inbound": 6,
    "outbound": 0
   },
   {
@@ -2304,31 +2368,34 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "ok",
+   "status": "partial",
    "summary": "Cliente Prisma unico (singleton) partilhado por todo o backend.",
-   "notes": "CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada.",
+   "notes": "03/10: acrescenta connect_timeout=30 e pool_timeout=30 aos URLs (o Prisma desistia aos 5 s / 10 s a partir de Maputo). CORRIGIDO 28/09: o proxy preguiçoso devolvia uma FUNCAO para tudo enquanto o cliente nao estava pronto, e `prisma.user.findUnique` ficava undefined (TypeError -> 500 opaco em qualquer rota que tocasse na BD antes do arranque). Agora cada acesso e adiado por um Proxy recursivo, que so vai buscar o model delegate no momento da chamada.",
    "role": "Acesso a base de dados.",
    "security": "",
    "planned": false,
-   "lines": 93,
-   "size": 3676,
+   "lines": 189,
+   "size": 8538,
    "externals": [
-    "@prisma/client"
+    "@prisma/client",
+    "async_hooks"
    ],
    "dependsOn": [
     "backend/src/utils/dbEngine2.js"
    ],
    "usedBy": [
-    "backend/scripts/check_sale.js",
     "backend/scripts/create_system_user.js",
-    "backend/scripts/create_tenant_7777.js",
     "backend/scripts/create_test_tenant.js",
+    "backend/scripts/e2e_admin_fixture.js",
+    "backend/scripts/e2e_fixture.js",
     "backend/scripts/ensure_device_keys.js",
     "backend/scripts/gerir_contas.js",
-    "backend/scripts/insert_product_7777.js",
     "backend/scripts/seed_demo.js",
     "backend/scripts/shift_closing_e2e.js",
+    "backend/scripts/verify_system.js",
     "backend/src/index.js",
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/terminalAuth.js",
     "backend/src/routes/admin.js",
     "backend/src/routes/auth.js",
     "backend/src/routes/catalogs.js",
@@ -2337,17 +2404,104 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/inventory.js",
     "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/sales.js",
-    "backend/src/routes/shift_closings.js",
+    "backend/src/routes/settings.js",
     "backend/src/routes/shrinkage_records.js",
-    "backend/src/services/deviceKeyService.js",
+    "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
-    "backend/tests/device_key_service.test.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/shift.js",
+    "backend/src/utils/tenantStatus.js",
+    "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 26,
+   "inbound": 33,
    "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/sessionScopes.js",
+   "path": "backend/src/utils/sessionScopes.js",
+   "label": "sessionScopes.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 41,
+   "size": 1716,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/middleware/auth.js"
+   ],
+   "inbound": 1,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/sessionUser.js",
+   "path": "backend/src/utils/sessionUser.js",
+   "label": "sessionUser.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 55,
+   "size": 2417,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/tokens.js"
+   ],
+   "usedBy": [
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/posWriteAuth.js",
+    "backend/src/routes/admin.js",
+    "backend/src/routes/auth.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/refresh.js"
+   ],
+   "inbound": 6,
+   "outbound": 2
+  },
+  {
+   "id": "backend/src/utils/shift.js",
+   "path": "backend/src/utils/shift.js",
+   "label": "shift.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 94,
+   "size": 4531,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/shiftLock.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/http.js"
+   ],
+   "usedBy": [
+    "backend/src/routes/pos.js"
+   ],
+   "inbound": 1,
+   "outbound": 4
   },
   {
    "id": "backend/src/utils/shiftLock.js",
@@ -2368,10 +2522,37 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [
     "backend/src/routes/owner.js",
+    "backend/src/routes/pos.js",
     "backend/src/routes/sales.js",
-    "backend/src/routes/shift_closings.js"
+    "backend/src/utils/shift.js"
    ],
-   "inbound": 3,
+   "inbound": 4,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/supportCodes.js",
+   "path": "backend/src/utils/supportCodes.js",
+   "label": "supportCodes.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 27,
+   "size": 1125,
+   "externals": [
+    "crypto"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/admin.js",
+    "backend/src/routes/auth.js"
+   ],
+   "inbound": 2,
    "outbound": 0
   },
   {
@@ -2400,6 +2581,96 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/utils/tenantStatus.js",
+   "path": "backend/src/utils/tenantStatus.js",
+   "label": "tenantStatus.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 70,
+   "size": 2809,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
+   "usedBy": [
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/terminalAuth.js",
+    "backend/src/routes/admin.js",
+    "backend/src/routes/pos.js",
+    "backend/src/routes/refresh.js"
+   ],
+   "inbound": 5,
+   "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/terminals.js",
+   "path": "backend/src/utils/terminals.js",
+   "label": "terminals.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 80,
+   "size": 3494,
+   "externals": [
+    "crypto"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js"
+   ],
+   "usedBy": [
+    "backend/src/middleware/posWriteAuth.js",
+    "backend/src/middleware/terminalAuth.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/pos.js"
+   ],
+   "inbound": 4,
+   "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/tokens.js",
+   "path": "backend/src/utils/tokens.js",
+   "label": "tokens.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 86,
+   "size": 3131,
+   "externals": [
+    "crypto",
+    "jsonwebtoken"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/scripts/verify_system.js",
+    "backend/src/middleware/posWriteAuth.js",
+    "backend/src/routes/auth.js",
+    "backend/src/routes/pos.js",
+    "backend/src/routes/refresh.js",
+    "backend/src/utils/sessionUser.js"
+   ],
+   "inbound": 6,
+   "outbound": 0
+  },
+  {
    "id": "backend/src/utils/whatsapp.js",
    "path": "backend/src/utils/whatsapp.js",
    "label": "whatsapp.js",
@@ -2423,34 +2694,6 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 3,
    "outbound": 0
-  },
-  {
-   "id": "backend/tests/device_key_service.test.js",
-   "path": "backend/tests/device_key_service.test.js",
-   "label": "device_key_service.test.js",
-   "group": "backend-data",
-   "dir": "backend/tests",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Testes do servico de chaves de dispositivo.",
-   "notes": "",
-   "role": "Teste.",
-   "security": "",
-   "planned": false,
-   "lines": 78,
-   "size": 2223,
-   "externals": [
-    "node:test",
-    "node:assert"
-   ],
-   "dependsOn": [
-    "backend/src/utils/prisma.js",
-    "backend/src/services/deviceKeyService.js",
-    "backend/src/middleware/deviceKeyAuth.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 3
   },
   {
    "id": "backend/tests/monthlyDeductions.test.js",
@@ -2494,31 +2737,6 @@ window.GENESIS_MINDMAP = {
    "lines": 95,
    "size": 2817,
    "externals": [
-    "@prisma/client"
-   ],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "backend/verify_hash.js",
-   "path": "backend/verify_hash.js",
-   "label": "verify_hash.js",
-   "group": "backend-data",
-   "dir": "backend",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Utilitario de verificacao de hashes de palavra-passe.",
-   "notes": "",
-   "role": "Diagnostico.",
-   "security": "",
-   "planned": false,
-   "lines": 25,
-   "size": 821,
-   "externals": [
-    "dotenv",
-    "bcrypt",
     "@prisma/client"
    ],
    "dependsOn": [],
@@ -2644,8 +2862,8 @@ window.GENESIS_MINDMAP = {
    "role": "HTML.",
    "security": "",
    "planned": false,
-   "lines": 40,
-   "size": 1729,
+   "lines": 18,
+   "size": 637,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -2665,8 +2883,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 35,
-   "size": 790,
+   "lines": 33,
+   "size": 757,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -2731,214 +2949,210 @@ window.GENESIS_MINDMAP = {
    "role": "Mapa de rotas.",
    "security": "Nenhuma rota de gestao esta exposta sem sessao.",
    "planned": false,
-   "lines": 131,
-   "size": 5176,
+   "lines": 94,
+   "size": 4790,
    "externals": [
     "react",
     "react-router-dom"
    ],
    "dependsOn": [
-    "frontend/src/pages/Login.jsx",
-    "frontend/src/pages/CashierLogin.jsx",
-    "frontend/src/pages/ResetPassword.jsx",
-    "frontend/src/pages/RequestAccount.jsx",
-    "frontend/src/pages/Owner/Dashboard.jsx",
-    "frontend/src/pages/Owner/Products.jsx",
-    "frontend/src/pages/Owner/Stock.jsx",
-    "frontend/src/pages/Owner/Suppliers.jsx",
-    "frontend/src/pages/Owner/DeviceKeys.jsx",
-    "frontend/src/pages/Owner/Employees.jsx",
-    "frontend/src/pages/Owner/Debts.jsx",
-    "frontend/src/pages/Owner/Goals.jsx",
-    "frontend/src/pages/Owner/Settings.jsx",
-    "frontend/src/pages/Owner/AuditLogViewer.jsx",
-    "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-    "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-    "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-    "frontend/src/pages/OnboardingWizard.jsx",
-    "frontend/src/components/ProtectedRoute.jsx",
-    "frontend/src/components/PosGate.jsx",
-    "frontend/src/pages/Hub.jsx",
-    "frontend/src/components/ui/index.jsx",
-    "frontend/src/layouts/CRMLayout.jsx"
+    "frontend/src/components/ui/index.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx"
    ],
    "usedBy": [
     "frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 23
+   "outbound": 17
   },
   {
-   "id": "frontend/src/components/PosGate.jsx",
-   "path": "frontend/src/components/PosGate.jsx",
-   "label": "PosGate.jsx",
+   "id": "frontend/src/components/ui/Button.jsx",
+   "path": "frontend/src/components/ui/Button.jsx",
+   "label": "Button.jsx",
    "group": "frontend",
-   "dir": "frontend/src/components",
+   "dir": "frontend/src/components/ui",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Porta do POS: escolhe entre login de caixista, chave de dispositivo ou perfil bloqueado.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Entrada do POS.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 82,
-   "size": 3048,
-   "externals": [
-    "react",
-    "react-router-dom"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/utils/hubSession.js"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/components/Printer3D.jsx",
-   "path": "frontend/src/components/Printer3D.jsx",
-   "label": "Printer3D.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/components",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Impressora 3D de verdade: corpo em CSS 3D, fenda escura, dois LEDs e o papel a sair com inclinação que endireita. Ao fim da animação chama onPrinted - é aí que o PDF é gerado e descarregado.",
-   "notes": "Substitui o antigo Receipt3D, que era só uma barra de 6px com gradiente. O Receipt3D continua exportado a partir daqui para não partir importes.",
-   "role": "Recibo (animação 3D).",
-   "security": "",
-   "planned": false,
-   "lines": 86,
-   "size": 3452,
+   "lines": 61,
+   "size": 2430,
    "externals": [
     "react"
    ],
-   "dependsOn": [],
-   "usedBy": [
-    "frontend/src/pages/CashierDashboard.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/components/ProtectedRoute.jsx",
-   "path": "frontend/src/components/ProtectedRoute.jsx",
-   "label": "ProtectedRoute.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/components",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Valida a sessao e o perfil antes de renderizar a pagina; redirecciona para /login.",
-   "notes": "",
-   "role": "Guardas de rota.",
-   "security": "Bloqueio no cliente; o servidor continua a validar cada pedido.",
-   "planned": false,
-   "lines": 51,
-   "size": 1419,
-   "externals": [
-    "react",
-    "react-router-dom"
-   ],
    "dependsOn": [
-    "frontend/src/utils/api.js"
+    "frontend/src/components/ui/cx.js"
    ],
    "usedBy": [
-    "frontend/src/App.jsx"
+    "frontend/src/components/ui/Overlay.jsx"
    ],
    "inbound": 1,
    "outbound": 1
   },
   {
-   "id": "frontend/src/components/SecurityGateIcon.jsx",
-   "path": "frontend/src/components/SecurityGateIcon.jsx",
-   "label": "SecurityGateIcon.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/components",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Sinal de porta para o ecrã de recuperar senha: dois painéis fechados que abrem (com ciano) quando o código do email está confirmado.",
-   "notes": "",
-   "role": "Indicador de segurança na UI.",
-   "security": "",
-   "planned": false,
-   "lines": 29,
-   "size": 1338,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [],
-   "usedBy": [
-    "frontend/src/pages/ResetPassword.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/components/ui/index.jsx",
-   "path": "frontend/src/components/ui/index.jsx",
-   "label": "index.jsx",
+   "id": "frontend/src/components/ui/Data.jsx",
+   "path": "frontend/src/components/ui/Data.jsx",
+   "label": "Data.jsx",
    "group": "frontend",
    "dir": "frontend/src/components/ui",
    "ext": ".jsx",
-   "status": "partial",
-   "summary": "Kit de UI: Card, Button, Modal, Tag, StatCard, ToastProvider, AmbientLayer, GlowCard, Receipt3D, SheenBar.",
-   "notes": "O Receipt3D actual e apenas uma barra de 6px com gradiente: nao ha impressora desenhada. Precisa do Printer3D.",
-   "role": "Design system.",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 498,
-   "size": 19708,
+   "lines": 203,
+   "size": 9289,
    "externals": [
     "react",
     "lucide-react"
    ],
+   "dependsOn": [
+    "frontend/src/components/ui/cx.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/components/ui/Form.jsx",
+   "path": "frontend/src/components/ui/Form.jsx",
+   "label": "Form.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 155,
+   "size": 7085,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/components/ui/cx.js",
+    "frontend/src/utils/money.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
+  },
+  {
+   "id": "frontend/src/components/ui/Overlay.jsx",
+   "path": "frontend/src/components/ui/Overlay.jsx",
+   "label": "Overlay.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 128,
+   "size": 5613,
+   "externals": [
+    "react",
+    "react-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/components/ui/cx.js",
+    "frontend/src/components/ui/Button.jsx"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
+  },
+  {
+   "id": "frontend/src/components/ui/cx.js",
+   "path": "frontend/src/components/ui/cx.js",
+   "label": "cx.js",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 3,
+   "size": 108,
+   "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/App.jsx",
-    "frontend/src/layouts/CRMLayout.jsx",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Login.jsx",
-    "frontend/src/pages/Owner/AuditLogViewer.jsx",
-    "frontend/src/pages/Owner/Dashboard.jsx",
-    "frontend/src/pages/Owner/Debts.jsx",
-    "frontend/src/pages/Owner/DeviceKeys.jsx",
-    "frontend/src/pages/Owner/Employees.jsx",
-    "frontend/src/pages/Owner/Goals.jsx",
-    "frontend/src/pages/Owner/Products.jsx",
-    "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-    "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-    "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-    "frontend/src/pages/Owner/Settings.jsx",
-    "frontend/src/pages/Owner/Stock.jsx",
-    "frontend/src/pages/Owner/Suppliers.jsx",
-    "frontend/src/pages/ResetPassword.jsx",
-    "frontend/src/pages/CodeMap.jsx"
+    "frontend/src/components/ui/Button.jsx",
+    "frontend/src/components/ui/Data.jsx",
+    "frontend/src/components/ui/Form.jsx",
+    "frontend/src/components/ui/Overlay.jsx"
    ],
-   "inbound": 19,
+   "inbound": 4,
    "outbound": 0
   },
   {
-   "id": "frontend/src/data/master_catalogs.json",
-   "path": "frontend/src/data/master_catalogs.json",
-   "label": "master_catalogs.json",
+   "id": "frontend/src/components/ui/index.js",
+   "path": "frontend/src/components/ui/index.js",
+   "label": "index.js",
    "group": "frontend",
-   "dir": "frontend/src/data",
-   "ext": ".json",
-   "status": "ok",
-   "summary": "Catalogos mestres usados como sugestao no onboarding, sem CDN.",
+   "dir": "frontend/src/components/ui",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Dados.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 16,
-   "size": 560,
+   "lines": 7,
+   "size": 493,
    "externals": [],
    "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/App.jsx",
+    "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/session.jsx"
+   ],
+   "inbound": 19,
    "outbound": 0
   },
   {
@@ -2954,69 +3168,20 @@ window.GENESIS_MINDMAP = {
    "role": "Offline.",
    "security": "",
    "planned": false,
-   "lines": 45,
-   "size": 1922,
+   "lines": 72,
+   "size": 3470,
    "externals": [
     "dexie"
    ],
    "dependsOn": [],
    "usedBy": [
     "frontend/src/hooks/useOfflineSync.js",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Owner/DeviceKeys.jsx"
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/utils/productCache.js",
+    "frontend/tests/offline_queue.test.mjs"
    ],
-   "inbound": 3,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/hooks/useAuth.js",
-   "path": "frontend/src/hooks/useAuth.js",
-   "label": "useAuth.js",
-   "group": "frontend",
-   "dir": "frontend/src/hooks",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Hook de sessao: carrega o utilizador e respeita o role.",
-   "notes": "",
-   "role": "Autenticacao.",
-   "security": "",
-   "planned": false,
-   "lines": 24,
-   "size": 535,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/hooks/useIsolatedScreen.js",
-   "path": "frontend/src/hooks/useIsolatedScreen.js",
-   "label": "useIsolatedScreen.js",
-   "group": "frontend",
-   "dir": "frontend/src/hooks",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Modo ecra isolado (kiosk) para o balcao.",
-   "notes": "",
-   "role": "POS.",
-   "security": "",
-   "planned": false,
-   "lines": 33,
-   "size": 1455,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [],
-   "usedBy": [
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Hub.jsx"
-   ],
-   "inbound": 2,
+   "inbound": 5,
    "outbound": 0
   },
   {
@@ -3032,47 +3197,20 @@ window.GENESIS_MINDMAP = {
    "role": "Offline.",
    "security": "",
    "planned": false,
-   "lines": 162,
-   "size": 5820,
+   "lines": 87,
+   "size": 3226,
    "externals": [
     "react"
    ],
    "dependsOn": [
-    "frontend/src/db/localDb.js"
-   ],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/i18n/index.js",
-   "path": "frontend/src/i18n/index.js",
-   "label": "index.js",
-   "group": "frontend",
-   "dir": "frontend/src/i18n",
-   "ext": ".js",
-   "status": "partial",
-   "summary": "Internacionalizacao PT/EN (i18next) com dicionarios do login, POS e reposicao de senha.",
-   "notes": "Textos do fluxo antigo ja removidos: agora so existe o modo por codigo com confirmacao separada.",
-   "role": "Textos.",
-   "security": "",
-   "planned": false,
-   "lines": 172,
-   "size": 7509,
-   "externals": [
-    "i18next",
-    "react-i18next"
-   ],
-   "dependsOn": [
-    "frontend/src/i18n/index.js"
+    "frontend/src/db/localDb.js",
+    "frontend/src/utils/offlineQueue.js"
    ],
    "usedBy": [
-    "frontend/src/i18n/index.js",
-    "frontend/src/pages/Login.jsx",
-    "frontend/src/pages/ResetPassword.jsx"
+    "frontend/src/pages/pos/PosScreen.jsx"
    ],
-   "inbound": 3,
-   "outbound": 1
+   "inbound": 1,
+   "outbound": 2
   },
   {
    "id": "frontend/src/index.css",
@@ -3087,29 +3225,35 @@ window.GENESIS_MINDMAP = {
    "role": "Estilo.",
    "security": "",
    "planned": false,
-   "lines": 930,
-   "size": 34297,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
+   "lines": 45,
+   "size": 1599,
+   "externals": [
+    "@fontsource-variable/inter"
+   ],
+   "dependsOn": [
+    "frontend/src/ui/tokens.css"
+   ],
+   "usedBy": [
+    "frontend/src/main.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
   },
   {
-   "id": "frontend/src/layouts/CRMLayout.jsx",
-   "path": "frontend/src/layouts/CRMLayout.jsx",
-   "label": "CRMLayout.jsx",
+   "id": "frontend/src/layouts/AppShell.jsx",
+   "path": "frontend/src/layouts/AppShell.jsx",
+   "label": "AppShell.jsx",
    "group": "frontend",
    "dir": "frontend/src/layouts",
    "ext": ".jsx",
-   "status": "partial",
-   "summary": "Shell do Genesis para donos e caixistas: sidebar recolhivel, topbar, paleta de comandos Ctrl+K, estado online/offline e logout.",
-   "notes": "Falta o botao de tema claro/escuro.",
-   "role": "Shell.",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 292,
-   "size": 11646,
+   "lines": 132,
+   "size": 6476,
    "externals": [
     "react",
     "react-router-dom",
@@ -3117,8 +3261,8 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx",
-    "frontend/src/theme/ThemeToggle.jsx"
+    "frontend/src/utils/session.jsx",
+    "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
@@ -3139,132 +3283,97 @@ window.GENESIS_MINDMAP = {
    "role": "Bootstrap do frontend.",
    "security": "",
    "planned": false,
-   "lines": 23,
-   "size": 553,
+   "lines": 12,
+   "size": 263,
    "externals": [
     "react",
     "react-dom"
    ],
    "dependsOn": [
     "frontend/src/App.jsx",
-    "frontend/src/theme/ThemeProvider.jsx"
+    "frontend/src/index.css",
+    "frontend/src/registerSW.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 3
   },
   {
-   "id": "frontend/src/pages/CashierDashboard.jsx",
-   "path": "frontend/src/pages/CashierDashboard.jsx",
-   "label": "CashierDashboard.jsx",
+   "id": "frontend/src/pages/auth/AuthLayout.jsx",
+   "path": "frontend/src/pages/auth/AuthLayout.jsx",
+   "label": "AuthLayout.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages",
+   "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "partial",
-   "summary": "POS completo: catalogo, carrinho, descontos, varios pagamentos, venda, pre-visualizacao do recibo com QR, fecho de turno cego e hub do balcao.",
-   "notes": "O botao 'Imprimir recibo' nao descarrega PDF nem mostra impressora 3D em condicoes.",
-   "role": "Caixa.",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 934,
-   "size": 39082,
+   "lines": 26,
+   "size": 1339,
    "externals": [
     "react",
-    "react-router-dom",
-    "lucide-react",
-    "qrcode"
+    "react-router-dom"
    ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/db/localDb.js",
-    "frontend/src/utils/receiptPrinter.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/utils/hubSession.js",
-    "frontend/src/hooks/useIsolatedScreen.js",
-    "frontend/src/components/ui/index.jsx",
-    "frontend/src/components/Printer3D.jsx",
-    "frontend/src/theme/ThemeToggle.jsx",
-    "frontend/src/utils/receiptPdf.js"
-   ],
+   "dependsOn": [],
    "usedBy": [
-    "frontend/src/components/PosGate.jsx"
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx"
    ],
-   "inbound": 1,
-   "outbound": 10
+   "inbound": 4,
+   "outbound": 0
   },
   {
-   "id": "frontend/src/pages/CashierLogin.jsx",
-   "path": "frontend/src/pages/CashierLogin.jsx",
-   "label": "CashierLogin.jsx",
+   "id": "frontend/src/pages/auth/Login.jsx",
+   "path": "frontend/src/pages/auth/Login.jsx",
+   "label": "Login.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages",
+   "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Login do caixista por PIN/utilizador dentro do estabelecimento.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Autenticacao.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 7,
-   "size": 135,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "frontend/src/pages/Login.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/pages/Hub.jsx",
-   "path": "frontend/src/pages/Hub.jsx",
-   "label": "Hub.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages",
-   "ext": ".jsx",
-   "status": "partial",
-   "summary": "Hub do balcao: criar caixistas, abrir/fechar turnos e entrar no POS de cada perfil.",
-   "notes": "Ainda tem cores hex fixas em style inline: nao acompanha o tema claro.",
-   "role": "Gestao de caixistas.",
-   "security": "",
-   "planned": false,
-   "lines": 200,
-   "size": 13009,
+   "lines": 122,
+   "size": 5377,
    "externals": [
     "react",
     "react-router-dom"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/utils/hubSession.js",
-    "frontend/src/hooks/useIsolatedScreen.js",
-    "frontend/src/theme/ThemeToggle.jsx"
+    "frontend/src/utils/session.jsx",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
-   "id": "frontend/src/pages/Login.jsx",
-   "path": "frontend/src/pages/Login.jsx",
-   "label": "Login.jsx",
+   "id": "frontend/src/pages/auth/RequestAccount.jsx",
+   "path": "frontend/src/pages/auth/RequestAccount.jsx",
+   "label": "RequestAccount.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages",
+   "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "partial",
-   "summary": "Login do dono: email/senha, botao Google Identity Services e ligacao para recuperacao de senha.",
-   "notes": "Falta o botao de tema. O Google so funciona depois de autorizar a origem no Google Cloud Console. CORRIGIDO 28/09: quando o backend responde code=CLOCK_SKEW, o ecra passa a explicar que a HORA DO COMPUTADOR esta errada em vez de mostrar o generico 'nao foi possivel validar a sessao do Google'.",
-   "role": "Autenticacao.",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 357,
-   "size": 14844,
+   "lines": 74,
+   "size": 4077,
    "externals": [
     "react",
     "react-router-dom",
@@ -3272,150 +3381,414 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx",
-    "frontend/src/theme/ThemeToggle.jsx",
-    "frontend/src/i18n/index.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx",
-    "frontend/src/pages/CashierLogin.jsx"
+    "frontend/src/pages/owner/Onboarding.jsx"
    ],
    "inbound": 2,
    "outbound": 4
   },
   {
-   "id": "frontend/src/pages/OnboardingWizard.jsx",
-   "path": "frontend/src/pages/OnboardingWizard.jsx",
-   "label": "OnboardingWizard.jsx",
+   "id": "frontend/src/pages/auth/ResetPassword.jsx",
+   "path": "frontend/src/pages/auth/ResetPassword.jsx",
+   "label": "ResetPassword.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages",
+   "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Wizard de arranque da loja: tipo de negocio, catalogo sugerido e importacao em poucos cliques.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Onboarding.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 323,
-   "size": 17666,
+   "lines": 65,
+   "size": 3660,
    "externals": [
     "react",
     "react-router-dom"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 4
   },
   {
-   "id": "frontend/src/pages/Owner/AuditLogViewer.jsx",
-   "path": "frontend/src/pages/Owner/AuditLogViewer.jsx",
-   "label": "AuditLogViewer.jsx",
+   "id": "frontend/src/pages/auth/Support.jsx",
+   "path": "frontend/src/pages/auth/Support.jsx",
+   "label": "Support.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
+   "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Leitor do registo de auditoria do tenant.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Auditoria.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 44,
-   "size": 2081,
+   "lines": 31,
+   "size": 1445,
+   "externals": [
+    "react",
+    "react-router-dom"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/auth/AuthLayout.jsx"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 5
+  },
+  {
+   "id": "frontend/src/pages/owner/Debts.jsx",
+   "path": "frontend/src/pages/owner/Debts.jsx",
+   "label": "Debts.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 108,
+   "size": 7153,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 4
   },
   {
-   "id": "frontend/src/pages/Owner/Dashboard.jsx",
-   "path": "frontend/src/pages/Owner/Dashboard.jsx",
-   "label": "Dashboard.jsx",
+   "id": "frontend/src/pages/owner/Home.jsx",
+   "path": "frontend/src/pages/owner/Home.jsx",
+   "label": "Home.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
+   "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Visao geral do dono: KPIs, graficos Recharts, alertas de stock/validade e exportacao CSV.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Painel do dono.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 323,
-   "size": 16502,
+   "lines": 161,
+   "size": 8734,
    "externals": [
     "react",
     "react-router-dom",
-    "recharts",
-    "lucide-react"
+    "recharts"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 4
   },
   {
-   "id": "frontend/src/pages/Owner/Debts.jsx",
-   "path": "frontend/src/pages/Owner/Debts.jsx",
-   "label": "Debts.jsx",
+   "id": "frontend/src/pages/owner/Onboarding.jsx",
+   "path": "frontend/src/pages/owner/Onboarding.jsx",
+   "label": "Onboarding.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
+   "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Chenecas: dividas de clientes, pagamentos parciais e saldo em falta.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Credito.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 58,
-   "size": 3410,
+   "lines": 201,
+   "size": 12500,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/auth/RequestAccount.jsx"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 5
+  },
+  {
+   "id": "frontend/src/pages/owner/Products.jsx",
+   "path": "frontend/src/pages/owner/Products.jsx",
+   "label": "Products.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 249,
+   "size": 15129,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/owner/Reports.jsx",
+   "path": "frontend/src/pages/owner/Reports.jsx",
+   "label": "Reports.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 217,
+   "size": 12863,
+   "externals": [
+    "react",
+    "lucide-react",
+    "recharts"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 3
+  },
+  {
+   "id": "frontend/src/pages/owner/Sales.jsx",
+   "path": "frontend/src/pages/owner/Sales.jsx",
+   "label": "Sales.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 111,
+   "size": 6676,
+   "externals": [
+    "react",
+    "lucide-react",
+    "react-router-dom"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/receiptPrinter.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/owner/Settings.jsx",
+   "path": "frontend/src/pages/owner/Settings.jsx",
+   "label": "Settings.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 273,
+   "size": 16923,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/owner/Suppliers.jsx",
+   "path": "frontend/src/pages/owner/Suppliers.jsx",
+   "label": "Suppliers.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 76,
+   "size": 4700,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 4
   },
   {
-   "id": "frontend/src/pages/Owner/DeviceKeys.jsx",
-   "path": "frontend/src/pages/Owner/DeviceKeys.jsx",
-   "label": "DeviceKeys.jsx",
+   "id": "frontend/src/pages/owner/Team.jsx",
+   "path": "frontend/src/pages/owner/Team.jsx",
+   "label": "Team.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
+   "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Chaves de dispositivo do POS: emitir, listar e revogar.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Dispositivos.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 104,
-   "size": 5938,
+   "lines": 163,
+   "size": 10579,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/pos/PosDialogs.jsx",
+   "path": "frontend/src/pages/pos/PosDialogs.jsx",
+   "label": "PosDialogs.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/pos",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 244,
+   "size": 12539,
+   "externals": [
+    "react",
+    "qrcode",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/db/localDb.js",
+    "frontend/src/utils/syncPolicy.js",
+    "frontend/src/utils/receiptPrinter.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/pos/PosScreen.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 6
+  },
+  {
+   "id": "frontend/src/pages/pos/PosScreen.jsx",
+   "path": "frontend/src/pages/pos/PosScreen.jsx",
+   "label": "PosScreen.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/pos",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 289,
+   "size": 17478,
    "externals": [
     "react",
     "lucide-react"
@@ -3423,321 +3796,34 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/api.js",
     "frontend/src/db/localDb.js",
-    "frontend/src/components/ui/index.jsx"
+    "frontend/src/hooks/useOfflineSync.js",
+    "frontend/src/utils/syncPolicy.js",
+    "frontend/src/utils/productCache.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/pos/PosDialogs.jsx"
    ],
    "usedBy": [
-    "frontend/src/App.jsx"
+    "frontend/src/pages/pos/Terminal.jsx"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 8
   },
   {
-   "id": "frontend/src/pages/Owner/Employees.jsx",
-   "path": "frontend/src/pages/Owner/Employees.jsx",
-   "label": "Employees.jsx",
+   "id": "frontend/src/pages/pos/Terminal.jsx",
+   "path": "frontend/src/pages/pos/Terminal.jsx",
+   "label": "Terminal.jsx",
    "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
+   "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "ok",
-   "summary": "Trabalhadores e salarios mensais (dinheiro convertido para centavos no envio).",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Recursos humanos.",
-   "security": "",
-   "planned": false,
-   "lines": 109,
-   "size": 6985,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/pages/Owner/Goals.jsx",
-   "path": "frontend/src/pages/Owner/Goals.jsx",
-   "label": "Goals.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Metas de venda com barra de progresso e cor por percentagem.",
-   "notes": "",
-   "role": "Vendas.",
-   "security": "",
-   "planned": false,
-   "lines": 85,
-   "size": 5105,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/pages/Owner/Products.jsx",
-   "path": "frontend/src/pages/Owner/Products.jsx",
-   "label": "Products.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Gestao de produtos: criar/editar, precos, stock minimo e codigos de barras.",
-   "notes": "",
-   "role": "Catalogo.",
-   "security": "",
-   "planned": false,
-   "lines": 171,
-   "size": 9729,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-   "path": "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-   "label": "DailyReport.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner/Reports",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Relatorio diario de vendas.",
-   "notes": "",
-   "role": "Relatorios.",
-   "security": "",
-   "planned": false,
-   "lines": 48,
-   "size": 2571,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 2
-  },
-  {
-   "id": "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-   "path": "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-   "label": "MonthlyReport.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner/Reports",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Relatorio mensal com o lucro liquido REAL: receita menos custo das mercadorias menos deducoes (salarios e custos fixos), em visual de cascata.",
-   "notes": "Vendas canceladas nunca contam na receita.",
-   "role": "Relatorios.",
-   "security": "",
-   "planned": false,
-   "lines": 88,
-   "size": 5403,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 2
-  },
-  {
-   "id": "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-   "path": "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-   "label": "WeeklyReport.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner/Reports",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Relatorio semanal de vendas.",
-   "notes": "",
-   "role": "Relatorios.",
-   "security": "",
-   "planned": false,
-   "lines": 58,
-   "size": 3250,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 2
-  },
-  {
-   "id": "frontend/src/pages/Owner/Settings.jsx",
-   "path": "frontend/src/pages/Owner/Settings.jsx",
-   "label": "Settings.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Definicoes do estabelecimento: horario de funcionamento, dados da loja e preferencias.",
-   "notes": "",
-   "role": "Configuracao.",
-   "security": "",
-   "planned": false,
-   "lines": 109,
-   "size": 5637,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 2
-  },
-  {
-   "id": "frontend/src/pages/Owner/Stock.jsx",
-   "path": "frontend/src/pages/Owner/Stock.jsx",
-   "label": "Stock.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Entradas de stock e historico de movimentos.",
-   "notes": "",
-   "role": "Stock.",
+   "role": "",
    "security": "",
    "planned": false,
    "lines": 177,
-   "size": 9309,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/pages/Owner/Suppliers.jsx",
-   "path": "frontend/src/pages/Owner/Suppliers.jsx",
-   "label": "Suppliers.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages/Owner",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Gestao de fornecedores.",
-   "notes": "",
-   "role": "Compras.",
-   "security": "",
-   "planned": false,
-   "lines": 92,
-   "size": 4703,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js",
-    "frontend/src/utils/money.js",
-    "frontend/src/components/ui/index.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 3
-  },
-  {
-   "id": "frontend/src/pages/RequestAccount.jsx",
-   "path": "frontend/src/pages/RequestAccount.jsx",
-   "label": "RequestAccount.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Pedido publico de conta de loja, aprovado depois no painel de super admin.",
-   "notes": "CORRIGIDO 28/09 (backend): o formulario nao avancava porque o POST /api/auth/request-account devolvia 500. Causa: faltava a coluna Tenant.onboarding_completed no Postgres e o tenant.create escreve-a. Validado: devolve 201 'Pedido recebido' e o registo de teste foi apagado.",
-   "role": "Aquisicao.",
-   "security": "",
-   "planned": false,
-   "lines": 155,
-   "size": 7738,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "frontend/src/utils/api.js"
-   ],
-   "usedBy": [
-    "frontend/src/App.jsx"
-   ],
-   "inbound": 1,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/pages/ResetPassword.jsx",
-   "path": "frontend/src/pages/ResetPassword.jsx",
-   "label": "ResetPassword.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/pages",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Recuperacao de senha em 3 fases separadas: pedir codigo, confirmar codigo (so com 6 digitos), e so entao escolher a nova senha com repeticao. O cadeado abre no ecra depois do codigo confirmado.",
-   "notes": "BUG GRAVE CORRIGIDO 28/09: a cadeia de ternarios do JSX tinha um ramo `: !sent ?` DUPLICADO logo a seguir ao `done ?`, e esse ramo renderizava o ecra de 'Senha redefinida com sucesso'. Como `sent` comeca a false, ao abrir /forgot-password aparecia de imediato a mensagem de sucesso — sem pedir email, sem campo de codigo e sem nunca passar pela fase 1. O ramo duplicado foi removido e a cadeia ficou done ? !sent ? !verified ? (nova senha). Agora, sem SMTP, o codigo devolvido em modo desenvolvimento (DEV_SHOW_RESET_CODE) aparece no ecra para o utilizador poder copiar.",
-   "role": "Recuperacao de conta.",
-   "security": "A fase da nova senha nem existe no DOM antes do codigo ser confirmado; o servidor continua a exigir { email, code, password } e conta tentativas. A 26/09 o bug que impedia QUALQUER reposicao foi corrigido.",
-   "planned": false,
-   "lines": 319,
-   "size": 13836,
+   "size": 8387,
    "externals": [
     "react",
     "react-router-dom",
@@ -3745,10 +3831,10 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.jsx",
-    "frontend/src/components/SecurityGateIcon.jsx",
-    "frontend/src/theme/ThemeToggle.jsx",
-    "frontend/src/i18n/index.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/productCache.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
@@ -3775,198 +3861,10 @@ window.GENESIS_MINDMAP = {
     "virtual:pwa-register"
    ],
    "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/theme/PoolWater.jsx",
-   "path": "frontend/src/theme/PoolWater.jsx",
-   "label": "PoolWater.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/theme",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Camada decorativa da piscina: azulejos, quatro ondas e três manchas de luz (causticas) em CSS puro. Só é montada no tema claro.",
-   "notes": "aria-hidden + pointer-events:none: nunca interfere com cliques nem com leitores de ecrã. Fica parada em prefers-reduced-motion.",
-   "role": "Animação do modo claro.",
-   "security": "",
-   "planned": false,
-   "lines": 26,
-   "size": 1143,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [],
    "usedBy": [
-    "frontend/src/theme/ThemeProvider.jsx"
+    "frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/theme/ThemeProvider.jsx",
-   "path": "frontend/src/theme/ThemeProvider.jsx",
-   "label": "ThemeProvider.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/theme",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Contexto de tema: aplica data-theme no <html>, guarda em localStorage (chave genesis.theme) e monta a camada da piscina quando o tema é claro.",
-   "notes": "First choice da ausencia de escolha guardada: respeita prefers-color-scheme. O index.html repete a lógica num script inline para não haver flash branco.",
-   "role": "Tema claro/escuro.",
-   "security": "",
-   "planned": false,
-   "lines": 81,
-   "size": 2980,
-   "externals": [
-    "react"
-   ],
-   "dependsOn": [
-    "frontend/src/theme/PoolWater.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/main.jsx",
-    "frontend/src/theme/ThemeToggle.jsx"
-   ],
-   "inbound": 2,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/theme/ThemeToggle.jsx",
-   "path": "frontend/src/theme/ThemeToggle.jsx",
-   "label": "ThemeToggle.jsx",
-   "group": "frontend",
-   "dir": "frontend/src/theme",
-   "ext": ".jsx",
-   "status": "ok",
-   "summary": "Botão lua/sol que alterna o tema. Presente no login, no shell do dono, no POS, no Hub e no ecrã de recuperação de senha.",
-   "notes": "",
-   "role": "Tema claro/escuro.",
-   "security": "aria-pressed + title descrevem o estado para leitores de ecrã.",
-   "planned": false,
-   "lines": 54,
-   "size": 1658,
-   "externals": [
-    "react",
-    "lucide-react"
-   ],
-   "dependsOn": [
-    "frontend/src/theme/ThemeProvider.jsx"
-   ],
-   "usedBy": [
-    "frontend/src/layouts/CRMLayout.jsx",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Hub.jsx",
-    "frontend/src/pages/Login.jsx",
-    "frontend/src/pages/ResetPassword.jsx"
-   ],
-   "inbound": 5,
-   "outbound": 1
-  },
-  {
-   "id": "frontend/src/ui/animations.css",
-   "path": "frontend/src/ui/animations.css",
-   "label": "animations.css",
-   "group": "frontend",
-   "dir": "frontend/src/ui",
-   "ext": ".css",
-   "status": "partial",
-   "summary": "Animacoes de assinatura: auroras ambiente, spotlight, sheen, recibo 3D e loops de fundo.",
-   "notes": "A seccao do recibo e fraca (uma barra de 6px): sera substituida pelo Printer3D.",
-   "role": "Estilo.",
-   "security": "",
-   "planned": false,
-   "lines": 338,
-   "size": 15730,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/ui/primitives.css",
-   "path": "frontend/src/ui/primitives.css",
-   "label": "primitives.css",
-   "group": "frontend",
-   "dir": "frontend/src/ui",
-   "ext": ".css",
-   "status": "ok",
-   "summary": "Icones e primitivos usados por todo o produto.",
-   "notes": "",
-   "role": "Estilo.",
-   "security": "",
-   "planned": false,
-   "lines": 394,
-   "size": 17185,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/ui/shell.css",
-   "path": "frontend/src/ui/shell.css",
-   "label": "shell.css",
-   "group": "frontend",
-   "dir": "frontend/src/ui",
-   "ext": ".css",
-   "status": "ok",
-   "summary": "Estilo do shell: sidebar, topbar, paleta de comandos e transicoes de pagina.",
-   "notes": "",
-   "role": "Estilo.",
-   "security": "",
-   "planned": false,
-   "lines": 289,
-   "size": 10102,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/ui/theme-light.css",
-   "path": "frontend/src/ui/theme-light.css",
-   "label": "theme-light.css",
-   "group": "frontend",
-   "dir": "frontend/src/ui",
-   "ext": ".css",
-   "status": "ok",
-   "summary": "Tema claro azul-piscina: reescreve os mesmos tokens do tema escuro em [data-theme=\"light\"] (fundos brancos, marca ciano, sombras de luz do dia) e ajusta o brilho ambiente do corpo.",
-   "notes": "Trocar o atributo muda a aplicação inteira de uma vez porque nada escreve hex a mao e não existe uma única classe dark: do Tailwind.",
-   "role": "Tokens do tema claro.",
-   "security": "",
-   "planned": false,
-   "lines": 99,
-   "size": 4056,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/ui/theme-toggle.css",
-   "path": "frontend/src/ui/theme-toggle.css",
-   "label": "theme-toggle.css",
-   "group": "frontend",
-   "dir": "frontend/src/ui",
-   "ext": ".css",
-   "status": "ok",
-   "summary": "Estilo do botão de tema e das três camadas da piscina (keyframes de deriva, onda e caustica).",
-   "notes": "",
-   "role": "Estilo do tema claro.",
-   "security": "",
-   "planned": false,
-   "lines": 139,
-   "size": 4849,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
    "outbound": 0
   },
   {
@@ -3982,12 +3880,14 @@ window.GENESIS_MINDMAP = {
    "role": "Design tokens.",
    "security": "",
    "planned": false,
-   "lines": 201,
-   "size": 6213,
+   "lines": 66,
+   "size": 2126,
    "externals": [],
    "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/index.css"
+   ],
+   "inbound": 1,
    "outbound": 0
   },
   {
@@ -4003,84 +3903,72 @@ window.GENESIS_MINDMAP = {
    "role": "Rede.",
    "security": "",
    "planned": false,
-   "lines": 9,
-   "size": 120,
+   "lines": 60,
+   "size": 2494,
    "externals": [
     "axios"
    ],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/components/PosGate.jsx",
-    "frontend/src/components/ProtectedRoute.jsx",
-    "frontend/src/hooks/useAuth.js",
-    "frontend/src/layouts/CRMLayout.jsx",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Hub.jsx",
-    "frontend/src/pages/Login.jsx",
-    "frontend/src/pages/OnboardingWizard.jsx",
-    "frontend/src/pages/Owner/AuditLogViewer.jsx",
-    "frontend/src/pages/Owner/Dashboard.jsx",
-    "frontend/src/pages/Owner/Debts.jsx",
-    "frontend/src/pages/Owner/DeviceKeys.jsx",
-    "frontend/src/pages/Owner/Employees.jsx",
-    "frontend/src/pages/Owner/Goals.jsx",
-    "frontend/src/pages/Owner/Products.jsx",
-    "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-    "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-    "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-    "frontend/src/pages/Owner/Settings.jsx",
-    "frontend/src/pages/Owner/Stock.jsx",
-    "frontend/src/pages/Owner/Suppliers.jsx",
-    "frontend/src/pages/RequestAccount.jsx",
-    "frontend/src/pages/ResetPassword.jsx"
+    "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/productCache.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/utils/useApi.js"
    ],
-   "inbound": 23,
+   "inbound": 18,
    "outbound": 0
   },
   {
-   "id": "frontend/src/utils/auth.js",
-   "path": "frontend/src/utils/auth.js",
-   "label": "auth.js",
+   "id": "frontend/src/utils/format.js",
+   "path": "frontend/src/utils/format.js",
+   "label": "format.js",
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Utilitarios de sessao no cliente.",
+   "status": "untracked",
+   "summary": "",
    "notes": "",
-   "role": "Autenticacao.",
+   "role": "",
    "security": "",
    "planned": false,
-   "lines": 42,
-   "size": 1148,
-   "externals": [],
-   "dependsOn": [],
-   "usedBy": [],
-   "inbound": 0,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/utils/hubSession.js",
-   "path": "frontend/src/utils/hubSession.js",
-   "label": "hubSession.js",
-   "group": "frontend",
-   "dir": "frontend/src/utils",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Sessao do perfil de caixista no Hub do balcao.",
-   "notes": "",
-   "role": "Estado do POS.",
-   "security": "",
-   "planned": false,
-   "lines": 23,
-   "size": 688,
+   "lines": 50,
+   "size": 1975,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/components/PosGate.jsx",
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/Hub.jsx"
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/useApi.js"
    ],
-   "inbound": 3,
+   "inbound": 17,
    "outbound": 0
   },
   {
@@ -4101,41 +3989,63 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/pages/CashierDashboard.jsx",
-    "frontend/src/pages/OnboardingWizard.jsx",
-    "frontend/src/pages/Owner/Employees.jsx",
-    "frontend/src/pages/Owner/Goals.jsx",
-    "frontend/src/pages/Owner/Products.jsx",
-    "frontend/src/pages/Owner/Stock.jsx",
-    "frontend/src/pages/Owner/Suppliers.jsx"
-   ],
-   "inbound": 7,
-   "outbound": 0
-  },
-  {
-   "id": "frontend/src/utils/receiptPdf.js",
-   "path": "frontend/src/utils/receiptPdf.js",
-   "label": "receiptPdf.js",
-   "group": "frontend",
-   "dir": "frontend/src/utils",
-   "ext": ".js",
-   "status": "ok",
-   "summary": "Gerador do PDF do recibo com jsPDF (offline, sem CDN): rolo de 80mm, tinta escura sobre papel, faixa Genesis com o nº da venda, serreto, QR e totais. Devolve o blob E o nome do ficheiro; o download é feito por quem chama.",
-   "notes": "Nome exacto: Recibo_<N>  <DD-MM-YYYY>  <HH:mm:ss>.pdf (dois espaços). N = daily_number do servidor; em venda offline usa o contador local do dia, que reinicia a meia-noite. Todo o texto passa por clean(), por isso um nome de produto com <script> sai literal.",
-   "role": "Recibo em PDF.",
-   "security": "Sem innerHTML: o PDF é desenhado com texto vectorial, logo não há injecção de HTML no documento impresso.",
-   "planned": false,
-   "lines": 362,
-   "size": 13830,
-   "externals": [
-    "jspdf"
-   ],
-   "dependsOn": [],
-   "usedBy": [
-    "frontend/src/pages/CashierDashboard.jsx"
+    "frontend/src/components/ui/Form.jsx"
    ],
    "inbound": 1,
    "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/offlineQueue.js",
+   "path": "frontend/src/utils/offlineQueue.js",
+   "label": "offlineQueue.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 69,
+   "size": 2803,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/utils/syncPolicy.js"
+   ],
+   "usedBy": [
+    "frontend/src/hooks/useOfflineSync.js",
+    "frontend/tests/offline_queue.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/utils/productCache.js",
+   "path": "frontend/src/utils/productCache.js",
+   "label": "productCache.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 44,
+   "size": 1723,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/db/localDb.js",
+    "frontend/src/utils/api.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/pages/pos/Terminal.jsx"
+   ],
+   "inbound": 2,
+   "outbound": 2
   },
   {
    "id": "frontend/src/utils/receiptPrinter.js",
@@ -4157,10 +4067,105 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/pages/CashierDashboard.jsx"
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/session.jsx",
+   "path": "frontend/src/utils/session.jsx",
+   "label": "session.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 46,
+   "size": 1911,
+   "externals": [
+    "react",
+    "react-router-dom"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx",
+    "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx"
+   ],
+   "inbound": 5,
+   "outbound": 2
+  },
+  {
+   "id": "frontend/src/utils/syncPolicy.js",
+   "path": "frontend/src/utils/syncPolicy.js",
+   "label": "syncPolicy.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 49,
+   "size": 2119,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/utils/offlineQueue.js",
+    "frontend/tests/offline_queue.test.mjs"
+   ],
+   "inbound": 4,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/useApi.js",
+   "path": "frontend/src/utils/useApi.js",
+   "label": "useApi.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 23,
+   "size": 837,
+   "externals": [
+    "react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/format.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Team.jsx"
+   ],
+   "inbound": 8,
+   "outbound": 2
   },
   {
    "id": "frontend/tailwind.config.js",
@@ -4175,15 +4180,96 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 159,
-   "size": 6104,
+   "lines": 47,
+   "size": 2107,
    "externals": [
     "tailwindcss"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "admin-frontend/tailwind.config.cjs"
+   ],
+   "inbound": 1,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/flows.mjs",
+   "path": "frontend/tests/e2e/flows.mjs",
+   "label": "flows.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 190,
+   "size": 10156,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
    ],
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
    "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/onboarding.mjs",
+   "path": "frontend/tests/e2e/onboarding.mjs",
+   "label": "onboarding.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 99,
+   "size": 5332,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/offline_queue.test.mjs",
+   "path": "frontend/tests/offline_queue.test.mjs",
+   "label": "offline_queue.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 122,
+   "size": 6222,
+   "externals": [
+    "node:test",
+    "node:assert",
+    "dexie"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/syncPolicy.js",
+    "frontend/src/utils/offlineQueue.js",
+    "frontend/src/db/localDb.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 3
   },
   {
    "id": "frontend/tests/playwright_offline_sync_test.js",
@@ -4223,7 +4309,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 42,
-   "size": 955,
+   "size": 995,
    "externals": [
     "vite",
     "vite-plugin-pwa"
@@ -4500,7 +4586,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 1
   },
   {
    "id": "frontend/src/pages/CodeMap.jsx",
@@ -4524,7 +4610,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 1
+   "outbound": 0
   },
   {
    "id": "docs/README_INSTALACAO.md",
@@ -4553,14 +4639,6 @@ window.GENESIS_MINDMAP = {
  ],
  "links": [
   {
-   "source": "admin-frontend/src/App.jsx",
-   "target": "admin-frontend/src/ThemeToggle.jsx"
-  },
-  {
-   "source": "admin-frontend/src/ThemeToggle.jsx",
-   "target": "admin-frontend/src/theme.js"
-  },
-  {
    "source": "admin-frontend/src/main.jsx",
    "target": "admin-frontend/src/App.jsx"
   },
@@ -4569,23 +4647,27 @@ window.GENESIS_MINDMAP = {
    "target": "admin-frontend/src/index.css"
   },
   {
-   "source": "backend/scripts/check_mail.js",
-   "target": "backend/src/utils/mailer.js"
+   "source": "admin-frontend/tailwind.config.cjs",
+   "target": "frontend/tailwind.config.js"
   },
   {
-   "source": "backend/scripts/check_sale.js",
-   "target": "backend/src/utils/prisma.js"
+   "source": "backend/scripts/check_mail.js",
+   "target": "backend/src/utils/mailer.js"
   },
   {
    "source": "backend/scripts/create_system_user.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
-   "source": "backend/scripts/create_tenant_7777.js",
+   "source": "backend/scripts/create_test_tenant.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
-   "source": "backend/scripts/create_test_tenant.js",
+   "source": "backend/scripts/e2e_admin_fixture.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/scripts/e2e_fixture.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
@@ -4594,10 +4676,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/scripts/gerir_contas.js",
-   "target": "backend/src/utils/prisma.js"
-  },
-  {
-   "source": "backend/scripts/insert_product_7777.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
@@ -4615,6 +4693,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/scripts/test_google.js",
    "target": "backend/src/routes/auth.js"
+  },
+  {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/utils/tokens.js"
   },
   {
    "source": "backend/src/index.js",
@@ -4658,19 +4744,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
-   "target": "backend/src/routes/shift_closings.js"
-  },
-  {
-   "source": "backend/src/index.js",
    "target": "backend/src/routes/demand_captures.js"
-  },
-  {
-   "source": "backend/src/index.js",
-   "target": "backend/src/routes/device_keys.js"
-  },
-  {
-   "source": "backend/src/index.js",
-   "target": "backend/src/middleware/deviceKeyAuth.js"
   },
   {
    "source": "backend/src/index.js",
@@ -4679,10 +4753,6 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/index.js",
    "target": "backend/src/middleware/auth.js"
-  },
-  {
-   "source": "backend/src/index.js",
-   "target": "backend/src/middleware/authOrDevice.js"
   },
   {
    "source": "backend/src/index.js",
@@ -4697,20 +4767,92 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/routes/refresh.js"
   },
   {
-   "source": "backend/src/middleware/authOrDevice.js",
+   "source": "backend/src/index.js",
+   "target": "backend/src/routes/settings.js"
+  },
+  {
+   "source": "backend/src/index.js",
+   "target": "backend/src/routes/pos.js"
+  },
+  {
+   "source": "backend/src/index.js",
+   "target": "backend/src/middleware/posWriteAuth.js"
+  },
+  {
+   "source": "backend/src/index.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/middleware/auth.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/middleware/auth.js",
+   "target": "backend/src/utils/tenantStatus.js"
+  },
+  {
+   "source": "backend/src/middleware/auth.js",
+   "target": "backend/src/utils/sessionScopes.js"
+  },
+  {
+   "source": "backend/src/middleware/auth.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/middleware/posWriteAuth.js",
    "target": "backend/src/middleware/auth.js"
   },
   {
-   "source": "backend/src/middleware/authOrDevice.js",
-   "target": "backend/src/middleware/deviceKeyAuth.js"
+   "source": "backend/src/middleware/posWriteAuth.js",
+   "target": "backend/src/middleware/terminalAuth.js"
   },
   {
-   "source": "backend/src/middleware/deviceKeyAuth.js",
-   "target": "backend/src/services/deviceKeyService.js"
+   "source": "backend/src/middleware/posWriteAuth.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/middleware/posWriteAuth.js",
+   "target": "backend/src/utils/terminals.js"
+  },
+  {
+   "source": "backend/src/middleware/posWriteAuth.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/middleware/terminalAuth.js",
+   "target": "backend/src/utils/terminals.js"
+  },
+  {
+   "source": "backend/src/middleware/terminalAuth.js",
+   "target": "backend/src/utils/tenantStatus.js"
+  },
+  {
+   "source": "backend/src/middleware/terminalAuth.js",
+   "target": "backend/src/utils/prisma.js"
   },
   {
    "source": "backend/src/routes/admin.js",
    "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/tenantStatus.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/supportCodes.js"
   },
   {
    "source": "backend/src/routes/auth.js",
@@ -4727,6 +4869,22 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/auth.js",
    "target": "backend/src/utils/mailer.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/supportCodes.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/audit.js"
   },
   {
    "source": "backend/src/routes/catalogs.js",
@@ -4759,10 +4917,6 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/demand_captures.js",
    "target": "backend/src/utils/tenantRls.js"
-  },
-  {
-   "source": "backend/src/routes/device_keys.js",
-   "target": "backend/src/services/deviceKeyService.js"
   },
   {
    "source": "backend/src/routes/inventory.js",
@@ -4810,11 +4964,71 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/routes/owner.js",
-   "target": "backend/src/services/monthlyDeductions.js"
+   "target": "backend/src/services/reports.js"
   },
   {
    "source": "backend/src/routes/owner.js",
    "target": "backend/src/utils/shiftLock.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/terminals.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/middleware/auth.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/middleware/terminalAuth.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/terminals.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/shiftLock.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/shift.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/tenantStatus.js"
   },
   {
    "source": "backend/src/routes/products.js",
@@ -4827,6 +5041,18 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/products.js",
    "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/refresh.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/routes/refresh.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/routes/refresh.js",
+   "target": "backend/src/utils/tenantStatus.js"
   },
   {
    "source": "backend/src/routes/sales.js",
@@ -4845,12 +5071,24 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/paymentMethods.js"
   },
   {
-   "source": "backend/src/routes/shift_closings.js",
+   "source": "backend/src/routes/settings.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
-   "source": "backend/src/routes/shift_closings.js",
-   "target": "backend/src/utils/shiftLock.js"
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/middleware/auth.js"
+  },
+  {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/utils/audit.js"
   },
   {
    "source": "backend/src/routes/shrinkage_records.js",
@@ -4861,11 +5099,19 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/tenantRls.js"
   },
   {
-   "source": "backend/src/services/deviceKeyService.js",
+   "source": "backend/src/services/reports.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
+   "source": "backend/src/services/reports.js",
+   "target": "backend/src/services/monthlyDeductions.js"
+  },
+  {
    "source": "backend/src/services/tenantAlerts.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/audit.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
@@ -4873,16 +5119,36 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/dbEngine2.js"
   },
   {
-   "source": "backend/tests/device_key_service.test.js",
+   "source": "backend/src/utils/sessionUser.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
-   "source": "backend/tests/device_key_service.test.js",
-   "target": "backend/src/services/deviceKeyService.js"
+   "source": "backend/src/utils/sessionUser.js",
+   "target": "backend/src/utils/tokens.js"
   },
   {
-   "source": "backend/tests/device_key_service.test.js",
-   "target": "backend/src/middleware/deviceKeyAuth.js"
+   "source": "backend/src/utils/shift.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/shift.js",
+   "target": "backend/src/utils/shiftLock.js"
+  },
+  {
+   "source": "backend/src/utils/shift.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/utils/shift.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/utils/tenantStatus.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/terminals.js",
+   "target": "backend/src/utils/prisma.js"
   },
   {
    "source": "backend/tests/monthlyDeductions.test.js",
@@ -4890,135 +5156,119 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Login.jsx"
+   "target": "frontend/src/components/ui/index.js"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/CashierLogin.jsx"
+   "target": "frontend/src/utils/session.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/ResetPassword.jsx"
+   "target": "frontend/src/pages/auth/Login.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/RequestAccount.jsx"
+   "target": "frontend/src/pages/auth/RequestAccount.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Dashboard.jsx"
+   "target": "frontend/src/pages/auth/ResetPassword.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Products.jsx"
+   "target": "frontend/src/pages/auth/Support.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Stock.jsx"
+   "target": "frontend/src/pages/pos/Terminal.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Suppliers.jsx"
+   "target": "frontend/src/layouts/AppShell.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/DeviceKeys.jsx"
+   "target": "frontend/src/pages/owner/Home.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Employees.jsx"
+   "target": "frontend/src/pages/owner/Sales.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Debts.jsx"
+   "target": "frontend/src/pages/owner/Products.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Goals.jsx"
+   "target": "frontend/src/pages/owner/Suppliers.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Settings.jsx"
+   "target": "frontend/src/pages/owner/Debts.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/AuditLogViewer.jsx"
+   "target": "frontend/src/pages/owner/Team.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Reports/DailyReport.jsx"
+   "target": "frontend/src/pages/owner/Reports.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Reports/WeeklyReport.jsx"
+   "target": "frontend/src/pages/owner/Settings.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Owner/Reports/MonthlyReport.jsx"
+   "target": "frontend/src/pages/owner/Onboarding.jsx"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/OnboardingWizard.jsx"
+   "source": "frontend/src/components/ui/Button.jsx",
+   "target": "frontend/src/components/ui/cx.js"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/components/ProtectedRoute.jsx"
+   "source": "frontend/src/components/ui/Data.jsx",
+   "target": "frontend/src/components/ui/cx.js"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/components/PosGate.jsx"
+   "source": "frontend/src/components/ui/Form.jsx",
+   "target": "frontend/src/components/ui/cx.js"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/pages/Hub.jsx"
+   "source": "frontend/src/components/ui/Form.jsx",
+   "target": "frontend/src/utils/money.js"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/components/ui/Overlay.jsx",
+   "target": "frontend/src/components/ui/cx.js"
   },
   {
-   "source": "frontend/src/App.jsx",
-   "target": "frontend/src/layouts/CRMLayout.jsx"
-  },
-  {
-   "source": "frontend/src/components/PosGate.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/components/PosGate.jsx",
-   "target": "frontend/src/pages/CashierDashboard.jsx"
-  },
-  {
-   "source": "frontend/src/components/PosGate.jsx",
-   "target": "frontend/src/utils/hubSession.js"
-  },
-  {
-   "source": "frontend/src/components/ProtectedRoute.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/hooks/useAuth.js",
-   "target": "frontend/src/utils/api.js"
+   "source": "frontend/src/components/ui/Overlay.jsx",
+   "target": "frontend/src/components/ui/Button.jsx"
   },
   {
    "source": "frontend/src/hooks/useOfflineSync.js",
    "target": "frontend/src/db/localDb.js"
   },
   {
-   "source": "frontend/src/i18n/index.js",
-   "target": "frontend/src/i18n/index.js"
+   "source": "frontend/src/hooks/useOfflineSync.js",
+   "target": "frontend/src/utils/offlineQueue.js"
   },
   {
-   "source": "frontend/src/layouts/CRMLayout.jsx",
+   "source": "frontend/src/index.css",
+   "target": "frontend/src/ui/tokens.css"
+  },
+  {
+   "source": "frontend/src/layouts/AppShell.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/layouts/CRMLayout.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/utils/session.jsx"
   },
   {
-   "source": "frontend/src/layouts/CRMLayout.jsx",
-   "target": "frontend/src/theme/ThemeToggle.jsx"
+   "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
    "source": "frontend/src/main.jsx",
@@ -5026,251 +5276,343 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/main.jsx",
-   "target": "frontend/src/theme/ThemeProvider.jsx"
+   "target": "frontend/src/index.css"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
+   "source": "frontend/src/main.jsx",
+   "target": "frontend/src/registerSW.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Login.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/db/localDb.js"
+   "source": "frontend/src/pages/auth/Login.jsx",
+   "target": "frontend/src/utils/session.jsx"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
+   "source": "frontend/src/pages/auth/Login.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Login.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Login.jsx",
+   "target": "frontend/src/pages/auth/AuthLayout.jsx"
+  },
+  {
+   "source": "frontend/src/pages/auth/RequestAccount.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/RequestAccount.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/RequestAccount.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/RequestAccount.jsx",
+   "target": "frontend/src/pages/auth/AuthLayout.jsx"
+  },
+  {
+   "source": "frontend/src/pages/auth/ResetPassword.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/ResetPassword.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/ResetPassword.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/ResetPassword.jsx",
+   "target": "frontend/src/pages/auth/AuthLayout.jsx"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/pages/auth/AuthLayout.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Debts.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Debts.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Debts.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Debts.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/pages/auth/RequestAccount.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Reports.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Reports.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Reports.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Sales.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Sales.jsx",
    "target": "frontend/src/utils/receiptPrinter.js"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/utils/money.js"
+   "source": "frontend/src/pages/owner/Sales.jsx",
+   "target": "frontend/src/utils/format.js"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/utils/hubSession.js"
+   "source": "frontend/src/pages/owner/Sales.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/hooks/useIsolatedScreen.js"
-  },
-  {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/components/Printer3D.jsx"
-  },
-  {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/theme/ThemeToggle.jsx"
-  },
-  {
-   "source": "frontend/src/pages/CashierDashboard.jsx",
-   "target": "frontend/src/utils/receiptPdf.js"
-  },
-  {
-   "source": "frontend/src/pages/CashierLogin.jsx",
-   "target": "frontend/src/pages/Login.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Hub.jsx",
+   "source": "frontend/src/pages/owner/Settings.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Hub.jsx",
-   "target": "frontend/src/utils/hubSession.js"
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/utils/useApi.js"
   },
   {
-   "source": "frontend/src/pages/Hub.jsx",
-   "target": "frontend/src/hooks/useIsolatedScreen.js"
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/utils/format.js"
   },
   {
-   "source": "frontend/src/pages/Hub.jsx",
-   "target": "frontend/src/theme/ThemeToggle.jsx"
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
-   "source": "frontend/src/pages/Login.jsx",
+   "source": "frontend/src/pages/owner/Suppliers.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Login.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/pages/owner/Suppliers.jsx",
+   "target": "frontend/src/utils/useApi.js"
   },
   {
-   "source": "frontend/src/pages/Login.jsx",
-   "target": "frontend/src/theme/ThemeToggle.jsx"
+   "source": "frontend/src/pages/owner/Suppliers.jsx",
+   "target": "frontend/src/utils/format.js"
   },
   {
-   "source": "frontend/src/pages/Login.jsx",
-   "target": "frontend/src/i18n/index.js"
+   "source": "frontend/src/pages/owner/Suppliers.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
-   "source": "frontend/src/pages/OnboardingWizard.jsx",
+   "source": "frontend/src/pages/owner/Team.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/OnboardingWizard.jsx",
-   "target": "frontend/src/utils/money.js"
+   "source": "frontend/src/pages/owner/Team.jsx",
+   "target": "frontend/src/utils/useApi.js"
   },
   {
-   "source": "frontend/src/pages/Owner/AuditLogViewer.jsx",
+   "source": "frontend/src/pages/owner/Team.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Team.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/AuditLogViewer.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Dashboard.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Dashboard.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Debts.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Debts.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/DeviceKeys.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/DeviceKeys.jsx",
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/db/localDb.js"
   },
   {
-   "source": "frontend/src/pages/Owner/DeviceKeys.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/utils/syncPolicy.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Employees.jsx",
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/utils/receiptPrinter.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Employees.jsx",
-   "target": "frontend/src/utils/money.js"
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/db/localDb.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Employees.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/hooks/useOfflineSync.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Goals.jsx",
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/utils/syncPolicy.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/utils/productCache.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/pages/pos/PosDialogs.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Goals.jsx",
-   "target": "frontend/src/utils/money.js"
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/utils/format.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Goals.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/utils/productCache.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Products.jsx",
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/pages/pos/PosScreen.jsx"
+  },
+  {
+   "source": "frontend/src/utils/offlineQueue.js",
+   "target": "frontend/src/utils/syncPolicy.js"
+  },
+  {
+   "source": "frontend/src/utils/productCache.js",
+   "target": "frontend/src/db/localDb.js"
+  },
+  {
+   "source": "frontend/src/utils/productCache.js",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Products.jsx",
-   "target": "frontend/src/utils/money.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Products.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Reports/DailyReport.jsx",
+   "source": "frontend/src/utils/session.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Reports/DailyReport.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/utils/session.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
+   "source": "frontend/src/utils/useApi.js",
    "target": "frontend/src/utils/api.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Reports/MonthlyReport.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/src/utils/useApi.js",
+   "target": "frontend/src/utils/format.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-   "target": "frontend/src/utils/api.js"
+   "source": "frontend/tests/offline_queue.test.mjs",
+   "target": "frontend/src/utils/syncPolicy.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Reports/WeeklyReport.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
+   "source": "frontend/tests/offline_queue.test.mjs",
+   "target": "frontend/src/utils/offlineQueue.js"
   },
   {
-   "source": "frontend/src/pages/Owner/Settings.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Settings.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Stock.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Stock.jsx",
-   "target": "frontend/src/utils/money.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Stock.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Suppliers.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Suppliers.jsx",
-   "target": "frontend/src/utils/money.js"
-  },
-  {
-   "source": "frontend/src/pages/Owner/Suppliers.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/RequestAccount.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/ResetPassword.jsx",
-   "target": "frontend/src/utils/api.js"
-  },
-  {
-   "source": "frontend/src/pages/ResetPassword.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
-  },
-  {
-   "source": "frontend/src/pages/ResetPassword.jsx",
-   "target": "frontend/src/components/SecurityGateIcon.jsx"
-  },
-  {
-   "source": "frontend/src/pages/ResetPassword.jsx",
-   "target": "frontend/src/theme/ThemeToggle.jsx"
-  },
-  {
-   "source": "frontend/src/pages/ResetPassword.jsx",
-   "target": "frontend/src/i18n/index.js"
-  },
-  {
-   "source": "frontend/src/theme/ThemeProvider.jsx",
-   "target": "frontend/src/theme/PoolWater.jsx"
-  },
-  {
-   "source": "frontend/src/theme/ThemeToggle.jsx",
-   "target": "frontend/src/theme/ThemeProvider.jsx"
+   "source": "frontend/tests/offline_queue.test.mjs",
+   "target": "frontend/src/db/localDb.js"
   },
   {
    "source": "backend/src/services/report.service.js",
@@ -5295,14 +5637,6 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/prisma/migrations/postgres/0001_init/migration.sql",
    "target": "backend/prisma/schema.prisma"
-  },
-  {
-   "source": "backend/prisma/migrations/postgres/0001_init/migration.sql",
-   "target": "backend/prisma/rls_policies.sql"
-  },
-  {
-   "source": "frontend/src/pages/CodeMap.jsx",
-   "target": "frontend/src/components/ui/index.jsx"
   },
   {
    "source": "docs/README_INSTALACAO.md",

@@ -1041,3 +1041,48 @@ O QUE AINDA FALTA (E E TEU)
   dados (Frankfurt).
 - Todos vao ter de entrar de novo uma vez. Cada computador do balcao tem
   de ser emparelhado uma vez, e cada caixista precisa de um PIN.
+
+==========================================================================
+03/10/2026 (noite) — GENESIS 2.1, FASE 0: GUARDAR O 2.0 E PROCURAR A CAUSA
+DO "SERVIDOR INDISPONIVEL"
+==========================================================================
+
+O QUE FIZ
+1. Guardei todo o Genesis 2.0 no git (commit 0cf0d30). Antes verifiquei que
+   nenhuma senha ia junto.
+2. Testei o onboarding num browser a serio, como tu fizeste: escolher
+   bottle store, escolher uma categoria adicional, importar o catalogo,
+   custos, horario, entrar. Funcionou do principio ao fim. Os problemas que
+   viste (botoes das categorias que nao reagiam e "Dados invalidos") eram da
+   versao antiga e ja nao acontecem.
+3. Encontrei porque e que o terminal dizia "servidor indisponivel" com o
+   servidor ligado. Sao tres coisas juntas:
+   a) Quando a internet daqui falha um instante no arranque, o servidor
+      passava para uma base de dados de reserva no proprio computador
+      (outra base, antiga, sem as tuas lojas). Ali as vendas davam erro e o
+      terminal pensava que estava sem ligacao. CORRIGIDO: agora tenta 3
+      vezes antes de desistir. Provei: no teste a 1.a tentativa falhou e a
+      2.a entrou na base certa.
+   b) O programa desistia de esperar pela base de dados aos 5 e aos 10
+      segundos, e daqui as respostas sao lentas. CORRIGIDO: agora espera 30.
+   c) A causa principal: a base de dados do Supabase so aceita 60 ligacoes
+      ao todo, e a "porta" que estamos a usar (5432) so deixa entrar cerca de
+      15 de cada vez. Quando o painel pede varias coisas ao mesmo tempo,
+      algumas sao recusadas e aparece o erro. Existe outra porta (6543) que
+      partilha as ligacoes. Testei-a: 24 ligacoes ao mesmo tempo, todas
+      entraram em 3 segundos, com o isolamento entre lojas a funcionar.
+   O fecho de turno a dizer "turno ja fechado" era consequencia disto: as
+   vendas nunca tinham chegado ao servidor.
+
+O QUE CORREU MAL (E A CULPA FOI MINHA)
+- Para medir o limite abri muitas ligacoes de teste ao mesmo tempo, e a
+  base ficou com 59 de 60 lugares ocupados por ligacoes paradas. Devem
+  libertar-se sozinhas; se nao, reinicia-se o "pooler" no painel do
+  Supabase.
+- Subi um limite de ligacoes que piorava o problema. Ja desfiz.
+
+O QUE PRECISO QUE DECIDAS
+- Mudar no ficheiro backend/.env a porta da base de dados de 5432 para
+  6543 (so o numero da porta, as senhas ficam iguais).
+- Desligar a base de reserva (DB_ALLOW_SQLITE_FALLBACK=false), para o
+  servidor nunca mais trabalhar em silencio numa base errada.
