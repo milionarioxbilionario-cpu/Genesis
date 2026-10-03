@@ -4,8 +4,9 @@ const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const bcrypt = require('bcrypt');
 const { getShiftLock } = require('../utils/shiftLock');
-const { applyTenantRls } = require('../utils/tenantRls');
+const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
+const rateLimit = require('express-rate-limit');
 
 const saleSchema = z.object({
   id: z.string().uuid().optional(),
@@ -25,6 +26,8 @@ const saleSchema = z.object({
  total_cost: z.number().int().nonnegative().optional(),
  // Etapa 4: desconto manual em centavos MZN (validado: total = subtotal - desconto).
  discount_amount: z.number().int().nonnegative().optional().default(0),
+ // Desconto acima do limite livre da loja exige o PIN de autorizacao do dono.
+ authorization_pin: z.string().regex(/^\d{4,6}$/).optional(),
  payment_method: z.string().min(1),
  amount_received: z.number().int().nonnegative().optional(),
  change_given: z.number().int().nonnegative().optional(),
@@ -35,6 +38,22 @@ const saleSchema = z.object({
    'created_at inválido'
  )
 });
+// Erro de regra de negocio com codigo HTTP (4xx). O POS offline usa a distincao
+// 4xx (rejeitada: nao adianta reenviar) vs 5xx/rede (tentar de novo).
+function httpError(statusCode, message, code) {
+  const e = new Error(message);
+  e.statusCode = statusCode;
+  if (code) e.code = code;
+  return e;
+}
+
+// Bloqueio de PINs de autorizacao errados (cancelamentos + descontos): por venda
+// e por loja numa janela de 15 minutos.
+const CANCEL_MAX_PER_SALE = 3;
+const CANCEL_MAX_PER_TENANT = 5;
+const CANCEL_TENANT_WINDOW_MS = 15 * 60 * 1000;
+const AUTH_PIN_FAIL_ACTIONS = ['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL'];
+
 // Gerador de numero sequencial diario por tenant.
 // daily_number e sequencial por dia (001, 002, ...). Recomeca amanha.
 // Implementado dentro da transaction para seguranca concorrente.
@@ -59,7 +78,12 @@ router.get('/', async (req, res) => {
      return res.status(400).json({ error: 'Tenant não identificado' });
    }
 
-    const cashierId = typeof req.query.cashier_id === 'string' && req.query.cashier_id ? req.query.cashier_id : null;
+    // O caixista so ve as SUAS vendas e nunca custos (especificacao 4.3).
+    // Antes via as ultimas 20 de toda a loja, de qualquer caixista, com o custo.
+    const isOwner = req.user.role === 'owner';
+    const cashierId = isOwner
+      ? (typeof req.query.cashier_id === 'string' && req.query.cashier_id ? req.query.cashier_id : null)
+      : req.user.userId;
     const where = cashierId ? { tenant_id: tenantId, cashier_user_id: cashierId } : { tenant_id: tenantId };
     const sales = await prisma.sale.findMany({
       where,
@@ -68,7 +92,11 @@ router.get('/', async (req, res) => {
       take: 20
     });
 
-   return res.json(sales);
+    if (isOwner) return res.json(sales);
+    return res.json(sales.map(({ total_cost, items, ...sale }) => ({
+      ...sale,
+      items: items.map(({ unit_cost_price, ...item }) => item),
+    })));
  } catch (err) {
    console.error('List sales error', err);
    return res.status(500).json({ error: 'Erro ao listar vendas' });
@@ -94,33 +122,8 @@ router.get('/cancel-pin-status', async (req, res) => {
  }
 });
 
-router.post('/cancel-pin', async (req, res) => {
- try {
-   const bodySchema = z.object({ pin: z.string().min(4).max(6).regex(/^\d+$/, 'PIN deve conter apenas números') });
-   const { pin } = bodySchema.parse(req.body);
-
-   const tenantId = req.user && req.user.tenantId ? req.user.tenantId : null;
-   const role = req.user && req.user.role ? req.user.role : null;
-   if (!tenantId) return res.status(400).json({ error: 'Tenant não identificado' });
-   if (!role || (role !== 'owner' && role !== 'super_admin')) {
-     return res.status(403).json({ error: 'Apenas o proprietário pode configurar o PIN de cancelamento' });
-   }
-
-   const hashedPin = await bcrypt.hash(pin, 10);
-   await prisma.tenant.update({
-     where: { id: tenantId },
-     data: { cancel_pin_hash: hashedPin }
-   });
-
-   return res.json({ ok: true, configured: true });
- } catch (err) {
-   if (err instanceof z.ZodError) {
-     return res.status(400).json({ error: err.errors[0]?.message || 'PIN inválido' });
-   }
-   console.error('Set cancel pin error', err);
-   return res.status(500).json({ error: 'Erro ao guardar PIN de cancelamento' });
- }
-});
+// O PIN de autorizacao configura-se em PUT /api/settings/authorization-pin
+// (exige a senha do dono). A rota antiga aqui trocava-o sem confirmacao.
 
 router.post('/', async (req, res) => {
  try {
@@ -165,17 +168,16 @@ router.post('/', async (req, res) => {
      // nao decide quanto custou nem se a venda ficou concluida.
      const saleItems = data.items.map((item) => {
        const product = productMap.get(item.product_id);
-       if (!product) throw new Error(`Produto não encontrado: ${item.product_id}`);
-       if (!product.is_active) throw new Error(`Produto inativo: ${item.product_id}`);
-       if (product.stock_qty < item.quantity) throw new Error(`Stock insuficiente para ${product.name}`);
+       if (!product) throw httpError(400, `Produto não encontrado: ${item.product_id}`, 'PRODUCT_NOT_FOUND');
+       if (!product.is_active) throw httpError(400, `Produto inativo: ${product.name}`, 'PRODUCT_INACTIVE');
+       if (product.stock_qty < item.quantity) throw httpError(409, `Stock insuficiente para ${product.name}`, 'INSUFFICIENT_STOCK');
 
-       // Cobrar acima do preco de catalogo e sempre recusado. Vender abaixo e
-       // aceite (promocao, ou venda offline sincronizada depois de o preco ter
-       // subido) mas a diferenca tem de estar reflectida no desconto da venda.
-       if (item.unit_sell_price > product.sell_price) {
-         const priceError = new Error(`${product.name}: preço acima do catálogo (${product.sell_price})`);
-         priceError.statusCode = 400;
-         throw priceError;
+       // O preco unitario TEM de ser o do catalogo. Antes so se recusava acima do
+       // catalogo: abaixo era aceite sem rasto, e um caixista registava a cerveja a
+       // 1 centavo, cobrava o preco real e ficava com a diferenca. Qualquer reducao
+       // legitima vai pelo campo discount_amount (gravado na venda e na auditoria).
+       if (item.unit_sell_price !== product.sell_price) {
+         throw httpError(409, `${product.name}: o preço mudou ou não corresponde ao catálogo (catálogo: ${product.sell_price} centavos). Actualize a lista de produtos.`, 'PRICE_MISMATCH');
        }
 
        return {
@@ -198,6 +200,26 @@ router.post('/', async (req, res) => {
        const discountError = new Error('Desconto superior ao subtotal da venda');
        discountError.statusCode = 400;
        throw discountError;
+     }
+
+     // POLITICA DE DESCONTOS: ate discount_free_pct% do subtotal e livre; acima
+     // disso exige o PIN de autorizacao do dono (o mesmo dos cancelamentos).
+     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true } });
+     const freeLimit = Math.floor(subtotal * (tenantPolicy?.discount_free_pct ?? 10) / 100);
+     let discountAuthorized = false;
+     if (discountAmount > freeLimit) {
+       if (!data.authorization_pin) {
+         throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono`, 'DISCOUNT_NEEDS_PIN');
+       }
+       if (!tenantPolicy?.cancel_pin_hash) throw httpError(400, 'PIN de autorização não configurado nesta loja', 'AUTH_PIN_NOT_SET');
+       const recentFails = await tx.auditLog.count({ where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - CANCEL_TENANT_WINDOW_MS) } } });
+       if (recentFails >= CANCEL_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados nesta loja. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
+       if (!(await bcrypt.compare(data.authorization_pin, tenantPolicy.cancel_pin_hash))) {
+         const pinErr = httpError(403, 'PIN de autorização inválido', 'INVALID_AUTH_PIN');
+         pinErr.recordDiscountPinFail = true; // gravado FORA da transaccao (catch)
+         throw pinErr;
+       }
+       discountAuthorized = true;
      }
 
      const totalAmount = subtotal - discountAmount;
@@ -231,7 +253,7 @@ router.post('/', async (req, res) => {
       // Se o dono indicou um vendedor, ele tem de ser caixista activo do mesmo tenant.
       if (callerRole === 'owner' && data.seller_user_id) {
         const seller = await tx.user.findFirst({ where: { id: data.seller_user_id, tenant_id: tenantId, role: 'cashier', is_active: true }, select: { id: true } });
-        if (!seller) throw new Error('Vendedor indicado nao pertence a este estabelecimento');
+        if (!seller) throw httpError(400, 'Vendedor indicado nao pertence a este estabelecimento', 'INVALID_SELLER');
         sellerUserId = seller.id;
       }
 
@@ -254,6 +276,9 @@ router.post('/', async (req, res) => {
       }
 
      // Etapa 4: gerar numero sequencial diario e usar desconto.
+     // Trinco por loja ate ao fim da transaccao: duas vendas em simultaneo ja
+     // nao recebem o mesmo numero de recibo.
+     if (!isSqliteUrl()) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${String(tenantId)}))`;
      const dailyNumber = await getNextDailyNumber(tx, tenantId);
      const saleId = data.id || require('crypto').randomUUID();
      const sale = await tx.sale.create({
@@ -321,6 +346,13 @@ router.post('/', async (req, res) => {
        }
      });
 
+     if (discountAuthorized) {
+       await tx.auditLog.create({ data: {
+         tenant_id: tenantId, user_id: callerUserId, action: 'DISCOUNT_AUTHORIZED', entity_type: 'sale', entity_id: sale.id,
+         new_value: JSON.stringify({ subtotal, discount_amount: discountAmount, free_limit: freeLimit }), ip_address: req.ip || '0.0.0.0',
+       } });
+     }
+
      return { id: sale.id, daily_number: sale.daily_number };
    });
 
@@ -329,100 +361,136 @@ router.post('/', async (req, res) => {
    if (err instanceof z.ZodError) {
      return res.status(400).json({ error: err.errors });
    }
+   if (err.recordDiscountPinFail && req.user?.userId && req.user?.tenantId) {
+     await prisma.auditLog.create({ data: {
+       tenant_id: req.user.tenantId, user_id: req.user.userId, action: 'DISCOUNT_PIN_FAIL', entity_type: 'sale',
+       ip_address: req.ip || '0.0.0.0',
+     } }).catch((e) => console.error('audit DISCOUNT_PIN_FAIL', e.message));
+   }
    if (err.statusCode) {
-     return res.status(err.statusCode).json({ error: err.message });
+     return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
    }
    console.error('Error in /api/sales', err);
-   return res.status(500).json({ error: err.message || 'Erro ao registar venda' });
+   // Nunca devolver err.message num 500: expunha caminhos de ficheiros e
+   // detalhes internos do Prisma ao browser.
+   return res.status(500).json({ error: 'Erro ao registar venda' });
  }
 });
 
-// Cancel a sale (requires owner PIN). Only allow cancelling sales from same tenant and same day.
-router.post('/:id/cancel', async (req, res) => {
+// Cancelar uma venda (exige o PIN do dono). So vendas desta loja e de hoje.
+//
+// BUG CORRIGIDO (2026-10-03): a tentativa falhada era gravada DENTRO da
+// transacao e logo a seguir fazia-se throw — o rollback apagava o registo. A
+// contagem de falhas ficava sempre a 0: tentativas infinitas, e um PIN de 4
+// digitos caia por forca bruta em minutos. Agora:
+//   - a falha e gravada FORA da transacao (persiste);
+//   - 3 falhas numa venda bloqueiam essa venda (423);
+//   - 5 falhas na loja em 15 min bloqueiam todos os cancelamentos (429);
+//   - limite de pedidos por loja+IP na propria rota.
+const cancelLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.CANCEL_RATE_MAX || 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.user?.tenantId || 'sem-loja') + '|' + req.ip,
+  message: { error: 'Demasiados pedidos de cancelamento. Espere 15 minutos.', code: 'TOO_MANY_ATTEMPTS' },
+});
+
+router.post('/:id/cancel', cancelLimiter, async (req, res) => {
   try {
     const paramsSchema = z.object({ id: z.string().uuid() });
-    const bodySchema = z.object({ pin: z.string().min(4), reason: z.string().optional() });
+    const bodySchema = z.object({
+      pin: z.string().min(4).max(6).regex(/^\d+$/, 'PIN deve conter apenas números'),
+      reason: z.string().max(500).optional(),
+    });
     const { id } = paramsSchema.parse(req.params);
     const body = bodySchema.parse(req.body);
 
     const tenantId = req.user && req.user.tenantId ? req.user.tenantId : null;
     const userId = req.user && req.user.userId ? req.user.userId : null;
-    if (!tenantId) return res.status(400).json({ error: 'Tenant não identificado' });
+    if (!tenantId || !userId) return res.status(401).json({ error: 'Sessão inválida' });
 
-    // Use a transaction to validate and perform cancellation atomically
+    const sale = await prisma.sale.findFirst({ where: { id, tenant_id: tenantId } });
+    if (!sale) return res.status(404).json({ error: 'Venda não encontrada' });
+    if (new Date(sale.created_at).toDateString() !== new Date().toDateString()) {
+      return res.status(400).json({ error: 'Só é possível cancelar vendas do dia actual' });
+    }
+    if (sale.status === 'cancelled') return res.status(409).json({ error: 'Venda já se encontra cancelada' });
+
+    const [failsOnSale, recentTenantFails] = await Promise.all([
+      prisma.auditLog.count({ where: { tenant_id: tenantId, action: 'CANCEL_ATTEMPT', entity_id: id } }),
+      prisma.auditLog.count({
+        where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - CANCEL_TENANT_WINDOW_MS) } },
+      }),
+    ]);
+    if (failsOnSale >= CANCEL_MAX_PER_SALE) {
+      return res.status(423).json({ error: 'Cancelamento desta venda bloqueado por múltiplas tentativas falhadas', code: 'SALE_CANCEL_LOCKED' });
+    }
+    if (recentTenantFails >= CANCEL_MAX_PER_TENANT) {
+      return res.status(429).json({ error: 'Demasiados PINs errados nesta loja. Espere 15 minutos.', code: 'TENANT_CANCEL_LOCKED' });
+    }
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cancel_pin_hash: true } });
+    if (!tenant || !tenant.cancel_pin_hash) {
+      return res.status(400).json({ error: 'PIN de cancelamento não configurado para este tenant' });
+    }
+
+    const pinOk = await bcrypt.compare(body.pin, tenant.cancel_pin_hash);
+    if (!pinOk) {
+      // FORA de qualquer transacao: esta linha tem de sobreviver ao erro.
+      await prisma.auditLog.create({
+        data: {
+          tenant_id: tenantId,
+          user_id: userId,
+          action: 'CANCEL_ATTEMPT',
+          entity_type: 'sale',
+          entity_id: id,
+          new_value: JSON.stringify({ attempt: failsOnSale + 1 }),
+          ip_address: req.ip || '0.0.0.0',
+        },
+      });
+      const remaining = Math.max(0, CANCEL_MAX_PER_SALE - (failsOnSale + 1));
+      return res.status(403).json({ error: 'PIN inválido', code: 'INVALID_PIN', remaining });
+    }
+
     await prisma.$transaction(async (tx) => {
-      // Fetch sale
-      const sale = await tx.sale.findUnique({ where: { id } });
-      if (!sale) throw new Error('Venda não encontrada');
-      if (sale.tenant_id !== tenantId) throw new Error('Venda não pertence ao tenant');
+      await applyTenantRls(tx, tenantId);
+      // Guarda atomica: so cancela se ainda estiver concluida (dois pedidos em
+      // paralelo nao repoem o stock duas vezes).
+      const flipped = await tx.sale.updateMany({
+        where: { id, tenant_id: tenantId, status: 'completed' },
+        data: { status: 'cancelled', cancelled_by: userId, cancel_reason: body.reason || null },
+      });
+      if (flipped.count !== 1) throw httpError(409, 'Venda já se encontra cancelada', 'ALREADY_CANCELLED');
 
-      // Only allow cancelling sales from the same day
-      const createdAt = new Date(sale.created_at);
-      const now = new Date();
-      const sameDay = createdAt.toDateString() === now.toDateString();
-      if (!sameDay) throw new Error('Só é possível cancelar vendas do dia actual');
-
-      if (sale.status === 'cancelled') throw new Error('Venda já se encontra cancelada');
-
-      // Check number of recent failed attempts for this sale using ORM
-      const attempts = await tx.auditLog.count({ where: { action: 'CANCEL_ATTEMPT', entity_id: id } });
-      if (attempts >= 3) throw new Error('Bloqueado devido a múltiplas tentativas falhadas');
-
-      // Fetch tenant to read cancel_pin_hash
-      const tenant = await tx.tenant.findUnique({ where: { id: tenantId } });
-      if (!tenant) throw new Error('Tenant não encontrado');
-      if (!tenant.cancel_pin_hash) throw new Error('PIN de cancelamento não configurado para este tenant');
-
-      // Verify PIN
-      const pinOk = await bcrypt.compare(body.pin, tenant.cancel_pin_hash);
-      if (!pinOk) {
-        // record failed attempt via ORM
-        await tx.auditLog.create({
-          data: {
-            id: require('crypto').randomUUID(),
-            tenant_id: tenantId,
-            user_id: userId || 'unknown',
-            action: 'CANCEL_ATTEMPT',
-            entity_type: 'sale',
-            entity_id: id,
-            ip_address: req.ip || '0.0.0.0'
-          }
-        });
-        throw new Error('PIN inválido');
-      }
-
-      // Fetch sale items via ORM
       const items = await tx.saleItem.findMany({ where: { sale_id: id } });
-
-      // Update sale status and restore stock via ORM
-      await tx.sale.update({ where: { id }, data: { status: 'cancelled', cancelled_by: userId || 'system', cancel_reason: body.reason || null } });
-
       for (const it of items) {
-        await tx.product.update({ where: { id: it.product_id }, data: { stock_qty: { increment: it.quantity } } });
+        await tx.product.updateMany({
+          where: { id: it.product_id, tenant_id: tenantId },
+          data: { stock_qty: { increment: it.quantity } },
+        });
       }
 
-      // Record audit log for cancellation via ORM
       await tx.auditLog.create({
         data: {
-          id: require('crypto').randomUUID(),
           tenant_id: tenantId,
-          user_id: userId || 'system',
+          user_id: userId,
           action: 'CANCEL_SALE',
           entity_type: 'sale',
           entity_id: id,
-          old_value: null,
-          new_value: null,
-          ip_address: req.ip || '0.0.0.0'
-        }
+          old_value: JSON.stringify({ status: 'completed', total_amount: sale.total_amount }),
+          new_value: JSON.stringify({ status: 'cancelled', reason: body.reason || null }),
+          ip_address: req.ip || '0.0.0.0',
+        },
       });
-
-    }); // end transaction
+    });
 
     return res.json({ ok: true, message: 'Venda cancelada com sucesso' });
   } catch (err) {
-    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos' });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
     console.error('Error cancelling sale', err);
-    return res.status(400).json({ error: err.message || 'Erro ao cancelar venda' });
+    return res.status(500).json({ error: 'Erro ao cancelar venda' });
   }
 });
 

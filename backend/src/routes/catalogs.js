@@ -131,36 +131,35 @@ router.post('/:businessType/import', auth, requireRole('owner'), async (req, res
 
     const createData = products.map(p => ({
       name: p.name,
-      barcode: p.sku || null,
+      // O catalogo-mestre usa o nome como sku: isso nao e um codigo de barras.
+      barcode: p.sku && p.sku !== p.name ? p.sku : null,
       sell_price: to_centavos(p.price_mzn),
       cost_price: to_centavos(p.cost_mzn),
       stock_qty: p.stock || 0,
       category: p.category || 'Geral',
-      tenant: { connect: { id: tenantId } }
+      tenant_id: tenantId
     }));
 
-    // Inserção em batch usando transaction
-    const created = await prisma.$transaction(
-      createData.map(d => prisma.product.create({ data: d }))
-    );
-
-    await prisma.$transaction([
-      prisma.tenant.update({
-        where: { id: tenantId },
-        data: { onboarding_completed: true }
-      }),
-      prisma.auditLog.create({
+    // Uma so transaccao interactiva (RLS: o contexto da loja aplica-se a tudo).
+    // createMany = uma ida a BD em vez de uma por produto.
+    const created = await prisma.$transaction(async (tx) => {
+      const result = createData.length ? await tx.product.createMany({ data: createData }) : { count: 0 };
+      await tx.tenant.update({ where: { id: tenantId }, data: { onboarding_completed: true } });
+      await tx.auditLog.create({
         data: {
+          tenant_id: tenantId,
           user_id: req.user.userId,
           action: 'IMPORT_CATALOG',
           entity_type: 'catalog_import',
           entity_id: null,
+          new_value: JSON.stringify({ products: result.count }),
           ip_address: req.ip || '0.0.0.0'
         }
-      })
-    ]);
+      });
+      return result.count;
+    });
 
-    return res.json({ imported: created.length, products: created, onboarding_completed: true });
+    return res.json({ imported: created, onboarding_completed: true });
   } catch (err) {
     console.error('Import catalog error', err);
     return res.status(500).json({ error: 'Erro no servidor' });

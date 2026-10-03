@@ -1,130 +1,93 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import CashierLogin from './pages/CashierLogin';
-import ResetPassword from './pages/ResetPassword';
-import RequestAccount from './pages/RequestAccount';
-import OwnerDashboard from './pages/Owner/Dashboard';
-import Products from './pages/Owner/Products';
-import Stock from './pages/Owner/Stock';
-import Suppliers from './pages/Owner/Suppliers';
-import DeviceKeys from './pages/Owner/DeviceKeys';
-import Employees from './pages/Owner/Employees';
-import Debts from './pages/Owner/Debts';
-import Goals from './pages/Owner/Goals';
-import Settings from './pages/Owner/Settings';
-import AuditLogViewer from './pages/Owner/AuditLogViewer';
-import DailyReport from './pages/Owner/Reports/DailyReport';
-import WeeklyReport from './pages/Owner/Reports/WeeklyReport';
-import MonthlyReport from './pages/Owner/Reports/MonthlyReport';
-import OnboardingWizard from './pages/OnboardingWizard';
-import ProtectedRoute from './components/ProtectedRoute';
-import PosGate from './components/PosGate';
-import Hub from './pages/Hub';
-import { ToastProvider } from './components/ui';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { ConfirmProvider, ToastProvider } from './components/ui';
+import { SessionProvider, RequireOwner, useSession, FullPageSpinner } from './utils/session';
+// Code-splitting por area: o terminal POS nao descarrega os graficos do painel
+// (Recharts), e o painel nao descarrega o POS. Requisito: POS < 2 s em 3G.
+const Login = lazy(() => import('./pages/auth/Login'));
+const RequestAccount = lazy(() => import('./pages/auth/RequestAccount'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+const Support = lazy(() => import('./pages/auth/Support'));
+const Terminal = lazy(() => import('./pages/pos/Terminal'));
+const AppShell = lazy(() => import('./layouts/AppShell'));
+const Home = lazy(() => import('./pages/owner/Home'));
+const Sales = lazy(() => import('./pages/owner/Sales'));
+const Products = lazy(() => import('./pages/owner/Products'));
+const Suppliers = lazy(() => import('./pages/owner/Suppliers'));
+const Debts = lazy(() => import('./pages/owner/Debts'));
+const Team = lazy(() => import('./pages/owner/Team'));
+const Reports = lazy(() => import('./pages/owner/Reports'));
+const Settings = lazy(() => import('./pages/owner/Settings'));
+const Onboarding = lazy(() => import('./pages/owner/Onboarding'));
 
-// Shell do produto
-import CRMLayout from './layouts/CRMLayout';
-
-function App() {
-  return (
-    <Router>
-      <ToastProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/cashier/login" element={<CashierLogin />} />
-        <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-        <Route path="/forgot-password" element={<ResetPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/request-account" element={<RequestAccount />} />
-
-        <Route path="/admin" element={<Navigate to="/login" replace />} />
-        <Route path="/super-admin" element={<Navigate to="/login" replace />} />
-        <Route path="/owner" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><OwnerDashboard /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/products" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Products /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/stock" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Stock /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/suppliers" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Suppliers /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/cashiers" element={<Navigate to="/hub" replace />} />
-        <Route path="/owner/device-keys" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><DeviceKeys /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/employees" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Employees /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/debts" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Debts /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/goals" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Goals /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/settings" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><Settings /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/audit" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><AuditLogViewer /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/reports" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><DailyReport /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/reports/daily" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><DailyReport /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/reports/weekly" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><WeeklyReport /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/owner/reports/monthly" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><MonthlyReport /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/onboarding" element={
-          <ProtectedRoute requiredRole="owner">
-            <CRMLayout><OnboardingWizard /></CRMLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/cashier" element={<Navigate to="/pos" replace />} />
-        <Route path="/pos" element={<PosGate />} />
-        <Route path="/hub" element={<ProtectedRoute requiredRole="owner"><Hub /></ProtectedRoute>} />
-
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
-      </ToastProvider>
-    </Router>
-  );
+// Sessao terminou (senha mudou, conta desactivada, expirou): o painel volta ao
+// ecra de entrada com o motivo. O terminal trata o seu proprio caso.
+function SessionEndedListener() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { reload } = useSession();
+  useEffect(() => {
+    const onEnded = (e) => {
+      if (location.pathname.startsWith('/terminal')) return;
+      reload();
+      navigate('/entrar?motivo=' + encodeURIComponent(e.detail?.code || 'SESSION_EXPIRED'), { replace: true });
+    };
+    window.addEventListener('genesis:session-ended', onEnded);
+    return () => window.removeEventListener('genesis:session-ended', onEnded);
+  }, [location.pathname, navigate, reload]);
+  return null;
 }
 
-export default App;
+function Root() {
+  const { loading, user } = useSession();
+  if (loading) return <FullPageSpinner />;
+  if (user?.role === 'owner') return <Navigate to="/app" replace />;
+  if (user?.role === 'cashier') return <Navigate to="/terminal" replace />;
+  return <Navigate to="/entrar" replace />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ToastProvider>
+        <ConfirmProvider>
+          <SessionProvider>
+            <SessionEndedListener />
+            <Suspense fallback={<FullPageSpinner />}>
+            <Routes>
+              <Route path="/" element={<Root />} />
+              <Route path="/entrar" element={<Login />} />
+              <Route path="/pedir-conta" element={<RequestAccount />} />
+              <Route path="/recuperar-senha" element={<ResetPassword />} />
+              <Route path="/suporte" element={<Support />} />
+              <Route path="/terminal" element={<Terminal />} />
+              <Route path="/onboarding" element={<RequireOwner><Onboarding /></RequireOwner>} />
+              <Route path="/app" element={<RequireOwner><AppShell /></RequireOwner>}>
+                <Route index element={<Home />} />
+                <Route path="vendas" element={<Sales />} />
+                <Route path="produtos" element={<Products />} />
+                <Route path="fornecedores" element={<Suppliers />} />
+                <Route path="chenecas" element={<Debts />} />
+                <Route path="equipa" element={<Team />} />
+                <Route path="relatorios" element={<Reports />} />
+                <Route path="definicoes" element={<Settings />} />
+              </Route>
+
+              {/* Enderecos antigos (marcadores, links ja partilhados). */}
+              <Route path="/login" element={<Navigate to="/entrar" replace />} />
+              <Route path="/request-account" element={<Navigate to="/pedir-conta" replace />} />
+              <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
+              <Route path="/reset-password" element={<Navigate to="/recuperar-senha" replace />} />
+              <Route path="/pos" element={<Navigate to="/terminal" replace />} />
+              <Route path="/cashier/*" element={<Navigate to="/terminal" replace />} />
+              <Route path="/hub" element={<Navigate to="/terminal" replace />} />
+              <Route path="/owner/*" element={<Navigate to="/app" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            </Suspense>
+          </SessionProvider>
+        </ConfirmProvider>
+      </ToastProvider>
+    </BrowserRouter>
+  );
+}

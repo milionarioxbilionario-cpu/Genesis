@@ -23,12 +23,16 @@ router.post('/', async (req, res) => {
       // Contexto de tenant para as politicas RLS do Postgres (no-op em SQLite).
       await applyTenantRls(tx, tenantId);
 
-      const product = await tx.product.findUnique({ where: { id: data.product_id } });
-      if (!product || product.tenant_id !== tenantId) throw new Error('Produto não encontrado para este tenant');
-
       if (data.id) {
-        const exists = await tx.demandCapture.findUnique({ where: { id: data.id } });
+        const exists = await tx.demandCapture.findFirst({ where: { id: data.id, tenant_id: tenantId } });
         if (exists) return { existed: true, id: exists.id };
+      }
+
+      const product = await tx.product.findFirst({ where: { id: data.product_id, tenant_id: tenantId } });
+      if (!product) {
+        const e = new Error('Produto não encontrado para este tenant');
+        e.statusCode = 400;
+        throw e;
       }
 
       const dc = await tx.demandCapture.create({
@@ -42,7 +46,7 @@ router.post('/', async (req, res) => {
       });
 
       const newValue = { product_id: data.product_id };
-      if (req.deviceKey && req.deviceKey.id) newValue.device_key_id = req.deviceKey.id;
+      if (req.user.tid) newValue.terminal_id = req.user.tid;
 
       await tx.auditLog.create({
         data: {
@@ -64,8 +68,9 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ id: result.id });
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     console.error('Create demand capture error', err);
-    return res.status(500).json({ error: err.message || 'Erro ao criar demand capture' });
+    return res.status(500).json({ error: 'Erro ao registar pedido de reposição' });
   }
 });
 

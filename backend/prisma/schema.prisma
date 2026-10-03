@@ -29,6 +29,11 @@ model Tenant {
   subscription_price    Int                   @default(300000)
   created_at            DateTime              @default(now())
   cancel_pin_hash       String?
+  // Genesis 2.0: politica de descontos e horario persistidos (antes num Map em memoria).
+  discount_free_pct     Int                   @default(10)
+  opening_time          String?
+  closing_time          String?
+  pos_terminals         PosTerminal[]
   audit_logs            AuditLog[]
   debts                 Debt[]
   demand_captures       DemandCapture[]
@@ -52,6 +57,8 @@ model User {
   name                       String
   email                      String                @unique
   password_hash              String
+  // PIN pessoal do caixista no terminal da loja (bcrypt). Null = sem acesso ao POS.
+  pin_hash                   String?
   phone                      String?
   is_active                  Boolean               @default(true)
   created_at                 DateTime              @default(now())
@@ -291,4 +298,21 @@ model device_keys {
   metadata      String?
 
   @@ignore
+}
+
+/// Terminal POS emparelhado a uma loja (Genesis 2.0). Substitui device_keys
+/// (que nao tem chave primaria). O segredo vive num cookie httpOnly do browser
+/// do balcao; aqui so o hash.
+model PosTerminal {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  name         String
+  secret_hash  String
+  created_by   String
+  created_at   DateTime  @default(now())
+  last_seen_at DateTime?
+  revoked_at   DateTime?
+  tenant       Tenant    @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id])
 }

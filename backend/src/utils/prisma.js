@@ -1,6 +1,6 @@
 // Cliente Prisma com escolha de motor feita no arranque (VERSAO 2026-09-26).
 //
-// O motor e resolvido por src/utils/dbEngine.js ANTES de `new PrismaClient()`,
+// O motor e resolvido por src/utils/dbEngine2.js ANTES de `new PrismaClient()`,
 // porque o Prisma valida a URL no construtor. Como os testes de Prisma exigem
 // um schema estatico, o provider do schema.prisma fica fixo em "postgresql"
 // e, no caminho SQLite, o URL `file:` e devolvido pelo utilitario de fallback.
@@ -13,7 +13,7 @@
 // ============================================================================
 //  Cliente Prisma com escolha de motor feita no arranque.
 //
-//  ORDEM CRITICA (ver src/utils/dbEngine.js):
+//  ORDEM CRITICA (ver src/utils/dbEngine2.js):
 //  1. escolher o motor (Postgres ou SQLite) testando a ligacao real;
 //  2. correr `prisma generate` com o schema desse motor;
 //  3. só ENTAO carregar o modulo '@prisma/client'.
@@ -28,20 +28,56 @@
 //  em qualquer modulo, sem alterar uma unica linha dos.routes.
 // ============================================================================
 
+const { AsyncLocalStorage } = require('async_hooks');
 const { prepareDatabase } = require('./dbEngine2');
 
+// ============================================================================
+//  RLS A SERIO (Genesis 2.0) — dois clientes:
+//   - SISTEMA (DATABASE_URL, papel postgres, BYPASSRLS): login, sessao, painel
+//     admin, emparelhamento de terminais, scripts. Usado quando NAO ha loja no
+//     contexto do pedido.
+//   - APLICACAO (APP_DATABASE_URL, papel genesis_app, SEM bypassrls): usado
+//     automaticamente quando o pedido tem uma loja no contexto. Cada operacao
+//     corre numa transaccao com set_config('app.tenant_id', ...), por isso as
+//     politicas do Postgres (prisma/rls_v2.sql) isolam as lojas MESMO que uma
+//     rota se esqueca do filtro tenant_id.
+//  O contexto e posto por middleware/auth.js e middleware/terminalAuth.js
+//  (runWithTenant). Transaccoes em LOTE ($transaction([...])) nao sao
+//  suportadas em contexto de loja: usar transaccoes interactivas.
+// ============================================================================
+const tenantContext = new AsyncLocalStorage();
+
 let client = null;
+let appClient = null;
 let initPromise = null;
+
+const txOptions = () => ({
+  // Transacoes interativas: o Prisma desiste aos 5 s por omissao. Com o
+  // Supabase (Frankfurt) medimos ~1,2 s por query a partir de Maputo, e uma
+  // venda faz ~12 queries — TODAS as vendas falhavam com 500 "Transaction not
+  // found" (verificado 2026-10-03). Limites configuraveis por env.
+  maxWait: Number(process.env.DB_TX_MAX_WAIT_MS || 15000),
+  timeout: Number(process.env.DB_TX_TIMEOUT_MS || 45000),
+});
 
 async function init() {
   if (client) return client;
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    const { url, engine } = await prepareDatabase();
+    const { engine } = await prepareDatabase();
     // Require tardio e intencional: so depois de o cliente estar gerado.
     const { PrismaClient } = require('@prisma/client');
-    client = new PrismaClient();
+    client = new PrismaClient({ transactionOptions: txOptions() });
+    const rlsWanted = engine === 'postgresql' && process.env.APP_DATABASE_URL && String(process.env.DB_RLS_ENFORCE).toLowerCase() !== 'false';
+    if (rlsWanted) {
+      appClient = new PrismaClient({ transactionOptions: txOptions(), datasources: { db: { url: process.env.APP_DATABASE_URL } } });
+      console.log('[db] RLS activo: pedidos de loja usam o papel sem bypassrls');
+    } else if (engine === 'postgresql') {
+      const msg = '[db] AVISO: RLS NAO aplicado (APP_DATABASE_URL em falta ou DB_RLS_ENFORCE=false). O isolamento depende so dos filtros da aplicacao.';
+      if (process.env.NODE_ENV === 'production') throw new Error(msg);
+      console.warn(msg);
+    }
     console.log(`[db] cliente pronto (${engine})`);
     return client;
   })();
@@ -54,22 +90,61 @@ async function init() {
   }
 }
 
+const setTenant = (c, tenantId) => c.$executeRaw`SELECT set_config('app.tenant_id', ${String(tenantId)}, true)`;
+
+// Operacao isolada: [set_config, operacao] na mesma transaccao (mesma ligacao).
+const scoped = (tenantId, makeOp) => appClient.$transaction([setTenant(appClient, tenantId), makeOp()]).then((r) => r[1]);
+
+function tenantModel(model, tenantId) {
+  return new Proxy({}, {
+    get(_t, op) {
+      if (op === 'then' || typeof op === 'symbol') return undefined;
+      return (...args) => scoped(tenantId, () => appClient[model][op](...args));
+    },
+  });
+}
+
+function tenantClientProp(prop, tenantId) {
+  if (prop === '$transaction') {
+    return (arg, opts) => {
+      if (typeof arg !== 'function') {
+        throw new Error('$transaction em lote nao suportado em contexto de loja (RLS): use uma transaccao interactiva');
+      }
+      return appClient.$transaction(async (tx) => {
+        await setTenant(tx, tenantId);
+        return arg(tx);
+      }, opts);
+    };
+  }
+  if (prop === '$queryRaw' || prop === '$executeRaw' || prop === '$queryRawUnsafe' || prop === '$executeRawUnsafe') {
+    return (...args) => scoped(tenantId, () => appClient[prop](...args));
+  }
+  const value = appClient[prop];
+  if (value && typeof value === 'object' && typeof value.findMany === 'function') return tenantModel(prop, tenantId);
+  return typeof value === 'function' ? value.bind(appClient) : value;
+}
+
+function runWithTenant(tenantId, fn) {
+  if (!tenantId) return fn();
+  return tenantContext.run({ tenantId: String(tenantId) }, fn);
+}
+
 const proxy = new Proxy({}, {
   get(_target, prop) {
     if (prop === 'ready') return init;
+    if (prop === 'runWithTenant') return runWithTenant;
+    if (prop === 'rlsActive') return () => Boolean(appClient);
+    if (prop === 'system') return client;
     if (prop === 'engineName') {
       return () => (String(process.env.DATABASE_URL || '').startsWith('file:') ? 'sqlite' : 'postgresql');
     }
-    // Se o cliente ja existe, repassa tudo directamente.
     if (client) {
+      const store = tenantContext.getStore();
+      if (store && appClient) return tenantClientProp(prop, store.tenantId);
       const value = client[prop];
       return typeof value === 'function' ? value.bind(client) : value;
     }
-    // Antes de `ready()` resolver, devolvia-se uma FUNCAO para tudo e
-    // `prisma.user.findUnique` ficava `undefined` — rebentava com
-    // "TypeError: prisma.user.findUnique is not a function" e a rota devolvia
-    // 500. Aqui cada acesso e ADIADO: `prisma.tenant.findFirst(...)` so vai
-    // buscar o model delegate ao cliente quando a chamada acontece.
+    // Antes de `ready()` resolver: cada acesso e ADIADO (cliente de sistema).
     const lazy = (resolver) => new Proxy(function () {}, {
       get(_t, sub) {
         // `then` nao e uma propriedade do delegate: devolvemos undefined para

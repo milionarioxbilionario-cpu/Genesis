@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
@@ -13,6 +12,10 @@ const {
 } = require('../services/passwordResetStore');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { sendPasswordResetEmail } = require('../utils/mailer');
+const { setSessionCookies, verifyAccessToken, clearSessionCookies } = require('../utils/tokens');
+const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessionUser');
+const { consumeSupportCode } = require('../utils/supportCodes');
+const { writeAudit } = require('../utils/audit');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -35,6 +38,15 @@ const resetPasswordLimiter = rateLimit({
   message: { error: 'Demasiadas tentativas de reposição. Tente novamente em 15 minutos.' }
 });
 
+// Rotas publicas que antes nao tinham limite: o login Google consultava o
+// Google a cada pedido, e o pedido de conta deixava encher a BD de lixo.
+const googleLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Demasiadas tentativas. Tente daqui a 15 minutos.' } });
+const requestAccountLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { error: 'Demasiados pedidos de conta a partir desta ligação. Tente mais tarde.' } });
+const supportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+
+// Caixistas entram SO no terminal da loja, com PIN (routes/pos.js).
+const USE_TERMINAL = { error: 'Caixistas entram no terminal da loja com o PIN pessoal.', code: 'USE_TERMINAL' };
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6)
@@ -43,7 +55,8 @@ const loginSchema = z.object({
 const requestAccountSchema = z.object({
   businessName: z.string().min(3),
   ownerName: z.string().min(3),
-  businessType: z.enum(['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'outro']),
+  // Os 8 tipos da especificacao 6.1 (faltavam restaurante e boutique).
+  businessType: z.enum(['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro']),
   location: z.string().min(3),
   phone: z.string().min(8),
   email: z.string().email().optional(),
@@ -223,40 +236,7 @@ const resetPasswordSchema = z.object({
 
 const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
 
-const signUserToken = (user) => jwt.sign({
-  userId: user.id,
-  tenantId: user.tenant_id,
-  role: user.role,
-  name: user.name
-}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRY });
-
-// Refresh token: longer lived, separate secret
-const signRefreshToken = (user) => jwt.sign({
-  userId: user.id,
-  tenantId: user.tenant_id,
-  role: user.role,
-  name: user.name
-}, process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET + 'refresh'), { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '30d' });
-
-const setAuthCookie = (res, token) => {
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  };
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-  res.cookie('token', token, cookieOptions);
-};
-
-const setRefreshCookie = (res, token) => {
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000
-  };
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-  res.cookie('refreshToken', token, cookieOptions);
-};
+// Emissao de tokens/cookies: ver utils/tokens.js (fonte unica).
 
 router.post('/login', loginLimiter, async (req, res) => {
   try {
@@ -276,6 +256,10 @@ router.post('/login', loginLimiter, async (req, res) => {
     // Google (ou aprovada sem senha) tem password_hash NULL, e o catch de
     // baixo devolvia 500 "Erro interno no servidor" ao utilizador — que é
     // exactamente o sintoma reportado. Aqui dizemos o que se passa.
+    if (user.role === 'cashier') {
+      return res.status(403).json(USE_TERMINAL);
+    }
+
     if (!user.password_hash) {
       return res.status(401).json({
         error: 'Esta conta ainda não tem palavra-passe. Entra com Google ou usa "Esqueci a senha" para definires uma.',
@@ -292,10 +276,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
     }
 
-    const token = signUserToken(user);
-    const refresh = signRefreshToken(user);
-    setAuthCookie(res, token);
-    setRefreshCookie(res, refresh);
+    const token = setSessionCookies(res, user);
 
     return res.json({
       token,
@@ -322,7 +303,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-router.post('/google', async (req, res) => {
+router.post('/google', googleLimiter, async (req, res) => {
   try {
     const { credential } = googleCredentialSchema.parse(req.body);
 
@@ -370,6 +351,10 @@ router.post('/google', async (req, res) => {
       });
     }
 
+    if (user.role === 'cashier') {
+      return res.status(403).json(USE_TERMINAL);
+    }
+
     if (!user.is_active) {
       return res.status(403).json({ error: 'Conta desactivada. Contacte o suporte.' });
     }
@@ -378,8 +363,8 @@ router.post('/google', async (req, res) => {
       return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
     }
 
-    const token = signUserToken(user);
-    setAuthCookie(res, token);
+    // Antes o login Google nao emitia refresh token (diferente do login normal).
+    const token = setSessionCookies(res, user);
 
     return res.json({
       token,
@@ -488,10 +473,12 @@ router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await prisma.user.update({
+    const changed = await prisma.user.update({
       where: { email: normalizedEmail },
       data: { password_hash: passwordHash }
     });
+    // A senha nova invalida todas as sessoes antigas (claim pv) — sem cache.
+    invalidateSessionUser(changed.id);
 
     clearResetCode(normalizedEmail);
     return res.json({ message: 'Senha redefinida com sucesso.' });
@@ -505,7 +492,9 @@ router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  // Antes so apagava o access token: o refresh token (30 dias) ficava no
+  // browser e /api/refresh devolvia a sessao depois do "logout".
+  clearSessionCookies(res);
   return res.json({ message: 'Sessão encerrada.' });
 });
 
@@ -516,10 +505,14 @@ router.get('/me', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'Não autenticado' });
     let payload;
     try {
-      payload = jwt.verify(token, process.env.JWT_SECRET);
+      payload = verifyAccessToken(token);
     } catch (e) {
       return res.status(401).json({ error: 'Token inválido' });
     }
+
+    // Mesma validacao do authMiddleware: conta activa + token da senha actual.
+    const check = await validateSessionClaims(payload);
+    if (!check.ok) return res.status(check.status).json({ error: check.error, code: check.code });
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -537,19 +530,20 @@ router.get('/me', async (req, res) => {
       return res.json({
         user: {
           ...user,
+          scope: payload.scope || null,
           tenant: tenant ? { name: tenant.name, location: tenant.location } : null,
         },
       });
     }
 
-    return res.json({ user });
+    return res.json({ user: { ...user, scope: payload.scope || null } });
   } catch (err) {
     console.error('[auth:me] falha ao validar a sessao ->', err);
     return res.status(500).json({ error: 'Erro interno' });
   }
 });
 
-router.post('/request-account', async (req, res) => {
+router.post('/request-account', requestAccountLimiter, async (req, res) => {
   try {
     const data = requestAccountSchema.parse(req.body);
 
@@ -579,6 +573,23 @@ router.post('/request-account', async (req, res) => {
     // ou constraint) e o erro real nunca chegava ao log nem ao ecrã.
     console.error('[auth:request-account] falha ao criar o pedido ->', err);
     return res.status(500).json({ error: 'Erro ao processar pedido' });
+  }
+});
+
+// Modo suporte do Super Admin: troca um codigo de uso unico (gerado no painel
+// admin) por uma sessao 'support' SO DE LEITURA do dono dessa loja.
+router.post('/support', supportLimiter, async (req, res) => {
+  try {
+    const entry = consumeSupportCode(req.body && req.body.code);
+    if (!entry) return res.status(400).json({ error: 'Código de suporte inválido ou expirado.', code: 'INVALID_SUPPORT_CODE' });
+    const owner = await prisma.user.findUnique({ where: { id: entry.ownerUserId } });
+    if (!owner || owner.tenant_id !== entry.tenantId) return res.status(404).json({ error: 'Loja não encontrada.' });
+    setSessionCookies(res, owner, { scope: 'support' });
+    await writeAudit({ req, tenantId: entry.tenantId, userId: entry.adminUserId, action: 'SUPPORT_SESSION_OPENED', entityType: 'tenant', entityId: entry.tenantId });
+    return res.json({ ok: true, scope: 'support' });
+  } catch (err) {
+    console.error('[auth:support]', err);
+    return res.status(500).json({ error: 'Erro ao abrir o modo suporte' });
   }
 });
 

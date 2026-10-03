@@ -9,9 +9,9 @@ export default defineConfig({
       manifest: {
         name: 'Genesis POS',
         short_name: 'Genesis',
-        description: 'Ponto de venda premium para gestão de loja e stock.',
-        theme_color: '#08090c',
-        background_color: '#08090c',
+        description: 'Gestão comercial e ponto de venda para lojas em Moçambique.',
+        theme_color: '#FAFAF9',
+        background_color: '#FAFAF9',
         display: 'standalone',
         start_url: '/',
         scope: '/',
@@ -31,7 +31,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4000',
+        target: process.env.GENESIS_API_URL || 'http://127.0.0.1:4000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
