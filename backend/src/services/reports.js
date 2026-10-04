@@ -249,7 +249,7 @@ async function monthlyReport(tenantId, year, month) {
   const historyStart = new Date(year, month - 6, 1, 0, 0, 0, 0);
   const prevStart = new Date(year, month - 2, 1, 0, 0, 0, 0);
   const prevEnd = new Date(year, month - 1, 0, 23, 59, 59, 999);
-  const [report, employees, fixedCosts, suppliers, stockEntries, history, prevItems, debts, goal, restock] = await Promise.all([
+  const [report, employees, fixedCosts, suppliers, stockEntries, history, prevItems, debts, goal, restock, expenses] = await Promise.all([
     summarize(tenantId, start, end),
     prisma.employee.findMany({ where: { tenant_id: tenantId, is_active: true } }),
     prisma.fixedCost.findMany({ where: { tenant_id: tenantId } }),
@@ -260,6 +260,7 @@ async function monthlyReport(tenantId, year, month) {
     debtsSummary(tenantId, start, end),
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     restockFor(tenantId, end < new Date() ? end : new Date(), 30),
+    prisma.expense.findMany({ where: { tenant_id: tenantId, date: { gte: start, lte: end } }, orderBy: { date: "asc" }, select: { id: true, date: true, category: true, description: true, amount: true } }),
   ]);
 
   // Mes anterior: receita e lucro bruto, para comparar.
@@ -289,7 +290,9 @@ async function monthlyReport(tenantId, year, month) {
     trends.push({ product_id: id, name, quantity: now, previous_quantity: before, change: now - before, change_pct: pctChange(now, before) });
   }
   trends.sort((a, b) => b.change - a.change);
-  const deductions = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries });
+  const deductions = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries, expenses });
+  const expensesByCategory = {};
+  for (const e of expenses) expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
   const months = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(year, month - 1 - i, 1);
@@ -305,6 +308,7 @@ async function monthlyReport(tenantId, year, month) {
     period: { year, month },
     ...report,
     deductions,
+    expenses: { rows: expenses, by_category: Object.entries(expensesByCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount) },
     net_profit: netProfit,
     revenue_history: months,
     compare: {
@@ -326,13 +330,13 @@ async function monthlyReport(tenantId, year, month) {
 // resultado. effect: 'gain' (entra no lucro), 'loss' (sai do lucro), 'info'
 // (movimento sem efeito directo no lucro: compra de stock, cheneca, fecho...).
 // Vendas trazem os itens e o caixista, para abrir o recibo.
-const TIMELINE_TYPES = ['sale', 'cancelled', 'loss', 'stock', 'debt', 'debt_payment', 'shift', 'demand'];
+const TIMELINE_TYPES = ['sale', 'cancelled', 'loss', 'stock', 'debt', 'debt_payment', 'shift', 'demand', 'expense'];
 
 async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1, pageSize = 50 } = {}) {
   const range = { gte: start, lte: end };
   const want = (t) => types.includes(t);
   const none = Promise.resolve([]);
-  const [sales, losses, entries, debts, payments, shifts, demand, suppliers] = await Promise.all([
+  const [sales, losses, entries, debts, payments, shifts, demand, suppliers, expenses] = await Promise.all([
     want('sale') || want('cancelled')
       ? prisma.sale.findMany({ where: { tenant_id: tenantId, created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true, cashier: { select: { id: true, name: true } } } })
       : none,
@@ -343,6 +347,7 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
     want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } } }) : none,
     want('demand') ? prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true } }, recordedBy: { select: { name: true } } } }) : none,
     want('stock') ? prisma.supplier.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } }) : none,
+    want('expense') ? prisma.expense.findMany({ where: { tenant_id: tenantId, date: range } }) : none,
   ]);
   // Validade do lote de onde saiu cada perda.
   const lotIds = losses.map((l) => l.lot_id).filter(Boolean);
@@ -389,6 +394,11 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
   for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido' });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
   for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || '—'} (em falta)`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida' });
+
+  // Despesa: sai do lucro liquido do MES (nao do lucro bruto do dia), por isso profit 0.
+  // A data e o dia escolhido pelo dono (meio-dia), nao a hora em que foi escrita.
+  const expenseBy = expenses.length ? new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: [...new Set(expenses.map((e) => e.created_by))] } }, select: { id: true, name: true } })).map((u) => [u.id, u.name])) : new Map();
+  for (const e of expenses) events.push({ id: 'expense-' + e.id, type: 'expense', at: e.date, effect: 'expense', amount: -e.amount, profit: 0, title: `Despesa: ${e.category}`, who: expenseBy.get(e.created_by) || '—', detail: e.description || '', day_only: true });
 
   events.sort((a, b) => new Date(b.at) - new Date(a.at));
   const totals = {

@@ -10,7 +10,8 @@ const visitKey = (supplierId, createdAt) => {
   return `${supplierId}|${y}-${m}-${day}`;
 };
 
-function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers = [], stockEntries = [] } = {}) {
+// expenses: despesas avulsas JA filtradas pelo mes (limpeza, transporte, luz...).
+function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers = [], stockEntries = [], expenses = [] } = {}) {
   const total_salaries = employees.reduce((sum, emp) => sum + money(emp.monthly_salary), 0);
   const total_rent = fixedCosts.reduce((sum, fc) => sum + (isRent(fc.type) ? money(fc.amount) : 0), 0);
   const total_other_fixed = fixedCosts.reduce((sum, fc) => sum + (isRent(fc.type) ? 0 : money(fc.amount)), 0);
@@ -32,7 +33,9 @@ function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers =
     total_supplier_delivery += costBySupplier.get(supplierId) || 0;
   }
 
-  const operating_expenses = total_salaries + total_fixed + total_supplier_delivery;
+  const total_expenses = expenses.reduce((sum, e) => sum + money(e.amount), 0);
+
+  const operating_expenses = total_salaries + total_fixed + total_supplier_delivery + total_expenses;
 
   return {
     total_salaries,
@@ -40,6 +43,7 @@ function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers =
     total_other_fixed,
     total_fixed,
     total_supplier_delivery,
+    total_expenses,
     operating_expenses,
   };
 }

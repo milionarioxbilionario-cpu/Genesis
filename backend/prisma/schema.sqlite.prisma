@@ -57,6 +57,7 @@ model Tenant {
   debts                 Debt[]
   demand_captures       DemandCapture[]
   employees             Employee[]
+  expenses              Expense[]
   fixed_costs           FixedCost[]
   products              Product[]
   product_price_history ProductPriceHistory[]
@@ -359,4 +360,20 @@ model PosTerminal {
   tenant       Tenant    @relation(fields: [tenant_id], references: [id])
 
   @@index([tenant_id])
+}
+
+// Despesas avulsas (Genesis 2.1, Fase 5): limpeza, transporte, luz... do dia a
+// dia, alem dos custos fixos mensais. Entram no lucro liquido do mes.
+model Expense {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  date        DateTime
+  category    String
+  description String
+  amount      Int
+  created_by  String
+  created_at  DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id, date])
 }

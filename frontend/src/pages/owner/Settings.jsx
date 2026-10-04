@@ -3,12 +3,12 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { Monitor, Plus } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
-import { money, dateTime, errorMessage } from '../../utils/format';
+import { money, date, dateTime, isoDay, errorMessage } from '../../utils/format';
 import { Alert, Badge, Button, Card, CardHeader, Dialog, Drawer, Input, MoneyInput, PageHeader, Select, Skeleton, Table, Tabs, useConfirm, useToast } from '../../components/ui';
 
 const TABS = [
   { value: 'store', label: 'Loja' },
-  { value: 'costs', label: 'Custos fixos' },
+  { value: 'costs', label: 'Custos e despesas' },
   { value: 'discounts', label: 'Descontos e PIN' },
   { value: 'terminals', label: 'Terminais' },
   { value: 'audit', label: 'Auditoria' },
@@ -26,7 +26,14 @@ export default function Settings() {
       {!settings.data && tab !== 'audit' && tab !== 'terminals' ? <Skeleton className="h-40 w-full max-w-2xl" /> : (
         <div className="max-w-3xl">
           {tab === 'store' && <Store s={settings.data} reload={settings.reload} />}
-          {tab === 'costs' && <FixedCosts s={settings.data} reload={settings.reload} />}
+          {tab === 'costs' && (
+            <>
+              <h2 className="mb-1 text-lg font-semibold text-ink">Custos fixos</h2>
+              <p className="mb-3 text-sm text-ink-muted">O que paga todos os meses (renda, água e luz fixas...). Descontado no lucro de cada mês.</p>
+              <FixedCosts s={settings.data} reload={settings.reload} />
+              <Expenses />
+            </>
+          )}
           {tab === 'discounts' && <Discounts s={settings.data} reload={settings.reload} />}
           {tab === 'terminals' && <Terminals />}
           {tab === 'audit' && <Audit />}
@@ -138,6 +145,74 @@ function FixedCosts({ s, reload }) {
         )}
       </Drawer>
     </>
+  );
+}
+
+// Despesas avulsas: o que se paga uma vez (limpeza, transporte do stock...).
+// Entram no lucro liquido do mes da data escolhida.
+function Expenses() {
+  const toast = useToast();
+  const confirm = useConfirm();
+  const now = new Date();
+  const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
+  const list = useApi(`/api/settings/expenses?year=${period.year}&month=${period.month}`);
+  const [editing, setEditing] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); return { year: d.getFullYear(), month: d.getMonth() + 1, label: d.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' }) }; });
+  const categories = list.data?.categories || [];
+  const valid = editing && editing.category.trim().length >= 2 && editing.amount > 0 && editing.date && editing.date <= isoDay();
+  async function save() {
+    setBusy(true); setError('');
+    const body = { date: editing.date, category: editing.category.trim(), description: editing.description.trim(), amount: editing.amount };
+    try {
+      if (editing.id) await api.put('/api/settings/expenses/' + editing.id, body);
+      else await api.post('/api/settings/expenses', body);
+      toast('Despesa guardada.'); setEditing(null); list.reload();
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+  async function remove() {
+    if (!(await confirm({ title: 'Remover despesa', message: `"${editing.category}" de ${money(editing.amount)} deixa de ser descontada no lucro do mês.`, confirmLabel: 'Remover', danger: true }))) return;
+    try { await api.delete('/api/settings/expenses/' + editing.id); toast('Despesa removida.'); setEditing(null); list.reload(); } catch (err) { setError(errorMessage(err)); }
+  }
+  return (
+    <section className="mt-8">
+      <h2 className="mb-1 text-lg font-semibold text-ink">Despesas avulsas</h2>
+      <p className="mb-3 text-sm text-ink-muted">O que paga uma vez: limpeza, transporte do stock, uma reparação... Entra no lucro líquido do mês da data da despesa.</p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <Select aria-label="Mês das despesas" value={`${period.year}-${period.month}`} onChange={(e) => { const [y, m] = e.target.value.split('-').map(Number); setPeriod({ year: y, month: m }); }} className="w-52">
+          {months.map((m) => <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>{m.label}</option>)}
+        </Select>
+        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ date: isoDay(), category: '', description: '', amount: 0 }); }}>Nova despesa</Button>
+      </div>
+      {list.error && <Alert tone="danger" className="mb-3">{list.error}</Alert>}
+      {list.data && <p className="mb-2 text-base text-ink-2">Total do mês: <span className="num font-semibold text-ink">{money(list.data.total)}</span></p>}
+      <Table
+        columns={[
+          { key: 'date', header: 'Data', render: (e) => <span className="num text-ink-2">{date(e.date)}</span> },
+          { key: 'category', header: 'Categoria', render: (e) => <Badge tone="neutral">{e.category}</Badge> },
+          { key: 'description', header: 'Descrição', render: (e) => <span className="text-ink-2">{e.description || '—'}</span> },
+          { key: 'amount', header: 'Valor', align: 'right', render: (e) => money(e.amount) },
+        ]}
+        rows={list.data?.rows || []}
+        loading={list.loading && !list.data}
+        onRowClick={(e) => { setError(''); setEditing({ id: e.id, date: isoDay(e.date), category: e.category, description: e.description || '', amount: e.amount }); }}
+        empty={<p className="py-10 text-center text-ink-muted">Sem despesas neste mês.</p>}
+      />
+      <Drawer open={Boolean(editing)} onClose={() => setEditing(null)} title={editing?.id ? 'Editar despesa' : 'Nova despesa'}
+        footer={<>{editing?.id && <Button variant="danger-ghost" className="mr-auto" onClick={remove}>Remover</Button>}<Button onClick={() => setEditing(null)}>Cancelar</Button><Button variant="primary" loading={busy} disabled={!valid} onClick={save}>Guardar</Button></>}>
+        {editing && (
+          <div className="flex flex-col gap-4">
+            {error && <Alert tone="danger">{error}</Alert>}
+            <Input label="Data" type="date" max={isoDay()} value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} />
+            <Input label="Categoria" list="expense-categories" placeholder="Escolha ou escreva" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} hint="Pode escrever uma categoria nova." />
+            <datalist id="expense-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+            <Input label="Descrição (opcional)" placeholder="Ex.: Detergente e vassouras" value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            <MoneyInput label="Valor" valueCents={editing.amount} onChangeCents={(v) => setEditing({ ...editing, amount: v })} />
+          </div>
+        )}
+      </Drawer>
+    </section>
   );
 }
 

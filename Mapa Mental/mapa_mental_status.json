@@ -179,7 +179,8 @@
     "backend/src/services/monthlyDeductions.js": {
       "status": "ok",
       "summary": "Deducoes mensais (salarios, custos fixos) que entram no lucro liquido real.",
-      "role": "Financeiro."
+      "role": "Financeiro.",
+      "notes": "04/10/2026 Fase 5.1: total_expenses; 8/8 testes."
     },
     "backend/src/services/tenantAlerts.js": {
       "status": "ok",
@@ -1064,6 +1065,18 @@
       "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
       "summary": "Inicio do dono: KPIs, meta do mes e do mes passado, alertas.",
       "role": "Painel do dono."
+    },
+    "backend/src/routes/settings.js": {
+      "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
+      "role": "Painel do dono.",
+      "status": "ok",
+      "notes": "04/10/2026 Fase 5.1: /expenses; verify_system 16 23/23."
+    },
+    "frontend/src/pages/owner/Settings.jsx": {
+      "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
+      "role": "Painel do dono.",
+      "status": "ok",
+      "notes": "04/10/2026 Fase 5.1: despesas avulsas; fase5.mjs 9/9."
     }
   }
 }
