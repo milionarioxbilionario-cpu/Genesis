@@ -621,7 +621,76 @@ async function test14() {
   ok(own >= 4, 'com o contexto da propria loja ve os seus lotes', own);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14 };
+// ---------------------------------------------------------------------------
+async function test15() {
+  section(15, 'Relatorios com rastreio, perdas, metas e chenecas (Genesis 2.1)');
+  const owner = ownerClient();
+  const today = new Date(); const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = iso(today);
+  const ym = `year=${today.getFullYear()}&month=${today.getMonth() + 1}`;
+  const get = async (p) => { const r = await owner.req('GET', p); if (r.status !== 200) throw new Error(p + ' -> ' + r.status + ' ' + JSON.stringify(r.data)); return r.data; };
+
+  ok((await owner.req('POST', '/api/owner/goals', { target_amount: 1000000 })).status < 300, 'meta do mes: 10 000 MT');
+  const d0 = await get('/api/owner/reports/daily?date=' + day);
+  const m0 = await get('/api/owner/reports/monthly?' + ym);
+
+  const term = await pairedTerminal('Balcao relatorios');
+  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const sale = await term.req('POST', '/api/sales', saleBody({ items: [{ product_id: ctx.product.id, quantity: 2, unit_sell_price: 10000, unit_cost_price: 0 }], total_amount: 20000, amount_received: 20000 }));
+  ok(sale.status === 201, 'venda de 2 x 100 MT', sale);
+  const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: ctx.product.id, quantity: 1, reason: 'broken' });
+  ok(sh.status < 300, 'quebra de 1 (custo 60 MT)', sh);
+  const debt = await owner.req('POST', '/api/owner/debts', { debtor_name: 'Cliente Relatorio', debtor_phone: '841234000', total_amount: 50000, due_date: iso(new Date(Date.now() + 10 * 86400000)) });
+  ok(debt.status === 201, 'cheneca de 500 MT', debt);
+  ok((await owner.req('POST', '/api/owner/debts/' + debt.data.id + '/payment', { amount: 20000 })).status < 300, 'pagamento de 200 MT');
+
+  const d1 = await get('/api/owner/reports/daily?date=' + day);
+  ok(d1.gross_revenue - d0.gross_revenue === 20000 && d1.gross_profit - d0.gross_profit === 8000, 'diario: +200 MT de receita e +80 MT de lucro bruto', [d1.gross_revenue - d0.gross_revenue, d1.gross_profit - d0.gross_profit]);
+  ok(d1.losses_total - d0.losses_total === 6000 && d1.losses.some((l) => l.reason === 'broken' && l.reason_label === 'Partido'), 'diario: perda de 60 MT com motivo "Partido"', d1.losses_total - d0.losses_total);
+  ok(d1.result_after_losses === d1.gross_profit - d1.losses_total, 'diario: resultado = lucro bruto - perdas');
+  ok(d1.goal_progress && Math.abs((d1.goal_progress.today_pct - d0.goal_progress.today_pct) - 2) < 0.05, 'diario: a venda vale +2% da meta do mes', d1.goal_progress);
+  ok(d1.goal_progress.accumulated_pct >= d1.goal_progress.today_pct, 'diario: % acumulado do mes >= % do dia');
+  ok(d1.compare && 'previous_revenue' in d1.compare, 'diario: comparacao com o dia anterior');
+  ok(d1.most_sold && d1.most_profitable && Array.isArray(d1.top_profitable), 'diario: mais vendido e mais rentavel separados');
+
+  const tl = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&page_size=200`);
+  const saleEv = tl.rows.find((e) => e.type === 'sale' && e.sale?.id === sale.data.id);
+  ok(saleEv && saleEv.amount === 20000 && saleEv.profit === 8000 && saleEv.effect === 'gain' && saleEv.who === ctx.cashier.name && saleEv.sale.items.length === 1, 'rastreio: a venda com valor, lucro, caixista e itens (para o recibo)', saleEv);
+  ok(/2 × Cerveja Teste/.test(saleEv?.detail || ''), 'rastreio: produto e quantidade descritos');
+  const lossEv = tl.rows.find((e) => e.type === 'loss' && e.reason === 'broken');
+  ok(lossEv && lossEv.amount === -6000 && lossEv.effect === 'loss' && lossEv.unit_cost === 6000, 'rastreio: a perda com -60 MT e o custo unitario', lossEv);
+  ok(tl.rows.some((e) => e.type === 'debt' && e.amount === 50000) && tl.rows.some((e) => e.type === 'debt_payment' && e.amount === 20000), 'rastreio: cheneca nova e pagamento');
+  ok(!tl.rows.some((e) => /\d{3,} por unidade|desconto \d/.test(e.detail || '')), 'rastreio: nenhum valor em centavos no texto');
+  ok(tl.rows.every((e, i, a) => i === 0 || new Date(a[i - 1].at) >= new Date(e.at)), 'rastreio: por ordem (mais recente primeiro)');
+  const onlyLoss = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&types=loss`);
+  ok(onlyLoss.rows.length > 0 && onlyLoss.rows.every((e) => e.type === 'loss'), 'rastreio: filtro por tipo (so perdas)');
+  const pageOne = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&page_size=1`);
+  ok(pageOne.rows.length === 1 && pageOne.total === tl.total, 'rastreio: paginado', [pageOne.rows.length, pageOne.total, tl.total]);
+  ok((await owner.req('GET', `/api/owner/reports/timeline?from=${day}&to=2020-01-01`)).status === 400, 'rastreio: intervalo invertido = 400');
+  ok((await owner.req('GET', '/api/owner/reports/timeline?from=2025-01-01&to=2026-01-01')).status === 400, 'rastreio: mais de 3 meses = 400');
+  ok(tl.rows.filter((e) => e.sale).every((e) => e.sale.tenant_id === ctx.tenant.id), 'rastreio: so vendas desta loja');
+  ok((await term.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}`)).status === 403, 'caixista nao chega ao rastreio (403)');
+
+  const w = await get(`/api/owner/reports/weekly?end=${day}`);
+  const wToday = w.by_day.find((x) => x.date === day);
+  ok(w.by_day.length === 7 && wToday && wToday.losses >= 6000, 'semanal: 7 dias, com perdas por dia', wToday);
+  ok(w.best_day && w.worst_day !== undefined && w.compare && w.restock && Array.isArray(w.restock.items), 'semanal: melhor/pior dia, comparacao e recomendacao de restock');
+
+  const m1 = await get('/api/owner/reports/monthly?' + ym);
+  ok(m1.debts.new_total - m0.debts.new_total === 50000 && m1.debts.received_total - m0.debts.received_total === 20000, 'mensal: chenecas novas +500 MT e recebidas +200 MT');
+  ok(m1.debts.outstanding.some((x) => x.debtor === 'Cliente Relatorio' && x.remaining === 30000), 'mensal: em aberto 300 MT do cliente');
+  ok(m1.losses_total - m0.losses_total === 6000, 'mensal: perdas +60 MT');
+  ok(m1.goal && m1.goal.target === 1000000 && Array.isArray(m1.weeks) && m1.weeks.length >= 4, 'mensal: meta e semanas do mes');
+  ok(m1.trends && m1.trends.growing.some((t) => t.product_id === ctx.product.id), 'mensal: produto em crescimento vs mes anterior');
+  ok(m1.compare && 'previous_revenue' in m1.compare && m1.restock && m1.restock.cover_days === 30, 'mensal: comparacao com o mes anterior e restock para 30 dias');
+  ok(m1.net_profit === m1.gross_profit - m1.deductions.total_salaries - m1.deductions.total_rent - m1.deductions.total_other_fixed - m1.deductions.total_supplier_delivery, 'mensal: formula do lucro liquido inalterada (especificacao 6.3)');
+
+  const gh = await get('/api/owner/goals/history');
+  const cur = gh[gh.length - 1];
+  ok(gh.length === 12 && cur.current && cur.target === 1000000 && cur.achieved >= 20000, 'metas: 12 meses, o actual com meta e atingido', cur);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15 };
 
 (async () => {
   await prisma.ready();
