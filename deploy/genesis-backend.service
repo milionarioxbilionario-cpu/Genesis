@@ -1,0 +1,24 @@
+[Unit]
+Description=Genesis backend (Express + Prisma)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=genesis
+Group=genesis
+WorkingDirectory=/srv/genesis/backend
+# .env de producao (chmod 600, dono genesis). NODE_ENV=production faz o
+# servidor recusar arrancar com JWT_SECRET fraco ou sem o cliente RLS.
+EnvironmentFile=/srv/genesis/backend/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+# Endurecimento basico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
