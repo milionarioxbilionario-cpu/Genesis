@@ -1,31 +1,31 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-03T23:56:38.875Z */
+   Gerado em: 2026-10-04T00:55:59.743Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-03T23:56:38.875Z",
+ "generatedAt": "2026-10-04T00:55:59.743Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 163,
+  "files": 169,
   "planned": 5,
-  "links": 259,
-  "lines": 23752,
+  "links": 271,
+  "lines": 24363,
   "byStatus": {
-   "ok": 94,
+   "ok": 97,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 57
+   "untracked": 60
   },
   "byGroup": {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 40,
-   "backend": 43,
+   "backend-data": 42,
+   "backend": 46,
    "frontend-pub": 4,
-   "frontend": 49,
+   "frontend": 50,
    "scripts": 3
   }
  },
@@ -55,6 +55,10 @@ window.GENESIS_MINDMAP = {
    "count": 15
   },
   {
+   "pkg": "crypto",
+   "count": 14
+  },
+  {
    "pkg": "zod",
    "count": 14
   },
@@ -63,20 +67,16 @@ window.GENESIS_MINDMAP = {
    "count": 13
   },
   {
-   "pkg": "crypto",
-   "count": 13
+   "pkg": "node:path",
+   "count": 7
   },
   {
    "pkg": "path",
    "count": 7
   },
   {
-   "pkg": "node:path",
-   "count": 6
-  },
-  {
    "pkg": "node:fs",
-   "count": 5
+   "count": 6
   },
   {
    "pkg": "fs",
@@ -95,6 +95,18 @@ window.GENESIS_MINDMAP = {
    "count": 4
   },
   {
+   "pkg": "node:test",
+   "count": 4
+  },
+  {
+   "pkg": "node:assert",
+   "count": 4
+  },
+  {
+   "pkg": "@playwright/test",
+   "count": 4
+  },
+  {
    "pkg": "qrcode",
    "count": 3
   },
@@ -108,18 +120,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "jsonwebtoken",
-   "count": 3
-  },
-  {
-   "pkg": "node:test",
-   "count": 3
-  },
-  {
-   "pkg": "node:assert",
-   "count": 3
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 3
   },
   {
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 40,
+   "nodes": 42,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -174,8 +174,9 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20260919_add_sale_discount_daily": 1,
     "backend/prisma/migrations/20261003_genesis2": 1,
     "backend/prisma/migrations/20261004_catalogo_mz": 1,
+    "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/scripts": 25,
-    "backend/tests": 3,
+    "backend/tests": 4,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -183,13 +184,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 43,
+   "nodes": 46,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 14,
-    "backend/src/services": 5,
-    "backend/src/utils": 17,
+    "backend/src/services": 6,
+    "backend/src/utils": 19,
     "backend/src/jobs": 1
    }
   },
@@ -206,7 +207,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 49,
+   "nodes": 50,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -219,7 +220,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
     "frontend/src/utils": 10,
-    "frontend/tests/e2e": 3,
+    "frontend/tests/e2e": 4,
     "frontend/tests": 2,
     "frontend/src/pages": 1
    }
@@ -272,8 +273,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 509,
-   "size": 82232,
+   "lines": 520,
+   "size": 85692,
    "externals": [
     "@prisma/client"
    ],
@@ -316,8 +317,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1021,
-   "size": 53205,
+   "lines": 1040,
+   "size": 54145,
    "externals": [
     "nodemailer"
    ],
@@ -781,6 +782,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
+   "path": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261004_stock_lotes",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 42,
+   "size": 2329,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -794,7 +816,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 91,
-   "size": 5062,
+   "size": 5073,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -814,8 +836,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 321,
-   "size": 11005,
+   "lines": 346,
+   "size": 12072,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -837,8 +859,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 338,
-   "size": 11887,
+   "lines": 363,
+   "size": 12954,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1011,7 +1033,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 71,
-   "size": 4988,
+   "size": 5000,
    "externals": [
     "dotenv",
     "fs",
@@ -1464,8 +1486,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 565,
-   "size": 39997,
+   "lines": 642,
+   "size": 46804,
    "externals": [
     "dotenv",
     "crypto",
@@ -1478,11 +1500,13 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/utils/prisma.js",
-    "backend/src/utils/tokens.js"
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/fefo.js",
+    "backend/src/services/expiryJob.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 4
   },
   {
    "id": "backend/src/index.js",
@@ -1497,8 +1521,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 272,
-   "size": 10412,
+   "lines": 274,
+   "size": 10551,
    "externals": [
     "dotenv",
     "express",
@@ -1527,11 +1551,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/settings.js",
     "backend/src/routes/pos.js",
     "backend/src/middleware/posWriteAuth.js",
-    "backend/src/utils/http.js"
+    "backend/src/utils/http.js",
+    "backend/src/services/expiryJob.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 20
+   "outbound": 21
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -1770,9 +1795,10 @@ window.GENESIS_MINDMAP = {
    "role": "Onboarding.",
    "security": "",
    "planned": false,
-   "lines": 97,
-   "size": 4767,
+   "lines": 103,
+   "size": 5233,
    "externals": [
+    "crypto",
     "express",
     "zod"
    ],
@@ -1860,8 +1886,8 @@ window.GENESIS_MINDMAP = {
    "role": "Stock.",
    "security": "",
    "planned": false,
-   "lines": 184,
-   "size": 7094,
+   "lines": 194,
+   "size": 7663,
    "externals": [
     "express",
     "zod"
@@ -1869,13 +1895,14 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/middleware/auth.js",
-    "backend/src/middleware/rbac.js"
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/stockLots.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "backend/src/routes/master_catalogs.js",
@@ -1920,8 +1947,8 @@ window.GENESIS_MINDMAP = {
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 382,
-   "size": 21375,
+   "lines": 384,
+   "size": 21452,
    "externals": [
     "express",
     "crypto",
@@ -2001,8 +2028,8 @@ window.GENESIS_MINDMAP = {
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 257,
-   "size": 10081,
+   "lines": 274,
+   "size": 11115,
    "externals": [
     "express",
     "zod"
@@ -2011,13 +2038,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js",
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
-    "backend/src/utils/productImage.js"
+    "backend/src/utils/productImage.js",
+    "backend/src/utils/stockLots.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "backend/src/routes/refresh.js",
@@ -2061,8 +2089,8 @@ window.GENESIS_MINDMAP = {
    "role": "Nucleo do POS.",
    "security": "",
    "planned": false,
-   "lines": 498,
-   "size": 22764,
+   "lines": 505,
+   "size": 23327,
    "externals": [
     "express",
     "zod",
@@ -2074,13 +2102,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js",
     "backend/src/utils/shiftLock.js",
     "backend/src/utils/tenantRls.js",
-    "backend/src/utils/paymentMethods.js"
+    "backend/src/utils/paymentMethods.js",
+    "backend/src/utils/stockLots.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "backend/src/routes/settings.js",
@@ -2095,8 +2124,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 132,
-   "size": 6323,
+   "lines": 143,
+   "size": 7043,
    "externals": [
     "express",
     "bcrypt",
@@ -2128,20 +2157,48 @@ window.GENESIS_MINDMAP = {
    "role": "Controlo de perdas.",
    "security": "",
    "planned": false,
-   "lines": 96,
-   "size": 3905,
+   "lines": 106,
+   "size": 4538,
    "externals": [
     "express",
     "zod"
    ],
    "dependsOn": [
     "backend/src/utils/prisma.js",
-    "backend/src/utils/tenantRls.js"
+    "backend/src/utils/tenantRls.js",
+    "backend/src/utils/stockLots.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
+   "outbound": 3
+  },
+  {
+   "id": "backend/src/services/expiryJob.js",
+   "path": "backend/src/services/expiryJob.js",
+   "label": "expiryJob.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Perda automatica de lotes vencidos (de hora a hora, idempotente, por loja com RLS).",
+   "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3.",
+   "role": "Stock e validades.",
+   "security": "",
+   "planned": false,
+   "lines": 87,
+   "size": 4470,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [
+    "backend/scripts/verify_system.js",
+    "backend/src/index.js"
+   ],
+   "inbound": 2,
    "outbound": 2
   },
   {
@@ -2228,23 +2285,24 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/services",
    "ext": ".js",
    "status": "ok",
-   "summary": "Alertas de stock minimo e validade vencida para o dashboard do dono.",
-   "notes": "",
+   "summary": "Alertas: stock baixo e validades por lote (X dias configuraveis).",
+   "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3.",
    "role": "Operacoes.",
    "security": "",
    "planned": false,
-   "lines": 45,
-   "size": 1776,
+   "lines": 65,
+   "size": 2787,
    "externals": [],
    "dependsOn": [
-    "backend/src/utils/prisma.js"
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/fefo.js"
    ],
    "usedBy": [
     "backend/src/routes/owner.js",
     "backend/src/jobs/dailyDigest.js"
    ],
    "inbound": 2,
-   "outbound": 1
+   "outbound": 2
   },
   {
    "id": "backend/src/utils/audit.js",
@@ -2304,6 +2362,33 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js"
    ],
    "inbound": 2,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/fefo.js",
+   "path": "backend/src/utils/fefo.js",
+   "label": "fefo.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "FEFO puro: ordem de saida dos lotes, validade em hora de Maputo.",
+   "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3.",
+   "role": "Stock e validades.",
+   "security": "",
+   "planned": false,
+   "lines": 47,
+   "size": 2053,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/scripts/verify_system.js",
+    "backend/src/services/expiryJob.js",
+    "backend/src/services/tenantAlerts.js",
+    "backend/src/utils/stockLots.js",
+    "backend/tests/fefo.test.js"
+   ],
+   "inbound": 5,
    "outbound": 0
   },
   {
@@ -2437,6 +2522,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/sales.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shrinkage_records.js",
+    "backend/src/services/expiryJob.js",
     "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/audit.js",
@@ -2446,7 +2532,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 34,
+   "inbound": 35,
    "outbound": 1
   },
   {
@@ -2582,6 +2668,34 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 4,
    "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/stockLots.js",
+   "path": "backend/src/utils/stockLots.js",
+   "label": "stockLots.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Lotes dentro da transaccao: addLot e consumeLots (FEFO com guarda atomica).",
+   "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3.",
+   "role": "Stock e validades.",
+   "security": "",
+   "planned": false,
+   "lines": 46,
+   "size": 2022,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [
+    "backend/src/routes/inventory.js",
+    "backend/src/routes/products.js",
+    "backend/src/routes/sales.js",
+    "backend/src/routes/shrinkage_records.js"
+   ],
+   "inbound": 4,
+   "outbound": 1
   },
   {
    "id": "backend/src/utils/supportCodes.js",
@@ -2748,6 +2862,32 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 3,
    "outbound": 0
+  },
+  {
+   "id": "backend/tests/fefo.test.js",
+   "path": "backend/tests/fefo.test.js",
+   "label": "fefo.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 48,
+   "size": 2411,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "backend/tests/monthlyDeductions.test.js",
@@ -3606,8 +3746,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 161,
-   "size": 8734,
+   "lines": 168,
+   "size": 9241,
    "externals": [
     "react",
     "react-router-dom",
@@ -3671,8 +3811,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 268,
-   "size": 16463,
+   "lines": 283,
+   "size": 18293,
    "externals": [
     "react",
     "react-router-dom",
@@ -3767,8 +3907,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 273,
-   "size": 16923,
+   "lines": 283,
+   "size": 17910,
    "externals": [
     "react",
     "react-router-dom",
@@ -4399,6 +4539,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/stock.mjs",
+   "path": "frontend/tests/e2e/stock.mjs",
+   "label": "stock.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 67,
+   "size": 3941,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/offline_queue.test.mjs",
    "path": "frontend/tests/offline_queue.test.mjs",
    "label": "offline_queue.test.mjs",
@@ -4863,6 +5028,14 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/tokens.js"
   },
   {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/services/expiryJob.js"
+  },
+  {
    "source": "backend/src/index.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -4941,6 +5114,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/index.js",
    "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/index.js",
+   "target": "backend/src/services/expiryJob.js"
   },
   {
    "source": "backend/src/middleware/auth.js",
@@ -5099,6 +5276,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/middleware/rbac.js"
   },
   {
+   "source": "backend/src/routes/inventory.js",
+   "target": "backend/src/utils/stockLots.js"
+  },
+  {
    "source": "backend/src/routes/master_catalogs.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -5215,6 +5396,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/productImage.js"
   },
   {
+   "source": "backend/src/routes/products.js",
+   "target": "backend/src/utils/stockLots.js"
+  },
+  {
    "source": "backend/src/routes/refresh.js",
    "target": "backend/src/utils/tokens.js"
   },
@@ -5241,6 +5426,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/sales.js",
    "target": "backend/src/utils/paymentMethods.js"
+  },
+  {
+   "source": "backend/src/routes/sales.js",
+   "target": "backend/src/utils/stockLots.js"
   },
   {
    "source": "backend/src/routes/settings.js",
@@ -5271,6 +5460,18 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/tenantRls.js"
   },
   {
+   "source": "backend/src/routes/shrinkage_records.js",
+   "target": "backend/src/utils/stockLots.js"
+  },
+  {
+   "source": "backend/src/services/expiryJob.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/services/expiryJob.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
    "source": "backend/src/services/reports.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -5281,6 +5482,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/services/tenantAlerts.js",
    "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/services/tenantAlerts.js",
+   "target": "backend/src/utils/fefo.js"
   },
   {
    "source": "backend/src/utils/audit.js",
@@ -5315,12 +5520,20 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/http.js"
   },
   {
+   "source": "backend/src/utils/stockLots.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
    "source": "backend/src/utils/tenantStatus.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
    "source": "backend/src/utils/terminals.js",
    "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/tests/fefo.test.js",
+   "target": "backend/src/utils/fefo.js"
   },
   {
    "source": "backend/tests/monthlyDeductions.test.js",

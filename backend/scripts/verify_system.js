@@ -93,7 +93,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -544,7 +544,84 @@ async function test13() {
   ok(admins === 0, 'contas super_admin invisiveis para a loja');
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13 };
+// ---------------------------------------------------------------------------
+async function test14() {
+  section(14, 'Stock por lote: FEFO, validades, perda automatica e RLS (Genesis 2.1)');
+  const owner = ownerClient();
+  const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const lotsOf = (pid) => prisma.stockLot.findMany({ where: { product_id: pid }, orderBy: [{ expiry_date: 'asc' }, { created_at: 'asc' }] });
+  const stockOf = async (pid) => (await prisma.product.findUnique({ where: { id: pid } })).stock_qty;
+  const sumLots = async (pid) => (await lotsOf(pid)).reduce((s, l) => s + l.quantity_remaining, 0);
+
+  const created = await owner.req('POST', '/api/products', { name: 'Iogurte Teste', category: 'Frescos', sell_price: 5000, cost_price: 3000, stock_qty: 0, has_expiry: true });
+  ok(created.status === 201, 'produto com validade criado', created);
+  const pid = created.data.id;
+  const entry = (quantity, expiry, unit_cost) => owner.req('POST', '/api/inventory/stock', { product_id: pid, quantity, unit_cost, expiry_date: expiry });
+  const eA = await entry(5, day(3), 3000); const eB = await entry(6, day(20), 3200); const eC = await entry(4, null, 3100);
+  ok([eA, eB, eC].every((r) => r.status === 201), 'tres compras (validade 3 d, 20 d, sem validade)', [eA.status, eB.status, eC.status]);
+  ok((await entry(1, '12/10/2026', 3000)).status === 400, 'data de validade em formato errado: 400');
+  ok((await lotsOf(pid)).length === 3 && (await stockOf(pid)) === 15 && (await sumLots(pid)) === 15, 'tres lotes; stock 15 = soma dos lotes');
+
+  const term = await pairedTerminal('Balcao lotes');
+  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const sale = await term.req('POST', '/api/sales', { items: [{ product_id: pid, quantity: 7, unit_sell_price: 5000, unit_cost_price: 0 }], total_amount: 35000, payment_method: 'cash', amount_received: 35000 });
+  ok(sale.status === 201, 'venda de 7 (201)', sale);
+  let lots = await lotsOf(pid);
+  ok(lots.map((l) => l.quantity_remaining).join(',') === '0,4,4', 'FEFO: sai primeiro o lote de 3 dias (5) e depois o de 20 dias (2); o sem validade fica', lots.map((l) => l.quantity_remaining));
+  ok((await stockOf(pid)) === 8 && (await sumLots(pid)) === 8, 'stock 8 = soma dos lotes');
+
+  // Alertas: o lote de 20 dias so aparece se o aviso for de >= 20 dias.
+  let al = await owner.req('GET', '/api/owner/alerts');
+  ok(!al.data.expiringLots.some((l) => l.product_id === pid), 'aviso de 7 dias: lote de 20 dias ainda nao aparece');
+  ok((await owner.req('PUT', '/api/settings/expiry-alert', { expiry_alert_days: 30 })).status === 200, 'dono muda o aviso para 30 dias');
+  ok((await owner.req('PUT', '/api/settings/expiry-alert', { expiry_alert_days: 0 })).status === 400, 'aviso de 0 dias recusado (400)');
+  al = await owner.req('GET', '/api/owner/alerts');
+  const alerted = al.data.expiringLots.find((l) => l.product_id === pid);
+  ok(alerted && alerted.quantity === 4 && alerted.days_left === require('../src/utils/fefo').daysUntilExpiry(day(20) + 'T00:00:00.000Z') && alerted.product_stock === 8 && alerted.value === 4 * 3200, 'alerta diz: 4 de 8 un. expiram em 20 dias, valor ao custo', alerted);
+  await owner.req('PUT', '/api/settings/expiry-alert', { expiry_alert_days: 7 });
+
+  // Quebra no balcao: tambem por FEFO, com lote e custo gravados.
+  const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: pid, quantity: 2, reason: 'broken' });
+  ok(sh.status === 201 || sh.status === 200, 'quebra de 2 registada', sh);
+  const rec = await prisma.shrinkageRecord.findFirst({ where: { product_id: pid, reason: 'broken' } });
+  const lotB = (await lotsOf(pid)).find((l) => l.unit_cost === 3200);
+  ok(rec && rec.lot_id === lotB.id && rec.unit_cost === 3200 && lotB.quantity_remaining === 2, 'quebra saiu do lote de 20 dias, com o custo desse lote', rec);
+
+  // Perda automatica: compra com validade ja passada.
+  const eD = await entry(3, day(-2), 2900);
+  ok(eD.status === 201, 'compra com validade de ha 2 dias (lote ja vencido)');
+  const { runExpiryJob } = require('../src/services/expiryJob');
+  const n1 = await runExpiryJob({ tenantId: ctx.tenant.id });
+  const exp = await prisma.shrinkageRecord.findMany({ where: { product_id: pid, reason: 'expired' } });
+  ok(n1 === 1 && exp.length === 1 && exp[0].quantity === 3 && exp[0].unit_cost === 2900 && exp[0].recorded_by === ctx.owner.id, 'job: 1 lote vencido virou quebra "expired" (3 un. a 29 MT, em nome do dono)', { n1, exp });
+  const audit = await prisma.auditLog.findFirst({ where: { tenant_id: ctx.tenant.id, action: 'AUTO_EXPIRY_LOSS' } });
+  ok(Boolean(audit), 'auditoria AUTO_EXPIRY_LOSS gravada');
+  ok((await stockOf(pid)) === 6 && (await sumLots(pid)) === 6, 'stock 6 = soma dos lotes (o vencido saiu)');
+  const n2 = await runExpiryJob({ tenantId: ctx.tenant.id });
+  ok(n2 === 0 && (await prisma.shrinkageRecord.count({ where: { product_id: pid, reason: 'expired' } })) === 1, 'job outra vez: nenhuma perda duplicada (idempotente)');
+  al = await owner.req('GET', '/api/owner/alerts');
+  ok(!al.data.expiringLots.some((l) => l.product_id === pid && l.days_left < 0), 'depois do job o lote vencido sai dos alertas');
+
+  // Cancelamento: a mercadoria volta como lote.
+  const cancel = await owner.req('POST', '/api/sales/' + sale.data.id + '/cancel', { pin: PIN, reason: 'teste lotes' });
+  ok(cancel.status === 200, 'venda cancelada com o PIN', cancel);
+  ok((await stockOf(pid)) === 13 && (await sumLots(pid)) === 13, 'cancelamento repoe 7: stock 13 = soma dos lotes');
+
+  // Ajustes do dono passam pelos lotes; PATCH directo do stock deixou de existir.
+  ok((await owner.req('PATCH', '/api/products/' + pid + '/stock', { delta: -5, reason: 'contagem fisica' })).status === 200, 'ajuste -5');
+  ok((await owner.req('PATCH', '/api/products/' + pid + '/stock', { delta: 2, reason: 'achado no armazem', expiry_date: day(10) })).status === 200, 'ajuste +2 com validade');
+  ok((await stockOf(pid)) === 10 && (await sumLots(pid)) === 10, 'stock 10 = soma dos lotes depois dos ajustes');
+  await owner.req('PATCH', '/api/products/' + pid, { stock_qty: 999, name: 'Iogurte Teste' });
+  ok((await stockOf(pid)) === 10, 'PATCH com stock_qty ignorado (so ajuste auditado mexe no stock)');
+
+  // RLS: outra loja nao ve os lotes desta.
+  const foreign = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.stockLot.count({ where: { tenant_id: ctx.tenant.id } }));
+  ok(foreign === 0, 'lotes invisiveis no contexto de outra loja (RLS)');
+  const own = await prisma.runWithTenant(ctx.tenant.id, () => prisma.stockLot.count({ where: { product_id: pid } }));
+  ok(own >= 4, 'com o contexto da propria loja ve os seus lotes', own);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14 };
 
 (async () => {
   await prisma.ready();

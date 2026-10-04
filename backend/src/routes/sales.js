@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const { getShiftLock } = require('../utils/shiftLock');
 const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
+const { addLot, consumeLots } = require('../utils/stockLots');
 const rateLimit = require('express-rate-limit');
 
 const saleSchema = z.object({
@@ -319,6 +320,9 @@ router.post('/', async (req, res) => {
          stockError.statusCode = 409;
          throw stockError;
        }
+       // Lotes: sai primeiro o que expira primeiro (o leitor identifica o
+       // produto, nao a unidade — por isso leitor e escolha manual sao iguais).
+       await consumeLots(tx, { tenantId, productId: item.product_id, quantity: item.quantity });
      }
 
      await tx.auditLog.create({
@@ -469,6 +473,9 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
           where: { id: it.product_id, tenant_id: tenantId },
           data: { stock_qty: { increment: it.quantity } },
         });
+        // A mercadoria volta como lote sem validade conhecida (a venda nao
+        // guarda de que lote saiu cada unidade).
+        await addLot(tx, { tenantId, productId: it.product_id, quantity: it.quantity, unitCost: it.unit_cost_price });
       }
 
       await tx.auditLog.create({

@@ -183,8 +183,9 @@
     },
     "backend/src/services/tenantAlerts.js": {
       "status": "ok",
-      "summary": "Alertas de stock minimo e validade vencida para o dashboard do dono.",
-      "role": "Operacoes."
+      "summary": "Alertas: stock baixo e validades por lote (X dias configuraveis).",
+      "role": "Operacoes.",
+      "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
     },
     "frontend/src/App.jsx": {
       "status": "ok",
@@ -1015,6 +1016,24 @@
       "summary": "Regra unica de imagem de produto (https ou data:image, < 60 000 car.).",
       "role": "Validacao.",
       "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+    },
+    "backend/src/utils/fefo.js": {
+      "status": "ok",
+      "summary": "FEFO puro: ordem de saida dos lotes, validade em hora de Maputo.",
+      "role": "Stock e validades.",
+      "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
+    },
+    "backend/src/utils/stockLots.js": {
+      "status": "ok",
+      "summary": "Lotes dentro da transaccao: addLot e consumeLots (FEFO com guarda atomica).",
+      "role": "Stock e validades.",
+      "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
+    },
+    "backend/src/services/expiryJob.js": {
+      "status": "ok",
+      "summary": "Perda automatica de lotes vencidos (de hora a hora, idempotente, por loja com RLS).",
+      "role": "Stock e validades.",
+      "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
     }
   }
 }

@@ -41,12 +41,14 @@ function Store({ s, reload }) {
   const { reloadTenant } = useOutletContext();
   const [store, setStore] = useState(s.store);
   const [hours, setHours] = useState(s.hours);
+  const [alertDays, setAlertDays] = useState(String(s.expiry_alert_days ?? 7));
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   async function save(kind) {
     setBusy(kind); setError('');
     try {
       if (kind === 'store') await api.put('/api/settings/store', { name: store.name, location: store.location, phone: store.phone, email: store.email || null });
+      else if (kind === 'expiry') await api.put('/api/settings/expiry-alert', { expiry_alert_days: Number(alertDays) });
       else await api.put('/api/settings/hours', hours);
       toast('Alterações guardadas.');
       reload(); reloadTenant?.();
@@ -72,6 +74,14 @@ function Store({ s, reload }) {
           <Input label="Fecho" type="time" value={hours.closing_time} onChange={(e) => setHours({ ...hours, closing_time: e.target.value })} />
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'hours'} onClick={() => save('hours')}>Guardar</Button></div>
+      </Card>
+      <Card>
+        <CardHeader title="Validades" description="Quantos dias antes da data de validade um lote aparece nos alertas. No dia seguinte à validade, o que não se vendeu é registado como perda automaticamente." />
+        <div className="flex items-end gap-3">
+          <Input label="Avisar com" inputMode="numeric" value={alertDays} onChange={(e) => setAlertDays(e.target.value.replace(/\D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
+          <span className="pb-2 text-base text-ink-2">dias de antecedência</span>
+          <Button className="ml-auto" variant="primary" loading={busy === 'expiry'} disabled={!(Number(alertDays) >= 1 && Number(alertDays) <= 90)} onClick={() => save('expiry')}>Guardar</Button>
+        </div>
       </Card>
     </div>
   );

@@ -3,6 +3,7 @@ const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const { applyTenantRls } = require('../utils/tenantRls');
+const { consumeLots } = require('../utils/stockLots');
 
 function businessError(statusCode, message) {
   const e = new Error(message);
@@ -50,12 +51,21 @@ router.post('/', async (req, res) => {
       if (dec.count !== 1) throw businessError(409, 'Quantidade a registar excede stock actual');
       const newQty = (await tx.product.findUnique({ where: { id: data.product_id }, select: { stock_qty: true } })).stock_qty;
 
+      // Lotes (FEFO) e valor da perda: custo medio das parcelas; sem lotes, o custo actual.
+      const { allocations } = await consumeLots(tx, { tenantId, productId: data.product_id, quantity: data.quantity });
+      const covered = allocations.reduce((s, a) => s + a.quantity, 0);
+      const unitCost = covered
+        ? Math.round((allocations.reduce((s, a) => s + a.quantity * a.unit_cost, 0) + (data.quantity - covered) * product.cost_price) / data.quantity)
+        : product.cost_price;
+
       const rec = await tx.shrinkageRecord.create({
         data: {
           id: data.id || undefined,
           tenant_id: tenantId,
           product_id: data.product_id,
           quantity: data.quantity,
+          lot_id: allocations[0]?.lot_id || null,
+          unit_cost: unitCost,
           reason: data.reason,
           recorded_by: userId || null,
           recorded_at: new Date()

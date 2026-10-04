@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const { z } = require('zod');
@@ -63,7 +64,9 @@ router.post('/:businessType/import', auth, requireRole('owner'), asyncHandler(as
 
   const tenantId = req.user.tenantId;
   const toCents = (val) => Math.round(val * 100);
+  // Ids gerados aqui: o createMany nao os devolve e os lotes precisam deles.
   const createData = parse.data.products.map((p) => ({
+    id: crypto.randomUUID(),
     tenant_id: tenantId,
     name: p.name,
     barcode: p.barcode || null,
@@ -77,6 +80,9 @@ router.post('/:businessType/import', auth, requireRole('owner'), asyncHandler(as
   // Uma so transaccao interactiva (RLS: o contexto da loja aplica-se a tudo).
   const imported = await prisma.$transaction(async (tx) => {
     const result = createData.length ? await tx.product.createMany({ data: createData }) : { count: 0 };
+    // Stock inicial = um lote por produto (sem validade: entra depois por compra).
+    const lots = createData.filter((p) => p.stock_qty > 0).map((p) => ({ tenant_id: tenantId, product_id: p.id, quantity_remaining: p.stock_qty, unit_cost: p.cost_price }));
+    if (lots.length) await tx.stockLot.createMany({ data: lots });
     await tx.tenant.update({ where: { id: tenantId }, data: { onboarding_completed: true } });
     await tx.auditLog.create({ data: {
       tenant_id: tenantId,

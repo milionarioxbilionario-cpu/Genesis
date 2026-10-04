@@ -5,6 +5,7 @@ const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { imageUrlSchema } = require('../utils/productImage');
+const { addLot, consumeLots } = require('../utils/stockLots');
 
 const productSchema = z.object({
   name: z.string().min(1),
@@ -45,7 +46,8 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
     const data = productSchema.parse(req.body);
     const tenantId = req.user.tenantId;
 
-    const product = await prisma.product.create({
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
       data: {
         tenant: { connect: { id: tenantId } },
         name: data.name,
@@ -60,6 +62,13 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
         expiry_date: data.expiry_date ? new Date(data.expiry_date) : null,
         is_active: true
       }
+      });
+      // Stock inicial = primeiro lote (com a validade, se o produto tem).
+      await addLot(tx, {
+        tenantId, productId: created.id, quantity: data.stock_qty,
+        expiryDate: data.has_expiry ? data.expiry_date : null, unitCost: data.cost_price,
+      });
+      return created;
     });
 
     return res.status(201).json(product);
@@ -72,8 +81,10 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
   }
 });
 
-// Update product (partial)
-const productUpdateSchema = productSchema.partial();
+// Update product (partial). Sem stock_qty: mudar quantidades so por entrada de
+// stock, ajuste auditado (/:id/stock), venda ou quebra — um PATCH directo
+// saltava a auditoria e os lotes.
+const productUpdateSchema = productSchema.omit({ stock_qty: true }).partial();
 const stockAdjustmentSchema = z.object({
   delta: z.number().int(),
   reason: z.string().optional().default('manual_adjustment')
@@ -98,7 +109,6 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
     if (typeof data.sell_price !== 'undefined') updateData.sell_price = data.sell_price;
-    if (typeof data.stock_qty !== 'undefined') updateData.stock_qty = data.stock_qty;
     if (typeof data.min_stock !== 'undefined') updateData.min_stock = data.min_stock;
     if (typeof data.has_expiry !== 'undefined') updateData.has_expiry = data.has_expiry;
     if (typeof data.expiry_date !== 'undefined') updateData.expiry_date = data.expiry_date ? new Date(data.expiry_date) : null;
@@ -198,6 +208,7 @@ router.patch('/:id/stock', auth, requireRole('owner'), async (req, res) => {
     const deltaSchema = z.object({
       delta: z.number().int().refine((v) => v !== 0, 'delta nao pode ser 0'),
       unit_cost: z.number().int().nonnegative().optional(),
+      expiry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'data de validade inválida').nullable().optional(),
       reason: z.string().min(3).max(200).optional().default('manual_adjustment')
     });
     const data = deltaSchema.parse(req.body);
@@ -217,7 +228,7 @@ router.patch('/:id/stock', auth, requireRole('owner'), async (req, res) => {
       }
       const current = await tx.product.findUnique({ where: { id: productId } });
 
-      await tx.stockEntry.create({
+      const entry = await tx.stockEntry.create({
         data: {
           tenant_id: tenantId,
           product_id: productId,
@@ -227,6 +238,12 @@ router.patch('/:id/stock', auth, requireRole('owner'), async (req, res) => {
           supplier_id: null,
         }
       });
+      // Lotes: ajuste positivo = lote novo; negativo = sai por FEFO.
+      if (data.delta > 0) {
+        await addLot(tx, { tenantId, productId, quantity: data.delta, expiryDate: data.expiry_date || null, unitCost: data.unit_cost ?? before.cost_price, stockEntryId: entry.id });
+      } else {
+        await consumeLots(tx, { tenantId, productId, quantity: -data.delta });
+      }
       await tx.auditLog.create({
         data: {
           tenant_id: tenantId,
