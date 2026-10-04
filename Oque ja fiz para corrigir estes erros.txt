@@ -1219,3 +1219,44 @@ COMO PROVEI
   certo com a soma dos lotes.
 - Todos os testes anteriores continuam a passar: 160 verificacoes do
   sistema e os testes no browser (stock, terminal, venda, offline, fecho).
+
+==========================================================================
+04/10/2026 — FASE 4: RELATORIOS COM RASTREIO, METAS E O QUE REPOR
+==========================================================================
+
+O QUE MUDOU
+- Relatorio do dia: alem das vendas, mostra as perdas e o resultado do
+  dia, quanto esse dia valeu da meta do mes (ex.: "Este dia: +5%") e o
+  acumulado, e compara com o dia anterior. Mostra o produto mais vendido
+  e o que deu mais lucro (nem sempre sao o mesmo).
+- "Rastreio": uma lista de tudo o que aconteceu, com hora ao segundo:
+  vendas (quem vendeu, o que, como pagou), perdas (motivo, codigo de
+  barras, validade), cancelamentos, entradas de stock, chenecas, fechos
+  de turno e produtos que clientes pediram e nao havia. Tem filtros.
+  Clicar numa venda abre o recibo completo e da para reimprimir.
+- Relatorio da semana: dia a dia (clicar num dia abre esse dia), o melhor
+  e o pior dia, e o que encomendar para os proximos 7 dias.
+- Relatorio do mes: comparacao com o mes anterior, as semanas, produtos a
+  crescer e a cair, chenecas (novas, recebidas, em aberto), as metas dos
+  ultimos 12 meses, o que encomendar para 30 dias (e quanto custa) e os
+  produtos parados que NAO vale a pena repor.
+- No Inicio aparece como correu a meta do mes passado.
+
+O QUE CORRIGI PELO CAMINHO
+- Numa loja nova, todos os produtos apareciam como "parados, nao repor"
+  so porque ainda nao tinham tido tempo de vender. Agora so se julga um
+  produto depois de existir ha 4 semanas.
+- Com a internet lenta, trocar o filtro duas vezes seguidas podia mostrar
+  o resultado do filtro anterior. Corrigido.
+
+COMO PROVEI
+- 194 verificacoes do sistema contra o servidor e a base de dados reais:
+  todas passaram. Testes no browser (relatorios, vendas, terminal, stock,
+  onboarding): todos passaram. O PC desligou a meio da sessao; repeti os
+  testes do browser hoje, com lojas de teste novas, e passaram.
+
+ATENCAO
+- Durante os testes, a base de dados (longe, na Europa) demorou tanto que
+  2 vezes o relatorio mensal teve de tentar de novo. Nao e um erro do
+  Genesis: com o servidor alojado perto da base de dados deixa de
+  acontecer.

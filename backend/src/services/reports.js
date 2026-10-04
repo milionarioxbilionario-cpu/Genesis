@@ -136,7 +136,7 @@ async function revenueBetween(tenantId, start, end) {
 async function restockFor(tenantId, end, coverDays, windowDays = 28) {
   const from = new Date(end.getTime() - windowDays * 86400000);
   const [products, items, demand] = await Promise.all([
-    prisma.product.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, stock_qty: true, cost_price: true } }),
+    prisma.product.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, stock_qty: true, cost_price: true, created_at: true } }),
     prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: from, lte: end } } }, select: { product_id: true, quantity: true } }),
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: { gte: from, lte: end } }, select: { product_id: true } }),
   ]);
@@ -144,7 +144,7 @@ async function restockFor(tenantId, end, coverDays, windowDays = 28) {
   for (const it of items) soldByProduct[it.product_id] = (soldByProduct[it.product_id] || 0) + it.quantity;
   const lostByProduct = {};
   for (const d of demand) lostByProduct[d.product_id] = (lostByProduct[d.product_id] || 0) + 1;
-  return recommendRestock({ products, soldByProduct, lostByProduct, windowDays, coverDays });
+  return recommendRestock({ products, soldByProduct, lostByProduct, windowDays, coverDays, now: end });
 }
 
 // Serie diaria completa (dias sem movimento a zero).
@@ -371,7 +371,7 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
       id: 'loss-' + l.id, type: 'loss', at: l.recorded_at, effect: 'loss', amount: -(l.quantity * unit), profit: -(l.quantity * unit),
       title: `Perda: ${l.quantity} × ${l.product?.name || '—'}`,
       who: l.reason === 'expired' ? 'Genesis (automático)' : (l.recordedBy?.name || '—'),
-      detail: [SHRINK_REASON[l.reason] || l.reason, l.product?.barcode ? `código ${l.product.barcode}` : null, expiry ? `validade ${dayKey(expiry)}` : null].filter(Boolean).join(' · '),
+      detail: [SHRINK_REASON[l.reason] || l.reason, l.product?.barcode ? `código ${l.product.barcode}` : null].filter(Boolean).join(' · '),
       unit_cost: unit,
       reason: l.reason, barcode: l.product?.barcode || null, expiry_date: expiry || null,
     });
@@ -385,7 +385,7 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
       unit_cost: e.unit_cost,
     });
   }
-  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: `vence a ${dayKey(d.due_date)}` });
+  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date });
   for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido' });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
   for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || '—'} (em falta)`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida' });

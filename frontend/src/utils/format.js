@@ -33,6 +33,12 @@ export function time(d) {
   return new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Hora com segundos (rastreio dos relatorios: "14:03:27").
+export function timeSec(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 // "AAAA-MM-DD" na hora local (para inputs type=date e query strings).
 export function isoDay(d = new Date()) {
   const x = new Date(d);

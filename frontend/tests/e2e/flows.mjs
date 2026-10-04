@@ -61,7 +61,7 @@ try {
   }
   await owner.goto(BASE + '/app/relatorios');
   await owner.getByRole('tab', { name: 'Mensal' }).click();
-  await owner.getByText('Lucro líquido real', { exact: true }).waitFor({ timeout: T });
+  await owner.getByText('Do que entrou ao que ficou').waitFor({ timeout: T });
   await owner.waitForLoadState('networkidle', { timeout: T });
   ok(await owner.getByText('Renda', { exact: true }).isVisible(), 'relatorio mensal mostra a renda na cascata');
   await shot(owner, '10-relatorio-mensal');

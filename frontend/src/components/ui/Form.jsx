@@ -9,7 +9,7 @@ const control = 'h-9 rounded border border-border-strong bg-surface px-3 text-ba
   + 'disabled:bg-subtle disabled:text-ink-muted aria-[invalid=true]:border-danger';
 
 // Largura: w-full, excepto se o className ja trouxer uma largura (w-40, ...).
-const widthOf = (className) => (/(^|s)(sm:|md:|lg:)?w-/.test(className || '') ? '' : 'w-full');
+const widthOf = (className) => (/(^|\s)(sm:|md:|lg:)?w-/.test(className || '') ? '' : 'w-full');
 
 export function Field({ label, hint, error, children, htmlFor, className }) {
   return (

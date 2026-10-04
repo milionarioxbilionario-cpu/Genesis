@@ -7,7 +7,9 @@
 //  - produto com stock e (quase) sem vendas na janela -> "nao reforcar".
 // Valores em centavos.
 
-function recommendRestock({ products, soldByProduct = {}, lostByProduct = {}, windowDays = 28, coverDays = 30 }) {
+// `now` serve para so julgar "nao reforcar" produtos que ja existiam durante
+// toda a janela (uma loja ou um produto novo ainda nao teve tempo de vender).
+function recommendRestock({ products, soldByProduct = {}, lostByProduct = {}, windowDays = 28, coverDays = 30, now = new Date() }) {
   if (!(windowDays > 0) || !(coverDays > 0)) throw new Error('janela e cobertura tem de ser > 0');
   const items = [];
   const slowMovers = [];
@@ -24,7 +26,8 @@ function recommendRestock({ products, soldByProduct = {}, lostByProduct = {}, wi
         unit_cost: p.cost_price || 0, investment: quantity * (p.cost_price || 0),
         reason: lost > 0 && sold === 0 ? 'pedido por clientes sem stock' : 'ritmo de vendas',
       });
-    } else if ((p.stock_qty || 0) > 0 && sold <= 1 && lost === 0) {
+    } else if ((p.stock_qty || 0) > 0 && sold <= 1 && lost === 0
+      && (!p.created_at || now - new Date(p.created_at) >= windowDays * 86400000)) {
       slowMovers.push({ product_id: p.id, name: p.name, stock: p.stock_qty, sold, stock_value: (p.stock_qty || 0) * (p.cost_price || 0) });
     }
   }
