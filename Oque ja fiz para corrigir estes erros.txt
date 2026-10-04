@@ -1359,3 +1359,32 @@ ATENCAO
   teste do browser.
 
 COM ISTO TERMINA O PLANO GENESIS 2.1 (Fases 0 a 5).
+
+==========================================================================
+04/10/2026 — FASE 6.1: PREPARAR O SERVIDOR EM FRANKFURT
+==========================================================================
+
+O QUE FIZ
+- Preparei tudo o que e preciso para pôr o Genesis num servidor da
+  DigitalOcean em Frankfurt, na mesma cidade da base de dados. A lentidao
+  que vimos nos testes (cada consulta a demorar 1-2 segundos porque o
+  servidor estava em Maputo) deve desaparecer.
+- Os scripts instalam o servidor sozinhos: firewall, HTTPS gratuito,
+  reinicio automatico se o Genesis cair, e publicacao de versoes novas com
+  "voltar atras" automatico se algo correr mal.
+- Ate teres um dominio, o site fica num endereco provisorio com HTTPS,
+  do tipo https://164-90-1-2.sslip.io (a loja) e
+  https://admin.164-90-1-2.sslip.io (o painel admin).
+- Criei uma chave de acesso (SSH) so para este servidor. Nao precisas de
+  me dar nenhuma senha.
+
+COMO PROVEI
+- Arranquei o Genesis neste PC em "modo producao" com a configuracao que
+  vai para o servidor: arrancou, o isolamento entre lojas esta activo e o
+  painel admin recusa pedidos de fora.
+- AINDA NAO FOI POSTO NO SERVIDOR: o servidor ainda nao existe.
+
+O QUE PRECISO DE TI
+1. Criar o servidor (passos na conversa).
+2. Antes de abrir ao publico: mudar a senha das 3 contas que ainda usam a
+   senha antiga que esteve exposta (gerir-contas.bat).
