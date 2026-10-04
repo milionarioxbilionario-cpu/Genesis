@@ -19,7 +19,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
-const { dailyReport, weeklyReport, monthlyReport, totalReport } = require('../services/reports');
+const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
 const { invalidateSessionUser } = require('../utils/sessionUser');
 const { asyncHandler, httpError } = require('../utils/http');
@@ -344,6 +344,25 @@ router.get('/reports/monthly', asyncHandler(async (req, res) => {
   if (month < 1 || month > 12) throw httpError(400, 'Mês inválido');
   res.json(await monthlyReport(tenantOf(req), year, month));
 }));
+// Rastreio de tudo o que aconteceu no periodo (paginado; filtro por tipo).
+router.get('/reports/timeline', asyncHandler(async (req, res) => {
+  const q = z.object({
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    types: z.string().optional(), page: z.coerce.number().int().min(1).default(1),
+    page_size: z.coerce.number().int().min(1).max(200).default(50),
+  }).parse(req.query);
+  const start = dayRange(q.from).start; const end = dayRange(q.to).end;
+  if (end < start) throw httpError(400, 'Intervalo de datas inválido', 'BAD_RANGE');
+  if (end - start > 92 * 86400000) throw httpError(400, 'Máximo de 3 meses por rastreio', 'RANGE_TOO_LARGE');
+  const types = q.types ? q.types.split(',').filter(Boolean) : undefined;
+  res.json(await timeline(tenantOf(req), start, end, { ...(types ? { types } : {}), page: q.page, pageSize: q.page_size }));
+}));
+
+// Metas dos ultimos 12 meses (meta, atingido, %).
+router.get('/goals/history', asyncHandler(async (req, res) => {
+  res.json(await goalsHistory(tenantOf(req), 12));
+}));
+
 router.get('/reports/total', asyncHandler(async (req, res) => {
   res.json(await totalReport(tenantOf(req)));
 }));
