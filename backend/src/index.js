@@ -20,6 +20,7 @@ const requireRole = require('./middleware/rbac');
 const adminOriginCheck = require('./middleware/adminOriginCheck');
 const refreshRoute = require('./routes/refresh');
 const settingsRoutes = require('./routes/settings');
+const shoppingListRoutes = require('./routes/shoppingLists');
 const posRoutes = require('./routes/pos');
 const posWriteAuth = require('./middleware/posWriteAuth');
 const helmet = require('helmet');
@@ -231,6 +232,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/owner', ownerRoutes);
 // Definicoes da loja: horario, descontos, custos fixos (renda), PIN.
 app.use('/api/settings', settingsRoutes);
+app.use('/api/shopping-lists', shoppingListRoutes);
 // Resumo operacional
 app.use('/api/dashboard', dashboardRoutes);
 // Gestão de stock e fornecedores

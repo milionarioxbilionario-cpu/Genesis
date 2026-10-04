@@ -5,6 +5,7 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
 import { photoToDataUrl } from '../../utils/imageResize';
+import ShoppingLists from './ShoppingLists';
 import { Badge, Button, Drawer, Input, MoneyInput, PageHeader, ProductImage, Select, Table, Tabs, Toolbar, useConfirm, useToast, Alert } from '../../components/ui';
 
 const stockTone = (p) => (p.stock_qty <= 0 ? 'danger' : p.stock_qty <= 10 ? 'danger' : p.stock_qty <= 20 ? 'warning' : p.stock_qty <= (p.min_stock || 0) ? 'warning' : 'neutral');
@@ -19,10 +20,12 @@ export default function Products() {
       <Tabs className="mb-5" value={tab} onChange={(v) => setParams({ tab: v })} items={[
         { value: 'catalog', label: 'Catálogo', count: products.data?.filter((p) => p.is_active).length },
         { value: 'stock', label: 'Stock' },
+        { value: 'shopping', label: 'Lista de compras' },
         { value: 'prices', label: 'Histórico de custos' },
       ]} />
       {tab === 'catalog' && <Catalog products={products} />}
       {tab === 'stock' && <Stock products={products} />}
+      {tab === 'shopping' && <ShoppingLists products={products} />}
       {tab === 'prices' && <PriceHistory />}
     </>
   );

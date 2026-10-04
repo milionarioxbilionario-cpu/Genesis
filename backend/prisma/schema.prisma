@@ -41,6 +41,8 @@ model Tenant {
   demand_captures       DemandCapture[]
   employees             Employee[]
   expenses              Expense[]
+  shopping_lists        ShoppingList[]
+  shopping_list_items   ShoppingListItem[]
   fixed_costs           FixedCost[]
   products              Product[]
   product_price_history ProductPriceHistory[]
@@ -360,3 +362,36 @@ model Expense {
 
   @@index([tenant_id, date])
 }
+
+// Lista de compras (Genesis 2.1, Fase 5): gerada da recomendacao de restock ou
+// feita a mao; enviada ao fornecedor por WhatsApp (wa.me). Estado: draft |
+// sent | received. O item guarda o nome do produto no momento da lista.
+model ShoppingList {
+  id          String             @id @default(uuid())
+  tenant_id   String
+  name        String
+  status      String             @default("draft")
+  supplier_id String?
+  created_by  String
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+  tenant      Tenant             @relation(fields: [tenant_id], references: [id])
+  items       ShoppingListItem[]
+
+  @@index([tenant_id, created_at])
+}
+
+model ShoppingListItem {
+  id           String       @id @default(uuid())
+  tenant_id    String
+  list_id      String
+  product_id   String
+  product_name String
+  quantity     Int
+  unit_cost    Int
+  list         ShoppingList @relation(fields: [list_id], references: [id], onDelete: Cascade)
+  tenant       Tenant       @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id, list_id])
+}
+

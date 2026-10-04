@@ -1077,6 +1077,24 @@
       "role": "Painel do dono.",
       "status": "ok",
       "notes": "04/10/2026 Fase 5.1: despesas avulsas; fase5.mjs 9/9."
+    },
+    "backend/src/routes/shoppingLists.js": {
+      "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
+      "role": "Compras.",
+      "status": "ok",
+      "notes": "04/10/2026 Fase 5.2: verify_system 17 25/25."
+    },
+    "backend/src/services/shoppingList.js": {
+      "summary": "Puro: totais, telefone +258, mensagem e link wa.me.",
+      "role": "Compras.",
+      "status": "ok",
+      "notes": "04/10/2026: 5/5 testes."
+    },
+    "frontend/src/pages/owner/ShoppingLists.jsx": {
+      "summary": "Ecra da lista de compras (Produtos).",
+      "role": "Painel do dono.",
+      "status": "ok",
+      "notes": "04/10/2026: fase5.mjs 16/16."
     }
   }
 }

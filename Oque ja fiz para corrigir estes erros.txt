@@ -1284,3 +1284,32 @@ COMO PROVEI
   outra loja nao ve nem apaga. Todas passaram.
 - Teste no browser como dono: criar, ver no relatorio, editar e apagar.
   Passou, sem erros.
+
+==========================================================================
+04/10/2026 — FASE 5.2: LISTA DE COMPRAS E WHATSAPP AO FORNECEDOR
+==========================================================================
+
+O QUE MUDOU
+- Em Produtos ha um separador novo: "Lista de compras".
+- "Gerar da recomendacao": o Genesis propoe o que comprar para 7, 14 ou
+  30 dias, ao ritmo de vendas das ultimas 4 semanas e contando os produtos
+  que clientes pediram quando nao havia. Tambem se pode fazer a lista a
+  mao, juntar ou tirar produtos e mudar quantidades.
+- Escolhe-se o fornecedor e aparece o total: o que custam os produtos +
+  a entrega do fornecedor.
+- "Enviar por WhatsApp" abre o WhatsApp ja com a mensagem para o numero
+  do fornecedor (gratis, nao precisa de Twilio). A mensagem leva so os
+  produtos e as quantidades, nao os seus custos. A lista fica "Enviada".
+- Quando a mercadoria chega, marca-se "Recebida". Isto NAO mete stock
+  sozinho: a entrada continua em Produtos > Stock > Entrada de stock,
+  porque e la que se escreve o preco real e a validade de cada lote.
+- As listas ficam guardadas. O caixista nao as ve; outra loja nunca.
+- Pequena correccao: no telemovel, os botoes em baixo das janelas
+  laterais saiam do ecra quando eram muitos. Agora passam para a linha
+  de baixo.
+
+COMO PROVEI
+- 25 verificacoes contra o servidor e a base de dados reais, todas
+  passaram. Teste no browser: lista com 24 x 2M e 12 x Heineken deu
+  1 572 MT + 500 MT de entrega = 2 072 MT, e o WhatsApp abriu para
+  +258 84 123 4567 com a encomenda. Sem erros.
