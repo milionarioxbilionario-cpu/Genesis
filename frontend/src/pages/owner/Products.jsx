@@ -133,7 +133,8 @@ function Catalog({ products }) {
               <input type="checkbox" className="h-4 w-4 accent-[color:var(--accent)]" checked={editing.has_expiry} onChange={(e) => set('has_expiry')(e.target.checked)} />
               Produto com validade
             </label>
-            {editing.has_expiry && <Input label="Data de validade" type="date" value={editing.expiry_date} onChange={(e) => set('expiry_date')(e.target.value)} />}
+            {editing.has_expiry && !editing.id && <Input label="Validade do stock inicial" type="date" value={editing.expiry_date} onChange={(e) => set('expiry_date')(e.target.value)} />}
+            {editing.has_expiry && editing.id && <p className="text-sm text-ink-muted">Cada compra tem a sua validade: registe-a em Stock → Entrada de stock.</p>}
           </div>
         )}
       </Drawer>
@@ -145,28 +146,28 @@ function Stock({ products }) {
   const toast = useToast();
   const entries = useApi('/api/inventory/stock');
   const suppliers = useApi('/api/inventory/suppliers');
+  const alerts = useApi('/api/owner/alerts');
   const [mode, setMode] = useState(null); // 'entry' | 'adjust'
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const active = (products.data || []).filter((p) => p.is_active);
   const low = active.filter((p) => p.stock_qty <= Math.max(p.min_stock || 0, 20)).sort((a, b) => a.stock_qty - b.stock_qty);
-  const soon = Date.now() + 7 * 86400000;
-  const expiring = active.filter((p) => p.has_expiry && p.expiry_date && new Date(p.expiry_date).getTime() < soon);
+  const lots = alerts.data?.expiringLots || [];
   const product = active.find((p) => p.id === form.product_id);
 
-  function open(m) { setError(''); setForm({ product_id: '', quantity: '', unit_cost: 0, supplier_id: '', delta: '', reason: '' }); setMode(m); }
+  function open(m) { setError(''); setForm({ product_id: '', quantity: '', unit_cost: 0, supplier_id: '', delta: '', reason: '', expiry_date: '' }); setMode(m); }
   async function save() {
     setSaving(true); setError('');
     try {
       if (mode === 'entry') {
-        await api.post('/api/inventory/stock', { product_id: form.product_id, quantity: Number(form.quantity), unit_cost: form.unit_cost || product.cost_price, supplier_id: form.supplier_id || null });
+        await api.post('/api/inventory/stock', { product_id: form.product_id, quantity: Number(form.quantity), unit_cost: form.unit_cost || product.cost_price, supplier_id: form.supplier_id || null, expiry_date: form.expiry_date || null });
         toast('Entrada de stock registada.');
       } else {
-        await api.patch(`/api/products/${form.product_id}/stock`, { delta: Number(form.delta), reason: form.reason.trim() });
+        await api.patch(`/api/products/${form.product_id}/stock`, { delta: Number(form.delta), reason: form.reason.trim(), ...(Number(form.delta) > 0 && form.expiry_date ? { expiry_date: form.expiry_date } : {}) });
         toast('Ajuste registado na auditoria.');
       }
-      setMode(null); products.reload(); entries.reload();
+      setMode(null); products.reload(); entries.reload(); alerts.reload();
     } catch (err) { setError(errorMessage(err)); } finally { setSaving(false); }
   }
 
@@ -176,10 +177,22 @@ function Stock({ products }) {
         <Button variant="primary" icon={Plus} onClick={() => open('entry')}>Entrada de stock</Button>
         <Button onClick={() => open('adjust')}>Ajuste manual</Button>
       </Toolbar>
-      {expiring.length > 0 && (
-        <Alert tone="warning" className="mb-4" title="Validade a terminar">
-          {expiring.map((p) => `${p.name} (${date(p.expiry_date)})`).join(' · ')}
-        </Alert>
+      {lots.length > 0 && (
+        <div className="mb-5">
+          <h2 className="mb-1 font-semibold text-ink">Validades</h2>
+          <p className="mb-2 text-sm text-ink-muted">Lotes que expiram nos próximos {alerts.data.alertDays} dias. No dia seguinte à validade, o Genesis regista sozinho a perda e tira-os do stock.</p>
+          <Table
+            columns={[
+              { key: 'name', header: 'Produto', render: (l) => <div><p className="text-ink">{l.name}</p>{l.barcode && <p className="num text-xs text-ink-muted">{l.barcode}</p>}</div> },
+              { key: 'qty', header: 'Deste lote', align: 'right', render: (l) => <span>{int(l.quantity)} de {int(l.product_stock ?? l.quantity)} un.</span> },
+              { key: 'expiry', header: 'Validade', render: (l) => date(l.expiry_date) },
+              { key: 'left', header: '', align: 'right', render: (l) => <Badge tone={l.days_left < 0 ? 'danger' : l.days_left <= 2 ? 'danger' : 'warning'}>{l.days_left < 0 ? 'Expirado' : l.days_left === 0 ? 'Expira hoje' : `${l.days_left} dia(s)`}</Badge> },
+              { key: 'value', header: 'Valor (custo)', align: 'right', render: (l) => money(l.value) },
+            ]}
+            rows={lots}
+            rowKey="lot_id"
+          />
+        </div>
       )}
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">
@@ -234,10 +247,12 @@ function Stock({ products }) {
                 <option value="">Sem fornecedor</option>
                 {(suppliers.data || []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
+              <Input label="Validade deste lote" type="date" hint="Deixe vazio se não tem validade (ex.: bebidas). Com data, o Genesis avisa antes e regista a perda se não vender." value={form.expiry_date || ''} onChange={(e) => setForm((f) => ({ ...f, expiry_date: e.target.value }))} />
             </>
           ) : (
             <>
               <Input label="Variação" hint="Negativo para retirar (ex.: −3), positivo para acrescentar." value={form.delta || ''} onChange={(e) => setForm((f) => ({ ...f, delta: e.target.value.replace(/[^\d-]/g, '') }))} inputClassName="num" />
+              {Number(form.delta) > 0 && <Input label="Validade (opcional)" type="date" value={form.expiry_date || ''} onChange={(e) => setForm((f) => ({ ...f, expiry_date: e.target.value }))} />}
               <Input label="Motivo" placeholder="Ex.: contagem física de fim de mês" value={form.reason || ''} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} />
             </>
           )}

@@ -33,6 +33,8 @@ model Tenant {
   discount_free_pct     Int                   @default(10)
   opening_time          String?
   closing_time          String?
+  // Genesis 2.1: avisar X dias antes de um lote expirar.
+  expiry_alert_days     Int                   @default(7)
   pos_terminals         PosTerminal[]
   audit_logs            AuditLog[]
   debts                 Debt[]
@@ -46,6 +48,7 @@ model Tenant {
   shift_closings        ShiftClosing[]
   shrinkage_records     ShrinkageRecord[]
   stock_entries         StockEntry[]
+  stock_lots            StockLot[]
   suppliers             Supplier[]
   users                 User[]                @relation("TenantUsers")
 }
@@ -95,6 +98,7 @@ model Product {
   sale_items            SaleItem[]
   shrinkage_records     ShrinkageRecord[]
   stock_entries         StockEntry[]
+  stock_lots            StockLot[]
 }
 
 model Sale {
@@ -221,9 +225,30 @@ model ShrinkageRecord {
   reason      String
   recorded_by String
   recorded_at DateTime @default(now())
+  // Genesis 2.1: lote de onde saiu e custo unitario (valor da perda nos relatorios).
+  lot_id      String?
+  unit_cost   Int?
   recordedBy  User     @relation("ShrinkageRecordedBy", fields: [recorded_by], references: [id])
   product     Product  @relation(fields: [product_id], references: [id])
   tenant      Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+// Genesis 2.1 — stock por lote (validades). Product.stock_qty continua a ser a
+// fonte de verdade da quantidade; os lotes dizem de que data e esse stock.
+// Saidas descontam por FEFO (utils/fefo.js). quantity_remaining 0 = lote fechado.
+model StockLot {
+  id                 String    @id @default(uuid())
+  tenant_id          String
+  product_id         String
+  stock_entry_id     String?
+  quantity_remaining Int
+  expiry_date        DateTime?
+  unit_cost          Int       @default(0)
+  created_at         DateTime  @default(now())
+  product            Product   @relation(fields: [product_id], references: [id])
+  tenant             Tenant    @relation(fields: [tenant_id], references: [id])
+
+  @@index([tenant_id, product_id, expiry_date])
 }
 
 model ShiftClosing {

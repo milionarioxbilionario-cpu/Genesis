@@ -38,6 +38,13 @@ export default function Home() {
     <>
       <PageHeader title="Início" description={new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })} />
 
+      {alerts.data?.expiringLots?.length > 0 && (
+        <Alert tone="warning" className="mb-4" title={`${alerts.data.expiringLots.length} lote(s) perto da validade`}>
+          {alerts.data.expiringLots.slice(0, 4).map((l) => `${l.name}: ${l.quantity} un. ${l.days_left < 0 ? 'expiradas' : l.days_left === 0 ? 'expiram hoje' : `em ${l.days_left} dia(s)`}`).join(' · ')}
+          {' '}<Link to="/app/produtos?tab=stock" className="font-medium text-accent">Ver validades</Link>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {d ? (
           <>

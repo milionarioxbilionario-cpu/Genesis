@@ -4,6 +4,10 @@ const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
+const { addLot } = require('../utils/stockLots');
+
+// Validade em AAAA-MM-DD (o <input type="date"> do browser).
+const expiryDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'data de validade inválida').nullable().optional();
 
 const supplierSchema = z.object({
   name: z.string().min(1),
@@ -17,6 +21,7 @@ const stockEntrySchema = z.object({
   quantity: z.number().int().nonnegative(),
   unit_cost: z.number().int().nonnegative(),
   supplier_id: z.string().uuid().nullable().optional(),
+  expiry_date: expiryDateSchema,
   reason: z.string().optional().default('purchase')
 });
 
@@ -112,8 +117,13 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
           created_at: new Date()
         }
       });
+      // Cada compra e um lote com a sua validade (FEFO nas saidas).
+      const lot = await addLot(tx, {
+        tenantId: req.user.tenantId, productId: product.id, quantity: data.quantity,
+        expiryDate: data.expiry_date || null, unitCost: data.unit_cost, stockEntryId: newEntry.id,
+      });
 
-      return { product: updatedProduct, entry: newEntry };
+      return { product: updatedProduct, entry: newEntry, lot };
     });
 
     return res.status(201).json(result);

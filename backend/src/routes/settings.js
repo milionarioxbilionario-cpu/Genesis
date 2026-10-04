@@ -30,6 +30,7 @@ const hoursSchema = z.object({
   closing_time: z.string().regex(HHMM, 'Hora no formato HH:MM'),
 });
 const discountSchema = z.object({ discount_free_pct: z.number().int().min(0).max(100) });
+const expiryAlertSchema = z.object({ expiry_alert_days: z.number().int().min(1, 'mínimo 1 dia').max(90, 'máximo 90 dias') });
 const pinSchema = z.object({
   pin: z.string().regex(/^\d{4,6}$/, 'O PIN tem 4 a 6 dígitos'),
   owner_password: z.string().min(1, 'Confirme com a sua senha'),
@@ -50,6 +51,7 @@ router.get('/', asyncHandler(async (req, res) => {
     store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type },
     hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00' },
     discount_free_pct: t.discount_free_pct,
+    expiry_alert_days: t.expiry_alert_days,
     authorization_pin_configured: Boolean(t.cancel_pin_hash),
     status: t.status,
     trial_ends_at: t.trial_ends_at,
@@ -78,6 +80,15 @@ router.put('/discount', asyncHandler(async (req, res) => {
   const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { discount_free_pct: true } });
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_DISCOUNT_POLICY', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
+  res.json({ ok: true, ...data });
+}));
+
+// Quantos dias antes da validade um lote aparece nos alertas.
+router.put('/expiry-alert', asyncHandler(async (req, res) => {
+  const data = expiryAlertSchema.parse(req.body);
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { expiry_alert_days: true } });
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data });
+  await writeAudit({ req, action: 'UPDATE_EXPIRY_ALERT', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true, ...data });
 }));
 

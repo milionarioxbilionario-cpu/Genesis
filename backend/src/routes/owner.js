@@ -354,7 +354,9 @@ router.get('/alerts', asyncHandler(async (req, res) => {
   const level = (p) => (p.stock_qty <= 10 ? 'critical' : p.stock_qty <= 20 ? 'severe' : 'low');
   res.json({
     lowStockProducts: snapshot.lowStockProducts.map((p) => ({ ...p, level: level(p) })),
+    expiringLots: snapshot.expiringLots,
     expiredProducts: snapshot.expiredProducts,
+    alertDays: snapshot.alert_days,
     totalAlerts: snapshot.totalAlerts,
   });
 }));

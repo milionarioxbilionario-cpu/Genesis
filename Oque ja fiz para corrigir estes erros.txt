@@ -1180,3 +1180,42 @@ COMO PROVEI
   todas passaram, incluindo uma venda por e-Mola que ficou gravada como
   e-Mola. Os testes antigos (venda, desconto, offline, fecho) continuam a
   passar.
+
+==========================================================================
+04/10/2026 — FASE 3: STOCK POR LOTE E VALIDADES
+==========================================================================
+
+O QUE MUDOU
+- Cada compra (Produtos > Stock > Entrada de stock) passa a ser um "lote"
+  com a sua data de validade (opcional: bebidas nao precisam).
+- Quando se vende ou se regista uma quebra, sai primeiro o lote que expira
+  primeiro. Tanto faz o caixista usar o leitor ou carregar no produto: o
+  codigo de barras identifica o produto, nao a unidade, por isso o sistema
+  escolhe sempre o lote certo sozinho.
+- Avisos: X dias antes de um lote expirar aparece em Produtos > Stock >
+  "Validades" e no Inicio, por exemplo "Agua Namaacha 1,5L — 12 de 20 un.
+  expiram em 3 dias". Os X dias escolhes em Definicoes > Loja > Validades
+  (por omissao 7).
+- No dia seguinte a validade, o que nao se vendeu e registado SOZINHO como
+  perda (motivo "expirado"), com o produto, o lote, a quantidade e o custo,
+  e sai do stock. Fica na auditoria. Nao duplica mesmo que corra varias
+  vezes. Isto vai aparecer nos relatorios na Fase 4.
+- O stock que ja existia foi convertido em lotes (26 produtos, 487
+  unidades), sem perder nem somar nada.
+
+ATENCAO
+- Na loja de teste antiga "Test Tenant 4444" havia 2 lotes com a validade
+  ja passada (Abril e Maio de 2026): 19 cervejas 2M e 7 aguas. Quando o
+  Genesis arrancar agora, vai registar essas 26 unidades como perda. E o
+  comportamento certo da funcionalidade nova.
+- Cada venda ficou um pouco mais lenta a partir daqui (o sistema tem de
+  ver os lotes). Com o servidor em Frankfurt, perto da base de dados,
+  deixa de se notar.
+
+COMO PROVEI
+- 27 verificacoes so para os lotes contra o servidor e a base de dados
+  reais (venda, quebra, cancelamento, ajustes, avisos, perda automatica,
+  isolamento entre lojas): todas passaram. Em todos os passos o stock bate
+  certo com a soma dos lotes.
+- Todos os testes anteriores continuam a passar: 160 verificacoes do
+  sistema e os testes no browser (stock, terminal, venda, offline, fecho).
