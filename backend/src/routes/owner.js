@@ -25,6 +25,7 @@ const { invalidateSessionUser } = require('../utils/sessionUser');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { createPairingCode } = require('../utils/terminals');
+const { monthCloseStatus, monthKey } = require('../services/monthClose');
 
 const router = express.Router();
 router.use(auth);
@@ -361,6 +362,37 @@ router.get('/reports/timeline', asyncHandler(async (req, res) => {
 // Metas dos ultimos 12 meses (meta, atingido, %).
 router.get('/goals/history', asyncHandler(async (req, res) => {
   res.json(await goalsHistory(tenantOf(req), 12));
+}));
+
+// ------------------------------------------------------------ fecho do mes
+// A partir de Tenant.month_close_day, o 1.o acesso do dono mostra o fecho do
+// mes anterior uma vez. "Visto" fica na auditoria (MONTH_CLOSE_SEEN, por mes).
+async function monthCloseSeenKeys(tid) {
+  const rows = await prisma.auditLog.findMany({ where: { tenant_id: tid, action: 'MONTH_CLOSE_SEEN' }, select: { entity_id: true }, orderBy: { created_at: 'desc' }, take: 24 });
+  return rows.map((r) => r.entity_id);
+}
+
+router.get('/month-close', asyncHandler(async (req, res) => {
+  const tid = tenantOf(req);
+  const [t, seenKeys] = await Promise.all([
+    prisma.tenant.findUnique({ where: { id: tid }, select: { month_close_day: true, created_at: true } }),
+    monthCloseSeenKeys(tid),
+  ]);
+  if (!t) throw httpError(404, 'Estabelecimento não encontrado');
+  res.json(monthCloseStatus({ now: new Date(), closeDay: t.month_close_day, tenantCreatedAt: t.created_at, seenKeys }));
+}));
+
+router.post('/month-close/seen', asyncHandler(async (req, res) => {
+  const q = z.object({
+    year: z.number().int().min(2020).max(2100), month: z.number().int().min(1).max(12),
+    choice: z.enum(['contacted', 'later', 'dismissed']),
+    shopping_list_id: z.string().uuid().nullable().optional(),
+  }).parse(req.body);
+  const key = monthKey(q.year, q.month);
+  if (!(await monthCloseSeenKeys(tenantOf(req))).includes(key)) {
+    await writeAudit({ req, action: 'MONTH_CLOSE_SEEN', entityType: 'month_close', entityId: key, newValue: { choice: q.choice, shopping_list_id: q.shopping_list_id || null } });
+  }
+  res.json({ ok: true, key });
 }));
 
 router.get('/reports/total', asyncHandler(async (req, res) => {

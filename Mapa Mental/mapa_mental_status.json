@@ -1095,6 +1095,24 @@
       "role": "Painel do dono.",
       "status": "ok",
       "notes": "04/10/2026: fase5.mjs 16/16."
+    },
+    "backend/src/services/monthClose.js": {
+      "summary": "Puro: quando mostrar o fecho do mes anterior.",
+      "role": "Fecho do mes.",
+      "status": "ok",
+      "notes": "04/10/2026: 6/6 testes; verify_system 18 15/15."
+    },
+    "frontend/src/components/MonthCloseDialog.jsx": {
+      "summary": "Dialogo do fecho do mes (resumo + lista sugerida + WhatsApp).",
+      "role": "Painel do dono.",
+      "status": "ok",
+      "notes": "04/10/2026: fecho_mes.mjs 10/10. Caminho Agora nao so provado pela API."
+    },
+    "frontend/src/layouts/AppShell.jsx": {
+      "summary": "Moldura do painel do dono; monta o fecho do mes.",
+      "role": "Painel do dono.",
+      "status": "ok",
+      "notes": "04/10/2026: regressao completa OK."
     }
   }
 }

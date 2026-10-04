@@ -37,6 +37,19 @@ async function create(file, mode) {
   await prisma.fixedCost.create({ data: { tenant_id: tenant.id, description: 'Renda do contentor', amount: 1500000, type: 'rent' } });
   await prisma.employee.create({ data: { tenant_id: tenant.id, name: 'Joana Cossa', role: 'Ajudante', monthly_salary: 800000, start_date: new Date('2026-03-01'), is_active: true } });
   await prisma.debt.create({ data: { tenant_id: tenant.id, debtor_name: 'Sr. Mabunda', debtor_phone: '845556677', total_amount: 250000, amount_paid: 50000, due_date: new Date(Date.now() - 2 * 86400000), status: 'partially_paid', created_by: owner.id } });
+  if (mode === 'fecho') {
+    // Loja "antiga" (criada ha 2 meses) com uma venda no ultimo dia do mes
+    // passado: 30 x Agua (stock 8) -> o fecho do mes aparece e sugere comprar.
+    const now = new Date();
+    await prisma.tenant.update({ where: { id: tenant.id }, data: { created_at: new Date(now.getFullYear(), now.getMonth() - 2, 10) } });
+    const agua = await prisma.product.findFirst({ where: { tenant_id: tenant.id, name: 'Água Namaacha 1,5L' } });
+    await prisma.sale.create({ data: {
+      tenant_id: tenant.id, cashier_user_id: cashier.id, total_amount: 30 * agua.sell_price, total_cost: 30 * agua.cost_price,
+      payment_method: 'cash', amount_received: 30 * agua.sell_price, change_given: 0, status: 'completed', daily_number: 1,
+      created_at: new Date(now.getFullYear(), now.getMonth(), 0, 12),
+      items: { create: [{ product_id: agua.id, product_name: agua.name, quantity: 30, unit_sell_price: agua.sell_price, unit_cost_price: agua.cost_price }] },
+    } });
+  }
   fs.writeFileSync(file, JSON.stringify(out, null, 2));
   console.log('fixture criada: ' + tenant.id);
 }

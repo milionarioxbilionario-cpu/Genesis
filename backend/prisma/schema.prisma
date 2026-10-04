@@ -35,6 +35,7 @@ model Tenant {
   closing_time          String?
   // Genesis 2.1: avisar X dias antes de um lote expirar.
   expiry_alert_days     Int                   @default(7)
+  month_close_day       Int                   @default(1)
   pos_terminals         PosTerminal[]
   audit_logs            AuditLog[]
   debts                 Debt[]

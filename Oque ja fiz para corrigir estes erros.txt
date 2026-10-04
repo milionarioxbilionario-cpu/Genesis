@@ -1313,3 +1313,49 @@ COMO PROVEI
   passaram. Teste no browser: lista com 24 x 2M e 12 x Heineken deu
   1 572 MT + 500 MT de entrega = 2 072 MT, e o WhatsApp abriu para
   +258 84 123 4567 com a encomenda. Sem erros.
+
+==========================================================================
+04/10/2026 — FASE 5.3: FECHO DO MES (E FIM DA FASE 5)
+==========================================================================
+
+O QUE MUDOU
+- Em Definicoes > Loja escolhe o "dia do fecho" (1 a 28; por omissao o
+  dia 1).
+- A partir desse dia, a primeira vez que entra no Genesis aparece uma
+  janela "Fecho de <mes passado>" com: quanto vendeu, o lucro liquido real
+  (depois de salarios, renda, entregas e despesas), as perdas, a meta e o
+  que comprar para os proximos 30 dias.
+- Dois botoes:
+  * "Contactar fornecedor agora": abre o WhatsApp com a encomenda e a
+    lista fica guardada como "Enviada".
+  * "Agora nao": a lista fica guardada como rascunho em Produtos > Lista
+    de compras.
+- Depois de escolher, a janela nao volta a aparecer nesse mes. Se fechar
+  no X, volta a aparecer da proxima vez que entrar.
+- Uma loja criada este mes nao ve fecho do mes anterior (nao existia).
+
+UM PROBLEMA QUE APARECEU E FOI CORRIGIDO
+- No primeiro teste a janela nao abria: pedia muitos dados a base de
+  dados ao mesmo tempo que o Inicio, e a ligacao (Maputo -> Europa) nao
+  aguentava. Agora espera o Inicio carregar, pede um de cada vez e tenta
+  de novo se falhar. Depois disso passou sem erros.
+
+COMO PROVEI
+- 15 verificacoes contra o servidor real (dia certo, so uma vez por mes,
+  caixista bloqueado...) e 10 no browser, todas passaram. Os numeros da
+  janela conferidos a mao.
+- No fim da Fase 5 corri TUDO outra vez: todos os testes do sistema
+  (seccoes 2 a 18) e todos os testes no browser (vendas, terminal, stock,
+  relatorios, onboarding, despesas, lista de compras, fecho do mes).
+  Tudo passou.
+
+ATENCAO
+- A base de dados esta longe (Europa). Durante os testes, algumas paginas
+  tiveram de tentar outra vez. Nao e erro do Genesis; desaparece quando o
+  servidor ficar alojado perto da base de dados.
+- Ainda NAO existe: enviar o relatorio do mes sozinho para o seu WhatsApp.
+  Precisa do Twilio configurado.
+- O botao "Agora nao" foi provado pelo servidor, mas nao foi clicado no
+  teste do browser.
+
+COM ISTO TERMINA O PLANO GENESIS 2.1 (Fases 0 a 5).
