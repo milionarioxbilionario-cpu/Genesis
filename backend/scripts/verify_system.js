@@ -802,7 +802,47 @@ async function test17() {
   ok((await owner.req('GET', '/api/shopping-lists/' + c.data.id)).status === 404 && (await prisma.shoppingListItem.count({ where: { list_id: c.data.id } })) === 0, 'apagada com os itens (404)');
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17 };
+// ---------------------------------------------------------------------------
+async function test18() {
+  section(18, 'Fecho do mes (Genesis 2.1, Fase 5)');
+  const owner = ownerClient();
+  const get = async (p) => { const r = await owner.req('GET', p); if (r.status !== 200) throw new Error(p + ' -> ' + r.status + ' ' + JSON.stringify(r.data)); return r.data; };
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  let st = await get('/api/owner/month-close');
+  ok(st.due === false && st.year === prev.getFullYear() && st.month === prev.getMonth() + 1, 'loja criada este mes: sem fecho do mes anterior', st);
+
+  // A loja passa a existir desde ha 2 meses.
+  await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { created_at: new Date(now.getFullYear(), now.getMonth() - 2, 10) } });
+  ok((await owner.req('PUT', '/api/settings/month-close', { month_close_day: 29 })).status === 400, 'dia 29 = 400 (so 1 a 28)');
+  ok((await owner.req('PUT', '/api/settings/month-close', { month_close_day: 0 })).status === 400, 'dia 0 = 400');
+  if (now.getDate() < 28) {
+    ok((await owner.req('PUT', '/api/settings/month-close', { month_close_day: 28 })).status === 200, 'dia do fecho = 28');
+    st = await get('/api/owner/month-close');
+    ok(st.due === false && st.close_day === 28, 'antes do dia do fecho: nada a mostrar', st);
+  }
+  ok((await owner.req('PUT', '/api/settings/month-close', { month_close_day: 1 })).status === 200, 'dia do fecho = 1');
+  ok((await get('/api/settings')).month_close_day === 1, 'definicoes devolvem o dia do fecho');
+  st = await get('/api/owner/month-close');
+  ok(st.due === true, 'a partir do dia do fecho: fecho do mes anterior por ver', st);
+
+  const term = await pairedTerminal('Balcao fecho');
+  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  ok((await term.req('GET', '/api/owner/month-close')).status === 403, 'caixista nao ve o fecho do mes (403)');
+  ok((await term.req('PUT', '/api/settings/month-close', { month_close_day: 5 })).status === 403, 'caixista nao muda o dia do fecho (403)');
+
+  const body = { year: st.year, month: st.month, choice: 'later' };
+  ok((await owner.req('POST', '/api/owner/month-close/seen', { ...body, choice: 'talvez' })).status === 400, 'escolha invalida = 400');
+  ok((await owner.req('POST', '/api/owner/month-close/seen', body)).status === 200, 'marcar como visto ("agora nao")');
+  ok((await owner.req('POST', '/api/owner/month-close/seen', body)).status === 200, 'marcar outra vez nao da erro');
+  const seenN = await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'MONTH_CLOSE_SEEN', entity_id: st.key } });
+  ok(seenN === 1, 'auditoria: um unico MONTH_CLOSE_SEEN por mes', seenN);
+  st = await get('/api/owner/month-close');
+  ok(st.due === false && st.seen === true, 'depois de visto nao volta a aparecer', st);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18 };
 
 (async () => {
   await prisma.ready();

@@ -336,7 +336,12 @@ function Weekly({ openDay }) {
 // O DIFERENCIADOR: lucro liquido real depois de todas as deducoes.
 function Monthly() {
   const now = new Date();
-  const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
+  // ?y=2026&m=9 abre esse mes (ligacao do fecho do mes).
+  const [params] = useSearchParams();
+  const [period, setPeriod] = useState(() => {
+    const y = Number(params.get('y')); const m = Number(params.get('m'));
+    return y >= 2020 && m >= 1 && m <= 12 ? { year: y, month: m } : { year: now.getFullYear(), month: now.getMonth() + 1 };
+  });
   const { data, loading, error } = useApi(`/api/owner/reports/monthly?year=${period.year}&month=${period.month}`);
   const goals = useApi('/api/owner/goals/history');
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); return { year: d.getFullYear(), month: d.getMonth() + 1 }; }), []); // eslint-disable-line react-hooks/exhaustive-deps

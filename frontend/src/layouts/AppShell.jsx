@@ -4,6 +4,7 @@ import { BarChart3, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, 
 import api from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
 import { cx, IconButton } from '../components/ui';
+import MonthCloseDialog from '../components/MonthCloseDialog';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
 // vive num so sitio (ex.: Metas no Inicio; Terminais e Auditoria nas Definicoes).
@@ -125,6 +126,7 @@ export default function AppShell() {
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">
           <Outlet context={{ tenant, reloadTenant: () => api.get('/api/owner/tenant').then((r) => setTenant(r.data)) }} />
         </main>
+        {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <MonthCloseDialog />}
       </div>
     </div>
   );

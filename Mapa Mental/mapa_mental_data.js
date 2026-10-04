@@ -1,42 +1,42 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-04T08:58:13.252Z */
+   Gerado em: 2026-10-04T10:15:23.256Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-04T08:58:13.252Z",
+ "generatedAt": "2026-10-04T10:15:23.256Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 180,
+  "files": 185,
   "planned": 5,
-  "links": 291,
-  "lines": 26369,
+  "links": 297,
+  "lines": 26822,
   "byStatus": {
-   "ok": 107,
+   "ok": 110,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 61
+   "untracked": 63
   },
   "byGroup": {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 46,
-   "backend": 49,
+   "backend-data": 48,
+   "backend": 50,
    "frontend-pub": 4,
-   "frontend": 54,
+   "frontend": 56,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 33
+   "count": 34
   },
   {
    "pkg": "lucide-react",
-   "count": 19
+   "count": 20
   },
   {
    "pkg": "dotenv",
@@ -48,7 +48,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "react-router-dom",
-   "count": 17
+   "count": 18
   },
   {
    "pkg": "express",
@@ -68,11 +68,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
-   "count": 9
+   "count": 10
   },
   {
    "pkg": "node:fs",
-   "count": 8
+   "count": 9
   },
   {
    "pkg": "path",
@@ -80,15 +80,15 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:test",
-   "count": 6
+   "count": 7
   },
   {
    "pkg": "node:assert",
-   "count": 6
+   "count": 7
   },
   {
    "pkg": "@playwright/test",
-   "count": 6
+   "count": 7
   },
   {
    "pkg": "fs",
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 46,
+   "nodes": 48,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -175,10 +175,11 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261003_genesis2": 1,
     "backend/prisma/migrations/20261004_catalogo_mz": 1,
     "backend/prisma/migrations/20261004_despesas": 1,
+    "backend/prisma/migrations/20261004_fecho_mes": 1,
     "backend/prisma/migrations/20261004_lista_compras": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/scripts": 25,
-    "backend/tests": 6,
+    "backend/tests": 7,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -186,12 +187,12 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 49,
+   "nodes": 50,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 15,
-    "backend/src/services": 8,
+    "backend/src/services": 9,
     "backend/src/utils": 19,
     "backend/src/jobs": 1
    }
@@ -209,11 +210,11 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 54,
+   "nodes": 56,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
-    "frontend/src/components": 1,
+    "frontend/src/components": 2,
     "frontend/src/components/ui": 7,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
@@ -223,7 +224,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
     "frontend/src/utils": 10,
-    "frontend/tests/e2e": 6,
+    "frontend/tests/e2e": 7,
     "frontend/tests": 2,
     "frontend/src/pages": 1
    }
@@ -276,8 +277,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 547,
-   "size": 95189,
+   "lines": 559,
+   "size": 99331,
    "externals": [
     "@prisma/client"
    ],
@@ -320,8 +321,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1101,
-   "size": 56826,
+   "lines": 1119,
+   "size": 57574,
    "externals": [
     "nodemailer"
    ],
@@ -806,6 +807,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261004_fecho_mes/migration.sql",
+   "path": "backend/prisma/migrations/20261004_fecho_mes/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261004_fecho_mes",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 7,
+   "size": 331,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/migrations/20261004_lista_compras/migration.sql",
    "path": "backend/prisma/migrations/20261004_lista_compras/migration.sql",
    "label": "migration.sql",
@@ -881,8 +903,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 398,
-   "size": 13763,
+   "lines": 399,
+   "size": 13821,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -904,8 +926,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 415,
-   "size": 14645,
+   "lines": 416,
+   "size": 14703,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1077,8 +1099,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 71,
-   "size": 5047,
+   "lines": 84,
+   "size": 6042,
    "externals": [
     "dotenv",
     "fs",
@@ -1531,8 +1553,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 823,
-   "size": 65030,
+   "lines": 863,
+   "size": 67956,
    "externals": [
     "dotenv",
     "crypto",
@@ -1995,8 +2017,8 @@ window.GENESIS_MINDMAP = {
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 403,
-   "size": 22568,
+   "lines": 435,
+   "size": 24257,
    "externals": [
     "express",
     "crypto",
@@ -2015,13 +2037,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/http.js",
     "backend/src/utils/audit.js",
-    "backend/src/utils/terminals.js"
+    "backend/src/utils/terminals.js",
+    "backend/src/services/monthClose.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 11
+   "outbound": 12
   },
   {
    "id": "backend/src/routes/pos.js",
@@ -2172,8 +2195,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 221,
-   "size": 11050,
+   "lines": 233,
+   "size": 11794,
    "externals": [
     "express",
     "bcrypt",
@@ -2282,6 +2305,30 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 2,
    "outbound": 2
+  },
+  {
+   "id": "backend/src/services/monthClose.js",
+   "path": "backend/src/services/monthClose.js",
+   "label": "monthClose.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Puro: quando mostrar o fecho do mes anterior.",
+   "notes": "04/10/2026: 6/6 testes; verify_system 18 15/15.",
+   "role": "Fecho do mes.",
+   "security": "",
+   "planned": false,
+   "lines": 22,
+   "size": 1164,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/owner.js",
+    "backend/tests/monthClose.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 0
   },
   {
    "id": "backend/src/services/monthlyDeductions.js",
@@ -3025,6 +3072,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/tests/monthClose.test.js",
+   "path": "backend/tests/monthClose.test.js",
+   "label": "monthClose.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 1640,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/services/monthClose.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "backend/tests/monthlyDeductions.test.js",
    "path": "backend/tests/monthlyDeductions.test.js",
    "label": "monthlyDeductions.test.js",
@@ -3388,6 +3461,37 @@ window.GENESIS_MINDMAP = {
    "outbound": 17
   },
   {
+   "id": "frontend/src/components/MonthCloseDialog.jsx",
+   "path": "frontend/src/components/MonthCloseDialog.jsx",
+   "label": "MonthCloseDialog.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Dialogo do fecho do mes (resumo + lista sugerida + WhatsApp).",
+   "notes": "04/10/2026: fecho_mes.mjs 10/10. Caminho Agora nao so provado pela API.",
+   "role": "Painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 141,
+   "size": 7899,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/layouts/AppShell.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 3
+  },
+  {
    "id": "frontend/src/components/SaleDrawer.jsx",
    "path": "frontend/src/components/SaleDrawer.jsx",
    "label": "SaleDrawer.jsx",
@@ -3599,6 +3703,7 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [
     "frontend/src/App.jsx",
+    "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/auth/Login.jsx",
@@ -3620,7 +3725,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 21,
+   "inbound": 22,
    "outbound": 0
   },
   {
@@ -3714,14 +3819,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/layouts",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Moldura do painel do dono; monta o fecho do mes.",
+   "notes": "04/10/2026: regressao completa OK.",
+   "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 132,
-   "size": 6476,
+   "lines": 134,
+   "size": 6657,
    "externals": [
     "react",
     "react-router-dom",
@@ -3730,13 +3835,14 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/api.js",
     "frontend/src/utils/session.jsx",
-    "frontend/src/components/ui/index.js"
+    "frontend/src/components/ui/index.js",
+    "frontend/src/components/MonthCloseDialog.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "frontend/src/main.jsx",
@@ -4066,8 +4172,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 492,
-   "size": 32224,
+   "lines": 497,
+   "size": 32475,
    "externals": [
     "react",
     "lucide-react",
@@ -4129,8 +4235,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 358,
-   "size": 23583,
+   "lines": 368,
+   "size": 24542,
    "externals": [
     "react",
     "react-router-dom",
@@ -4411,6 +4517,7 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [],
    "usedBy": [
+    "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
@@ -4431,7 +4538,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 19,
+   "inbound": 20,
    "outbound": 0
   },
   {
@@ -4452,6 +4559,7 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
+    "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
@@ -4472,7 +4580,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 19,
+   "inbound": 20,
    "outbound": 0
   },
   {
@@ -4735,6 +4843,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 141,
    "size": 9150,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/fecho_mes.mjs",
+   "path": "frontend/tests/e2e/fecho_mes.mjs",
+   "label": "fecho_mes.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 103,
+   "size": 5649,
    "externals": [
     "node:fs",
     "node:path",
@@ -5647,6 +5780,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/terminals.js"
   },
   {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/services/monthClose.js"
+  },
+  {
    "source": "backend/src/routes/pos.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -5879,6 +6016,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/fefo.js"
   },
   {
+   "source": "backend/tests/monthClose.test.js",
+   "target": "backend/src/services/monthClose.js"
+  },
+  {
    "source": "backend/tests/monthlyDeductions.test.js",
    "target": "backend/src/services/monthlyDeductions.js"
   },
@@ -5963,6 +6104,18 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/pages/owner/Onboarding.jsx"
   },
   {
+   "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
    "source": "frontend/src/components/SaleDrawer.jsx",
    "target": "frontend/src/utils/receiptPrinter.js"
   },
@@ -6025,6 +6178,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/layouts/AppShell.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/components/MonthCloseDialog.jsx"
   },
   {
    "source": "frontend/src/main.jsx",

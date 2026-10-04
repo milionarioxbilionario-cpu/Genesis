@@ -49,6 +49,7 @@ function Store({ s, reload }) {
   const [store, setStore] = useState(s.store);
   const [hours, setHours] = useState(s.hours);
   const [alertDays, setAlertDays] = useState(String(s.expiry_alert_days ?? 7));
+  const [closeDay, setCloseDay] = useState(String(s.month_close_day ?? 1));
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   async function save(kind) {
@@ -56,6 +57,7 @@ function Store({ s, reload }) {
     try {
       if (kind === 'store') await api.put('/api/settings/store', { name: store.name, location: store.location, phone: store.phone, email: store.email || null });
       else if (kind === 'expiry') await api.put('/api/settings/expiry-alert', { expiry_alert_days: Number(alertDays) });
+      else if (kind === 'close') await api.put('/api/settings/month-close', { month_close_day: Number(closeDay) });
       else await api.put('/api/settings/hours', hours);
       toast('Alterações guardadas.');
       reload(); reloadTenant?.();
@@ -88,6 +90,14 @@ function Store({ s, reload }) {
           <Input label="Avisar com" inputMode="numeric" value={alertDays} onChange={(e) => setAlertDays(e.target.value.replace(/\D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
           <span className="pb-2 text-base text-ink-2">dias de antecedência</span>
           <Button className="ml-auto" variant="primary" loading={busy === 'expiry'} disabled={!(Number(alertDays) >= 1 && Number(alertDays) <= 90)} onClick={() => save('expiry')}>Guardar</Button>
+        </div>
+      </Card>
+      <Card>
+        <CardHeader title="Fecho do mês" description="A partir deste dia, ao entrar, o Genesis mostra o resumo do mês anterior e a lista do que comprar, com a opção de a enviar ao fornecedor." />
+        <div className="flex items-end gap-3">
+          <Input label="Dia do fecho" inputMode="numeric" value={closeDay} onChange={(e) => setCloseDay(e.target.value.replace(/D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
+          <span className="pb-2 text-base text-ink-2">de cada mês (1 a 28)</span>
+          <Button className="ml-auto" variant="primary" loading={busy === 'close'} disabled={!(Number(closeDay) >= 1 && Number(closeDay) <= 28)} onClick={() => save('close')}>Guardar</Button>
         </div>
       </Card>
     </div>
