@@ -30,6 +30,14 @@ test('produto parado com stock: "nao reforcar"', () => {
   assert.ok(r.items.every((i) => i.product_id !== 'escova'));
 });
 
+test('produto novo (menos dias que a janela) nao e julgado "parado"', () => {
+  const now = new Date('2026-10-04T10:00:00Z');
+  const novo = { ...p('novo', 30), created_at: '2026-10-01T10:00:00Z' };
+  const velho = { ...p('velho', 30), created_at: '2026-08-01T10:00:00Z' };
+  const r = recommendRestock({ products: [novo, velho], windowDays: 28, now });
+  assert.deepStrictEqual(r.slow_movers.map((s) => s.product_id), ['velho']);
+});
+
 test('ordena pelo maior investimento', () => {
   const r = recommendRestock({ products: [p('barato', 0, 100), p('caro', 0, 10000)], soldByProduct: { barato: 28, caro: 28 }, windowDays: 28, coverDays: 7 });
   assert.deepStrictEqual(r.items.map((i) => i.product_id), ['caro', 'barato']);

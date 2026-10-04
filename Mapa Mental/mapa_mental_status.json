@@ -1034,6 +1034,36 @@
       "summary": "Perda automatica de lotes vencidos (de hora a hora, idempotente, por loja com RLS).",
       "role": "Stock e validades.",
       "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
+    },
+    "backend/src/services/reports.js": {
+      "status": "ok",
+      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "summary": "Relatorios diario/semanal/mensal, rastreio (timeline), metas 12 meses.",
+      "role": "Relatorios."
+    },
+    "backend/src/services/restock.js": {
+      "status": "ok",
+      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "summary": "Recomendacao de restock pura: ritmo x dias + procura perdida - stock; nao reforcar.",
+      "role": "Relatorios."
+    },
+    "frontend/src/pages/owner/Reports.jsx": {
+      "status": "ok",
+      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "summary": "Ecra dos relatorios: KPIs, resumo, rastreio com filtros, cascata mensal.",
+      "role": "Painel do dono."
+    },
+    "frontend/src/components/SaleDrawer.jsx": {
+      "status": "ok",
+      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "summary": "Recibo completo de uma venda num Drawer, com reimprimir.",
+      "role": "Painel do dono."
+    },
+    "frontend/src/pages/owner/Home.jsx": {
+      "status": "ok",
+      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "summary": "Inicio do dono: KPIs, meta do mes e do mes passado, alertas.",
+      "role": "Painel do dono."
     }
   }
 }

@@ -14,6 +14,8 @@ export default function Home() {
   const summary = useApi('/api/dashboard/summary');
   const week = useApi('/api/dashboard/reports');
   const goal = useApi('/api/owner/goals/current');
+  const goalHistory = useApi('/api/owner/goals/history');
+  const lastMonth = goalHistory.data ? goalHistory.data[goalHistory.data.length - 2] : null;
   const alerts = useApi('/api/owner/alerts');
   const debts = useApi('/api/owner/debts');
   const [goalOpen, setGoalOpen] = useState(false);
@@ -94,6 +96,12 @@ export default function Home() {
                     : `Ao ritmo actual, termina o mês com ${money(g.projected)}.`}
               </p>
             </>
+          )}
+          {lastMonth && (lastMonth.target > 0 || lastMonth.achieved > 0) && (
+            <p className="mt-3 border-t border-border pt-3 text-sm text-ink-muted">
+              Mês passado: {lastMonth.target > 0 ? <><span className="num font-medium text-ink-2">{pct(lastMonth.pct)}</span> da meta ({money(lastMonth.achieved)} de {money(lastMonth.target)})</> : <>{money(lastMonth.achieved)} vendidos, sem meta</>}.{' '}
+              <Link to="/app/relatorios?tab=monthly" className="text-accent">Histórico</Link>
+            </p>
           )}
         </Card>
       </div>

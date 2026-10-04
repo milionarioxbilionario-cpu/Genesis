@@ -1,10 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Printer } from 'lucide-react';
 import useApi from '../../utils/useApi';
-import { printReceipt } from '../../utils/receiptPrinter';
+import SaleDrawer from '../../components/SaleDrawer';
 import { money, dateTime, isoDay, PAYMENT_LABEL } from '../../utils/format';
-import { Badge, Button, Drawer, Input, KeyValue, PageHeader, Pagination, Select, Table, Tabs, Toolbar } from '../../components/ui';
-import { useOutletContext } from 'react-router-dom';
+import { Badge, Input, PageHeader, Pagination, Select, Table, Tabs, Toolbar } from '../../components/ui';
 
 const PAGE_SIZE = 25;
 
@@ -20,7 +18,6 @@ export default function Sales() {
 }
 
 function SalesTable() {
-  const { tenant } = useOutletContext();
   const [filters, setFilters] = useState({ from: isoDay(new Date(Date.now() - 6 * 86400000)), to: isoDay(), cashier_id: '', method: '', status: '' });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -62,37 +59,7 @@ function SalesTable() {
       <Table columns={columns} rows={data?.rows || []} loading={loading && !data} onRowClick={setSelected} empty={<p className="py-10 text-center text-ink-muted">Sem vendas neste período.</p>} />
       {data && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPage={setPage} />}
 
-      <Drawer
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title={selected ? `Venda n.º ${String(selected.daily_number || '').padStart(3, '0')}` : ''}
-        description={selected ? dateTime(selected.created_at) + ' · ' + (selected.cashier?.name || '') : ''}
-        footer={selected && selected.status !== 'cancelled' && (
-          <Button icon={Printer} onClick={() => printReceipt({
-            shopName: tenant?.name, shopLocation: tenant?.location, cashierName: selected.cashier?.name,
-            sale: { ...selected, payment_method: PAYMENT_LABEL[selected.payment_method] }, items: selected.items,
-          })}>Reimprimir recibo</Button>
-        )}
-      >
-        {selected && (
-          <>
-            {selected.status === 'cancelled' && (
-              <div className="mb-4 rounded border border-border bg-danger-soft p-3 text-sm text-ink-2">
-                <p className="font-medium text-danger">Venda cancelada</p>
-                <p>Motivo: {selected.cancel_reason || '—'}</p>
-              </div>
-            )}
-            {selected.items.map((it) => <KeyValue key={it.id} label={`${it.quantity} × ${it.product_name}`} value={money(it.quantity * it.unit_sell_price)} />)}
-            <div className="my-2 border-t border-border" />
-            {selected.discount_amount > 0 && <KeyValue label="Desconto" value={'−' + money(selected.discount_amount)} />}
-            <KeyValue label="Total" value={money(selected.total_amount)} strong />
-            <KeyValue label="Custo dos produtos" value={money(selected.total_cost)} />
-            <KeyValue label="Margem" value={money(selected.total_amount - selected.total_cost)} tone="positive" />
-            <KeyValue label={PAYMENT_LABEL[selected.payment_method]} value={money(selected.amount_received)} />
-            {selected.change_given > 0 && <KeyValue label="Troco" value={money(selected.change_given)} />}
-          </>
-        )}
-      </Drawer>
+      <SaleDrawer sale={selected} onClose={() => setSelected(null)} />
     </>
   );
 }
