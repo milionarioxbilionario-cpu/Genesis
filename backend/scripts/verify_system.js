@@ -93,7 +93,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -745,7 +745,64 @@ async function test16() {
   ok(m2.deductions.total_expenses - m0.deductions.total_expenses === 80000, 'mensal: depois de apagar, so fica a de 800 MT');
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16 };
+// ---------------------------------------------------------------------------
+async function test17() {
+  section(17, 'Lista de compras e WhatsApp ao fornecedor (Genesis 2.1, Fase 5)');
+  const owner = ownerClient();
+  const supplier = await prisma.supplier.create({ data: { tenant_id: ctx.tenant.id, name: 'CDM Teste', phone: '84 123 4567', delivery_cost_per_visit: 50000 } });
+  const p2 = await prisma.product.create({ data: { tenant_id: ctx.tenant.id, name: 'Agua Teste 1,5L', category: 'Bebidas', sell_price: 5000, cost_price: 3050, stock_qty: 0, is_active: true } });
+  await prisma.demandCapture.create({ data: { id: crypto.randomUUID(), tenant_id: ctx.tenant.id, product_id: p2.id, recorded_by: ctx.owner.id } }).catch(() => null);
+
+  const sug = await owner.req('GET', '/api/shopping-lists/suggestion?days=30');
+  ok(sug.status === 200 && sug.data.cover_days === 30 && Array.isArray(sug.data.items), 'sugestao para 30 dias (recomendacao de restock)', sug.status);
+  ok((await owner.req('GET', '/api/shopping-lists/suggestion?days=5')).status === 400, 'dias fora de 7/14/30 = 400');
+
+  const body = { name: 'Compra semanal', supplier_id: supplier.id, items: [{ product_id: ctx.product.id, quantity: 24 }, { product_id: p2.id, quantity: 12, unit_cost: 2900 }] };
+  const c = await owner.req('POST', '/api/shopping-lists', body);
+  ok(c.status === 201 && c.data.items.length === 2 && c.data.status === 'draft', 'lista criada em rascunho com 2 produtos', c);
+  const cerveja = c.data.items.find((i) => i.product_id === ctx.product.id);
+  ok(cerveja && cerveja.unit_cost === 6000 && cerveja.product_name === 'Cerveja Teste', 'sem custo indicado usa o custo actual do produto (60 MT)', cerveja);
+  ok(c.data.totals.investment === 24 * 6000 + 12 * 2900 && c.data.totals.delivery === 50000 && c.data.totals.total === 24 * 6000 + 12 * 2900 + 50000, 'total = investimento 1 788 MT + entrega 500 MT', c.data.totals);
+
+  ok((await owner.req('POST', '/api/shopping-lists', { ...body, items: [{ product_id: ctx.product.id, quantity: 1 }, { product_id: ctx.product.id, quantity: 2 }] })).status === 400, 'produto repetido = 400');
+  ok((await owner.req('POST', '/api/shopping-lists', { ...body, items: [] })).status === 400, 'lista vazia = 400');
+  ok((await owner.req('POST', '/api/shopping-lists', { ...body, items: [{ product_id: ctx.product.id, quantity: 0 }] })).status === 400, 'quantidade 0 = 400');
+  const foreignProduct = await prisma.product.findFirst({ where: { tenant_id: { not: ctx.tenant.id } }, select: { id: true } });
+  if (foreignProduct) ok((await owner.req('POST', '/api/shopping-lists', { ...body, items: [{ product_id: foreignProduct.id, quantity: 1 }] })).status === 400, 'produto de outra loja = 400 (nao entra na lista)');
+  ok((await owner.req('POST', '/api/shopping-lists', { ...body, supplier_id: crypto.randomUUID() })).status === 400, 'fornecedor inexistente = 400');
+
+  const wa = await owner.req('GET', '/api/shopping-lists/' + c.data.id + '/whatsapp');
+  ok(wa.status === 200 && wa.data.url.startsWith('https://wa.me/258841234567?text=') && wa.data.has_phone, 'link wa.me com o numero do fornecedor em formato internacional', wa.data?.url);
+  ok(/- 24 × Cerveja Teste/.test(wa.data.text) && /- 12 × Agua Teste/.test(wa.data.text) && !/MT|6000|60,00/.test(wa.data.text), 'mensagem com produtos e quantidades, sem custos', wa.data.text);
+
+  const upd = await owner.req('PUT', '/api/shopping-lists/' + c.data.id, { name: 'Compra semanal (rev)', supplier_id: null, items: [{ product_id: ctx.product.id, quantity: 10 }] });
+  ok(upd.status === 200 && upd.data.items.length === 1 && upd.data.totals.total === 60000 && upd.data.totals.delivery === 0, 'editar: 1 produto, sem fornecedor = sem entrega', upd.data?.totals);
+  const list = await owner.req('GET', '/api/shopping-lists');
+  ok(list.status === 200 && list.data.some((l) => l.id === c.data.id && l.item_count === 1 && l.totals.total === 60000), 'listas guardadas com totais');
+
+  ok((await owner.req('PUT', '/api/shopping-lists/' + c.data.id + '/status', { status: 'sent' })).status === 200, 'marcar como enviada');
+  ok((await owner.req('PUT', '/api/shopping-lists/' + c.data.id + '/status', { status: 'paga' })).status === 400, 'estado invalido = 400');
+  const stockBefore = (await prisma.product.findUnique({ where: { id: ctx.product.id } })).stock_qty;
+  ok((await owner.req('PUT', '/api/shopping-lists/' + c.data.id + '/status', { status: 'received' })).status === 200, 'marcar como recebida');
+  ok((await prisma.product.findUnique({ where: { id: ctx.product.id } })).stock_qty === stockBefore, 'recebida NAO mexe no stock (entrada continua em Produtos -> Stock)');
+  const locked = await owner.req('PUT', '/api/shopping-lists/' + c.data.id, body);
+  ok(locked.status === 409 && locked.data.code === 'LIST_RECEIVED', 'lista recebida nao se edita (409)', locked);
+
+  // Isolamento.
+  const term = await pairedTerminal('Balcao compras');
+  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  ok((await term.req('GET', '/api/shopping-lists')).status === 403, 'caixista nao ve listas de compras (403)');
+  const other = crypto.randomUUID();
+  ok((await prisma.runWithTenant(other, () => prisma.shoppingList.count({ where: { tenant_id: ctx.tenant.id } }))) === 0, 'listas invisiveis noutra loja (RLS)');
+  ok((await prisma.runWithTenant(other, () => prisma.shoppingListItem.count({ where: { tenant_id: ctx.tenant.id } }))) === 0, 'itens invisiveis noutra loja (RLS)');
+  const audits = await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: { in: ['CREATE_SHOPPING_LIST', 'UPDATE_SHOPPING_LIST', 'SHOPPING_LIST_STATUS'] } } });
+  ok(audits === 4, 'auditoria: criada, editada, 2 mudancas de estado', audits);
+
+  ok((await owner.req('DELETE', '/api/shopping-lists/' + c.data.id)).status === 200, 'apagar lista');
+  ok((await owner.req('GET', '/api/shopping-lists/' + c.data.id)).status === 404 && (await prisma.shoppingListItem.count({ where: { list_id: c.data.id } })) === 0, 'apagada com os itens (404)');
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17 };
 
 (async () => {
   await prisma.ready();

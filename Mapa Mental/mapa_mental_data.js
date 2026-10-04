@@ -1,38 +1,42 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-04T08:43:11.351Z */
+   Gerado em: 2026-10-04T08:58:13.252Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-04T08:43:11.351Z",
+ "generatedAt": "2026-10-04T08:58:13.252Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 175,
+  "files": 180,
   "planned": 5,
-  "links": 277,
-  "lines": 25698,
+  "links": 291,
+  "lines": 26369,
   "byStatus": {
-   "ok": 104,
+   "ok": 107,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 59
+   "untracked": 61
   },
   "byGroup": {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 44,
-   "backend": 47,
+   "backend-data": 46,
+   "backend": 49,
    "frontend-pub": 4,
-   "frontend": 53,
+   "frontend": 54,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 32
+   "count": 33
+  },
+  {
+   "pkg": "lucide-react",
+   "count": 19
   },
   {
    "pkg": "dotenv",
@@ -43,23 +47,19 @@ window.GENESIS_MINDMAP = {
    "count": 19
   },
   {
-   "pkg": "lucide-react",
-   "count": 18
-  },
-  {
    "pkg": "react-router-dom",
    "count": 17
   },
   {
    "pkg": "express",
+   "count": 16
+  },
+  {
+   "pkg": "zod",
    "count": 15
   },
   {
    "pkg": "crypto",
-   "count": 14
-  },
-  {
-   "pkg": "zod",
    "count": 14
   },
   {
@@ -79,19 +79,19 @@ window.GENESIS_MINDMAP = {
    "count": 7
   },
   {
+   "pkg": "node:test",
+   "count": 6
+  },
+  {
+   "pkg": "node:assert",
+   "count": 6
+  },
+  {
    "pkg": "@playwright/test",
    "count": 6
   },
   {
    "pkg": "fs",
-   "count": 5
-  },
-  {
-   "pkg": "node:test",
-   "count": 5
-  },
-  {
-   "pkg": "node:assert",
    "count": 5
   },
   {
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 44,
+   "nodes": 46,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -175,9 +175,10 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261003_genesis2": 1,
     "backend/prisma/migrations/20261004_catalogo_mz": 1,
     "backend/prisma/migrations/20261004_despesas": 1,
+    "backend/prisma/migrations/20261004_lista_compras": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/scripts": 25,
-    "backend/tests": 5,
+    "backend/tests": 6,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -185,12 +186,12 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 47,
+   "nodes": 49,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
-    "backend/src/routes": 14,
-    "backend/src/services": 7,
+    "backend/src/routes": 15,
+    "backend/src/services": 8,
     "backend/src/utils": 19,
     "backend/src/jobs": 1
    }
@@ -208,7 +209,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 53,
+   "nodes": 54,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -218,7 +219,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/hooks": 1,
     "frontend/src/layouts": 1,
     "frontend/src/pages/auth": 5,
-    "frontend/src/pages/owner": 9,
+    "frontend/src/pages/owner": 10,
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
     "frontend/src/utils": 10,
@@ -275,8 +276,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 539,
-   "size": 92186,
+   "lines": 547,
+   "size": 95189,
    "externals": [
     "@prisma/client"
    ],
@@ -319,8 +320,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1083,
-   "size": 56156,
+   "lines": 1101,
+   "size": 56826,
    "externals": [
     "nodemailer"
    ],
@@ -805,6 +806,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261004_lista_compras/migration.sql",
+   "path": "backend/prisma/migrations/20261004_lista_compras/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261004_lista_compras",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 49,
+   "size": 2716,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
    "path": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
    "label": "migration.sql",
@@ -839,7 +861,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 91,
-   "size": 5083,
+   "size": 5117,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -859,8 +881,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 363,
-   "size": 12586,
+   "lines": 398,
+   "size": 13763,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -882,8 +904,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 380,
-   "size": 13468,
+   "lines": 415,
+   "size": 14645,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1056,7 +1078,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 71,
-   "size": 5011,
+   "size": 5047,
    "externals": [
     "dotenv",
     "fs",
@@ -1509,8 +1531,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 766,
-   "size": 58928,
+   "lines": 823,
+   "size": 65030,
    "externals": [
     "dotenv",
     "crypto",
@@ -1544,8 +1566,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 274,
-   "size": 10551,
+   "lines": 276,
+   "size": 10665,
    "externals": [
     "dotenv",
     "express",
@@ -1572,6 +1594,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/adminOriginCheck.js",
     "backend/src/routes/refresh.js",
     "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js",
     "backend/src/routes/pos.js",
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/utils/http.js",
@@ -1579,7 +1602,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 21
+   "outbound": 22
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -1638,9 +1661,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
-    "backend/src/routes/settings.js"
+    "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 10,
+   "inbound": 11,
    "outbound": 4
   },
   {
@@ -1698,9 +1722,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
-    "backend/src/routes/settings.js"
+    "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 9,
+   "inbound": 10,
    "outbound": 0
   },
   {
@@ -2168,6 +2193,40 @@ window.GENESIS_MINDMAP = {
    "outbound": 5
   },
   {
+   "id": "backend/src/routes/shoppingLists.js",
+   "path": "backend/src/routes/shoppingLists.js",
+   "label": "shoppingLists.js",
+   "group": "backend",
+   "dir": "backend/src/routes",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
+   "notes": "04/10/2026 Fase 5.2: verify_system 17 25/25.",
+   "role": "Compras.",
+   "security": "",
+   "planned": false,
+   "lines": 151,
+   "size": 8330,
+   "externals": [
+    "express",
+    "zod"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js",
+    "backend/src/services/reports.js",
+    "backend/src/services/shoppingList.js"
+   ],
+   "usedBy": [
+    "backend/src/index.js"
+   ],
+   "inbound": 1,
+   "outbound": 7
+  },
+  {
    "id": "backend/src/routes/shrinkage_records.js",
    "path": "backend/src/routes/shrinkage_records.js",
    "label": "shrinkage_records.js",
@@ -2296,9 +2355,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/restock.js"
    ],
    "usedBy": [
-    "backend/src/routes/owner.js"
+    "backend/src/routes/owner.js",
+    "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 3
   },
   {
@@ -2321,6 +2381,30 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/src/services/reports.js",
     "backend/tests/restock.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/services/shoppingList.js",
+   "path": "backend/src/services/shoppingList.js",
+   "label": "shoppingList.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Puro: totais, telefone +258, mensagem e link wa.me.",
+   "notes": "04/10/2026: 5/5 testes.",
+   "role": "Compras.",
+   "security": "",
+   "planned": false,
+   "lines": 41,
+   "size": 1779,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/shoppingLists.js",
+    "backend/tests/shoppingList.test.js"
    ],
    "inbound": 2,
    "outbound": 0
@@ -2377,9 +2461,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 6,
+   "inbound": 7,
    "outbound": 1
   },
   {
@@ -2465,9 +2550,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 7,
+   "inbound": 8,
    "outbound": 0
   },
   {
@@ -2569,6 +2655,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/products.js",
     "backend/src/routes/sales.js",
     "backend/src/routes/settings.js",
+    "backend/src/routes/shoppingLists.js",
     "backend/src/routes/shrinkage_records.js",
     "backend/src/services/expiryJob.js",
     "backend/src/services/reports.js",
@@ -2580,7 +2667,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 35,
+   "inbound": 36,
    "outbound": 1
   },
   {
@@ -3016,6 +3103,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/tests/shoppingList.test.js",
+   "path": "backend/tests/shoppingList.test.js",
+   "label": "shoppingList.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 33,
+   "size": 1659,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/services/shoppingList.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "backend/tests/validate_rls.js",
    "path": "backend/tests/validate_rls.js",
    "label": "validate_rls.js",
@@ -3400,7 +3513,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 128,
-   "size": 5613,
+   "size": 5623,
    "externals": [
     "react",
     "react-dom",
@@ -3499,6 +3612,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
     "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
     "frontend/src/pages/pos/PosDialogs.jsx",
@@ -3506,7 +3620,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 20,
+   "inbound": 21,
    "outbound": 0
   },
   {
@@ -3918,8 +4032,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 283,
-   "size": 18293,
+   "lines": 286,
+   "size": 18464,
    "externals": [
     "react",
     "react-router-dom",
@@ -3930,13 +4044,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/imageResize.js",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/Reports.jsx",
@@ -4029,6 +4144,37 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "path": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "label": "ShoppingLists.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Ecra da lista de compras (Produtos).",
+   "notes": "04/10/2026: fase5.mjs 16/16.",
+   "role": "Painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 193,
+   "size": 12570,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/owner/Products.jsx"
    ],
    "inbound": 1,
    "outbound": 4
@@ -4275,6 +4421,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/Products.jsx",
     "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
     "frontend/src/pages/pos/PosDialogs.jsx",
@@ -4284,7 +4431,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 18,
+   "inbound": 19,
    "outbound": 0
   },
   {
@@ -4317,6 +4464,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
     "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
     "frontend/src/pages/pos/PosDialogs.jsx",
@@ -4324,7 +4472,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 18,
+   "inbound": 19,
    "outbound": 0
   },
   {
@@ -4540,10 +4688,11 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
     "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx"
    ],
-   "inbound": 8,
+   "inbound": 9,
    "outbound": 2
   },
   {
@@ -4584,8 +4733,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 95,
-   "size": 5722,
+   "lines": 141,
+   "size": 9150,
    "externals": [
     "node:fs",
     "node:path",
@@ -5263,6 +5412,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
+   "target": "backend/src/routes/shoppingLists.js"
+  },
+  {
+   "source": "backend/src/index.js",
    "target": "backend/src/routes/pos.js"
   },
   {
@@ -5610,6 +5763,34 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/audit.js"
   },
   {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/middleware/auth.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/services/reports.js"
+  },
+  {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/services/shoppingList.js"
+  },
+  {
    "source": "backend/src/routes/shrinkage_records.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -5708,6 +5889,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/tests/restock.test.js",
    "target": "backend/src/services/restock.js"
+  },
+  {
+   "source": "backend/tests/shoppingList.test.js",
+   "target": "backend/src/services/shoppingList.js"
   },
   {
    "source": "frontend/src/App.jsx",
@@ -5995,6 +6180,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/pages/owner/ShoppingLists.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -6043,6 +6232,22 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {

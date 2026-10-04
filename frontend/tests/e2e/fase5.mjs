@@ -82,6 +82,52 @@ try {
   await owner.getByLabel('Remover despesa').getByRole('button', { name: 'Remover' }).click();
   await owner.getByText('Despesa removida.').waitFor({ timeout: T });
   ok(await owner.getByText('Sem despesas neste mês.').waitFor({ timeout: T }).then(() => true, () => false), 'apagar: a lista fica vazia');
+
+  console.log('\n=== Lista de compras ===');
+  // O wa.me e externo: o teste so le o URL, sem sair para a internet.
+  await ctx.route('https://wa.me/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<p>wa.me</p>' }));
+  const sup = await owner.evaluate(async () => (await fetch('/api/inventory/suppliers', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'CDM Maputo', phone: '84 123 4567', delivery_cost_per_visit: 50000 }) })).status);
+  ok(sup < 300, 'fornecedor CDM Maputo criado (entrega 500 MT)', sup);
+  await owner.goto(BASE + '/app/produtos?tab=shopping');
+  await owner.getByRole('button', { name: 'Gerar da recomendação' }).click({ timeout: T });
+  await owner.getByText('Nova lista de compras').waitFor({ timeout: T });
+  ok(true, 'gerar da recomendacao abre a lista (loja nova: pode vir vazia)');
+  await owner.getByLabel('Nome da lista').fill('Compra da semana');
+  await owner.getByLabel('Fornecedor').selectOption({ label: 'CDM Maputo' });
+  // A sugestao pode trazer outros produtos: fica so com os dois do teste.
+  for (const b of await owner.getByRole('button', { name: /^Tirar / }).all()) {
+    if (!/2M 340ml|Heineken 330ml/.test(await b.getAttribute('aria-label'))) await b.click();
+  }
+  for (const name of ['2M 340ml', 'Heineken 330ml']) {
+    if (await owner.getByLabel('Quantidade de ' + name).count() === 0) {
+      const value = await owner.getByLabel('Juntar produto').locator('option', { hasText: name }).first().getAttribute('value');
+      await owner.getByLabel('Juntar produto').selectOption(value);
+      await owner.getByRole('button', { name: 'Juntar', exact: true }).click();
+    }
+  }
+  await owner.getByLabel('Quantidade de 2M 340ml').fill('24');
+  await owner.getByLabel('Quantidade de Heineken 330ml').fill('12');
+  // 24 x 38 + 12 x 55 = 1 572 MT + entrega 500 = 2 072 MT
+  const totalText = await owner.getByText('Investimento (ao custo)').locator('xpath=../..').textContent();
+  ok(/1\s?572,00/.test(totalText) && /500,00/.test(totalText) && /2\s?072,00/.test(totalText), 'totais: investimento 1 572 MT + entrega 500 MT = 2 072 MT', totalText);
+  await shot(owner, 'f5-lista');
+  const popupP = ctx.waitForEvent('page', { timeout: T });
+  await owner.getByRole('button', { name: 'Enviar por WhatsApp' }).click();
+  const popup = await popupP;
+  await popup.waitForURL(/wa\.me/, { timeout: T });
+  const waUrl = decodeURIComponent(popup.url());
+  ok(waUrl.startsWith('https://wa.me/258841234567?text=') && /24 × 2M 340ml/.test(waUrl) && /12 × Heineken 330ml/.test(waUrl), 'WhatsApp abre para +258 84 123 4567 com a encomenda', waUrl);
+  await popup.close();
+  const listRow = owner.locator('tbody tr', { hasText: 'Compra da semana' });
+  await listRow.filter({ hasText: 'Enviada' }).waitFor({ timeout: T });
+  ok(/2\s?072,00/.test(await listRow.textContent()), 'lista guardada como "Enviada" com o total');
+  await listRow.click();
+  await owner.getByRole('button', { name: 'Marcar como recebida' }).click({ timeout: T });
+  await listRow.filter({ hasText: 'Recebida' }).waitFor({ timeout: T });
+  ok(true, 'marcar como recebida');
+  await listRow.click();
+  ok(await owner.getByText(/Lista recebida\. A entrada no stock/).waitFor({ timeout: T }).then(() => true, () => false), 'lista recebida fica so de leitura e diz onde registar a entrada');
+  await shot(owner, 'f5-lista-recebida');
 } catch (e) {
   failures++;
   console.log('ERRO: ' + (e.stack || e.message).split('\n').slice(0, 4).join(' | '));

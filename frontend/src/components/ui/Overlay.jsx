@@ -53,7 +53,7 @@ export function Drawer({ open, onClose, title, description, children, footer }) 
           <IconButton label="Fechar" icon={X} size="sm" onClick={onClose} />
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
+        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
       </aside>
     </div>,
     document.body,
