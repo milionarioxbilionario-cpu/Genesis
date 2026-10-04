@@ -158,6 +158,7 @@ const TYPE_FILTERS = [
   { value: 'debt,debt_payment', label: 'Chenecas' },
   { value: 'shift', label: 'Fechos de turno' },
   { value: 'demand', label: 'Pedidos em falta' },
+  { value: 'expense', label: 'Despesas' },
 ];
 const PAGE = 50;
 
@@ -178,7 +179,7 @@ function Timeline({ from, to }) {
   ].filter(Boolean).join(' · ');
   const value = (e) => {
     if (e.effect === 'gain') return <span className="num font-medium text-positive">{money(e.amount, { sign: true })}</span>;
-    if (e.effect === 'loss') return <span className="num font-medium text-danger">{money(e.amount)}</span>;
+    if (e.effect === 'loss' || e.effect === 'expense') return <span className="num font-medium text-danger">{money(e.amount)}</span>;
     if (e.type === 'cancelled') return <span className="num text-ink-faint line-through">{money(e.sale.total_amount)}</span>;
     if (e.type === 'shift') return <span className={cx('num', e.amount === 0 ? 'text-ink-muted' : 'text-warning')}>{money(e.amount, { sign: true })}</span>;
     return e.amount ? <span className="num text-ink-muted">{money(e.amount)}</span> : <span className="text-ink-faint">—</span>;
@@ -205,7 +206,7 @@ function Timeline({ from, to }) {
       <div className={cx('transition-opacity', loading && data && 'opacity-50')} aria-busy={loading}>
       <Table
         columns={[
-          { key: 'at', header: sameDay ? 'Hora' : 'Data', render: (e) => <span className="num whitespace-nowrap text-ink-2">{sameDay ? timeSec(e.at) : `${date(e.at)} ${timeSec(e.at)}`}</span> },
+          { key: 'at', header: sameDay ? 'Hora' : 'Data', render: (e) => <span className="num whitespace-nowrap text-ink-2">{e.day_only ? (sameDay ? '(dia)' : date(e.at)) : sameDay ? timeSec(e.at) : `${date(e.at)} ${timeSec(e.at)}`}</span> },
           { key: 'title', header: 'Movimento', render: (e) => (
             <div className="min-w-0">
               <p className="text-ink">{e.title}</p>
@@ -351,6 +352,7 @@ function Monthly() {
     { label: 'Renda', value: -data.deductions.total_rent },
     { label: 'Outros custos fixos', value: -data.deductions.total_other_fixed },
     { label: 'Entregas de fornecedores', value: -data.deductions.total_supplier_delivery },
+    { label: 'Despesas avulsas', value: -(data.deductions.total_expenses || 0) },
     { label: 'Lucro líquido real', value: data.net_profit, kind: 'result' },
   ] : [];
   const scale = data ? Math.max(1, data.gross_revenue, ...steps.map((s) => Math.abs(s.value))) : 1;
@@ -369,7 +371,7 @@ function Monthly() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label="Receita" value={money(data.gross_revenue)} delta={data.compare.revenue_change_pct ?? undefined} hint={`vs ${money(data.compare.previous_revenue)} no mês anterior`} />
             <Stat label="Lucro bruto" value={money(data.gross_profit)} delta={data.compare.gross_profit_change_pct ?? undefined} hint={`vs ${money(data.compare.previous_gross_profit)}`} />
-            <Stat label="Lucro líquido real" value={money(data.net_profit)} tone={data.net_profit < 0 ? 'danger' : 'positive'} hint="Depois de salários, renda e entregas" />
+            <Stat label="Lucro líquido real" value={money(data.net_profit)} tone={data.net_profit < 0 ? 'danger' : 'positive'} hint="Depois de salários, renda, entregas e despesas" />
             <Stat label="Meta" value={data.goal ? `${String(data.goal.pct).replace('.', ',')}%` : '—'} hint={data.goal ? `${money(data.goal.achieved)} de ${money(data.goal.target)}` : 'Sem meta neste mês'} tone={data.goal && data.goal.pct >= 100 ? 'positive' : undefined} />
           </div>
 
@@ -394,8 +396,14 @@ function Monthly() {
                   Perdas do mês (quebras e validades): <span className="num font-medium text-danger">−{money(data.losses_total)}</span>. Depois das perdas ficariam <span className="num font-medium text-ink">{money(data.net_profit - data.losses_total)}</span>.
                 </div>
               )}
+              {data.expenses?.by_category.length > 0 && (
+                <div className="mt-4 border-t border-border pt-3">
+                  <p className="mb-1 text-sm font-medium text-ink">Despesas avulsas por categoria</p>
+                  {data.expenses.by_category.map((c) => <KeyValue key={c.category} label={c.category} value={'−' + money(c.amount)} />)}
+                </div>
+              )}
               {data.deductions.total_rent === 0 && (
-                <Alert tone="warning" className="mt-4">Não há renda registada. Se paga renda, registe-a em Definições → Custos fixos para o lucro ser real.</Alert>
+                <Alert tone="warning" className="mt-4">Não há renda registada. Se paga renda, registe-a em Definições → Custos e despesas para o lucro ser real.</Alert>
               )}
             </Card>
             <Card>

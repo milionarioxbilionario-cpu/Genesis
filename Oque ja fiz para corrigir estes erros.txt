@@ -1260,3 +1260,27 @@ ATENCAO
   2 vezes o relatorio mensal teve de tentar de novo. Nao e um erro do
   Genesis: com o servidor alojado perto da base de dados deixa de
   acontecer.
+
+==========================================================================
+04/10/2026 — FASE 5.1: DESPESAS DO DIA A DIA ENTRAM NO LUCRO
+==========================================================================
+
+O QUE MUDOU
+- Em Definicoes > "Custos e despesas" ha agora duas partes:
+  1. Custos fixos (o que ja existia: renda, etc., todos os meses).
+  2. Despesas avulsas (NOVO): o que se paga uma vez — limpeza, transporte
+     do stock, uma reparacao, gasoleo do gerador... Escolhe-se a data, a
+     categoria (ha sugestoes, mas pode escrever outra), uma descricao e o
+     valor.
+- Essas despesas descontam no lucro liquido do mes. No relatorio mensal
+  aparece a linha "Despesas avulsas" e a lista por categoria. No rastreio
+  aparece cada despesa com o dia e quem a registou.
+- O caixista nao ve nem regista despesas. Outra loja nunca as ve.
+
+COMO PROVEI
+- 23 verificacoes contra o servidor e a base de dados reais: valor
+  350,50 MT guardado certo (35050 centavos), lucro liquido desce
+  exactamente o valor, datas no futuro recusadas, caixista bloqueado,
+  outra loja nao ve nem apaga. Todas passaram.
+- Teste no browser como dono: criar, ver no relatorio, editar e apagar.
+  Passou, sem erros.

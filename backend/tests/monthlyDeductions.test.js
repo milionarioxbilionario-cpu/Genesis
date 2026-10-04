@@ -70,3 +70,21 @@ test('lucro líquido = lucro bruto - despesas operacionais (renda incluída)', (
   assert.equal(deductions.operating_expenses, 150);
   assert.equal(computeMonthlyNetProfit(500, deductions), 350);
 });
+
+test('despesas avulsas entram no lucro líquido como linha própria', () => {
+  const deductions = computeMonthlyDeductions({
+    employees: [{ monthly_salary: 100 }],
+    fixedCosts: [{ type: 'rent', amount: 40 }],
+    expenses: [{ amount: 15 }, { amount: 5 }],
+  });
+  assert.equal(deductions.total_expenses, 20);
+  assert.equal(deductions.total_fixed, 40);
+  assert.equal(deductions.operating_expenses, 160);
+  assert.equal(computeMonthlyNetProfit(500, deductions), 340);
+});
+
+test('sem despesas avulsas a linha é zero e a fórmula não muda', () => {
+  const d = computeMonthlyDeductions({ fixedCosts: [{ type: 'rent', amount: 40 }] });
+  assert.equal(d.total_expenses, 0);
+  assert.equal(d.operating_expenses, 40);
+});

@@ -93,7 +93,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -683,14 +683,69 @@ async function test15() {
   ok(m1.goal && m1.goal.target === 1000000 && Array.isArray(m1.weeks) && m1.weeks.length >= 4, 'mensal: meta e semanas do mes');
   ok(m1.trends && m1.trends.growing.some((t) => t.product_id === ctx.product.id), 'mensal: produto em crescimento vs mes anterior');
   ok(m1.compare && 'previous_revenue' in m1.compare && m1.restock && m1.restock.cover_days === 30, 'mensal: comparacao com o mes anterior e restock para 30 dias');
-  ok(m1.net_profit === m1.gross_profit - m1.deductions.total_salaries - m1.deductions.total_rent - m1.deductions.total_other_fixed - m1.deductions.total_supplier_delivery, 'mensal: formula do lucro liquido inalterada (especificacao 6.3)');
+  ok(m1.net_profit === m1.gross_profit - m1.deductions.total_salaries - m1.deductions.total_rent - m1.deductions.total_other_fixed - m1.deductions.total_supplier_delivery - m1.deductions.total_expenses, 'mensal: formula do lucro liquido (especificacao 6.3 + despesas avulsas)');
 
   const gh = await get('/api/owner/goals/history');
   const cur = gh[gh.length - 1];
   ok(gh.length === 12 && cur.current && cur.target === 1000000 && cur.achieved >= 20000, 'metas: 12 meses, o actual com meta e atingido', cur);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15 };
+// ---------------------------------------------------------------------------
+async function test16() {
+  section(16, 'Despesas avulsas no lucro liquido (Genesis 2.1, Fase 5)');
+  const owner = ownerClient();
+  const now = new Date(); const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = iso(now);
+  const ym = `year=${now.getFullYear()}&month=${now.getMonth() + 1}`;
+  const get = async (p) => { const r = await owner.req('GET', p); if (r.status !== 200) throw new Error(p + ' -> ' + r.status + ' ' + JSON.stringify(r.data)); return r.data; };
+
+  const m0 = await get('/api/owner/reports/monthly?' + ym);
+  const a = await owner.req('POST', '/api/settings/expenses', { date: day, category: 'Limpeza', description: 'Detergente', amount: 35050 });
+  ok(a.status === 201 && a.data.amount === 35050 && a.data.tenant_id === ctx.tenant.id, 'despesa de 350,50 MT gravada em centavos', a);
+  const b = await owner.req('POST', '/api/settings/expenses', { date: day, category: 'Gerador', amount: 100000 });
+  ok(b.status === 201 && b.data.category === 'Gerador', 'categoria escrita pelo dono (fora da lista) aceite', b);
+  ok((await owner.req('POST', '/api/settings/expenses', { date: day, category: 'Luz', amount: 0 })).status === 400, 'valor 0 = 400');
+  ok((await owner.req('POST', '/api/settings/expenses', { date: day, category: 'Luz', amount: 10.5 })).status === 400, 'valor nao inteiro (nao centavos) = 400');
+  const fut = await owner.req('POST', '/api/settings/expenses', { date: iso(new Date(Date.now() + 3 * 86400000)), category: 'Luz', amount: 1000 });
+  ok(fut.status === 400 && fut.data.code === 'FUTURE_DATE', 'data no futuro = 400 FUTURE_DATE', fut);
+  ok((await owner.req('POST', '/api/settings/expenses', { date: '2026-02-31', category: 'Luz', amount: 1000 })).status === 400, 'data inexistente (31/02) = 400');
+
+  const list = await get('/api/settings/expenses?' + ym);
+  ok(list.total === 135050 && list.rows.length === 2 && list.by_category[0].category === 'Gerador', 'lista do mes: total 1 350,50 MT, por categoria', list.total);
+  ok(list.categories.includes('Transporte do stock'), 'categorias sugeridas devolvidas');
+
+  const upd = await owner.req('PUT', '/api/settings/expenses/' + b.data.id, { date: day, category: 'Gerador', description: 'Gasoleo', amount: 80000 });
+  ok(upd.status === 200 && upd.data.amount === 80000, 'editar despesa', upd);
+
+  const m1 = await get('/api/owner/reports/monthly?' + ym);
+  ok(m1.deductions.total_expenses - m0.deductions.total_expenses === 115050, 'mensal: total_expenses +1 150,50 MT', m1.deductions.total_expenses);
+  ok(m0.net_profit - m1.net_profit === 115050, 'mensal: lucro liquido desce exactamente 1 150,50 MT', [m0.net_profit, m1.net_profit]);
+  ok(m1.deductions.operating_expenses === m1.deductions.total_salaries + m1.deductions.total_fixed + m1.deductions.total_supplier_delivery + m1.deductions.total_expenses, 'mensal: despesas operacionais incluem as avulsas');
+  ok(m1.expenses.by_category.some((c) => c.category === 'Limpeza' && c.amount === 35050), 'mensal: despesas linha a linha por categoria');
+
+  const tl = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&types=expense`);
+  ok(tl.rows.length === 2 && tl.rows.every((e) => e.type === 'expense' && e.effect === 'expense' && e.amount < 0 && e.profit === 0), 'rastreio: 2 despesas, negativas, sem mexer no lucro bruto do dia', tl.rows);
+  ok(tl.rows.some((e) => e.who === ctx.owner.name), 'rastreio: quem registou a despesa');
+
+  // Isolamento: caixista nao chega; outra loja nao ve nem apaga.
+  const term = await pairedTerminal('Balcao despesas');
+  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  ok((await term.req('GET', '/api/settings/expenses')).status === 403, 'caixista nao ve despesas (403)');
+  ok((await term.req('POST', '/api/settings/expenses', { date: day, category: 'Luz', amount: 1000 })).status === 403, 'caixista nao cria despesas (403)');
+  const foreign = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.expense.count({ where: { tenant_id: ctx.tenant.id } }));
+  ok(foreign === 0, 'despesas invisiveis no contexto de outra loja (RLS)');
+  const foreignDel = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.expense.deleteMany({ where: { id: a.data.id } }));
+  ok(foreignDel.count === 0, 'outra loja nao consegue apagar a despesa (RLS)');
+  const auditN = await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: { in: ['CREATE_EXPENSE', 'UPDATE_EXPENSE'] } } });
+  ok(auditN === 3, 'auditoria: 2 criadas + 1 editada', auditN);
+
+  ok((await owner.req('DELETE', '/api/settings/expenses/' + a.data.id)).status === 200, 'apagar despesa');
+  ok((await owner.req('DELETE', '/api/settings/expenses/' + a.data.id)).status === 404, 'apagar outra vez = 404');
+  const m2 = await get('/api/owner/reports/monthly?' + ym);
+  ok(m2.deductions.total_expenses - m0.deductions.total_expenses === 80000, 'mensal: depois de apagar, so fica a de 800 MT');
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16 };
 
 (async () => {
   await prisma.ready();

@@ -1,18 +1,18 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-04T02:44:33.025Z */
+   Gerado em: 2026-10-04T08:43:11.351Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-04T02:44:33.025Z",
+ "generatedAt": "2026-10-04T08:43:11.351Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 173,
+  "files": 175,
   "planned": 5,
   "links": 277,
-  "lines": 25272,
+  "lines": 25698,
   "byStatus": {
-   "ok": 102,
+   "ok": 104,
    "partial": 12,
    "broken": 0,
    "planned": 5,
@@ -22,10 +22,10 @@ window.GENESIS_MINDMAP = {
    "infra": 9,
    "docs": 11,
    "admin": 9,
-   "backend-data": 43,
+   "backend-data": 44,
    "backend": 47,
    "frontend-pub": 4,
-   "frontend": 52,
+   "frontend": 53,
    "scripts": 3
   }
  },
@@ -68,15 +68,19 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
-   "count": 8
+   "count": 9
   },
   {
    "pkg": "node:fs",
-   "count": 7
+   "count": 8
   },
   {
    "pkg": "path",
    "count": 7
+  },
+  {
+   "pkg": "@playwright/test",
+   "count": 6
   },
   {
    "pkg": "fs",
@@ -88,10 +92,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:assert",
-   "count": 5
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 5
   },
   {
@@ -165,7 +165,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 43,
+   "nodes": 44,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -174,6 +174,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20260919_add_sale_discount_daily": 1,
     "backend/prisma/migrations/20261003_genesis2": 1,
     "backend/prisma/migrations/20261004_catalogo_mz": 1,
+    "backend/prisma/migrations/20261004_despesas": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/scripts": 25,
     "backend/tests": 5,
@@ -207,7 +208,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 52,
+   "nodes": 53,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -221,7 +222,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
     "frontend/src/utils": 10,
-    "frontend/tests/e2e": 5,
+    "frontend/tests/e2e": 6,
     "frontend/tests": 2,
     "frontend/src/pages": 1
    }
@@ -274,8 +275,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 530,
-   "size": 89421,
+   "lines": 539,
+   "size": 92186,
    "externals": [
     "@prisma/client"
    ],
@@ -318,8 +319,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1070,
-   "size": 55567,
+   "lines": 1083,
+   "size": 56156,
    "externals": [
     "nodemailer"
    ],
@@ -783,6 +784,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261004_despesas/migration.sql",
+   "path": "backend/prisma/migrations/20261004_despesas/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261004_despesas",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 27,
+   "size": 1311,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
    "path": "backend/prisma/migrations/20261004_stock_lotes/migration.sql",
    "label": "migration.sql",
@@ -817,7 +839,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 91,
-   "size": 5073,
+   "size": 5083,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -837,8 +859,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 346,
-   "size": 12072,
+   "lines": 363,
+   "size": 12586,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -860,8 +882,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 363,
-   "size": 12954,
+   "lines": 380,
+   "size": 13468,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1034,7 +1056,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 71,
-   "size": 5000,
+   "size": 5011,
    "externals": [
     "dotenv",
     "fs",
@@ -1487,8 +1509,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 711,
-   "size": 53790,
+   "lines": 766,
+   "size": 58928,
    "externals": [
     "dotenv",
     "crypto",
@@ -2119,14 +2141,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
+   "notes": "04/10/2026 Fase 5.1: /expenses; verify_system 16 23/23.",
+   "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 143,
-   "size": 7043,
+   "lines": 221,
+   "size": 11050,
    "externals": [
     "express",
     "bcrypt",
@@ -2211,12 +2233,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Deducoes mensais (salarios, custos fixos) que entram no lucro liquido real.",
-   "notes": "",
+   "notes": "04/10/2026 Fase 5.1: total_expenses; 8/8 testes.",
    "role": "Financeiro.",
    "security": "",
    "planned": false,
-   "lines": 55,
-   "size": 1790,
+   "lines": 59,
+   "size": 2006,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -2265,8 +2287,8 @@ window.GENESIS_MINDMAP = {
    "role": "Relatorios.",
    "security": "",
    "planned": false,
-   "lines": 413,
-   "size": 26409,
+   "lines": 423,
+   "size": 27762,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -2928,8 +2950,8 @@ window.GENESIS_MINDMAP = {
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 73,
-   "size": 2710,
+   "lines": 91,
+   "size": 3436,
    "externals": [
     "node:test",
     "node:assert"
@@ -3929,8 +3951,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 484,
-   "size": 31604,
+   "lines": 492,
+   "size": 32224,
    "externals": [
     "react",
     "lucide-react",
@@ -3986,14 +4008,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
+   "notes": "04/10/2026 Fase 5.1: despesas avulsas; fase5.mjs 9/9.",
+   "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 283,
-   "size": 17910,
+   "lines": 358,
+   "size": 23583,
    "externals": [
     "react",
     "react-router-dom",
@@ -4547,6 +4569,31 @@ window.GENESIS_MINDMAP = {
     "admin-frontend/tailwind.config.cjs"
    ],
    "inbound": 1,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/fase5.mjs",
+   "path": "frontend/tests/e2e/fase5.mjs",
+   "label": "fase5.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 95,
+   "size": 5722,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
    "outbound": 0
   },
   {

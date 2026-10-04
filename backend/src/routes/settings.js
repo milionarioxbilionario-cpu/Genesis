@@ -138,5 +138,83 @@ router.delete('/fixed-costs/:id', asyncHandler(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// ------------------------------------------------------- despesas avulsas
+// Gastos do dia a dia (limpeza, transporte do stock, luz...), alem dos custos
+// fixos. Entram no lucro liquido do mes em que foram pagos. As categorias
+// sugeridas aparecem no ecra, mas o dono pode escrever outra.
+const EXPENSE_CATEGORIES = ['Limpeza', 'Transporte do stock', 'Software', 'Luz', 'Água', 'Manutenção', 'Outros'];
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const expenseSchema = z.object({
+  date: z.string().regex(DAY, 'Data no formato AAAA-MM-DD'),
+  category: z.string().trim().min(2, 'Escolha ou escreva a categoria').max(40),
+  description: z.string().trim().max(160).optional().default(''),
+  amount: z.number().int().positive(), // centavos
+});
+const pad = (n) => String(n).padStart(2, '0');
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
+// Meio-dia (hora do servidor) do dia escolhido: fica dentro do dia e do mes
+// que os relatorios usam, seja qual for o fuso de quem le.
+function expenseDate(day) {
+  const [y, m, d] = day.split('-').map(Number);
+  const date = new Date(y, m - 1, d, 12, 0, 0, 0);
+  if (Number.isNaN(date.getTime()) || date.getDate() !== d) throw httpError(400, 'Data inválida', 'BAD_DATE');
+  if (day > todayKey()) throw httpError(400, 'A data da despesa não pode ser no futuro', 'FUTURE_DATE');
+  return date;
+}
+
+router.get('/expenses', asyncHandler(async (req, res) => {
+  const now = new Date();
+  const q = z.object({
+    year: z.coerce.number().int().min(2020).max(2100).default(now.getFullYear()),
+    month: z.coerce.number().int().min(1).max(12).default(now.getMonth() + 1),
+  }).parse(req.query);
+  const start = new Date(q.year, q.month - 1, 1, 0, 0, 0, 0);
+  const end = new Date(q.year, q.month, 0, 23, 59, 59, 999);
+  const rows = await prisma.expense.findMany({ where: { tenant_id: tenantId(req), date: { gte: start, lte: end } }, orderBy: [{ date: 'desc' }, { created_at: 'desc' }] });
+  const byCategory = {};
+  for (const e of rows) byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+  res.json({
+    year: q.year, month: q.month, rows,
+    total: rows.reduce((s, e) => s + e.amount, 0),
+    by_category: Object.entries(byCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount),
+    categories: EXPENSE_CATEGORIES,
+  });
+}));
+
+router.post('/expenses', asyncHandler(async (req, res) => {
+  const data = expenseSchema.parse(req.body);
+  const expense = await prisma.expense.create({
+    data: { tenant_id: tenantId(req), date: expenseDate(data.date), category: data.category, description: data.description, amount: data.amount, created_by: req.user.userId },
+  });
+  await writeAudit({ req, action: 'CREATE_EXPENSE', entityType: 'expense', entityId: expense.id, newValue: data });
+  res.status(201).json(expense);
+}));
+
+async function ownExpense(req) {
+  const expense = await prisma.expense.findFirst({ where: { id: req.params.id, tenant_id: tenantId(req) } });
+  if (!expense) throw httpError(404, 'Despesa não encontrada');
+  return expense;
+}
+
+router.put('/expenses/:id', asyncHandler(async (req, res) => {
+  const before = await ownExpense(req);
+  const data = expenseSchema.parse(req.body);
+  const expense = await prisma.expense.update({
+    where: { id: before.id },
+    data: { date: expenseDate(data.date), category: data.category, description: data.description, amount: data.amount },
+  });
+  await writeAudit({ req, action: 'UPDATE_EXPENSE', entityType: 'expense', entityId: expense.id, oldValue: before, newValue: data });
+  res.json(expense);
+}));
+
+router.delete('/expenses/:id', asyncHandler(async (req, res) => {
+  const before = await ownExpense(req);
+  await prisma.expense.delete({ where: { id: before.id } });
+  await writeAudit({ req, action: 'DELETE_EXPENSE', entityType: 'expense', entityId: before.id, oldValue: before });
+  res.json({ ok: true });
+}));
+
 module.exports = router;
 module.exports.FIXED_COST_TYPES = FIXED_COST_TYPES;
+module.exports.EXPENSE_CATEGORIES = EXPENSE_CATEGORIES;
