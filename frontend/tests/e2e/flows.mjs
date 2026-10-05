@@ -173,7 +173,7 @@ try {
 
   console.log('\n=== Vendas no painel do dono ===');
   await owner.goto(BASE + '/app/vendas');
-  await owner.getByText('Carlos').first().waitFor({ timeout: T });
+  await owner.locator('tbody tr', { hasText: 'Carlos' }).first().waitFor({ timeout: T });
   const rows = await owner.locator('tbody tr').count();
   ok(rows >= 3, 'dono ve as vendas do terminal no historico (' + rows + ')');
   await shot(owner, '14-vendas-com-dados');

@@ -1,25 +1,25 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-04T10:15:23.256Z */
+   Gerado em: 2026-10-05T12:37:53.943Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-04T10:15:23.256Z",
+ "generatedAt": "2026-10-05T12:37:53.943Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 185,
+  "files": 188,
   "planned": 5,
   "links": 297,
-  "lines": 26822,
+  "lines": 27043,
   "byStatus": {
    "ok": 110,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 63
+   "untracked": 66
   },
   "byGroup": {
-   "infra": 9,
+   "infra": 12,
    "docs": 11,
    "admin": 9,
    "backend-data": 48,
@@ -55,12 +55,12 @@ window.GENESIS_MINDMAP = {
    "count": 16
   },
   {
-   "pkg": "zod",
+   "pkg": "crypto",
    "count": 15
   },
   {
-   "pkg": "crypto",
-   "count": 14
+   "pkg": "zod",
+   "count": 15
   },
   {
    "pkg": "@prisma/client",
@@ -76,7 +76,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "path",
-   "count": 7
+   "count": 8
   },
   {
    "pkg": "node:test",
@@ -92,7 +92,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "fs",
-   "count": 5
+   "count": 6
   },
   {
    "pkg": "nodemailer",
@@ -132,10 +132,11 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 9,
+   "nodes": 12,
    "clusters": {
     ".": 7,
     "backend": 1,
+    "deploy": 3,
     "frontend": 1
    }
   },
@@ -277,8 +278,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 559,
-   "size": 99331,
+   "lines": 585,
+   "size": 107320,
    "externals": [
     "@prisma/client"
    ],
@@ -1553,8 +1554,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 863,
-   "size": 67956,
+   "lines": 873,
+   "size": 68123,
    "externals": [
     "dotenv",
     "crypto",
@@ -3219,6 +3220,73 @@ window.GENESIS_MINDMAP = {
    "externals": [
     "@prisma/client"
    ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "deploy/gerar_env_producao.js",
+   "path": "deploy/gerar_env_producao.js",
+   "label": "gerar_env_producao.js",
+   "group": "infra",
+   "dir": "deploy",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 41,
+   "size": 1929,
+   "externals": [
+    "fs",
+    "path",
+    "crypto"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "deploy/publicar.sh",
+   "path": "deploy/publicar.sh",
+   "label": "publicar.sh",
+   "group": "infra",
+   "dir": "deploy",
+   "ext": ".sh",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 81,
+   "size": 4423,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "deploy/setup_servidor.sh",
+   "path": "deploy/setup_servidor.sh",
+   "label": "setup_servidor.sh",
+   "group": "infra",
+   "dir": "deploy",
+   "ext": ".sh",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 63,
+   "size": 3045,
+   "externals": [],
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
@@ -4892,7 +4960,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 190,
-   "size": 10146,
+   "size": 10169,
    "externals": [
     "node:fs",
     "node:path",
