@@ -1442,3 +1442,13 @@ O QUE FALTA
 1. Definires as senhas das 2 contas (comando na conversa).
 2. Ligar a "nuvem laranja" na Cloudflare (protecao contra ataques).
 3. O login com Google precisa de autorizar genesismz.com na consola Google.
+
+==========================================================================
+05/10/2026 — GOOGLE A FUNCIONAR; EMAILS A CAMINHO (BREVO)
+==========================================================================
+- O login com Google ja funciona em https://genesismz.com (testaste e
+  entraste no assistente de configuracao da loja).
+- O codigo de recuperacao de senha nao chegou porque o Genesis ainda nao
+  tem servico de email. Escolheste o Brevo (gratis). Preparei um programa
+  no servidor que te pede a chave do Brevo sem a mostrar, envia um email
+  de teste e so guarda se funcionar.
