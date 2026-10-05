@@ -45,6 +45,14 @@ echo "== nginx"
 sed -e "s/__APP_HOST__/${APP_HOST}/g" -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" /tmp/genesis-deploy/nginx.conf > /etc/nginx/sites-available/genesis
 ln -sf /etc/nginx/sites-available/genesis /etc/nginx/sites-enabled/genesis
 rm -f /etc/nginx/sites-enabled/default
+# Atras da Cloudflare (nuvem laranja) o pedido chega dos IPs dela: sem isto todas
+# as lojas teriam o "mesmo IP" e os limites de login/PIN de uma bloqueavam as
+# outras. CF-Connecting-IP so e aceite quando o pedido vem mesmo da Cloudflare.
+{
+  echo "# Gerado por setup_servidor.sh: IP real do cliente atras da Cloudflare."
+  for ip in $(curl -fsS https://www.cloudflare.com/ips-v4) $(curl -fsS https://www.cloudflare.com/ips-v6); do echo "set_real_ip_from $ip;"; done
+  echo "real_ip_header CF-Connecting-IP;"
+} > /etc/nginx/conf.d/cloudflare-realip.conf
 nginx -t && systemctl reload nginx
 
 echo "== HTTPS (Let's Encrypt; renova sozinho)"

@@ -1412,3 +1412,33 @@ PORQUE NAO PUS O SISTEMA TODO NA CLOUDFLARE
 O QUE FALTA
 - Um servidor em Frankfurt: precisa de um meio de pagamento que aceitem
   (falar com o banco sobre compras online internacionais, ou PayPal).
+
+==========================================================================
+05/10/2026 — O GENESIS ESTA NA INTERNET: https://genesismz.com
+==========================================================================
+
+O QUE FOI FEITO
+- Servidor em Frankfurt (Akamai/Linode), na mesma cidade da base de dados.
+  A loja abre em https://genesismz.com e o painel admin em
+  https://admin.genesismz.com, com cadeado (HTTPS) que se renova sozinho.
+- Limpei a base de dados como pediste: apaguei as 20 lojas e 21 contas de
+  teste (antes fiz uma copia de seguranca completa neste PC, na pasta
+  genesis-backup-20261005). Ficaram so:
+    * admin@genesismz.com  (super admin)
+    * kleytonvelichane3@gmail.com  (dono, com uma loja nova vazia que
+      comeca pelo assistente de 5 passos)
+  As duas tem senhas aleatorias que ninguem conhece: tens de as definir.
+  Isto tambem resolve a senha antiga que esteve exposta: ja nao abre nada.
+
+A LENTIDAO ACABOU
+- Do servidor ate a base de dados: 5 milesimos de segundo por ida e volta.
+  Daqui de Maputo eram 340 a 700.
+- A bateria de 238 verificacoes do sistema que aqui demorava ~20 minutos
+  correu no servidor em 21 segundos, sem erros.
+- Testei no browser, no site verdadeiro: login, terminal com PIN, vendas,
+  offline, fecho de turno, relatorios. Tudo passou.
+
+O QUE FALTA
+1. Definires as senhas das 2 contas (comando na conversa).
+2. Ligar a "nuvem laranja" na Cloudflare (protecao contra ataques).
+3. O login com Google precisa de autorizar genesismz.com na consola Google.
