@@ -1388,3 +1388,27 @@ O QUE PRECISO DE TI
 1. Criar o servidor (passos na conversa).
 2. Antes de abrir ao publico: mudar a senha das 3 contas que ainda usam a
    senha antiga que esteve exposta (gerir-contas.bat).
+
+==========================================================================
+05/10/2026 — DOMINIO genesismz.com LIGADO A CLOUDFLARE
+==========================================================================
+
+O QUE FOI FEITO
+- O dominio genesismz.com (comprado na Namecheap) passou a ser gerido pela
+  Cloudflare (plano gratis). Confirmei pelos servidores publicos do Google:
+  ja respondem os servidores da Cloudflare.
+- Apaguei a pagina de "parking" da Namecheap e mantive o reencaminhamento
+  de email.
+- O site ainda nao abre: falta o servidor. Quando existir, a loja fica em
+  https://genesismz.com e o painel admin em https://admin.genesismz.com.
+- Nao liguei o "Bot Fight Mode" de proposito: podia bloquear o terminal
+  do balcao.
+
+PORQUE NAO PUS O SISTEMA TODO NA CLOUDFLARE
+- O plano gratis da Cloudflare nao aguenta a verificacao de senhas e PINs
+  do Genesis, e partes importantes teriam de ser reescritas. A Cloudflare
+  fica como "escudo" a frente do servidor, que e onde ela e melhor.
+
+O QUE FALTA
+- Um servidor em Frankfurt: precisa de um meio de pagamento que aceitem
+  (falar com o banco sobre compras online internacionais, ou PayPal).
