@@ -122,6 +122,18 @@ async function pairedTerminal(name = 'Balcao teste') {
   return term;
 }
 
+// Terminal com o caixista com sessao, partilhado pelas seccoes 15-18: o
+// emparelhamento tem limite de 10 por IP em 15 min (pos.js) e, perto da BD, a
+// bateria inteira corre em segundos.
+async function cashierTerminal() {
+  if (!ctx.cashierTerm) {
+    const term = await pairedTerminal('Balcao partilhado');
+    await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+    ctx.cashierTerm = term;
+  }
+  return ctx.cashierTerm;
+}
+
 // ---------------------------------------------------------------------------
 async function test2() {
   section(2, 'Terminal emparelhado + PIN do caixista (a conta do dono fora do balcao)');
@@ -636,8 +648,7 @@ async function test15() {
   const d0 = await get('/api/owner/reports/daily?date=' + day);
   const m0 = await get('/api/owner/reports/monthly?' + ym);
 
-  const term = await pairedTerminal('Balcao relatorios');
-  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const term = await cashierTerminal();
   const sale = await term.req('POST', '/api/sales', saleBody({ items: [{ product_id: ctx.product.id, quantity: 2, unit_sell_price: 10000, unit_cost_price: 0 }], total_amount: 20000, amount_received: 20000 }));
   ok(sale.status === 201, 'venda de 2 x 100 MT', sale);
   const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: ctx.product.id, quantity: 1, reason: 'broken' });
@@ -730,8 +741,7 @@ async function test16() {
   ok(tl.rows.some((e) => e.who === ctx.owner.name), 'rastreio: quem registou a despesa');
 
   // Isolamento: caixista nao chega; outra loja nao ve nem apaga.
-  const term = await pairedTerminal('Balcao despesas');
-  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const term = await cashierTerminal();
   ok((await term.req('GET', '/api/settings/expenses')).status === 403, 'caixista nao ve despesas (403)');
   ok((await term.req('POST', '/api/settings/expenses', { date: day, category: 'Luz', amount: 1000 })).status === 403, 'caixista nao cria despesas (403)');
   const foreign = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.expense.count({ where: { tenant_id: ctx.tenant.id } }));
@@ -791,8 +801,7 @@ async function test17() {
   ok(locked.status === 409 && locked.data.code === 'LIST_RECEIVED', 'lista recebida nao se edita (409)', locked);
 
   // Isolamento.
-  const term = await pairedTerminal('Balcao compras');
-  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const term = await cashierTerminal();
   ok((await term.req('GET', '/api/shopping-lists')).status === 403, 'caixista nao ve listas de compras (403)');
   const other = crypto.randomUUID();
   ok((await prisma.runWithTenant(other, () => prisma.shoppingList.count({ where: { tenant_id: ctx.tenant.id } }))) === 0, 'listas invisiveis noutra loja (RLS)');
@@ -829,8 +838,7 @@ async function test18() {
   st = await get('/api/owner/month-close');
   ok(st.due === true, 'a partir do dia do fecho: fecho do mes anterior por ver', st);
 
-  const term = await pairedTerminal('Balcao fecho');
-  await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  const term = await cashierTerminal();
   ok((await term.req('GET', '/api/owner/month-close')).status === 403, 'caixista nao ve o fecho do mes (403)');
   ok((await term.req('PUT', '/api/settings/month-close', { month_close_day: 5 })).status === 403, 'caixista nao muda o dia do fecho (403)');
 
