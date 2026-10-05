@@ -504,6 +504,9 @@ async function test11() {
   ok(w.status === 403 && w.data?.code === 'SCOPE_RESTRICTED', 'suporte NAO pode escrever (403)', w);
   ok((await client(signAccessToken(ctx.owner)).req('GET', '/api/admin/tenants', undefined, { Origin: ADMIN_ORIGIN })).status === 403, 'dono nao entra no /api/admin');
   await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { status: 'active', trial_ends_at: null } });
+  // Espera que a cache do estado da loja (TENANT_STATUS_CACHE_MS) expire: num
+  // servidor perto da BD a seccao seguinte comecava antes e via ainda o trial expirado.
+  await new Promise((r) => setTimeout(r, Number(process.env.TENANT_STATUS_CACHE_MS || 1000) + 500));
 }
 
 async function test12() {
