@@ -2,6 +2,7 @@
 # Publica a versao COMMITADA (HEAD) no servidor. Corre a partir do PC (Git Bash):
 #   bash deploy/publicar.sh <IP>                 -> publica backend + app + admin
 #   bash deploy/publicar.sh <IP> --primeira-vez <EMAIL>   -> prepara o servidor antes
+# Com o dominio: APP_HOST=genesismz.com ADMIN_HOST=admin.genesismz.com bash deploy/publicar.sh ...
 # Usa a chave ~/.ssh/genesis_do. So vai o que esta no git (nunca .env, dev.db, logs).
 # Troca de versao com rollback: se o backend novo nao responder, volta ao anterior.
 set -euo pipefail
@@ -12,7 +13,12 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DASHED="${IP//./-}"
 APP_HOST="${APP_HOST:-${DASHED}.sslip.io}"
 ADMIN_HOST="${ADMIN_HOST:-admin.${DASHED}.sslip.io}"
-SSH="ssh -i $HOME/.ssh/genesis_do -o StrictHostKeyChecking=accept-new root@${IP}"
+SSH_OPTS="-i $HOME/.ssh/genesis_do -o StrictHostKeyChecking=accept-new"
+SSH="ssh $SSH_OPTS root@${IP}"
+# Fornecedores cujo utilizador inicial nao e root (AWS Lightsail e OVH: ubuntu;
+# Google Cloud: o nome do utilizador): DEPLOY_USER=ubuntu bash deploy/publicar.sh ...
+# Na primeira vez, a mesma chave passa a valer para root (so com chave, nunca senha).
+DEPLOY_USER="${DEPLOY_USER:-root}"
 
 cd "$ROOT"
 if [ -n "$(git status --porcelain)" ]; then
@@ -23,6 +29,10 @@ REV="$(git rev-parse --short HEAD)"
 if [ "$MODE" = "--primeira-vez" ]; then
   [ -n "$EMAIL" ] || { echo "falta o email para o certificado HTTPS"; exit 1; }
   echo "== a preparar o servidor ($APP_HOST, $ADMIN_HOST)"
+  if [ "$DEPLOY_USER" != "root" ]; then
+    echo "== a autorizar a chave para root (via $DEPLOY_USER + sudo)"
+    ssh $SSH_OPTS "${DEPLOY_USER}@${IP}" "sudo install -d -m 700 /root/.ssh && sudo install -m 600 \$HOME/.ssh/authorized_keys /root/.ssh/authorized_keys"
+  fi
   $SSH "rm -rf /tmp/genesis-deploy && mkdir -p /tmp/genesis-deploy"
   tar -C deploy -cz setup_servidor.sh genesis-backend.service nginx.conf | $SSH "tar -xz -C /tmp/genesis-deploy"
   $SSH "bash /tmp/genesis-deploy/setup_servidor.sh '$APP_HOST' '$ADMIN_HOST' '$EMAIL'"
