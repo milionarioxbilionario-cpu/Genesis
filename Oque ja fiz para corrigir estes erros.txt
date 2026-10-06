@@ -1452,3 +1452,16 @@ O QUE FALTA
   tem servico de email. Escolheste o Brevo (gratis). Preparei um programa
   no servidor que te pede a chave do Brevo sem a mostrar, envia um email
   de teste e so guarda se funcionar.
+
+==========================================================================
+06/10/2026 — CORRECCAO NO CLAUDE.md + LISTA DO TEU TESTE NO IPHONE
+==========================================================================
+- O ficheiro de instrucoes (CLAUDE.md) ainda dizia que o painel admin
+  estava em admin.genesis.co.mz. Agora diz admin.genesismz.com, que e o
+  endereco verdadeiro. Funcionou (procurei e ja nao ha o nome antigo la).
+- Anotei todos os problemas que encontraste no iPhone no Mapa Mental,
+  para nao se perderem. O mais grave: o caixista consegue continuar a
+  vender depois de fechar o turno e consegue ver as vendas sem o PIN do
+  dono. Vamos tratar um de cada vez, a comecar por esses.
+- Descobri mais um: o QR dos recibos aponta para genesis.co.mz, um
+  endereco que nao e nosso. Esta na lista.
