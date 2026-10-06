@@ -592,3 +592,20 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Reset de senha não entregou: log do servidor `[reset] codigo NAO entregue (sem SMTP/WhatsApp configurado)`; `MAIL_USER`/`MAIL_PASS` vazios no `.env` de produção (já pendente desde 09/2026). Correcto não mostrar o código no ecrã (`DEV_SHOW_RESET_CODE=false`).
 - Decisão do fundador: **Brevo** (SMTP `smtp-relay.brevo.com:587`, remetente `Genesis <no-reply@genesismz.com>`). Novo `backend/scripts/configurar_email.js` (corre no servidor; chave escondida; envia email de teste e só guarda se funcionar; actualiza `.env` e a cópia mestra `/srv/genesis/backend.env`). Publicado (`9b937d8`). ⚠️ NÃO VERIFICADO até o fundador criar a conta Brevo, autenticar o domínio na Cloudflare e correr o script.
 - Nota para o fundador: no CMD a chave é `"%USERPROFILE%\.ssh\genesis_do"` (o `$HOME` é do PowerShell, que está restrito no PC dele).
+
+### [2026-10-06] — CLAUDE.md com o domínio real; teste do fundador no iPhone (lista de defeitos)
+- `CLAUDE.md`: `admin.genesis.co.mz` → `admin.genesismz.com` (+ app em `genesismz.com`). Prova: `grep genesis.co.mz CLAUDE.md` → 0.
+- Senhas das 2 contas: o fundador confirma que as definiu com `gerir-contas.bat`. Brevo: não consegue validar a conta (não recebe o código de verificação do telefone) → escolher outro fornecedor de email.
+- Defeitos/pedidos do teste no iPhone (06/10), por confirmar e tratar um a um:
+  - 🔴 Turno: depois de "Fechar turno" o caixista continua a vender (o turno é só a "janela desde o último fecho", `utils/shift.js:29`; não existe estado "turno fechado"); o cadeado sai do perfil sem fechar o turno; depois de fechar volta a entrar e vende.
+  - 🔴 "Vendas" no terminal abre sem PIN do dono → o caixista vê o total e acerta o fecho cego. Fundador quer o PIN do dono para abrir a lista (e o cancelamento continua com motivo).
+  - 🔴 QR dos recibos aponta para `https://genesis.co.mz/verify/…` (`receiptPrinter.js:18`, `PosDialogs.jsx:34`): domínio que não é nosso e rota `/verify` inexistente no frontend.
+  - 🔴 Pesquisa do POS sensível a acentos ("acucar" não encontra "Açúcar").
+  - Recibo: imprime em A4; deve imprimir no formato de talão (80/58 mm); A4 só como cópia em PDF guardada. Nome do ficheiro: `Recibo_<n> - <Loja> (DD-MM-AAAA - HH:MM:SS).pdf`; pastas `Lojas/<Loja>/{Recibos, Relatórios diários, semanais, mensais, Chenecas-Empréstimos}`.
+  - Admin no iPhone: "Abrir modo suporte" não abre separador (Safari bloqueia `window.open` depois de `await`).
+  - Admin: a senha temporária da conta aprovada devia ir por email automático, não ser enviada pelo fundador; email inventado `<nome>.<timestamp>@genesis.co.mz` quando o email já existe (`routes/admin.js:106-108`).
+  - Dono: mudar a própria senha nas Definições (por confirmar se existe).
+  - Produtos: editar (preço, custo, stock, código de barras, ícone); escolher ícone; ler código de barras com o leitor no formulário.
+  - Onboarding: linhas vazias já visíveis (custos, trabalhadores, fornecedores) com exemplos (ex.: 300,00 MT) e texto mais claro sobre o "lucro real que vai para o bolso".
+  - Novos (fora do spec actual — REGRA 8, autorizados pelo fundador): idioma PT/EN incluindo nomes de produtos e pesquisa bilingue; layout próprio para telemóvel/tablet; instalar como app (PWA "Adicionar ao ecrã principal").
+- Segue-se: o fundador escolhe a ordem; proposta começa pelos 🔴 de turno/vendas.
