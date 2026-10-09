@@ -152,6 +152,61 @@ try {
   await shot(term, '27-pos-fecho-cego');
   await term.keyboard.press('Escape');
 
+  // Lista de vendas: so abre com o PIN do dono.
+  await term.getByRole('button', { name: 'Vendas', exact: true }).click();
+  await term.getByText('A lista de vendas só abre com o PIN').waitFor({ timeout: T });
+  ok(!(await term.getByText('As minhas últimas vendas').isVisible()), 'Vendas: pede o PIN do dono antes de mostrar a lista');
+  await term.getByLabel('PIN do dono').fill('0000');
+  await term.getByRole('button', { name: 'Autorizar' }).click();
+  await term.getByText(/PIN do dono incorrecto/).waitFor({ timeout: T });
+  ok(!(await term.getByText('As minhas últimas vendas').isVisible()), 'PIN errado: a lista continua fechada');
+  await term.getByLabel('PIN do dono').fill(fx.authPin);
+  await term.getByRole('button', { name: 'Autorizar' }).click();
+  await term.getByText('As minhas últimas vendas').waitFor({ timeout: T });
+  ok(true, 'PIN certo: lista de vendas aberta');
+  await shot(term, '28-pos-vendas-pin');
+  await term.keyboard.press('Escape');
+
+  // Venda offline ainda por enviar: o fecho NAO conta (o servidor nao a tem e
+  // o turno seguinte daria um falso 'abaixo do esperado').
+  await termCtx.setOffline(true);
+  await term.getByRole('button', { name: /Sumol Laranja 330ml/ }).click();
+  await term.getByRole('button', { name: /Cobrar 35,00 MT/ }).click();
+  await term.getByText('1 por enviar').waitFor({ timeout: T });
+  await term.getByRole('button', { name: 'Fechar turno' }).click();
+  await term.getByLabel('Dinheiro contado na gaveta').fill('250');
+  await term.getByRole('button', { name: 'Confirmar contagem' }).click();
+  await term.getByText(/ainda não chegaram ao servidor/).waitFor({ timeout: T });
+  ok(true, 'fecho com venda offline por enviar: recusado com explicacao');
+  await shot(term, '28b-pos-fecho-com-pendentes');
+  await term.keyboard.press('Escape');
+  await termCtx.setOffline(false);
+  await term.getByText('1 por enviar').waitFor({ state: 'detached', timeout: T });
+
+  // Fecho certo (105 + 75 + 35 + 35 = 250 MT em dinheiro): o turno fica FECHADO.
+  await term.getByRole('button', { name: 'Fechar turno' }).click();
+  await term.getByLabel('Dinheiro contado na gaveta').fill('250');
+  await term.getByRole('button', { name: 'Confirmar contagem' }).click();
+  await term.getByText('Este perfil só volta a vender').waitFor({ timeout: T });
+  await term.getByRole('button', { name: 'Concluir' }).click();
+  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ timeout: T });
+  ok(await term.getByRole('button', { name: /Laurentina Preta 550ml/ }).isDisabled(), 'turno fechado: produtos desactivados');
+  await shot(term, '29-pos-turno-fechado');
+  // O cadeado e uma pausa: voltar a entrar com o PIN NAO reabre o turno.
+  await term.getByRole('button', { name: 'Bloquear terminal' }).click();
+  await term.getByText('Quem está a vender?').waitFor({ timeout: T });
+  ok(await term.getByText('Turno fechado').isVisible(), 'perfis: o caixista aparece com o turno fechado');
+  await term.getByRole('button', { name: /Carlos/ }).click();
+  await term.getByText('Introduza o seu PIN').waitFor();
+  await term.keyboard.type('2468');
+  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ timeout: T });
+  ok(true, 'voltar a entrar com o PIN do caixista nao reabre o turno');
+  await term.getByRole('button', { name: 'Abrir turno novo' }).click();
+  await term.getByLabel('PIN do dono').fill(fx.authPin);
+  await term.getByRole('button', { name: 'Autorizar' }).click();
+  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ state: 'detached', timeout: T });
+  ok(await term.getByRole('button', { name: /Laurentina Preta 550ml/ }).isEnabled(), 'PIN do dono: turno novo aberto, volta a vender');
+
   // ------------------------------------------------------------- telemovel
   console.log('\n=== Telemovel (390 px) ===');
   const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'pt-PT', storageState: await ownerCtx.storageState() });

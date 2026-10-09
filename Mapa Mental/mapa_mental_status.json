@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-04",
+  "updatedAt": "2026-10-09",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -101,9 +101,9 @@
     },
     "backend/src/routes/sales.js": {
       "status": "ok",
-      "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria.",
+      "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria. Turno fechado = 409 SHIFT_CLOSED; GET recusado ao caixista (lista so com PIN do dono em /api/pos/sales).",
       "role": "Nucleo do POS.",
-      "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N."
+      "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
     },
     "backend/src/routes/shift_closings.js": {
       "status": "ok",
@@ -997,8 +997,8 @@
     },
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
-      "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas.",
-      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+      "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1113,6 +1113,43 @@
       "role": "Painel do dono.",
       "status": "ok",
       "notes": "04/10/2026: regressao completa OK."
+    },
+    "backend/src/routes/pos.js": {
+      "status": "ok",
+      "summary": "Terminal: emparelhar, perfis (com estado do turno), PIN do caixista, fecho cego, abrir turno novo e ver vendas com o PIN do dono.",
+      "role": "Balcao.",
+      "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "backend/src/utils/shift.js": {
+      "status": "ok",
+      "summary": "Turno e fecho cego: estado aberto/fechado (SHIFT_OPENED na auditoria), esperado nunca revelado antes de contar.",
+      "role": "Fecho de caixa.",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "backend/src/utils/authPin.js": {
+      "status": "ok",
+      "summary": "Verificacao unica do PIN de autorizacao do dono no terminal; limite partilhado de 5 falhas/loja/15 min.",
+      "role": "Seguranca do balcao.",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "backend/src/utils/sessionScopes.js": {
+      "status": "ok",
+      "summary": "Listas fechadas de rotas por ambito (pos = terminal, support = so leitura).",
+      "role": "Seguranca.",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "frontend/src/pages/pos/PosDialogs.jsx": {
+      "status": "ok",
+      "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
+      "role": "Balcao.",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "frontend/src/pages/pos/Terminal.jsx": {
+      "status": "ok",
+      "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
+      "role": "Balcao.",
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
     }
   }
 }

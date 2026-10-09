@@ -152,8 +152,8 @@ function ProfilesScreen({ info, notice, onLoggedIn }) {
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-subtle text-md font-semibold text-ink-2">{(c.name || '?').slice(0, 1).toUpperCase()}</span>
                     <span className="mt-3 font-medium text-ink">{c.name}</span>
-                    <span className={cx('mt-0.5 text-xs', c.locked ? 'text-danger' : 'text-ink-muted')}>
-                      {!c.has_pin ? 'Sem PIN definido' : c.locked ? 'Bloqueado no fecho' : 'Disponível'}
+                    <span className={cx('mt-0.5 text-xs', c.locked ? 'text-danger' : c.shift_open === false ? 'text-warning' : 'text-ink-muted')}>
+                      {!c.has_pin ? 'Sem PIN definido' : c.locked ? 'Bloqueado no fecho' : c.shift_open === false ? 'Turno fechado' : 'Turno aberto'}
                     </span>
                   </button>
                 ))}

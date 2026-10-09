@@ -67,7 +67,14 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
 }
 
 // Fecho cego: o caixista conta a gaveta ANTES de saber quanto o sistema espera.
-export function CloseShiftDialog({ shift, onClose, onDone }) {
+//
+// Vendas feitas sem ligacao e ainda por enviar NAO entram no esperado do
+// servidor: o dinheiro estaria na gaveta mas o fecho seguinte esperava-o e dava
+// um falso "abaixo do esperado" (com tentativa falhada e bloqueio do perfil).
+// Por isso o fecho envia primeiro a fila e recusa-se a contar se ficar alguma
+// venda por enviar. A hora da venda no servidor nao e mudada de proposito: uma
+// data do terminal aceite como verdade deixava esconder vendas do turno.
+export function CloseShiftDialog({ shift, onClose, onDone, syncNow }) {
   const [counted, setCounted] = useState(0);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -75,6 +82,12 @@ export function CloseShiftDialog({ shift, onClose, onDone }) {
   async function submit() {
     setBusy(true); setError('');
     try {
+      if (syncNow) await syncNow();
+      const pending = await db.sales.where('sync_state').equals(SYNC_STATE.PENDING).count();
+      if (pending > 0) {
+        setError(`Há ${pending} venda(s) feitas sem ligação que ainda não chegaram ao servidor. Verifique a internet e tente fechar de novo quando forem enviadas — senão o fecho não as conta.`);
+        return;
+      }
       const res = await api.post('/api/pos/shift/close', { declared_amount: counted });
       setResult({ ok: true, ...res.data });
       onDone();
@@ -83,7 +96,7 @@ export function CloseShiftDialog({ shift, onClose, onDone }) {
       if (d && d.accepted === false) { setResult({ ok: false, ...d }); onDone(); } else setError(errorMessage(err));
     } finally { setBusy(false); }
   }
-  const noShift = shift && !shift.hasOpenSales;
+  const noShift = shift && shift.open === false;
   return (
     <Dialog
       open
@@ -98,9 +111,9 @@ export function CloseShiftDialog({ shift, onClose, onDone }) {
       {shift?.locked || result?.locked ? (
         <Alert tone="danger" title="Perfil bloqueado">Três contagens abaixo do esperado. O dono tem de desbloquear este perfil no painel (Equipa).</Alert>
       ) : noShift && !result ? (
-        <Alert tone="info">Não há vendas desde o último fecho. O turno já está fechado.</Alert>
+        <Alert tone="info">O turno já está fechado. Para vender de novo, o dono abre um turno novo com o PIN dele.</Alert>
       ) : result?.ok ? (
-        <Alert tone="positive" title="Turno fechado">{result.message}</Alert>
+        <Alert tone="positive" title="Turno fechado">{result.message} Este perfil só volta a vender quando o dono abrir um turno novo.</Alert>
       ) : (
         <>
           {result && !result.ok && <Alert tone="warning" className="mb-3">{result.error}</Alert>}
@@ -113,16 +126,21 @@ export function CloseShiftDialog({ shift, onClose, onDone }) {
   );
 }
 
+// A lista so abre com o PIN do dono: o caixista via o total do turno e
+// acertava o fecho cego. Cancelar continua a pedir PIN + motivo.
 export function RecentSalesDialog({ onClose, onChanged }) {
   const toast = useToast();
+  const [ownerPin, setOwnerPin] = useState(null);
+  const [pinError, setPinError] = useState('');
   const [sales, setSales] = useState(null);
   const [cancelling, setCancelling] = useState(null);
   const [pin, setPin] = useState('');
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const load = () => api.get('/api/sales').then((r) => setSales(r.data)).catch(() => setSales([]));
-  useEffect(() => { load(); }, []);
+  const load = (p = ownerPin) => api.post('/api/pos/sales', { pin: p })
+    .then((r) => { setOwnerPin(p); setPinError(''); setSales(r.data); })
+    .catch((err) => { if (!ownerPin) setPinError(errorMessage(err)); else setSales([]); });
 
   async function cancel() {
     setBusy(true); setError('');
@@ -132,6 +150,19 @@ export function RecentSalesDialog({ onClose, onChanged }) {
       setCancelling(null); setPin(''); setReason('');
       load(); onChanged();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+
+  if (!ownerPin) {
+    return (
+      <AuthorizationPinDialog
+        key={pinError || 'vendas'}
+        error={pinError}
+        title="Ver vendas"
+        description="A lista de vendas só abre com o PIN de autorização do dono."
+        onCancel={onClose}
+        onSubmit={(p) => load(p)}
+      />
+    );
   }
 
   if (cancelling) {

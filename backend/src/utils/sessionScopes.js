@@ -14,7 +14,6 @@ const SCOPES = {
   pos: [
     ['GET', /^\/api\/auth\/me\/?$/],
     ['GET', /^\/api\/products\/?$/],
-    ['GET', /^\/api\/sales\/?$/],
     ['POST', /^\/api\/sales\/?$/],
     ['GET', /^\/api\/sales\/cancel-pin-status\/?$/],
     ['POST', /^\/api\/sales\/[^/]+\/cancel\/?$/], // exige o PIN do dono
@@ -22,6 +21,8 @@ const SCOPES = {
     ['POST', /^\/api\/shrinkage_records\/?$/],
     ['GET', /^\/api\/pos\/shift\/?$/],
     ['POST', /^\/api\/pos\/shift\/close\/?$/],
+    ['POST', /^\/api\/pos\/shift\/open\/?$/], // exige o PIN do dono
+    ['POST', /^\/api\/pos\/sales\/?$/], // lista de vendas: exige o PIN do dono
   ],
   support: [
     ['GET', /^\/api\/auth\/me\/?$/],

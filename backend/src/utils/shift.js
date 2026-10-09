@@ -9,7 +9,11 @@
 //    o inicio do dia); o valor esperado NUNCA e devolvido antes de contar;
 //  - declarar menos do que o esperado = tentativa falhada; 3 falhas desde o
 //    ultimo desbloqueio do dono = perfil bloqueado (ver utils/shiftLock.js);
-//  - sem vendas desde o ultimo fecho nao ha turno aberto.
+//  - TURNO FECHADO (06/10/2026): depois de um fecho aceite o caixista NAO
+//    vende ate o dono abrir um turno novo com o PIN de autorizacao no terminal
+//    (registo SHIFT_OPENED na auditoria, que e append-only). Antes o turno era
+//    so a "janela desde o ultimo fecho" e o caixista continuava a vender. O
+//    cadeado do terminal e uma pausa: nao fecha nem abre o turno.
 const prisma = require('./prisma');
 const { getShiftLock, MAX_ATTEMPTS } = require('./shiftLock');
 const { writeAudit } = require('./audit');
@@ -21,24 +25,39 @@ function startOfToday() {
   return d;
 }
 
-async function shiftWindow(tenantId, cashierId) {
-  const lastClosing = await prisma.shiftClosing.findFirst({
+// Aberto se nunca houve fecho, ou se o dono o reabriu depois do ultimo fecho.
+// `db` pode ser a transaccao da venda (routes/sales.js).
+async function shiftStatus(db, tenantId, cashierId) {
+  const lastClosing = await db.shiftClosing.findFirst({
     where: { tenant_id: tenantId, cashier_user_id: cashierId },
     orderBy: { closed_at: 'desc' },
   });
+  if (!lastClosing) return { open: true, lastClosing: null, openedAt: null };
+  const reopened = await db.auditLog.findFirst({
+    where: { tenant_id: tenantId, action: 'SHIFT_OPENED', entity_id: cashierId, created_at: { gt: lastClosing.closed_at } },
+    orderBy: { created_at: 'desc' },
+  });
+  return { open: Boolean(reopened), lastClosing, openedAt: reopened ? reopened.created_at : null };
+}
+
+async function shiftWindow(tenantId, cashierId) {
+  const status = await shiftStatus(prisma, tenantId, cashierId);
+  const { lastClosing } = status;
   const since = lastClosing ? lastClosing.closed_at : startOfToday();
   const base = { tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed', created_at: { gt: since } };
   const [cashAgg, openSales] = await Promise.all([
     prisma.sale.aggregate({ where: { ...base, payment_method: 'cash' }, _sum: { total_amount: true } }),
     prisma.sale.count({ where: base }),
   ]);
-  return { lastClosing, since, expectedCash: Number(cashAgg._sum.total_amount || 0), openSales };
+  return { ...status, since, expectedCash: Number(cashAgg._sum.total_amount || 0), openSales };
 }
 
 // Estado visivel no POS: nunca inclui o valor esperado.
 async function getShiftState(tenantId, cashierId) {
   const [win, lock] = await Promise.all([shiftWindow(tenantId, cashierId), getShiftLock(prisma, tenantId, cashierId)]);
   return {
+    open: win.open,
+    openedAt: win.openedAt,
     hasOpenSales: win.openSales > 0,
     salesCount: win.openSales,
     attempts: lock.attempts,
@@ -54,8 +73,8 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   if (lock.locked) throw httpError(423, 'Perfil bloqueado por erros no fecho. O dono tem de desbloquear no painel dele.', 'CASHIER_LOCKED');
 
   const win = await shiftWindow(tenantId, cashier.id);
-  if (win.lastClosing && win.openSales === 0) {
-    throw httpError(409, 'Este turno já está fechado. Não há vendas desde o último fecho.', 'NO_OPEN_SHIFT');
+  if (!win.open) {
+    throw httpError(409, 'Este turno já está fechado. O dono abre um turno novo com o PIN dele.', 'NO_OPEN_SHIFT');
   }
 
   const detail = { cashierName: cashier.name, declared, expected: win.expectedCash };
@@ -90,4 +109,4 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   };
 }
 
-module.exports = { getShiftState, closeShiftBlind, startOfToday };
+module.exports = { getShiftState, closeShiftBlind, shiftStatus, startOfToday };

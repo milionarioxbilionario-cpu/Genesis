@@ -1465,3 +1465,47 @@ O QUE FALTA
   dono. Vamos tratar um de cada vez, a comecar por esses.
 - Descobri mais um: o QR dos recibos aponta para genesis.co.mz, um
   endereco que nao e nosso. Esta na lista.
+
+==========================================================================
+09/10/2026 — TURNO FECHADO A SERIO + "VENDAS" SO COM O TEU PIN
+==========================================================================
+O QUE ESTAVA MAL
+- Depois de "Fechar turno", o caixista continuava a vender como se nada
+  fosse. O "turno" nao existia de verdade: era so "as vendas desde o
+  ultimo fecho".
+- O botao "Vendas" no terminal mostrava a lista sem pedir nada. Assim o
+  caixista via quanto tinha vendido e acertava o fecho "as cegas".
+
+O QUE FIZ
+- Agora, depois de um fecho aceite, aquele perfil fica "Turno fechado":
+  os produtos ficam cinzentos e o servidor recusa qualquer venda dele.
+  So TU abres um turno novo, escrevendo o teu PIN de autorizacao no
+  terminal (fica registado quem abriu e quando).
+- O cadeado continua a ser uma pausa (casa de banho, almoco). No ecra
+  dos perfis aparece "Turno aberto" ou "Turno fechado", para nao haver
+  confusao. Sair pelo cadeado e voltar com o PIN do caixista NAO reabre
+  um turno fechado.
+- "Vendas" no terminal so abre com o teu PIN. Cancelar uma venda
+  continua a pedir o teu PIN e o motivo.
+- PINs errados (para abrir turno ou ver vendas) contam para o mesmo
+  limite dos cancelamentos: 5 erros em 15 minutos bloqueiam a loja
+  nessas accoes durante 15 minutos.
+- O problema que pediste para nao esquecer: se uma venda feita sem
+  internet ainda nao tinha chegado ao servidor na hora do fecho, o
+  turno seguinte ia dar "abaixo do esperado" a um caixista honesto.
+  Agora o terminal tenta enviar tudo antes de contar e, se ainda faltar
+  alguma venda, NAO deixa fechar e explica porque. Nao conta como
+  tentativa falhada.
+
+FUNCIONOU?
+- Sim. A bateria de verificacao contra a base de dados verdadeira passou
+  271 de 271. O teste num browser verdadeiro passou todos os passos
+  (incluindo o PIN errado, o fecho com venda por enviar e a reabertura
+  com o teu PIN). Pelo caminho a verificacao apanhou 2 erros meus, que
+  corrigi antes de te dizer que estava feito.
+- Ainda NAO esta no site genesismz.com. Falta publicar (peco-te
+  autorizacao primeiro).
+
+ENCONTREI MAIS UM (pequeno, fica na lista)
+- Depois de a internet voltar, o aviso azul "Sem ligacao: a usar o
+  catalogo guardado" fica no ecra ate a venda seguinte.

@@ -28,7 +28,7 @@ const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], 
 //    regra mostra o motivo e mantem o cesto.
 export default function PosScreen({ info, cashier, onLock }) {
   const toast = useToast();
-  const { isOnline, pendingCount, rejectedCount, refreshCounts } = useOfflineSync();
+  const { isOnline, pendingCount, rejectedCount, refreshCounts, syncNow } = useOfflineSync();
   const [products, setProducts] = useState([]);
   const [catalogSource, setCatalogSource] = useState('online');
   const [catalogLoaded, setCatalogLoaded] = useState(false);
@@ -42,7 +42,7 @@ export default function PosScreen({ info, cashier, onLock }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [shift, setShift] = useState(null);
-  const [dialog, setDialog] = useState(null); // 'pin' | 'close' | 'recent' | 'shrink' | 'demand' | {receipt}
+  const [dialog, setDialog] = useState(null); // 'pin' | 'close' | 'recent' | 'shrink' | 'demand' | {openShift} | {receipt}
   const [scan, setScan] = useState(null); // ultima leitura: { code, name?, ok, at }
   const pendingSale = useRef(null);
   const searchRef = useRef(null);
@@ -73,7 +73,11 @@ export default function PosScreen({ info, cashier, onLock }) {
   const change = payment === 'cash' ? Math.max(0, received - total) : 0;
   const freeLimit = Math.floor(subtotal * (info.store.discount_free_pct ?? 10) / 100);
   const locked = Boolean(shift?.locked);
-  const canCharge = cart.length > 0 && total > 0 && !busy && !locked && (payment !== 'cash' || received === 0 || received >= total);
+  // Turno fechado: so o dono abre outro (PIN). Sem resposta do servidor
+  // (offline) o estado anterior mantem-se e a venda nao fica presa.
+  const shiftClosed = shift?.open === false;
+  const blocked = locked || shiftClosed;
+  const canCharge = cart.length > 0 && total > 0 && !busy && !blocked && (payment !== 'cash' || received === 0 || received >= total);
 
   function add(p) {
     setError('');
@@ -191,6 +195,9 @@ export default function PosScreen({ info, cashier, onLock }) {
       if (code === 'DISCOUNT_NEEDS_PIN' || code === 'INVALID_AUTH_PIN') {
         pendingSale.current = payload;
         setDialog({ pin: true, error: code === 'INVALID_AUTH_PIN' ? 'PIN incorrecto.' : '' });
+      } else if (code === 'SHIFT_CLOSED') {
+        pendingSale.current = null;
+        refreshShift();
       } else if (shouldQueueOffline(err)) {
         pendingSale.current = null;
         await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload });
@@ -233,6 +240,14 @@ export default function PosScreen({ info, cashier, onLock }) {
       {locked && (
         <Alert tone="danger" className="m-4 mb-0" title="Perfil bloqueado">
           Três contagens erradas no fecho de turno. O dono tem de desbloquear este perfil no painel (Equipa).
+        </Alert>
+      )}
+      {!locked && shiftClosed && (
+        <Alert tone="warning" className="m-4 mb-0" title="Turno fechado">
+          <span className="flex flex-wrap items-center gap-3">
+            <span>Este perfil não vende até o dono abrir um turno novo.</span>
+            <Button size="sm" variant="primary" onClick={() => setDialog({ openShift: true })}>Abrir turno novo</Button>
+          </span>
         </Alert>
       )}
       {rejectedCount > 0 && (
@@ -280,7 +295,7 @@ export default function PosScreen({ info, cashier, onLock }) {
               const out = (p.stock_qty || 0) <= 0;
               const low = !out && p.stock_qty <= (p.min_stock || 5);
               return (
-                <button key={p.id} data-tile type="button" disabled={out || locked} onClick={() => add(p)} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-border-strong hover:bg-subtle focus-visible:border-accent focus-visible:shadow-focus focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50">
+                <button key={p.id} data-tile type="button" disabled={out || blocked} onClick={() => add(p)} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-border-strong hover:bg-subtle focus-visible:border-accent focus-visible:shadow-focus focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50">
                   <ProductImage product={p} size={56} className="self-center" />
                   <span className="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-ink">{p.name}</span>
                   <span className="flex items-baseline justify-between gap-2">
@@ -365,8 +380,25 @@ export default function PosScreen({ info, cashier, onLock }) {
           onSubmit={(pin) => { setDialog(null); charge(pin); }}
         />
       )}
+      {dialog?.openShift && (
+        <AuthorizationPinDialog
+          key={dialog.error || 'abrir'}
+          error={dialog.error}
+          title="Abrir turno novo"
+          description="O turno deste perfil foi fechado. Só o dono abre outro: peça-lhe o PIN de autorização."
+          onCancel={() => setDialog(null)}
+          onSubmit={async (pin) => {
+            try {
+              const res = await api.post('/api/pos/shift/open', { pin });
+              setShift(res.data);
+              setDialog(null);
+              toast('Turno novo aberto.');
+            } catch (err) { setDialog({ openShift: true, error: errorMessage(err) }); }
+          }}
+        />
+      )}
       {dialog?.receipt && <ReceiptDialog store={info.store} cashier={cashier} {...dialog.receipt} onClose={() => setDialog(null)} />}
-      {dialog === 'close' && <CloseShiftDialog shift={shift} onClose={() => setDialog(null)} onDone={() => { refreshShift(); }} />}
+      {dialog === 'close' && <CloseShiftDialog shift={shift} syncNow={syncNow} onClose={() => setDialog(null)} onDone={() => { refreshShift(); }} />}
       {dialog === 'recent' && <RecentSalesDialog onClose={() => setDialog(null)} onChanged={() => { refreshCatalog(); refreshShift(); }} />}
       {dialog === 'shrink' && <ShrinkageDialog products={products} onClose={() => setDialog(null)} onSaved={() => { refreshCounts(); refreshCatalog(); }} />}
       {dialog === 'demand' && <DemandDialog products={products} onClose={() => setDialog(null)} onSaved={refreshCounts} />}

@@ -133,6 +133,18 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | Ligações à BD (Supabase) | `DATABASE_URL` e `APP_DATABASE_URL` passaram à porta **6543** (pooler em modo transacção; `DIRECT_URL` fica na 5432 para migrações) | ✅ CONFIRMADO FUNCIONAL | 03/10 — `verify_system.js` todas as secções OK; `flows.mjs` 24/24; `onboarding.mjs` 8/8; 0 erros P1001/P2024/EMAXCONN no log |
 | `DB_ALLOW_SQLITE_FALLBACK` no `.env` | Passou a `false` (decisão do fundador 03/10): sem Postgres o servidor recusa arrancar em vez de servir de outra base | ✅ CONFIRMADO | 03/10 — leitura do `.env` após a alteração; backup em `~/genesis-backup-20261003/` |
 
+### Fase 7.1 — turno e lista de vendas no terminal (09/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `backend/src/utils/shift.js` (`shiftStatus`) | Estado explícito do turno: aberto se nunca houve fecho ou se há `SHIFT_OPENED` (auditoria) depois do último fecho; fechado depois de um fecho aceite. Fechar um turno fechado → 409 `NO_OPEN_SHIFT` | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js` 271/271 (secção 2) |
+| `backend/src/routes/sales.js` (POST) | Caixista com turno fechado não vende (409 `SHIFT_CLOSED`); excepção: venda offline com `created_at` do terminal anterior ao fecho | ✅ CONFIRMADO FUNCIONAL | 09/10 — secção 2 |
+| `backend/src/routes/sales.js` (GET) + `utils/sessionScopes.js` | `GET /api/sales` recusado ao caixista (403) e retirado do âmbito `pos` | ✅ CONFIRMADO FUNCIONAL | 09/10 — secção 10 |
+| `backend/src/routes/pos.js` `POST /shift/open`, `POST /sales` | Abrir turno novo e ver as últimas vendas (só as dele, sem custos) exigem o PIN de autorização do dono; auditoria `SHIFT_OPENED` / `SALES_VIEWED`; perfis com `shift_open` | ✅ CONFIRMADO FUNCIONAL | 09/10 — secções 2 e 10 + browser |
+| `backend/src/utils/authPin.js` | Verificação única do PIN do dono; falhas (`SHIFT_OPEN_PIN_FAIL`, `SALES_VIEW_PIN_FAIL`) partilham o limite de 5/loja/15 min com cancelamentos e descontos | ✅ CONFIRMADO FUNCIONAL | 09/10 — secções 2, 3, 8, 10 |
+| `frontend/src/pages/pos/PosScreen.jsx`, `PosDialogs.jsx`, `Terminal.jsx` | Faixa "Turno fechado" + "Abrir turno novo" (PIN do dono); produtos desactivados; "Vendas" pede o PIN antes da lista; perfis mostram "Turno aberto/fechado"; o cadeado é pausa | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` todos os fluxos passaram (32 OK), capturas 28/28b/29 revistas |
+| `PosDialogs.jsx` `CloseShiftDialog` | Antes de contar envia a fila offline; com vendas ainda por enviar recusa o fecho com explicação (evita o falso "abaixo do esperado" no turno seguinte e a tentativa falhada/bloqueio) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` (captura 28b) |
+| Aviso "Sem ligação: a usar o catálogo guardado" | Não desaparece quando a rede volta (só após a venda seguinte) — defeito antigo, encontrado na captura 29 | 🔴 CONHECIDO COMO QUEBRADO (menor) | 09/10 — captura 29 |
+
 ---
 
 ## Parte B — JORNAL CRONOLÓGICO
@@ -609,3 +621,13 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
   - Onboarding: linhas vazias já visíveis (custos, trabalhadores, fornecedores) com exemplos (ex.: 300,00 MT) e texto mais claro sobre o "lucro real que vai para o bolso".
   - Novos (fora do spec actual — REGRA 8, autorizados pelo fundador): idioma PT/EN incluindo nomes de produtos e pesquisa bilingue; layout próprio para telemóvel/tablet; instalar como app (PWA "Adicionar ao ecrã principal").
 - Segue-se: o fundador escolhe a ordem; proposta começa pelos 🔴 de turno/vendas.
+
+### [2026-10-09] — Fase 7.1: turno fechado de verdade + "Vendas" só com o PIN do dono
+- Decisões do fundador (09/10): turno fechado só reabre com o **PIN de autorização do dono** no terminal; o cadeado continua a ser **pausa** (não fecha o turno, mas os perfis mostram o estado). O fundador pediu também que o falso "abaixo do esperado" por vendas offline atrasadas fosse resolvido (clientes reais).
+- Ficheiros: `backend/src/utils/shift.js` (`shiftStatus`; fechar turno fechado → 409), `backend/src/utils/authPin.js` (novo), `backend/src/routes/pos.js` (`POST /shift/open`, `POST /sales`, `shift_open` nos perfis), `backend/src/routes/sales.js` (409 `SHIFT_CLOSED`; GET recusado ao caixista; lista de falhas de PIN partilhada), `backend/src/utils/sessionScopes.js`, `frontend/src/pages/pos/{PosScreen,PosDialogs,Terminal}.jsx`, `backend/scripts/verify_system.js` (secções 2 e 10), `frontend/tests/e2e/flows.mjs`.
+- Falso "abaixo do esperado": a venda offline ainda por enviar não está no servidor quando se fecha → entrava no esperado do turno seguinte. Correcção no fecho: envia a fila primeiro e recusa contar se ficar venda por enviar. Rejeitado de propósito: usar a hora do terminal como hora da venda (deixava um caixista esconder vendas do turno com datas antigas). Resta o caso de o mesmo caixista ter vendas por enviar noutro terminal — não tratado.
+- Erros apanhados pela verificação (meus, corrigidos antes de declarar): as 2 rotas novas não estavam no âmbito `pos` (403 `SCOPE_RESTRICTED`); a regex do PIN perdeu a barra (`/^d{4,6}$/`) na edição por script — grep confirmou que não há outro caso.
+- Prova: `verify_system.js` (todas as secções, contra Supabase com RLS) **271/271**, loja de teste apagada; `flows.mjs` no Chromium **todos os fluxos passaram** (Vendas com PIN errado/certo, fecho com venda por enviar recusado, turno fechado com produtos desactivados, cadeado + PIN do caixista não reabre, PIN do dono reabre); `vite build` OK; fixture apagada.
+- Encontrado e NÃO corrigido (fora desta fase): aviso "Sem ligação: a usar o catálogo guardado" fica no ecrã depois de a rede voltar.
+- Não feito: publicar em genesismz.com (pede confirmação do fundador).
+- Segue-se (fase seguinte, após confirmação): QR dos recibos (domínio + rota `/verify`) e pesquisa do POS sem acentos.

@@ -4,6 +4,8 @@ const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const bcrypt = require('bcrypt');
 const { getShiftLock } = require('../utils/shiftLock');
+const { shiftStatus } = require('../utils/shift');
+const { AUTH_PIN_FAIL_ACTIONS } = require('../utils/authPin');
 const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
 const { addLot, consumeLots } = require('../utils/stockLots');
@@ -53,7 +55,8 @@ function httpError(statusCode, message, code) {
 const CANCEL_MAX_PER_SALE = 3;
 const CANCEL_MAX_PER_TENANT = 5;
 const CANCEL_TENANT_WINDOW_MS = 15 * 60 * 1000;
-const AUTH_PIN_FAIL_ACTIONS = ['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL'];
+// AUTH_PIN_FAIL_ACTIONS (utils/authPin.js): o mesmo orcamento de falhas serve
+// cancelamentos, descontos, abrir turno e ver vendas no terminal.
 
 // Gerador de numero sequencial diario por tenant.
 // daily_number e sequencial por dia (001, 002, ...). Recomeca amanha.
@@ -79,9 +82,10 @@ router.get('/', async (req, res) => {
      return res.status(400).json({ error: 'Tenant não identificado' });
    }
 
-    // O caixista so ve as SUAS vendas e nunca custos (especificacao 4.3).
-    // Antes via as ultimas 20 de toda a loja, de qualquer caixista, com o custo.
+    // O caixista ja nao lista vendas por aqui: no terminal a lista exige o PIN
+    // do dono (POST /api/pos/sales) — via o total e acertava o fecho cego.
     const isOwner = req.user.role === 'owner';
+    if (!isOwner) return res.status(403).json({ error: 'A lista de vendas exige o PIN do dono.', code: 'SALES_NEED_PIN' });
     const cashierId = isOwner
       ? (typeof req.query.cashier_id === 'string' && req.query.cashier_id ? req.query.cashier_id : null)
       : req.user.userId;
@@ -273,6 +277,15 @@ router.post('/', async (req, res) => {
           );
           lockErr.statusCode = 403;
           throw lockErr;
+        }
+        // TURNO FECHADO: nao vende ate o dono abrir um turno novo com o PIN.
+        // Excepcao: venda feita offline ANTES do fecho e sincronizada depois
+        // (created_at do terminal anterior ao fecho) — recusa-la perdia uma
+        // venda real ja cobrada.
+        const shift = await shiftStatus(tx, tenantId, sellerUser.id);
+        const madeBeforeClose = shift.lastClosing && data.created_at && Date.parse(data.created_at) < shift.lastClosing.closed_at.getTime();
+        if (!shift.open && !madeBeforeClose) {
+          throw httpError(409, 'Turno fechado. Para vender, o dono abre um turno novo com o PIN dele.', 'SHIFT_CLOSED');
         }
       }
 
