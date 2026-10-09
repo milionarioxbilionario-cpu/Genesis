@@ -259,14 +259,22 @@ function TenantDrawer({ id, onClose, onChanged }) {
   const confirm = useConfirm();
   const { data: t, reload } = useLoad('/api/admin/tenants/' + id);
   const [busy, setBusy] = useState('');
+  const [supportUrl, setSupportUrl] = useState('');
   async function act(path, label, opts = {}) {
     if (opts.confirm && !(await confirm({ title: label, message: opts.confirm, confirmLabel: label, danger: opts.danger }))) return;
+    // O Safari (iPhone) so deixa abrir um separador no proprio toque: um
+    // window.open depois do await era bloqueado em silencio. O separador abre
+    // ja, vazio, e recebe o link quando o codigo chegar. Se mesmo assim for
+    // bloqueado, aparece um link para tocar.
+    const tab = path === 'support' ? window.open('', '_blank') : null;
     setBusy(path);
     try {
       const r = await api.post(`/api/admin/tenants/${id}/${path}`, opts.body);
-      if (path === 'support') { window.open(r.data.url, '_blank', 'noopener'); toast('Modo suporte aberto noutro separador (só leitura, 60 s para abrir).'); }
-      else { toast('Feito.'); reload(); onChanged(); }
-    } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+      if (path === 'support') {
+        if (tab) { tab.opener = null; tab.location.replace(r.data.url); toast('Modo suporte aberto noutro separador (só leitura, 60 s para abrir).'); }
+        else setSupportUrl(r.data.url);
+      } else { toast('Feito.'); reload(); onChanged(); }
+    } catch (err) { if (tab) tab.close(); toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
   return (
     <Drawer open onClose={onClose} title={t?.name || 'Loja'} description={t ? `${TYPES[t.business_type] || t.business_type} · ${t.location}` : ''}>
@@ -289,6 +297,11 @@ function TenantDrawer({ id, onClose, onChanged }) {
           <div className="flex flex-col gap-2">
             <h3 className="text-sm font-medium text-ink-muted">Acções</h3>
             <Button loading={busy === 'support'} onClick={() => act('support', 'Abrir modo suporte')}>Abrir modo suporte (só leitura)</Button>
+            {supportUrl && (
+              <Alert tone="warning" title="O browser bloqueou o separador novo">
+                <a href={supportUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline" onClick={() => setSupportUrl('')}>Tocar aqui para abrir o modo suporte</a> (válido 60 s).
+              </Alert>
+            )}
             {t.status === 'trial' && <Button loading={busy === 'extend-trial'} onClick={() => act('extend-trial', 'Prolongar teste', { body: { days: 14 } })}>Prolongar teste 14 dias</Button>}
             {['trial', 'suspended'].includes(t.status) && <Button variant="primary" loading={busy === 'activate'} onClick={() => act('activate', 'Activar subscrição', { confirm: 'A loja passa a pagante (activa).' })}>Activar subscrição (pagamento recebido)</Button>}
             {['active', 'trial'].includes(t.status) && <Button variant="danger-ghost" loading={busy === 'suspend'} onClick={() => act('suspend', 'Suspender', { confirm: 'Todas as sessões e terminais da loja deixam de funcionar de imediato.', danger: true })}>Suspender (pagamento em atraso)</Button>}

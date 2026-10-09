@@ -103,9 +103,12 @@ router.post('/requests/:tenantId/approve', asyncHandler(async (req, res) => {
   if (tenant.status !== 'pending') throw httpError(409, 'Só pedidos pendentes podem ser aprovados (estado actual: ' + tenant.status + ')', 'NOT_PENDING');
   const tempPassword = crypto.randomBytes(9).toString('base64url');
   const trialEnds = new Date(); trialEnds.setDate(trialEnds.getDate() + 30);
-  let ownerEmail = (tenant.email || `${tenant.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@genesis.co.mz`).toLowerCase();
+  const ownerEmail = (tenant.email || `${tenant.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@genesis.co.mz`).toLowerCase();
+  // Email do pedido ja com conta: antes era inventado um <nome>.<hora>@... que
+  // o dono nao conhecia (e o login Google com o email dele nunca acertava).
+  // Agora o pedido fica pendente e o admin resolve com a pessoa.
   if (await prisma.user.findUnique({ where: { email: ownerEmail } })) {
-    ownerEmail = `${ownerEmail.split('@')[0]}.${Date.now()}@genesis.co.mz`;
+    throw httpError(409, `O email ${ownerEmail} já tem uma conta no Genesis. Peça outro email ao dono ou rejeite o pedido.`, 'EMAIL_IN_USE');
   }
   const passwordHash = await bcrypt.hash(tempPassword, 12);
   await prisma.$transaction([

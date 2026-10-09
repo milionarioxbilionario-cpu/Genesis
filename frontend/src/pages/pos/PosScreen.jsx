@@ -59,6 +59,15 @@ export default function PosScreen({ info, cashier, onLock }) {
   const refreshShift = useCallback(() => api.get('/api/pos/shift').then((r) => setShift(r.data)).catch(() => {}), []);
 
   useEffect(() => { refreshCatalog(); refreshShift(); }, [refreshCatalog, refreshShift]);
+  // A usar o catalogo guardado: quando a rede volta (e de 30 em 30 s, para o
+  // caso de ser o servidor que estava em baixo) tenta outra vez. Antes o aviso
+  // "Sem ligacao" so desaparecia depois da venda seguinte.
+  useEffect(() => {
+    if (catalogSource !== 'cache' || !isOnline) return undefined;
+    refreshCatalog(); refreshShift();
+    const t = setInterval(() => { refreshCatalog(); refreshShift(); }, 30000);
+    return () => clearInterval(t);
+  }, [catalogSource, isOnline, refreshCatalog, refreshShift]);
   useEffect(() => { if (!dialog) searchRef.current?.focus(); }, [dialog, cart.length]);
 
   const categories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(), [products]);

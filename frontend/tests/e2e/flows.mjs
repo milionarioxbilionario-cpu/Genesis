@@ -221,6 +221,10 @@ try {
   await term.getByRole('button', { name: 'Concluir' }).click();
   await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ timeout: T });
   ok(await term.getByRole('button', { name: /Laurentina Preta 550ml/ }).isDisabled(), 'turno fechado: produtos desactivados');
+  // Fase 7.3: aqui (ja com rede) o aviso 'Sem ligacao: a usar o catalogo
+  // guardado' ficava no ecra ate a venda seguinte (captura 29 de 09/10).
+  await term.getByText('Sem ligação: a usar o catálogo guardado').waitFor({ state: 'detached', timeout: T });
+  ok(true, 'com rede: sem o aviso "a usar o catalogo guardado"');
   await shot(term, '29-pos-turno-fechado');
   // O cadeado e uma pausa: voltar a entrar com o PIN NAO reabre o turno.
   await term.getByRole('button', { name: 'Bloquear terminal' }).click();

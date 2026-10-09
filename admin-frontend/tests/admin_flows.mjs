@@ -76,6 +76,22 @@ try {
   await page.getByText('APPROVE_TENANT').first().waitFor({ timeout: T });
   ok(true, 'auditoria regista a aprovacao');
   await shot(page, '47-admin-auditoria');
+
+  // Fase 7.3: browser que bloqueia o separador (Safari no iPhone) -> link
+  // para tocar, em vez de nada acontecer.
+  await page.getByRole('link', { name: 'Lojas' }).click();
+  await page.getByText(fx.request.name).first().click();
+  await page.getByText('Abrir modo suporte (só leitura)').waitFor({ timeout: T });
+  await page.evaluate(() => { window.open = () => null; });
+  await page.getByRole('button', { name: 'Abrir modo suporte (só leitura)' }).click();
+  const link = page.getByRole('link', { name: 'Tocar aqui para abrir o modo suporte' });
+  await link.waitFor({ timeout: T });
+  ok(true, 'separador bloqueado: aparece o link para tocar');
+  await shot(page, '48-admin-suporte-bloqueado');
+  const [popup2] = await Promise.all([ctx.waitForEvent('page', { timeout: T }), link.click()]);
+  await popup2.getByText('Modo suporte Genesis — só leitura').waitFor({ timeout: T });
+  ok(true, 'o link abre o modo suporte');
+  await popup2.close();
 } catch (e) {
   failures++;
   console.log('ERRO: ' + (e.stack || e.message).split('\n').slice(0, 4).join(' | '));

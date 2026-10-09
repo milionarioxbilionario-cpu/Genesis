@@ -522,6 +522,19 @@ async function test11() {
   ok(ghost.status === 404, 'rejeitar loja inexistente: 404 (antes derrubava o processo)', ghost);
   ok((await fetch(BASE + '/').then((r) => r.status)) === 200, 'servidor continua vivo');
   ok((await admin.req('POST', '/api/admin/requests/' + ctx.tenant.id + '/approve')).status === 409, 'aprovar loja que nao esta pendente: 409');
+  // Fase 7.3: pedido com um email que ja tem conta -> 409, sem inventar email.
+  const dup = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-DUP', owner_name: 'Dup', business_type: 'bottle_store', location: 'Teste', phone: '840000002', email: ctx.owner.email, status: 'pending' } });
+  try {
+    const r = await admin.req('POST', '/api/admin/requests/' + dup.id + '/approve');
+    ok(r.status === 409 && r.data?.code === 'EMAIL_IN_USE', 'aprovar pedido com email ja usado: 409 EMAIL_IN_USE', r);
+    const after = await prisma.tenant.findUnique({ where: { id: dup.id }, select: { status: true } });
+    const owners = await prisma.user.count({ where: { tenant_id: dup.id } });
+    ok(after.status === 'pending' && owners === 0, 'o pedido continua pendente e nenhuma conta foi criada', { after, owners });
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { entity_id: dup.id } });
+    await prisma.user.deleteMany({ where: { tenant_id: dup.id } });
+    await prisma.tenant.delete({ where: { id: dup.id } });
+  }
   await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { status: 'trial', trial_ends_at: new Date(Date.now() + 5 * 86400000) } });
   const susp = await admin.req('POST', '/api/admin/tenants/' + ctx.tenant.id + '/suspend');
   ok(susp.status === 200, 'admin suspende a loja', susp);
