@@ -877,7 +877,26 @@ async function test18() {
   ok(st.due === false && st.seen === true, 'depois de visto nao volta a aparecer', st);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18 };
+async function test19() {
+  section(19, 'QR do recibo: verificacao publica sem sessao (Fase 7.2)');
+  const saleId = await newSale(ownerClient());
+  const anon = client();
+  const r = await anon.req('GET', '/api/verify/' + saleId);
+  ok(r.status === 200 && r.data?.store?.name === ctx.tenant.name, 'sem sessao: recibo encontrado com o nome da loja (200)', r);
+  ok(r.data?.sale?.status === 'completed' && r.data?.sale?.total_amount === 10000, 'estado concluida e total em centavos (10000)', r.data?.sale);
+  ok(r.data?.sale?.items?.length === 1 && r.data.sale.items[0].product_name === 'Cerveja Teste', 'artigos do recibo (nome, quantidade, preco)', r.data?.sale?.items);
+  const raw = JSON.stringify(r.data || {});
+  ok(!/cost|cashier|tenant_id|user_id/i.test(raw), 'nao expoe custos, caixista nem ids internos', raw);
+  const head = await fetch(BASE + '/api/verify/' + saleId);
+  ok(/no-store/.test(head.headers.get('cache-control') || ''), 'Cache-Control: no-store');
+  ok((await anon.req('GET', '/api/verify/nao-e-um-uuid')).status === 400, 'codigo invalido = 400');
+  ok((await anon.req('GET', '/api/verify/' + crypto.randomUUID())).status === 404, 'uuid inexistente = 404');
+  await prisma.sale.update({ where: { id: saleId }, data: { status: 'cancelled' } });
+  const c = await anon.req('GET', '/api/verify/' + saleId);
+  ok(c.status === 200 && c.data?.sale?.status === 'cancelled', 'venda cancelada aparece como cancelada', c.data?.sale);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19 };
 
 (async () => {
   await prisma.ready();

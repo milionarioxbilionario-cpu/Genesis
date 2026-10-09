@@ -1,38 +1,38 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-09T14:34:09.068Z */
+   Gerado em: 2026-10-09T15:53:21.837Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-09T14:34:09.068Z",
+ "generatedAt": "2026-10-09T15:53:21.837Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 190,
+  "files": 194,
   "planned": 5,
-  "links": 303,
-  "lines": 27443,
+  "links": 316,
+  "lines": 27686,
   "byStatus": {
-   "ok": 116,
+   "ok": 119,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 62
+   "untracked": 63
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 9,
    "backend-data": 49,
-   "backend": 51,
+   "backend": 52,
    "frontend-pub": 4,
-   "frontend": 56,
+   "frontend": 59,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 34
+   "count": 35
   },
   {
    "pkg": "lucide-react",
@@ -43,16 +43,16 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
+   "pkg": "react-router-dom",
+   "count": 19
+  },
+  {
    "pkg": "dotenv",
    "count": 19
   },
   {
-   "pkg": "react-router-dom",
-   "count": 18
-  },
-  {
    "pkg": "express",
-   "count": 16
+   "count": 17
   },
   {
    "pkg": "crypto",
@@ -79,15 +79,15 @@ window.GENESIS_MINDMAP = {
    "count": 8
   },
   {
-   "pkg": "fs",
-   "count": 7
-  },
-  {
    "pkg": "node:test",
-   "count": 7
+   "count": 8
   },
   {
    "pkg": "node:assert",
+   "count": 8
+  },
+  {
+   "pkg": "fs",
    "count": 7
   },
   {
@@ -99,16 +99,16 @@ window.GENESIS_MINDMAP = {
    "count": 5
   },
   {
-   "pkg": "node-fetch",
-   "count": 4
-  },
-  {
    "pkg": "express-rate-limit",
-   "count": 4
+   "count": 5
   },
   {
    "pkg": "qrcode",
-   "count": 3
+   "count": 4
+  },
+  {
+   "pkg": "node-fetch",
+   "count": 4
   },
   {
    "pkg": "react-dom",
@@ -188,11 +188,11 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 51,
+   "nodes": 52,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
-    "backend/src/routes": 15,
+    "backend/src/routes": 16,
     "backend/src/services": 9,
     "backend/src/utils": 20,
     "backend/src/jobs": 1
@@ -211,7 +211,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 56,
+   "nodes": 59,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -220,14 +220,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
     "frontend/src/layouts": 1,
+    "frontend/src/pages": 2,
     "frontend/src/pages/auth": 5,
     "frontend/src/pages/owner": 10,
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
-    "frontend/src/utils": 10,
+    "frontend/src/utils": 11,
     "frontend/tests/e2e": 7,
-    "frontend/tests": 2,
-    "frontend/src/pages": 1
+    "frontend/tests": 3
    }
   },
   {
@@ -322,8 +322,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1156,
-   "size": 59904,
+   "lines": 1175,
+   "size": 61539,
    "externals": [
     "nodemailer"
    ],
@@ -1579,8 +1579,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 898,
-   "size": 70977,
+   "lines": 917,
+   "size": 72439,
    "externals": [
     "dotenv",
     "crypto",
@@ -1614,8 +1614,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 276,
-   "size": 10665,
+   "lines": 280,
+   "size": 10820,
    "externals": [
     "dotenv",
     "express",
@@ -1645,12 +1645,13 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/shoppingLists.js",
     "backend/src/routes/pos.js",
     "backend/src/middleware/posWriteAuth.js",
+    "backend/src/routes/verify.js",
     "backend/src/utils/http.js",
     "backend/src/services/expiryJob.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 22
+   "outbound": 23
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -2309,6 +2310,35 @@ window.GENESIS_MINDMAP = {
    "outbound": 3
   },
   {
+   "id": "backend/src/routes/verify.js",
+   "path": "backend/src/routes/verify.js",
+   "label": "verify.js",
+   "group": "backend",
+   "dir": "backend/src/routes",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "GET /api/verify/:saleId publico: confirma que o recibo existe e se a venda continua valida (concluida/cancelada).",
+   "notes": "09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao).",
+   "role": "QR de autenticidade do recibo.",
+   "security": "So devolve o que ja esta impresso no recibo (sem custos, sem caixista, sem ids internos); UUID validado (400); 60 pedidos/IP/15 min; Cache-Control no-store e noindex.",
+   "planned": false,
+   "lines": 58,
+   "size": 2400,
+   "externals": [
+    "express",
+    "express-rate-limit"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/http.js"
+   ],
+   "usedBy": [
+    "backend/src/index.js"
+   ],
+   "inbound": 1,
+   "outbound": 2
+  },
+  {
    "id": "backend/src/services/expiryJob.js",
    "path": "backend/src/services/expiryJob.js",
    "label": "expiryJob.js",
@@ -2658,10 +2688,11 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
+    "backend/src/routes/verify.js",
     "backend/src/utils/authPin.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 9,
+   "inbound": 10,
    "outbound": 0
   },
   {
@@ -2765,6 +2796,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
     "backend/src/routes/shrinkage_records.js",
+    "backend/src/routes/verify.js",
     "backend/src/services/expiryJob.js",
     "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
@@ -2776,7 +2808,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 37,
+   "inbound": 38,
    "outbound": 1
   },
   {
@@ -3559,8 +3591,8 @@ window.GENESIS_MINDMAP = {
    "role": "Mapa de rotas.",
    "security": "Nenhuma rota de gestao esta exposta sem sessao.",
    "planned": false,
-   "lines": 94,
-   "size": 4790,
+   "lines": 96,
+   "size": 4932,
    "externals": [
     "react",
     "react-router-dom"
@@ -3572,6 +3604,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
     "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/owner/Home.jsx",
@@ -3588,7 +3621,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 17
+   "outbound": 18
   },
   {
    "id": "frontend/src/components/MonthCloseDialog.jsx",
@@ -3836,6 +3869,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
@@ -3855,7 +3889,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 22,
+   "inbound": 23,
    "outbound": 0
   },
   {
@@ -4003,6 +4037,38 @@ window.GENESIS_MINDMAP = {
    "outbound": 3
   },
   {
+   "id": "frontend/src/pages/VerifyReceipt.jsx",
+   "path": "frontend/src/pages/VerifyReceipt.jsx",
+   "label": "VerifyReceipt.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Pagina publica /verify/:saleId aberta pelo QR: Recibo autentico / Venda cancelada / Recibo nao encontrado.",
+   "notes": "09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao).",
+   "role": "QR de autenticidade do recibo.",
+   "security": "",
+   "planned": false,
+   "lines": 57,
+   "size": 3149,
+   "externals": [
+    "react",
+    "react-router-dom"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/pages/auth/AuthLayout.jsx"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 5
+  },
+  {
    "id": "frontend/src/pages/auth/AuthLayout.jsx",
    "path": "frontend/src/pages/auth/AuthLayout.jsx",
    "label": "AuthLayout.jsx",
@@ -4023,12 +4089,13 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [],
    "usedBy": [
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
     "frontend/src/pages/auth/Support.jsx"
    ],
-   "inbound": 4,
+   "inbound": 5,
    "outbound": 0
   },
   {
@@ -4268,8 +4335,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 286,
-   "size": 18464,
+   "lines": 287,
+   "size": 18536,
    "externals": [
     "react",
     "react-router-dom",
@@ -4279,6 +4346,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/utils/search.js",
     "frontend/src/utils/imageResize.js",
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/components/ui/index.js"
@@ -4287,7 +4355,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 6
+   "outbound": 7
   },
   {
    "id": "frontend/src/pages/owner/Reports.jsx",
@@ -4486,12 +4554,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao).",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 275,
-   "size": 14143,
+   "lines": 276,
+   "size": 14203,
    "externals": [
     "react",
     "qrcode",
@@ -4502,6 +4570,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/db/localDb.js",
     "frontend/src/utils/syncPolicy.js",
     "frontend/src/utils/receiptPrinter.js",
+    "frontend/src/utils/search.js",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js"
    ],
@@ -4509,7 +4578,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "inbound": 1,
-   "outbound": 6
+   "outbound": 7
   },
   {
    "id": "frontend/src/pages/pos/PosScreen.jsx",
@@ -4524,8 +4593,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 408,
-   "size": 23781,
+   "lines": 409,
+   "size": 23814,
    "externals": [
     "react",
     "lucide-react"
@@ -4537,6 +4606,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/syncPolicy.js",
     "frontend/src/utils/productCache.js",
     "frontend/src/utils/format.js",
+    "frontend/src/utils/search.js",
     "frontend/src/components/ui/index.js",
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
@@ -4544,7 +4614,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx"
    ],
    "inbound": 1,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "frontend/src/pages/pos/Terminal.jsx",
@@ -4649,6 +4719,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
@@ -4668,7 +4739,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 20,
+   "inbound": 21,
    "outbound": 0
   },
   {
@@ -4691,6 +4762,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
@@ -4710,7 +4782,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 20,
+   "inbound": 21,
    "outbound": 0
   },
   {
@@ -4821,12 +4893,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "partial",
    "summary": "Impressao do talao: Web Serial (impressora termica ligada) com recurso a window.print(). O PDFVectorial do recibo vive em receiptPdf.js.",
-   "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido.",
+   "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido. 09/10/2026: o QR deixou de apontar para genesis.co.mz (dominio que nao e nosso) e usa saleVerifyUrl() = origem da app + /verify/<id>.",
    "role": "Recibo (impressao).",
    "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
    "planned": false,
-   "lines": 193,
-   "size": 9134,
+   "lines": 200,
+   "size": 9456,
    "externals": [
     "qrcode"
    ],
@@ -4836,6 +4908,32 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
    "inbound": 2,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/search.js",
+   "path": "frontend/src/utils/search.js",
+   "label": "search.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Pesquisa sem acentos nem maiusculas (foldText/nameMatches): acucar encontra Açúcar.",
+   "notes": "09/10/2026 (Fase 7.2): tests/search.test.mjs 4/4 + pos.mjs no browser.",
+   "role": "Pesquisa de produtos (POS, quebra/pedido, Produtos do dono).",
+   "security": "",
+   "planned": false,
+   "lines": 12,
+   "size": 524,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/tests/search.test.mjs"
+   ],
+   "inbound": 4,
    "outbound": 0
   },
   {
@@ -4864,11 +4962,12 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "frontend/src/App.jsx",
     "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/Support.jsx",
     "frontend/src/pages/owner/Onboarding.jsx"
    ],
-   "inbound": 5,
+   "inbound": 6,
    "outbound": 2
   },
   {
@@ -5021,12 +5120,13 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 245,
-   "size": 13932,
+   "lines": 275,
+   "size": 16193,
    "externals": [
     "node:fs",
     "node:path",
-    "@playwright/test"
+    "@playwright/test",
+    "qrcode"
    ],
    "dependsOn": [],
    "usedBy": [],
@@ -5071,8 +5171,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 156,
-   "size": 9402,
+   "lines": 162,
+   "size": 9864,
    "externals": [
     "node:fs",
     "node:path",
@@ -5185,6 +5285,32 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 0
+  },
+  {
+   "id": "frontend/tests/search.test.mjs",
+   "path": "frontend/tests/search.test.mjs",
+   "label": "search.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 26,
+   "size": 1090,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/search.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "frontend/vite.config.js",
@@ -5687,6 +5813,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
+   "target": "backend/src/routes/verify.js"
+  },
+  {
+   "source": "backend/src/index.js",
    "target": "backend/src/utils/http.js"
   },
   {
@@ -6082,6 +6212,14 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/stockLots.js"
   },
   {
+   "source": "backend/src/routes/verify.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/routes/verify.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
    "source": "backend/src/services/expiryJob.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -6212,6 +6350,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/App.jsx",
    "target": "frontend/src/pages/auth/Support.jsx"
+  },
+  {
+   "source": "frontend/src/App.jsx",
+   "target": "frontend/src/pages/VerifyReceipt.jsx"
   },
   {
    "source": "frontend/src/App.jsx",
@@ -6350,6 +6492,26 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/registerSW.js"
   },
   {
+   "source": "frontend/src/pages/VerifyReceipt.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/VerifyReceipt.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/VerifyReceipt.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/VerifyReceipt.jsx",
+   "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/pages/VerifyReceipt.jsx",
+   "target": "frontend/src/pages/auth/AuthLayout.jsx"
+  },
+  {
    "source": "frontend/src/pages/auth/Login.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -6487,6 +6649,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/utils/search.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
    "target": "frontend/src/utils/imageResize.js"
   },
   {
@@ -6611,6 +6777,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/utils/search.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/utils/format.js"
   },
   {
@@ -6640,6 +6810,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/pos/PosScreen.jsx",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/utils/search.js"
   },
   {
    "source": "frontend/src/pages/pos/PosScreen.jsx",
@@ -6708,6 +6882,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/offline_queue.test.mjs",
    "target": "frontend/src/db/localDb.js"
+  },
+  {
+   "source": "frontend/tests/search.test.mjs",
+   "target": "frontend/src/utils/search.js"
   },
   {
    "source": "backend/src/services/report.service.js",

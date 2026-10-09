@@ -356,7 +356,7 @@
       "summary": "Impressao do talao: Web Serial (impressora termica ligada) com recurso a window.print(). O PDFVectorial do recibo vive em receiptPdf.js.",
       "role": "Recibo (impressao).",
       "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
-      "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido."
+      "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido. 09/10/2026: o QR deixou de apontar para genesis.co.mz (dominio que nao e nosso) e usa saleVerifyUrl() = origem da app + /verify/<id>."
     },
     "frontend/src/db/localDb.js": {
       "status": "ok",
@@ -1143,13 +1143,32 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao)."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
       "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+    },
+    "backend/src/routes/verify.js": {
+      "status": "ok",
+      "summary": "GET /api/verify/:saleId publico: confirma que o recibo existe e se a venda continua valida (concluida/cancelada).",
+      "role": "QR de autenticidade do recibo.",
+      "security": "So devolve o que ja esta impresso no recibo (sem custos, sem caixista, sem ids internos); UUID validado (400); 60 pedidos/IP/15 min; Cache-Control no-store e noindex.",
+      "notes": "09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao)."
+    },
+    "frontend/src/pages/VerifyReceipt.jsx": {
+      "status": "ok",
+      "summary": "Pagina publica /verify/:saleId aberta pelo QR: Recibo autentico / Venda cancelada / Recibo nao encontrado.",
+      "role": "QR de autenticidade do recibo.",
+      "notes": "09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao)."
+    },
+    "frontend/src/utils/search.js": {
+      "status": "ok",
+      "summary": "Pesquisa sem acentos nem maiusculas (foldText/nameMatches): acucar encontra Açúcar.",
+      "role": "Pesquisa de produtos (POS, quebra/pedido, Produtos do dono).",
+      "notes": "09/10/2026 (Fase 7.2): tests/search.test.mjs 4/4 + pos.mjs no browser."
     }
   }
 }

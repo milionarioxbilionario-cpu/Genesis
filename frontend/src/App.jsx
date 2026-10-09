@@ -8,6 +8,7 @@ const Login = lazy(() => import('./pages/auth/Login'));
 const RequestAccount = lazy(() => import('./pages/auth/RequestAccount'));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const Support = lazy(() => import('./pages/auth/Support'));
+const VerifyReceipt = lazy(() => import('./pages/VerifyReceipt'));
 const Terminal = lazy(() => import('./pages/pos/Terminal'));
 const AppShell = lazy(() => import('./layouts/AppShell'));
 const Home = lazy(() => import('./pages/owner/Home'));
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="/pedir-conta" element={<RequestAccount />} />
               <Route path="/recuperar-senha" element={<ResetPassword />} />
               <Route path="/suporte" element={<Support />} />
+              <Route path="/verify/:saleId" element={<VerifyReceipt />} />
               <Route path="/terminal" element={<Terminal />} />
               <Route path="/onboarding" element={<RequireOwner><Onboarding /></RequireOwner>} />
               <Route path="/app" element={<RequireOwner><AppShell /></RequireOwner>}>

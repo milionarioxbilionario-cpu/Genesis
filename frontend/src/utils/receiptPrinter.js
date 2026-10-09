@@ -11,11 +11,18 @@ function padDailyNumber(n) {
   return String(Number(n || 0) || 0).padStart(3, '0');
 }
 
+// Endereco do QR de autenticidade: a pagina publica /verify/<id> da propria
+// app. O terminal corre em genesismz.com, por isso a origem actual e a certa
+// (antes apontava para genesis.co.mz, um dominio que nao e nosso).
+export function saleVerifyUrl(saleId) {
+  return window.location.origin + '/verify/' + encodeURIComponent(saleId);
+}
+
 async function generateQrDataUrl(saleId, width = 150) {
   if (!saleId) return '';
   try {
     return await QRCode.toDataURL(
-      `https://genesis.co.mz/verify/${saleId}`,
+      saleVerifyUrl(saleId),
       { width, margin: 1, color: { dark: '#111c2b', light: '#ffffff' }, errorCorrectionLevel: 'M' },
     );
   } catch (e) {
