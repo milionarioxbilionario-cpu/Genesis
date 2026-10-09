@@ -1,29 +1,29 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-05T12:37:53.943Z */
+   Gerado em: 2026-10-09T14:34:09.068Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-05T12:37:53.943Z",
+ "generatedAt": "2026-10-09T14:34:09.068Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 188,
+  "files": 190,
   "planned": 5,
-  "links": 297,
-  "lines": 27043,
+  "links": 303,
+  "lines": 27443,
   "byStatus": {
-   "ok": 110,
+   "ok": 116,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 66
+   "untracked": 62
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 9,
-   "backend-data": 48,
-   "backend": 50,
+   "backend-data": 49,
+   "backend": 51,
    "frontend-pub": 4,
    "frontend": 56,
    "scripts": 3
@@ -39,11 +39,11 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
-   "pkg": "dotenv",
-   "count": 19
+   "pkg": "bcrypt",
+   "count": 20
   },
   {
-   "pkg": "bcrypt",
+   "pkg": "dotenv",
    "count": 19
   },
   {
@@ -79,6 +79,10 @@ window.GENESIS_MINDMAP = {
    "count": 8
   },
   {
+   "pkg": "fs",
+   "count": 7
+  },
+  {
    "pkg": "node:test",
    "count": 7
   },
@@ -91,12 +95,8 @@ window.GENESIS_MINDMAP = {
    "count": 7
   },
   {
-   "pkg": "fs",
-   "count": 6
-  },
-  {
    "pkg": "nodemailer",
-   "count": 4
+   "count": 5
   },
   {
    "pkg": "node-fetch",
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 48,
+   "nodes": 49,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -179,7 +179,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261004_fecho_mes": 1,
     "backend/prisma/migrations/20261004_lista_compras": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
-    "backend/scripts": 25,
+    "backend/scripts": 26,
     "backend/tests": 7,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
@@ -188,13 +188,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 50,
+   "nodes": 51,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 15,
     "backend/src/services": 9,
-    "backend/src/utils": 19,
+    "backend/src/utils": 20,
     "backend/src/jobs": 1
    }
   },
@@ -256,7 +256,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 120,
-   "size": 15121,
+   "size": 15158,
    "externals": [
     "@prisma/client"
    ],
@@ -278,8 +278,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 585,
-   "size": 107320,
+   "lines": 634,
+   "size": 116616,
    "externals": [
     "@prisma/client"
    ],
@@ -322,8 +322,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1119,
-   "size": 57574,
+   "lines": 1156,
+   "size": 59904,
    "externals": [
     "nodemailer"
    ],
@@ -987,6 +987,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/scripts/configurar_email.js",
+   "path": "backend/scripts/configurar_email.js",
+   "label": "configurar_email.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 69,
+   "size": 3562,
+   "externals": [
+    "fs",
+    "readline",
+    "nodemailer"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/scripts/create_owner_user.js",
    "path": "backend/scripts/create_owner_user.js",
    "label": "create_owner_user.js",
@@ -1554,8 +1579,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 873,
-   "size": 68123,
+   "lines": 898,
+   "size": 70977,
    "externals": [
     "dotenv",
     "crypto",
@@ -2054,14 +2079,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
-   "security": "",
+   "status": "ok",
+   "summary": "Terminal: emparelhar, perfis (com estado do turno), PIN do caixista, fecho cego, abrir turno novo e ver vendas com o PIN do dono.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Balcao.",
+   "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
    "planned": false,
-   "lines": 117,
-   "size": 6836,
+   "lines": 152,
+   "size": 9201,
    "externals": [
     "express",
     "bcrypt",
@@ -2079,13 +2104,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/utils/shiftLock.js",
     "backend/src/utils/shift.js",
+    "backend/src/utils/authPin.js",
     "backend/src/utils/tenantStatus.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 11
+   "outbound": 12
   },
   {
    "id": "backend/src/routes/products.js",
@@ -2156,13 +2182,13 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/routes",
    "ext": ".js",
    "status": "ok",
-   "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria.",
-   "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N.",
+   "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria. Turno fechado = 409 SHIFT_CLOSED; GET recusado ao caixista (lista so com PIN do dono em /api/pos/sales).",
+   "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
    "role": "Nucleo do POS.",
    "security": "",
    "planned": false,
-   "lines": 505,
-   "size": 23327,
+   "lines": 518,
+   "size": 24299,
    "externals": [
     "express",
     "zod",
@@ -2173,6 +2199,8 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/utils/shiftLock.js",
+    "backend/src/utils/shift.js",
+    "backend/src/utils/authPin.js",
     "backend/src/utils/tenantRls.js",
     "backend/src/utils/paymentMethods.js",
     "backend/src/utils/stockLots.js"
@@ -2181,7 +2209,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 7
   },
   {
    "id": "backend/src/routes/settings.js",
@@ -2510,10 +2538,41 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
+    "backend/src/utils/authPin.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 7,
+   "inbound": 8,
    "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/authPin.js",
+   "path": "backend/src/utils/authPin.js",
+   "label": "authPin.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Verificacao unica do PIN de autorizacao do dono no terminal; limite partilhado de 5 falhas/loja/15 min.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Seguranca do balcao.",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 1946,
+   "externals": [
+    "bcrypt"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/http.js"
+   ],
+   "usedBy": [
+    "backend/src/routes/pos.js",
+    "backend/src/routes/sales.js"
+   ],
+   "inbound": 2,
+   "outbound": 3
   },
   {
    "id": "backend/src/utils/dbEngine2.js",
@@ -2599,9 +2658,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
+    "backend/src/utils/authPin.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 8,
+   "inbound": 9,
    "outbound": 0
   },
   {
@@ -2709,13 +2769,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/audit.js",
+    "backend/src/utils/authPin.js",
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/shift.js",
     "backend/src/utils/tenantStatus.js",
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 36,
+   "inbound": 37,
    "outbound": 1
   },
   {
@@ -2751,14 +2812,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Listas fechadas de rotas por ambito (pos = terminal, support = so leitura).",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Seguranca.",
    "security": "",
    "planned": false,
-   "lines": 41,
-   "size": 1716,
+   "lines": 42,
+   "size": 1831,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -2805,14 +2866,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Turno e fecho cego: estado aberto/fechado (SHIFT_OPENED na auditoria), esperado nunca revelado antes de contar.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Fecho de caixa.",
    "security": "",
    "planned": false,
-   "lines": 94,
-   "size": 4531,
+   "lines": 113,
+   "size": 5568,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -2821,9 +2882,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/http.js"
    ],
    "usedBy": [
-    "backend/src/routes/pos.js"
+    "backend/src/routes/pos.js",
+    "backend/src/routes/sales.js"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 4
   },
   {
@@ -4422,14 +4484,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 244,
-   "size": 12539,
+   "lines": 275,
+   "size": 14143,
    "externals": [
     "react",
     "qrcode",
@@ -4457,13 +4519,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
    "status": "ok",
-   "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas.",
-   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
+   "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 376,
-   "size": 22304,
+   "lines": 408,
+   "size": 23781,
    "externals": [
     "react",
     "lucide-react"
@@ -4491,14 +4553,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "role": "Balcao.",
    "security": "",
    "planned": false,
    "lines": 177,
-   "size": 8387,
+   "size": 8473,
    "externals": [
     "react",
     "react-router-dom",
@@ -4959,8 +5021,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 190,
-   "size": 10169,
+   "lines": 245,
+   "size": 13932,
    "externals": [
     "node:fs",
     "node:path",
@@ -5893,6 +5955,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/routes/pos.js",
+   "target": "backend/src/utils/authPin.js"
+  },
+  {
+   "source": "backend/src/routes/pos.js",
    "target": "backend/src/utils/tenantStatus.js"
   },
   {
@@ -5934,6 +6000,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/sales.js",
    "target": "backend/src/utils/shiftLock.js"
+  },
+  {
+   "source": "backend/src/routes/sales.js",
+   "target": "backend/src/utils/shift.js"
+  },
+  {
+   "source": "backend/src/routes/sales.js",
+   "target": "backend/src/utils/authPin.js"
   },
   {
    "source": "backend/src/routes/sales.js",
@@ -6038,6 +6112,18 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/utils/audit.js",
    "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/authPin.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/authPin.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/utils/authPin.js",
+   "target": "backend/src/utils/http.js"
   },
   {
    "source": "backend/src/utils/prisma.js",

@@ -6,6 +6,8 @@
 //   POST /api/pos/lock          termina a sessao do caixista (o terminal fica)
 //   GET  /api/pos/shift         estado do turno do caixista (sem o esperado)
 //   POST /api/pos/shift/close   fecho cego feito pelo proprio caixista
+//   POST /api/pos/shift/open    turno novo depois de fechado (PIN do dono)
+//   POST /api/pos/sales         ultimas vendas do caixista (PIN do dono)
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { z } = require('zod');
@@ -19,7 +21,8 @@ const { writeAudit } = require('../utils/audit');
 const { setSessionCookies, clearSessionCookies, verifyAccessToken } = require('../utils/tokens');
 const { TERMINAL_COOKIE, consumePairingCode, createTerminal, terminalCookieOptions } = require('../utils/terminals');
 const { getShiftLock } = require('../utils/shiftLock');
-const { getShiftState, closeShiftBlind } = require('../utils/shift');
+const { getShiftState, closeShiftBlind, shiftStatus } = require('../utils/shift');
+const { checkAuthorizationPin } = require('../utils/authPin');
 const { blockedTenantStatus } = require('../utils/tenantStatus');
 
 const router = express.Router();
@@ -66,8 +69,9 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
     prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true } }),
   ]);
   const profiles = await Promise.all(cashiers.map(async (c) => {
-    const lock = await getShiftLock(prisma, tenantId, c.id);
-    return { id: c.id, name: c.name, has_pin: Boolean(c.pin_hash), locked: lock.locked };
+    const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
+    // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
+    return { id: c.id, name: c.name, has_pin: Boolean(c.pin_hash), locked: lock.locked, shift_open: shift.open };
   }));
   const sessionUserId = currentPosSession(req, id);
   res.json({
@@ -111,6 +115,37 @@ router.post('/shift/close', auth, requireRole('cashier'), asyncHandler(async (re
   const { declared_amount } = z.object({ declared_amount: z.number().int().nonnegative() }).parse(req.body);
   const result = await closeShiftBlind({ req, tenantId: req.user.tenantId, cashier: { id: req.user.userId, name: req.user.name }, declared: declared_amount });
   res.status(result.status).json(result.body);
+}));
+
+const pinBody = z.object({ pin: z.string().regex(/^\d{4,6}$/, 'PIN inválido') });
+
+// Turno fechado -> so o dono abre outro, com o PIN de autorizacao no terminal.
+router.post('/shift/open', auth, requireRole('cashier'), asyncHandler(async (req, res) => {
+  const { pin } = pinBody.parse(req.body);
+  const { tenantId, userId } = req.user;
+  const lock = await getShiftLock(prisma, tenantId, userId);
+  if (lock.locked) throw httpError(423, 'Perfil bloqueado por erros no fecho. O dono tem de desbloquear no painel dele.', 'CASHIER_LOCKED');
+  if ((await shiftStatus(prisma, tenantId, userId)).open) throw httpError(409, 'O turno já está aberto.', 'SHIFT_ALREADY_OPEN');
+  await checkAuthorizationPin({ req, tenantId, pin, failAction: 'SHIFT_OPEN_PIN_FAIL', entityType: 'user', entityId: userId });
+  await writeAudit({ req, tenantId, action: 'SHIFT_OPENED', entityType: 'user', entityId: userId, newValue: { cashierName: req.user.name, terminal: req.user.tid || null } });
+  res.status(201).json(await getShiftState(tenantId, userId));
+}));
+
+// Lista de vendas no terminal: o caixista via o total do turno e acertava o
+// fecho cego. Agora so abre com o PIN do dono (GET /api/sales recusa caixistas).
+router.post('/sales', auth, requireRole('cashier'), asyncHandler(async (req, res) => {
+  const { pin } = pinBody.parse(req.body);
+  const { tenantId, userId } = req.user;
+  await checkAuthorizationPin({ req, tenantId, pin, failAction: 'SALES_VIEW_PIN_FAIL', entityType: 'user', entityId: userId });
+  await writeAudit({ req, tenantId, action: 'SALES_VIEWED', entityType: 'user', entityId: userId });
+  const sales = await prisma.sale.findMany({
+    where: { tenant_id: tenantId, cashier_user_id: userId },
+    include: { items: true },
+    orderBy: { created_at: 'desc' },
+    take: 20,
+  });
+  // Sem custos (especificacao 4.3).
+  res.json(sales.map(({ total_cost, items, ...sale }) => ({ ...sale, items: items.map(({ unit_cost_price, ...item }) => item) })));
 }));
 
 module.exports = router;

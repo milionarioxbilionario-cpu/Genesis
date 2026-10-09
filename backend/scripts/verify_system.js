@@ -182,6 +182,25 @@ async function test2() {
   // Limpa a tentativa falhada para nao contaminar as seccoes seguintes.
   await prisma.auditLog.deleteMany({ where: { tenant_id: ctx.tenant.id, action: 'SHIFT_ATTEMPT_FAIL' } });
 
+  // Turno fechado (06/10/2026): nao vende ate o dono abrir outro com o PIN.
+  const closedSale = await term.req('POST', '/api/sales', saleBody());
+  ok(closedSale.status === 409 && closedSale.data?.code === 'SHIFT_CLOSED', 'turno fechado: o caixista NAO vende (409 SHIFT_CLOSED)', closedSale);
+  ok((await term.req('GET', '/api/pos/shift')).data?.open === false, 'estado do turno: fechado');
+  ok((await term.req('POST', '/api/pos/shift/close', { declared_amount: 0 })).data?.code === 'NO_OPEN_SHIFT', 'fechar outra vez: 409 NO_OPEN_SHIFT');
+  const profs = await term.req('GET', '/api/pos/terminal');
+  ok(profs.data?.cashiers.find((c) => c.id === ctx.cashier.id)?.shift_open === false, 'ecra de perfis mostra o turno fechado', profs.data?.cashiers);
+  const before = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID(), created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString() }));
+  ok(before.status === 201, 'venda offline feita ANTES do fecho ainda sincroniza (201)', before);
+  const wrongOpen = await term.req('POST', '/api/pos/shift/open', { pin: '0000' });
+  ok(wrongOpen.status === 403 && wrongOpen.data?.code === 'INVALID_AUTH_PIN', 'abrir turno com PIN errado: 403', wrongOpen);
+  ok((await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'SHIFT_OPEN_PIN_FAIL' } })) === 1, '... e a falha fica gravada');
+  const reopen = await term.req('POST', '/api/pos/shift/open', { pin: PIN });
+  ok(reopen.status === 201 && reopen.data?.open === true && reopen.data?.expected === undefined, 'PIN do dono certo: turno novo aberto (sem revelar o esperado)', reopen);
+  ok((await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'SHIFT_OPENED', entity_id: ctx.cashier.id } })) === 1, 'auditoria: SHIFT_OPENED');
+  ok((await term.req('POST', '/api/pos/shift/open', { pin: PIN })).data?.code === 'SHIFT_ALREADY_OPEN', 'abrir um turno ja aberto: 409');
+  ok((await term.req('POST', '/api/sales', saleBody())).status === 201, 'turno novo: volta a vender (201)');
+  await prisma.auditLog.deleteMany({ where: { tenant_id: ctx.tenant.id, action: 'SHIFT_OPEN_PIN_FAIL' } });
+
   const lock = await term.req('POST', '/api/pos/lock');
   ok(lock.status === 200 && !term.jar.has('token') && term.jar.has('genesis_terminal'), 'bloquear: sai o caixista, o terminal continua emparelhado');
   ok((await term.req('GET', '/api/products')).status === 401, 'depois de bloquear nao ha sessao');
@@ -476,8 +495,14 @@ async function test10() {
   await owner.req('POST', '/api/sales', saleBody()); // venda do dono (nao do caixista)
   const prods = await caixa.req('GET', '/api/products');
   ok(prods.status === 200 && prods.data.every((p) => p.cost_price === undefined), 'produtos para o caixista: sem cost_price');
-  const sales = await caixa.req('GET', '/api/sales');
-  ok(sales.status === 200 && sales.data.every((s) => s.cashier_user_id === ctx.cashier.id && s.total_cost === undefined), 'vendas: so as dele e sem custos');
+  const plain = await caixa.req('GET', '/api/sales');
+  ok(plain.status === 403, 'GET /api/sales: 403 para caixista (a lista exige o PIN do dono)', plain);
+  const noPin = await caixa.req('POST', '/api/pos/sales', { pin: '0000' });
+  ok(noPin.status === 403 && noPin.data?.code === 'INVALID_AUTH_PIN', 'lista de vendas com PIN errado: 403', noPin);
+  const sales = await caixa.req('POST', '/api/pos/sales', { pin: PIN });
+  ok(sales.status === 200 && sales.data.length > 0 && sales.data.every((s) => s.cashier_user_id === ctx.cashier.id && s.total_cost === undefined && s.items.every((i) => i.unit_cost_price === undefined)), 'lista com o PIN do dono: so as dele e sem custos', sales.status);
+  ok((await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'SALES_VIEWED' } })) >= 1, 'auditoria: SALES_VIEWED');
+  await prisma.auditLog.deleteMany({ where: { tenant_id: ctx.tenant.id, action: 'SALES_VIEW_PIN_FAIL' } });
   ok((await client(signAccessToken(ctx.cashier)).req('GET', '/api/dashboard/summary')).status === 403, 'dashboard financeiro: 403 para caixista');
   ok((await client(signAccessToken(ctx.cashier)).req('GET', '/api/inventory/stock')).status === 403, 'entradas de stock (custos): 403 para caixista');
   const hist = await owner.req('GET', '/api/owner/sales?page=1&page_size=5');
