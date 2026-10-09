@@ -4,7 +4,8 @@ import { CheckCircle2, Printer } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import { newUuid, SYNC_STATE } from '../../utils/syncPolicy';
-import { printReceipt } from '../../utils/receiptPrinter';
+import { printReceipt, saleVerifyUrl } from '../../utils/receiptPrinter';
+import { foldText, nameMatches } from '../../utils/search';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
 import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Select, Spinner, useToast } from '../../components/ui';
 
@@ -31,7 +32,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   const [qr, setQr] = useState('');
   const [printing, setPrinting] = useState(false);
   useEffect(() => {
-    QRCode.toDataURL(`https://genesis.co.mz/verify/${sale.id}`, { width: 120, margin: 1 }).then(setQr).catch(() => setQr(''));
+    QRCode.toDataURL(saleVerifyUrl(sale.id), { width: 120, margin: 1 }).then(setQr).catch(() => setQr(''));
   }, [sale.id]);
   const subtotal = items.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
   async function print() {
@@ -211,7 +212,7 @@ export function RecentSalesDialog({ onClose, onChanged }) {
 
 function ProductPicker({ products, value, onChange }) {
   const [q, setQ] = useState('');
-  const list = useMemo(() => products.filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 50), [products, q]);
+  const list = useMemo(() => { const f = foldText(q); return products.filter((p) => nameMatches(p.name, f)).slice(0, 50); }, [products, q]);
   return (
     <div className="flex flex-col gap-2">
       <Input label="Produto" placeholder="Pesquisar…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />

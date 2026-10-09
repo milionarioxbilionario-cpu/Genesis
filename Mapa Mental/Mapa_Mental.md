@@ -145,6 +145,15 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `PosDialogs.jsx` `CloseShiftDialog` | Antes de contar envia a fila offline; com vendas ainda por enviar recusa o fecho com explicação (evita o falso "abaixo do esperado" no turno seguinte e a tentativa falhada/bloqueio) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` (captura 28b) |
 | Aviso "Sem ligação: a usar o catálogo guardado" | Não desaparece quando a rede volta (só após a venda seguinte) — defeito antigo, encontrado na captura 29 | 🔴 CONHECIDO COMO QUEBRADO (menor) | 09/10 — captura 29 |
 
+### Fase 7.2 — QR dos recibos e pesquisa sem acentos (09/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `backend/src/routes/verify.js` (`GET /api/verify/:saleId`, público) | Confirma que o recibo existe e se a venda está concluída ou cancelada; só devolve o que já está impresso (loja, n.º, data, artigos, total, pagamento) — sem custos, caixista nem ids; UUID validado (400), inexistente 404, 60/IP/15 min, `Cache-Control: no-store` | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js 19` 8/8 |
+| `frontend/src/pages/VerifyReceipt.jsx` + rota `/verify/:saleId` | Página pública aberta pelo QR: "Recibo autêntico" / "Venda cancelada" / "Recibo não encontrado" (com nota sobre vendas offline ainda por enviar) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` (sem sessão, 390 px, captura 24b revista) |
+| QR (`receiptPrinter.js` `saleVerifyUrl`, `PosDialogs.jsx`) | O QR aponta para a origem da app + `/verify/<id>` (antes `genesis.co.mz`, domínio que não é nosso) | ✅ CONFIRMADO no diálogo do recibo (pixel a pixel + contraprova); ⚠️ talão impresso (Web Serial/print) não percorrido — usa a mesma função | 09/10 — `flows.mjs` |
+| `frontend/src/utils/search.js` (POS, escolha de produto na quebra/pedido, Produtos do dono) | Pesquisa sem acentos nem maiúsculas ("acucar" → "Açúcar") | ✅ CONFIRMADO FUNCIONAL | 09/10 — `search.test.mjs` 4/4; `pos.mjs` ("agua" → só "Água Namaacha 1,5L") |
+| `genesis.co.mz` ainda no código | `routes/admin.js:106-108` (email inventado na aprovação — item da lista de 06/10) e seed demo opt-in em `index.js` | ⚠️ por tratar (fora desta fase) | 09/10 — grep |
+
 ---
 
 ## Parte B — JORNAL CRONOLÓGICO
@@ -631,3 +640,14 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Encontrado e NÃO corrigido (fora desta fase): aviso "Sem ligação: a usar o catálogo guardado" fica no ecrã depois de a rede voltar.
 - Não feito: publicar em genesismz.com (pede confirmação do fundador).
 - Segue-se (fase seguinte, após confirmação): QR dos recibos (domínio + rota `/verify`) e pesquisa do POS sem acentos.
+
+### [2026-10-09] — Fase 7.2: QR dos recibos com página /verify + pesquisa sem acentos
+- Ficheiros: novos `backend/src/routes/verify.js`, `frontend/src/pages/VerifyReceipt.jsx`, `frontend/src/utils/search.js`, `frontend/tests/search.test.mjs`; alterados `backend/src/index.js` (monta `/api/verify`), `frontend/src/App.jsx` (rota pública), `utils/receiptPrinter.js` (`saleVerifyUrl`), `pages/pos/PosDialogs.jsx`, `pages/pos/PosScreen.jsx`, `pages/owner/Products.jsx`, `scripts/verify_system.js` (secção 19), `tests/e2e/flows.mjs`, `tests/e2e/pos.mjs`.
+- Porquê: teste do fundador no iPhone (06/10) — o QR apontava para `https://genesis.co.mz/verify/…` (domínio alheio, rota inexistente); a pesquisa do POS não encontrava "Açúcar" com "acucar".
+- Decisões: o QR usa a origem da app (em produção `https://genesismz.com`); a página pública mostra só o que já está no recibo + estado — nada de custos/caixista. A mesma correcção de acentos aplicada nos 3 sítios com o mesmo padrão (POS, escolha de produto na quebra/pedido, Produtos do dono) — grep de `toLowerCase().includes` = 0 depois.
+- Erros apanhados pela prova (no teste, não no produto): o 1.º `flows.mjs` comparava os bytes do PNG (browser/canvas ≠ Node) e procurava "Laurentina" numa venda de 2M + Coca-Cola. Passou a comparar pixels, com contraprova (o QR do domínio antigo tem de ser diferente).
+- Incidente de escrita: a 1.ª tentativa de acrescentar estas entradas por `node -e` na shell perdeu o texto entre crases (substituição de comandos do bash). Detectado na releitura e corrigido à mão; nenhuma entrada antiga foi tocada.
+- Prova: `verify_system.js 19` 8/8 (sem sessão 200, sem custos/caixista/ids, no-store, 400, 404, cancelada); `search.test.mjs` 4/4; `flows.mjs` todos os fluxos passaram, 0 erros JS; `pos.mjs` passou, 0 erros JS; `vite build` OK; fixtures apagadas. Regressão completa `verify_system.js`: ver adenda abaixo.
+- Não feito: publicar em genesismz.com (7.1 + 7.2 juntas, pede confirmação); push para o GitHub.
+- Segue-se: paragem entre fases — o fundador escolhe o próximo item da lista de 06/10.
+

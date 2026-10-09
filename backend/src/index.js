@@ -23,6 +23,7 @@ const settingsRoutes = require('./routes/settings');
 const shoppingListRoutes = require('./routes/shoppingLists');
 const posRoutes = require('./routes/pos');
 const posWriteAuth = require('./middleware/posWriteAuth');
+const verifyRoutes = require('./routes/verify');
 const helmet = require('helmet');
 const { errorHandler } = require('./utils/http');
 
@@ -246,6 +247,9 @@ app.use('/api/sales', posWriteAuth, requireRole('owner', 'cashier'), salesRoutes
 
 // Terminal POS: emparelhamento, PIN do caixista, turno e fecho cego.
 app.use('/api/pos', posRoutes);
+
+// Verificacao publica do QR dos recibos (sem sessao, so leitura).
+app.use('/api/verify', verifyRoutes);
 
 // Rotas Protegidas de Admin
 app.use('/api/admin', adminOriginCheck, authMiddleware, requireRole('super_admin'), adminRoutes);

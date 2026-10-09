@@ -1509,3 +1509,40 @@ FUNCIONOU?
 ENCONTREI MAIS UM (pequeno, fica na lista)
 - Depois de a internet voltar, o aviso azul "Sem ligacao: a usar o
   catalogo guardado" fica no ecra ate a venda seguinte.
+
+==========================================================================
+09/10/2026 — QR DOS RECIBOS A FUNCIONAR + PESQUISA SEM ACENTOS
+==========================================================================
+O QUE ESTAVA MAL
+- O QR impresso nos recibos levava o cliente para genesis.co.mz, um
+  endereco que nao e nosso, e para uma pagina que nao existia. Quem o
+  lesse com o telemovel nao confirmava nada.
+- No POS, escrever "acucar" nao encontrava "Acucar" com acentos (o mesmo
+  com "pao", "feijao", "agua"...). No balcao quase ninguem escreve
+  acentos.
+
+O QUE FIZ
+- O QR aponta agora para o nosso site: genesismz.com/verify/<codigo da
+  venda>. Ao ler o QR abre uma pagina publica (nao precisa de conta) que
+  diz "Recibo autentico" com o nome da loja, a data, os produtos, o total
+  e a forma de pagamento. Se a venda foi cancelada depois, diz "Venda
+  cancelada". Se o codigo nao existe, diz "Recibo nao encontrado".
+- Essa pagina so mostra o que ja esta impresso no recibo. Nunca mostra
+  custos, lucros, o nome do caixista nem outras vendas.
+- A pesquisa ignora acentos e maiusculas: "acucar" encontra "Acucar",
+  "agua" encontra "Agua Namaacha". Corrigi nos 3 sitios onde havia o
+  mesmo problema: a pesquisa do POS, a escolha de produto nas perdas e
+  nos pedidos, e a lista de Produtos no teu painel.
+
+FUNCIONOU?
+- Sim. Teste no servidor: 8 de 8 (a pagina publica funciona sem conta,
+  nao mostra custos, rejeita codigos falsos e mostra as canceladas).
+  Teste da pesquisa: 4 de 4. Num browser verdadeiro: o QR do recibo e
+  exactamente o do nosso endereco (e ja nao o antigo), a pagina abre num
+  telemovel sem conta, e "agua" encontra a Agua Namaacha. 0 erros.
+- Os meus primeiros testes do browser falharam por culpa do proprio
+  teste (procurava um produto que nao estava naquela venda). Corrigi o
+  teste, nao o programa, e voltou a passar.
+- Ainda NAO esta no site genesismz.com. Tal como o turno, falta
+  publicar (peco-te autorizacao primeiro). O talao impresso numa
+  impressora verdadeira ainda nao foi testado.

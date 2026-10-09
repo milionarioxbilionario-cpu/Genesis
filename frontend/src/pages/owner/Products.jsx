@@ -4,6 +4,7 @@ import { Camera, Plus, Search } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
+import { foldText, nameMatches } from '../../utils/search';
 import { photoToDataUrl } from '../../utils/imageResize';
 import ShoppingLists from './ShoppingLists';
 import { Badge, Button, Drawer, Input, MoneyInput, PageHeader, ProductImage, Select, Table, Tabs, Toolbar, useConfirm, useToast, Alert } from '../../components/ui';
@@ -48,7 +49,7 @@ function Catalog({ products }) {
     if (!file) return;
     try { const url = await photoToDataUrl(file); setEditing((x) => ({ ...x, image_url: url })); } catch (err) { setError(err.message); }
   }
-  const list = useMemo(() => (products.data || []).filter((p) => p.is_active && (!q || p.name.toLowerCase().includes(q.toLowerCase()) || (p.barcode || '').includes(q))), [products.data, q]);
+  const list = useMemo(() => { const f = foldText(q); return (products.data || []).filter((p) => p.is_active && (nameMatches(p.name, f) || (p.barcode || '').includes(q.trim()))); }, [products.data, q]);
   const categories = useMemo(() => [...new Set((products.data || []).map((p) => p.category))].sort(), [products.data]);
 
   const set = (k) => (v) => setEditing((e) => ({ ...e, [k]: v }));

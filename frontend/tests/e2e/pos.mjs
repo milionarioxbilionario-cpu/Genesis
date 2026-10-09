@@ -92,6 +92,12 @@ try {
   await term.getByText('Este código não existe no catálogo').waitFor({ timeout: 5000 });
   ok(true, 'codigo desconhecido: aviso em vez de silencio');
   await shot(term, 'p3-pos-codigo-desconhecido');
+  // Pesquisa sem acentos (Fase 7.2): 'agua' encontra 'Água Namaacha 1,5L'.
+  await search.fill('agua');
+  await term.waitForFunction(() => document.querySelectorAll('button[data-tile]').length === 1, null, { timeout: 5000 });
+  ok(await term.locator('button[data-tile]', { hasText: 'Água Namaacha 1,5L' }).count() === 1, 'pesquisa sem acentos: "agua" encontra so a Agua Namaacha');
+  await shot(term, 'p3b-pos-pesquisa-sem-acentos');
+  await search.fill('');
 
   // Atalhos.
   await term.keyboard.press('F4');

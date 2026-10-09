@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
+import QRCode from 'qrcode';
 
 const BASE = process.env.BASE || 'http://localhost:5180';
 const fx = JSON.parse(fs.readFileSync(process.env.FIXTURE, 'utf8'));
@@ -105,10 +106,39 @@ try {
   await term.getByRole('button', { name: /Coca-Cola 500ml/ }).click();
   ok(await term.getByRole('button', { name: /Cobrar 105,00 MT/ }).isVisible(), 'cesto: 2M + Coca-Cola = 105,00 MT');
   await shot(term, '23-pos-cesto');
+  const saleResp = term.waitForResponse((r) => r.url().endsWith('/api/sales') && r.request().method() === 'POST', { timeout: T });
   await term.getByRole('button', { name: /Cobrar/ }).click();
   await term.getByText('Venda registada').waitFor({ timeout: T });
   ok(true, 'venda registada no servidor');
   await shot(term, '24-pos-recibo');
+
+  // QR do recibo (Fase 7.2): aponta para /verify/<id> desta app e a pagina
+  // publica, sem sessao, confirma a venda.
+  const saleId = (await saleResp).request().postDataJSON().id;
+  const qrImg = term.getByAltText('QR de verificação da venda');
+  await qrImg.waitFor({ timeout: T });
+  const qrSrc = await qrImg.getAttribute('src');
+  const expectedQr = await QRCode.toDataURL(BASE + '/verify/' + saleId, { width: 120, margin: 1 });
+  // O PNG do browser (canvas) e o do Node tem bytes diferentes: compara pixels.
+  const samePixels = (x, y) => term.evaluate(async ([a, b]) => {
+    const px = async (src) => { const i = new Image(); i.src = src; await i.decode(); const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); return g.getImageData(0, 0, i.width, i.height).data; };
+    const [x, y] = await Promise.all([px(a), px(b)]);
+    return x.length === y.length && x.every((v, k) => v === y[k]);
+  }, [x, y]);
+  const oldDomainQr = await QRCode.toDataURL('https://genesis.co.mz/verify/' + saleId, { width: 120, margin: 1 });
+  ok(!(await samePixels(qrSrc, oldDomainQr)), 'contraprova: o QR ja nao e o do dominio antigo');
+  ok(await samePixels(qrSrc, expectedQr), 'QR do recibo = ' + BASE + '/verify/<id da venda>');
+  const anonCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'pt-PT' });
+  const anon = await anonCtx.newPage();
+  watch(anon, 'verificar');
+  await anon.goto(BASE + '/verify/' + saleId);
+  await anon.getByText('Recibo autêntico').waitFor({ timeout: T });
+  ok(await anon.getByText('105,00').first().isVisible() && await anon.getByText(/2M 340ml/).isVisible() && await anon.getByText(/Coca-Cola 500ml/).isVisible(), 'pagina /verify sem sessao: recibo autentico, artigos e total 105,00');
+  await shot(anon, '24b-verificar-recibo');
+  await anon.goto(BASE + '/verify/00000000-0000-4000-8000-000000000000');
+  await anon.getByText('Recibo não encontrado').waitFor({ timeout: T });
+  ok(true, 'codigo inexistente: "Recibo nao encontrado"');
+  await anonCtx.close();
   await term.getByRole('button', { name: 'Nova venda' }).click();
 
   // Desconto acima do limite (10%): pede o PIN do dono.
