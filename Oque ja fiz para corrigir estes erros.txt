@@ -1546,3 +1546,58 @@ FUNCIONOU?
 - Ainda NAO esta no site genesismz.com. Tal como o turno, falta
   publicar (peco-te autorizacao primeiro). O talao impresso numa
   impressora verdadeira ainda nao foi testado.
+
+==========================================================================
+09/10/2026 — TURNO + QR + PESQUISA JA ESTAO NO SITE (genesismz.com)
+==========================================================================
+O QUE FIZ
+- Como pediste: publiquei no genesismz.com tudo o que estava pronto (o
+  turno fechado a serio, "Vendas" so com o teu PIN, o QR dos recibos e a
+  pesquisa sem acentos) e enviei o codigo para o GitHub (estava 12
+  passos atrasado; agora esta igual).
+
+FUNCIONOU?
+- Sim. A bateria completa de verificacao passou 279 de 279 contra a base
+  de dados verdadeira, antes de publicar.
+- Depois de publicar, corri o teste do browser contra o PROPRIO site
+  genesismz.com (com uma loja de teste que apaguei no fim): passou tudo.
+  O QR do recibo leva a genesismz.com/verify/... e a pagina abre.
+- Uma coisa que NAO fiz: correr a bateria dentro do servidor. O sistema
+  de permissoes recusou o comando, e ainda bem — o comando que eu ia usar
+  para desligar o servidor de teste podia ter desligado o servidor
+  verdadeiro por engano.
+
+==========================================================================
+09/10/2026 — 3 DEFEITOS PEQUENOS (AINDA NAO ESTAO NO SITE)
+==========================================================================
+O QUE ESTAVA MAL
+1. No POS, o aviso azul "Sem ligacao: a usar o catalogo guardado" ficava
+   no ecra mesmo depois de a internet voltar.
+2. No painel admin pelo iPhone, "Abrir modo suporte" nao fazia nada: o
+   Safari bloqueava o separador novo em silencio.
+3. Ao aprovar um pedido de conta cujo email ja tinha conta, o sistema
+   inventava um email (nome.numero@genesis.co.mz) que o dono nao
+   conhecia — e esse dominio nem e nosso.
+
+O QUE FIZ
+1. Quando ha internet e o POS ainda esta a usar o catalogo guardado, ele
+   volta a pedir o catalogo (logo, e de 30 em 30 segundos). O aviso sai
+   sozinho.
+2. O separador abre logo no teu toque e so depois recebe o link. Se o
+   browser mesmo assim o bloquear, aparece no ecra "Tocar aqui para
+   abrir o modo suporte".
+3. Agora a aprovacao para e diz: "O email X ja tem uma conta no Genesis.
+   Peca outro email ao dono ou rejeite o pedido." Nao cria nada.
+
+FUNCIONOU?
+- Sim nos testes: verificacao do admin OK (o pedido fica pendente e nao
+  se cria conta), teste do POS no browser OK, teste do admin no browser
+  7 de 7 (incluindo simular um browser que bloqueia o separador).
+- Nao testei num iPhone verdadeiro — isso tens de ser tu a confirmar
+  depois de publicado.
+
+PRECISO DE UMA DECISAO TUA
+- Quando um pedido de conta chega SEM email, o sistema ainda cria um
+  login do tipo nomedaloja@genesis.co.mz. Esse endereco nao recebe
+  emails (nem o de recuperar a senha). Opcoes: tornar o email
+  obrigatorio no pedido de conta, ou outra ideia tua.

@@ -133,7 +133,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | Ligações à BD (Supabase) | `DATABASE_URL` e `APP_DATABASE_URL` passaram à porta **6543** (pooler em modo transacção; `DIRECT_URL` fica na 5432 para migrações) | ✅ CONFIRMADO FUNCIONAL | 03/10 — `verify_system.js` todas as secções OK; `flows.mjs` 24/24; `onboarding.mjs` 8/8; 0 erros P1001/P2024/EMAXCONN no log |
 | `DB_ALLOW_SQLITE_FALLBACK` no `.env` | Passou a `false` (decisão do fundador 03/10): sem Postgres o servidor recusa arrancar em vez de servir de outra base | ✅ CONFIRMADO | 03/10 — leitura do `.env` após a alteração; backup em `~/genesis-backup-20261003/` |
 
-### Fase 7.1 — turno e lista de vendas no terminal (09/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+### Fase 7.1 — turno e lista de vendas no terminal (09/10/2026) — **publicado em genesismz.com (`8f9b348`, 09/10)**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | `backend/src/utils/shift.js` (`shiftStatus`) | Estado explícito do turno: aberto se nunca houve fecho ou se há `SHIFT_OPENED` (auditoria) depois do último fecho; fechado depois de um fecho aceite. Fechar um turno fechado → 409 `NO_OPEN_SHIFT` | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js` 271/271 (secção 2) |
@@ -143,9 +143,9 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `backend/src/utils/authPin.js` | Verificação única do PIN do dono; falhas (`SHIFT_OPEN_PIN_FAIL`, `SALES_VIEW_PIN_FAIL`) partilham o limite de 5/loja/15 min com cancelamentos e descontos | ✅ CONFIRMADO FUNCIONAL | 09/10 — secções 2, 3, 8, 10 |
 | `frontend/src/pages/pos/PosScreen.jsx`, `PosDialogs.jsx`, `Terminal.jsx` | Faixa "Turno fechado" + "Abrir turno novo" (PIN do dono); produtos desactivados; "Vendas" pede o PIN antes da lista; perfis mostram "Turno aberto/fechado"; o cadeado é pausa | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` todos os fluxos passaram (32 OK), capturas 28/28b/29 revistas |
 | `PosDialogs.jsx` `CloseShiftDialog` | Antes de contar envia a fila offline; com vendas ainda por enviar recusa o fecho com explicação (evita o falso "abaixo do esperado" no turno seguinte e a tentativa falhada/bloqueio) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `flows.mjs` (captura 28b) |
-| Aviso "Sem ligação: a usar o catálogo guardado" | Não desaparece quando a rede volta (só após a venda seguinte) — defeito antigo, encontrado na captura 29 | 🔴 CONHECIDO COMO QUEBRADO (menor) | 09/10 — captura 29 |
+| Aviso "Sem ligação: a usar o catálogo guardado" | Não desaparecia quando a rede voltava — corrigido na Fase 7.3 (ver abaixo) | ✅ CORRIGIDO (local) | 09/10 — `flows.mjs` |
 
-### Fase 7.2 — QR dos recibos e pesquisa sem acentos (09/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+### Fase 7.2 — QR dos recibos e pesquisa sem acentos (09/10/2026) — **publicado em genesismz.com (`8f9b348`, 09/10)**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | `backend/src/routes/verify.js` (`GET /api/verify/:saleId`, público) | Confirma que o recibo existe e se a venda está concluída ou cancelada; só devolve o que já está impresso (loja, n.º, data, artigos, total, pagamento) — sem custos, caixista nem ids; UUID validado (400), inexistente 404, 60/IP/15 min, `Cache-Control: no-store` | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js 19` 8/8 |
@@ -153,6 +153,14 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | QR (`receiptPrinter.js` `saleVerifyUrl`, `PosDialogs.jsx`) | O QR aponta para a origem da app + `/verify/<id>` (antes `genesis.co.mz`, domínio que não é nosso) | ✅ CONFIRMADO no diálogo do recibo (pixel a pixel + contraprova); ⚠️ talão impresso (Web Serial/print) não percorrido — usa a mesma função | 09/10 — `flows.mjs` |
 | `frontend/src/utils/search.js` (POS, escolha de produto na quebra/pedido, Produtos do dono) | Pesquisa sem acentos nem maiúsculas ("acucar" → "Açúcar") | ✅ CONFIRMADO FUNCIONAL | 09/10 — `search.test.mjs` 4/4; `pos.mjs` ("agua" → só "Água Namaacha 1,5L") |
 | `genesis.co.mz` ainda no código | `routes/admin.js:106-108` (email inventado na aprovação — item da lista de 06/10) e seed demo opt-in em `index.js` | ⚠️ por tratar (fora desta fase) | 09/10 — grep |
+
+### Fase 7.3 — defeitos pequenos (09/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `frontend/src/pages/pos/PosScreen.jsx` (catálogo guardado) | Com o catálogo em cache e rede disponível, volta a pedir o catálogo (logo e de 30 em 30 s); o aviso "Sem ligação: a usar o catálogo guardado" sai sozinho | ✅ CONFIRMADO no ponto da captura 29 (`flows.mjs`: com rede, sem aviso) · ⚠️ a verificação passa também se o aviso nunca chegar a aparecer; a contraprova é a captura 29 da versão anterior (mesmos passos, aviso visível) | 09/10 — `flows.mjs` todos os fluxos |
+| `admin-frontend/src/App.jsx` (modo suporte) | O separador abre no próprio toque (antes do pedido) e recebe o link depois; se o browser bloquear, aparece "Tocar aqui para abrir o modo suporte" | ✅ CONFIRMADO no Chromium (normal + bloqueio simulado) · ⚠️ NÃO VERIFICADO no Safari do iPhone (fundador) | 09/10 — `admin_flows.mjs` 7/7 |
+| `backend/src/routes/admin.js` (aprovar pedido) | Email do pedido já com conta → 409 `EMAIL_IN_USE`, pedido continua pendente, nenhuma conta criada (antes inventava `<nome>.<hora>@genesis.co.mz`) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js 11` |
+| Pedido **sem** email | Continua a gerar um login `<loja>@genesis.co.mz` (domínio que não é nosso; o reset de senha nunca lhe chega) | ⚠️ DECISÃO DO FUNDADOR em aberto: tornar o email obrigatório no pedido, ou outro identificador | 09/10 — leitura |
 
 ---
 
@@ -647,7 +655,23 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Decisões: o QR usa a origem da app (em produção `https://genesismz.com`); a página pública mostra só o que já está no recibo + estado — nada de custos/caixista. A mesma correcção de acentos aplicada nos 3 sítios com o mesmo padrão (POS, escolha de produto na quebra/pedido, Produtos do dono) — grep de `toLowerCase().includes` = 0 depois.
 - Erros apanhados pela prova (no teste, não no produto): o 1.º `flows.mjs` comparava os bytes do PNG (browser/canvas ≠ Node) e procurava "Laurentina" numa venda de 2M + Coca-Cola. Passou a comparar pixels, com contraprova (o QR do domínio antigo tem de ser diferente).
 - Incidente de escrita: a 1.ª tentativa de acrescentar estas entradas por `node -e` na shell perdeu o texto entre crases (substituição de comandos do bash). Detectado na releitura e corrigido à mão; nenhuma entrada antiga foi tocada.
-- Prova: `verify_system.js 19` 8/8 (sem sessão 200, sem custos/caixista/ids, no-store, 400, 404, cancelada); `search.test.mjs` 4/4; `flows.mjs` todos os fluxos passaram, 0 erros JS; `pos.mjs` passou, 0 erros JS; `vite build` OK; fixtures apagadas. Regressão completa `verify_system.js`: ver adenda abaixo.
+- Prova: `verify_system.js 19` 8/8 (sem sessão 200, sem custos/caixista/ids, no-store, 400, 404, cancelada); `search.test.mjs` 4/4; `flows.mjs` todos os fluxos passaram, 0 erros JS; `pos.mjs` passou, 0 erros JS; `vite build` OK; fixtures apagadas. Regressão completa `verify_system.js` (secções 2–19, contra Supabase com RLS) **279/279**, loja de teste apagada.
 - Não feito: publicar em genesismz.com (7.1 + 7.2 juntas, pede confirmação); push para o GitHub.
 - Segue-se: paragem entre fases — o fundador escolhe o próximo item da lista de 06/10.
+
+### [2026-10-09] — Publicação de 7.1 + 7.2 em genesismz.com e push
+- Pedido explícito do fundador ("publica no genesismz.com e faz push e depois avance").
+- Commit `8f9b348` em `main`; `git push origin main` → `4b7201a..8f9b348` (GitHub tinha 12 commits em atraso desde a Fase 6.2; agora `main...origin/main` igual).
+- `APP_HOST=genesismz.com ADMIN_HOST=admin.genesismz.com bash deploy/publicar.sh 139.162.186.49` → "PUBLICADO 8f9b348" (1.º `curl` ao backend falhou durante o arranque; a verificação seguinte deu "backend OK"; serviço `active`).
+- Prova de fora: `/` 200, `/verify/<uuid>` 200 (SPA), `/api/verify/<uuid inexistente>` 404 `RECEIPT_NOT_FOUND`, `/api/verify/xyz` 400, `/api/auth/me` 401, admin 200. Browser (`flows.mjs`) contra **https://genesismz.com** com loja de teste temporária (apagada no fim): **todos os fluxos passaram** (36 OK, 0 erros JS) — inclui os da 7.1 (turno fechado, Vendas com PIN, fecho com venda por enviar) e o QR = `https://genesismz.com/verify/<id>` com contraprova.
+- Não feito: a bateria `verify_system.js` no próprio servidor (o comando foi recusado pelas permissões — e o meu `pkill` para parar o backend de teste podia atingir o de produção; ainda bem). A regressão completa foi feita a partir do PC contra a mesma BD (279/279).
+
+### [2026-10-09] — Fase 7.3: aviso offline, modo suporte no iPhone, email já usado na aprovação
+- Ficheiros: `frontend/src/pages/pos/PosScreen.jsx`, `admin-frontend/src/App.jsx`, `backend/src/routes/admin.js`, `backend/scripts/verify_system.js` (secção 11), `frontend/tests/e2e/flows.mjs`, `admin-frontend/tests/admin_flows.mjs`.
+- 7.3a — aviso "a usar o catálogo guardado": a captura 29 (09/10) mostrava-o já com rede. Causa: nada voltava a pedir o catálogo depois de cair para a cópia local. Correcção: enquanto a fonte for a cache e houver rede, tenta logo e de 30 em 30 s. O 1.º teste que escrevi exigia o aviso durante o 1.º passo offline e falhou — também falhava na versão anterior (captura 26 sem aviso, Sumol a 40 un. depois da venda offline). Ou seja, nesse passo o pedido do catálogo não cai logo para a cache sob a emulação offline do Playwright; não investigado mais (fora da mini-meta). O teste passou a verificar o ponto da captura 29.
+- 7.3b — "Abrir modo suporte" no Safari: o `window.open` vinha depois de um `await` (o Safari só deixa abrir no próprio toque). Agora o separador abre no toque e recebe o link depois (`opener = null`); bloqueado → link para tocar. Prova no Chromium, incluindo o bloqueio simulado (`window.open = () => null`).
+- 7.3c — aprovação com email já usado: 409 `EMAIL_IN_USE` em vez de inventar um email. O caso "pedido sem email" ficou de fora (decisão do fundador).
+- Prova: `verify_system.js 11` todas OK (incl. 409 EMAIL_IN_USE e pedido intacto); `flows.mjs` todos os fluxos, 0 erros JS; `admin_flows.mjs` 7/7, 0 erros JS; builds OK; fixtures apagadas.
+- Não feito: publicar a 7.3 e o push (pedem confirmação); Safari real do iPhone.
+- Segue-se: paragem entre fases.
 

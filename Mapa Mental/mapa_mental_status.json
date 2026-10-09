@@ -122,7 +122,8 @@
       "status": "ok",
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
-      "security": "requireRole('super_admin') + adminOriginCheck."
+      "security": "requireRole('super_admin') + adminOriginCheck.",
+      "notes": " 09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador)."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -426,7 +427,7 @@
       "status": "partial",
       "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
       "role": "Painel da plataforma.",
-      "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema."
+      "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado."
     },
     "admin-frontend/src/main.jsx": {
       "status": "ok",
@@ -998,7 +999,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",

@@ -1,8 +1,8 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-09T15:53:21.837Z */
+   Gerado em: 2026-10-09T17:08:34.336Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-09T15:53:21.837Z",
+ "generatedAt": "2026-10-09T17:08:34.336Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
@@ -10,7 +10,7 @@ window.GENESIS_MINDMAP = {
   "files": 194,
   "planned": 5,
   "links": 316,
-  "lines": 27686,
+  "lines": 27789,
   "byStatus": {
    "ok": 119,
    "partial": 12,
@@ -278,8 +278,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 634,
-   "size": 116616,
+   "lines": 678,
+   "size": 125105,
    "externals": [
     "@prisma/client"
    ],
@@ -322,8 +322,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1175,
-   "size": 61539,
+   "lines": 1176,
+   "size": 61988,
    "externals": [
     "nodemailer"
    ],
@@ -451,12 +451,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "partial",
    "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
-   "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema.",
+   "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado.",
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 405,
-   "size": 23519,
+   "lines": 418,
+   "size": 24359,
    "externals": [
     "react",
     "react-router-dom",
@@ -560,8 +560,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 89,
-   "size": 4653,
+   "lines": 105,
+   "size": 5611,
    "externals": [
     "node:fs",
     "node:path",
@@ -1579,8 +1579,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 917,
-   "size": 72439,
+   "lines": 930,
+   "size": 73477,
    "externals": [
     "dotenv",
     "crypto",
@@ -1814,12 +1814,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
-   "notes": "",
+   "notes": " 09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador).",
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 185,
-   "size": 11386,
+   "lines": 188,
+   "size": 11679,
    "externals": [
     "express",
     "bcrypt",
@@ -4589,12 +4589,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 409,
-   "size": 23814,
+   "lines": 418,
+   "size": 24333,
    "externals": [
     "react",
     "lucide-react"
@@ -5120,8 +5120,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 275,
-   "size": 16193,
+   "lines": 279,
+   "size": 16520,
    "externals": [
     "node:fs",
     "node:path",
