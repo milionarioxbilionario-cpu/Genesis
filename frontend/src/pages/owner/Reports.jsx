@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Printer } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import api from '../../utils/api';
 import useApi from '../../utils/useApi';
-import { money, int, isoDay, date, dateTime, timeSec, PAYMENT_LABEL } from '../../utils/format';
+import { timelineExtra, timelineWhen } from '../../utils/timelineText';
+import PdfButton from '../../components/PdfButton';
+import { money, int, isoDay, date, dateTime, PAYMENT_LABEL } from '../../utils/format';
 import SaleDrawer from '../../components/SaleDrawer';
 import { Alert, Badge, Button, Card, CardHeader, Input, KeyValue, PageHeader, Pagination, ProgressBar, Select, Skeleton, Stat, Table, Tabs, Toolbar, cx } from '../../components/ui';
 
@@ -24,7 +26,7 @@ export default function Reports() {
   const go = (next) => setParams({ tab: next.tab || tab, ...(next.date || (next.tab || tab) === 'daily' ? { date: next.date || day } : {}) });
   return (
     <>
-      <PageHeader title="Relatórios" description="Tudo o que aconteceu na loja, com o porquê de cada valor." actions={<Button className="no-print" icon={Printer} onClick={() => window.print()}>Imprimir / PDF</Button>} />
+      <PageHeader title="Relatórios" description="Tudo o que aconteceu na loja, com o porquê de cada valor." />
       <Tabs className="no-print mb-5" value={tab} onChange={(t) => go({ tab: t })} items={[{ value: 'daily', label: 'Diário' }, { value: 'weekly', label: 'Semanal' }, { value: 'monthly', label: 'Mensal' }]} />
       {tab === 'daily' && <Daily day={day} setDay={(d) => go({ tab: 'daily', date: d })} />}
       {tab === 'weekly' && <Weekly openDay={(d) => go({ tab: 'daily', date: d })} />}
@@ -53,14 +55,15 @@ function ProductRanking({ title, description, rows, valueKey }) {
       <div className="px-5 pb-5">
         <Table
           columns={[
+            { key: 'rank', header: '#', render: (p) => <span className="num text-ink-muted">{p.rank}.º</span> },
             { key: 'name', header: 'Produto' },
             { key: 'quantity', header: 'Qtd.', align: 'right', render: (p) => <span className={valueKey === 'quantity' ? 'font-medium' : ''}>{int(p.quantity)}</span> },
             { key: 'revenue', header: 'Receita', align: 'right', render: (p) => money(p.revenue) },
             { key: 'profit', header: 'Lucro', align: 'right', render: (p) => <span className={valueKey === 'profit' ? 'font-medium' : ''}>{money(p.profit)}</span> },
           ]}
-          rows={rows.slice(0, 5)}
+          rows={rows}
           rowKey="product_id"
-          empty={<p className="py-6 text-center text-ink-muted">Sem vendas.</p>}
+          empty={<p className="py-6 text-center text-ink-muted">{valueKey === 'profit' ? 'Sem vendas com lucro.' : 'Sem vendas.'}</p>}
         />
       </div>
     </Card>
@@ -69,8 +72,8 @@ function ProductRanking({ title, description, rows, valueKey }) {
 
 function Breakdown({ r }) {
   return (
-    <div className="mt-4 grid gap-4 lg:grid-cols-2">
-      <ProductRanking title="Mais vendidos" description="Por quantidade." rows={r.top_products} valueKey="quantity" />
+    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <ProductRanking title="Mais vendidos" description="Por quantidade. Até 3 lugares; empates partilham o lugar." rows={r.top_products} valueKey="quantity" />
       <ProductRanking title="Mais rentáveis" description="Por lucro. Não é o mesmo que vender mais." rows={r.top_profitable || []} valueKey="profit" />
       <Card>
         <CardHeader title="Por forma de pagamento" />
@@ -148,6 +151,22 @@ function Restock({ data, title }) {
   );
 }
 
+// PDF do relatorio (substitui o window.print, que nao funciona na app do ecra
+// principal do iPhone). Junta o rastreio inteiro do periodo (ate 1000 movimentos).
+const loadReportPdf = () => import('../../utils/pdf/reportPdf');
+function ReportPdf({ kind, data, from, to, labels }) {
+  const { tenant } = useOutletContext() || {};
+  async function build() {
+    const { buildReportPdf } = await loadReportPdf();
+    const base = `/api/owner/reports/timeline?from=${from}&to=${to}&page_size=200`;
+    const first = (await api.get(base + '&page=1')).data;
+    const rows = [...first.rows];
+    for (let page = 2; rows.length < first.total && page <= 5; page += 1) rows.push(...(await api.get(base + '&page=' + page)).data.rows);
+    return buildReportPdf({ kind, shopName: tenant?.name, data, timeline: { ...first, rows }, labels });
+  }
+  return <PdfButton build={build} preload={loadReportPdf} disabled={!data} />;
+}
+
 // Rastreio: cada evento do periodo, com quem, quando (ao segundo) e o efeito.
 const TYPE_FILTERS = [
   { value: '', label: 'Tudo' },
@@ -169,14 +188,6 @@ function Timeline({ from, to }) {
   const url = `/api/owner/reports/timeline?from=${from}&to=${to}&page=${page}&page_size=${PAGE}${type ? '&types=' + type : ''}`;
   const { data, loading, error } = useApi(url);
   const sameDay = from === to;
-  const extra = (e) => [
-    e.expiry_date ? `validade ${date(e.expiry_date)}` : null,
-    e.due_date ? `vence a ${date(e.due_date)}` : null,
-    e.discount ? `desconto ${money(e.discount)}` : null,
-    e.type === 'loss' ? `${money(e.unit_cost)} por unidade` : null,
-    e.type === 'stock' ? `${money(e.unit_cost)} por unidade` : null,
-    e.type === 'shift' ? `contado ${money(e.counted)} · esperado ${money(e.expected)}` : null,
-  ].filter(Boolean).join(' · ');
   const value = (e) => {
     if (e.effect === 'gain') return <span className="num font-medium text-positive">{money(e.amount, { sign: true })}</span>;
     if (e.effect === 'loss' || e.effect === 'expense') return <span className="num font-medium text-danger">{money(e.amount)}</span>;
@@ -206,11 +217,11 @@ function Timeline({ from, to }) {
       <div className={cx('transition-opacity', loading && data && 'opacity-50')} aria-busy={loading}>
       <Table
         columns={[
-          { key: 'at', header: sameDay ? 'Hora' : 'Data', render: (e) => <span className="num whitespace-nowrap text-ink-2">{e.day_only ? (sameDay ? '(dia)' : date(e.at)) : sameDay ? timeSec(e.at) : `${date(e.at)} ${timeSec(e.at)}`}</span> },
+          { key: 'at', header: sameDay ? 'Hora' : 'Data', render: (e) => <span className="num whitespace-nowrap text-ink-2">{timelineWhen(e, sameDay)}</span> },
           { key: 'title', header: 'Movimento', render: (e) => (
             <div className="min-w-0">
               <p className="text-ink">{e.title}</p>
-              <p className="text-xs text-ink-muted">{[e.detail, extra(e)].filter(Boolean).join(' · ')}</p>
+              <p className="text-xs text-ink-muted">{[e.detail, timelineExtra(e)].filter(Boolean).join(' · ')}</p>
             </div>
           ) },
           { key: 'who', header: 'Quem', render: (e) => <span className="text-ink-2">{e.who}</span> },
@@ -238,6 +249,7 @@ function Daily({ day, setDay }) {
         <Button size="sm" variant="ghost" onClick={() => setDay(shiftDay(day, -1))}>← Dia anterior</Button>
         <Input type="date" aria-label="Dia" value={day} max={isoDay()} onChange={(e) => e.target.value && setDay(e.target.value)} className="w-44" />
         <Button size="sm" variant="ghost" disabled={day >= isoDay()} onClick={() => setDay(shiftDay(day, 1))}>Dia seguinte →</Button>
+        <ReportPdf kind="daily" data={data} from={day} to={day} labels={{ title: 'Relatório diário', subtitle: dayLabel(day) + '/' + day.slice(0, 4), period: day.split('-').reverse().join('-'), dayLabel }} />
       </Toolbar>
       <h2 className="mb-3 text-lg font-semibold capitalize text-ink">{dayLabel(day)}</h2>
       {error && <Alert tone="danger">{error}</Alert>}
@@ -273,12 +285,13 @@ function Weekly({ openDay }) {
       <Toolbar className="no-print">
         <span className="text-sm text-ink-muted">Semana a terminar em</span>
         <Input type="date" aria-label="Fim da semana" value={end} max={isoDay()} onChange={(e) => e.target.value && setEnd(e.target.value)} className="w-44" />
+        <ReportPdf kind="weekly" data={data} from={start} to={end} labels={{ title: 'Relatório semanal', subtitle: `${dayLabel(start)} a ${dayLabel(end)}/${end.slice(0, 4)}`, period: `${start.split('-').reverse().join('-')} a ${end.split('-').reverse().join('-')}`, dayLabel }} />
       </Toolbar>
       {error && <Alert tone="danger">{error}</Alert>}
       {loading || !data ? <Skeleton className="h-40 w-full" /> : (
         <>
           <Kpis r={data} compareLabel="vs semana anterior" />
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader title="Receita por dia" description={`${date(data.start)} a ${date(data.end)}`} />
               <div className="h-60">
@@ -368,6 +381,7 @@ function Monthly() {
         <Select aria-label="Mês" value={`${period.year}-${period.month}`} onChange={(e) => { const [y, m] = e.target.value.split('-').map(Number); setPeriod({ year: y, month: m }); }} className="w-48">
           {months.map((m) => <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>{MONTHS[m.month - 1]} {m.year}</option>)}
         </Select>
+        <ReportPdf kind="monthly" data={data} from={first} to={last} labels={{ title: 'Relatório mensal', subtitle: `${MONTHS[period.month - 1]} ${period.year}`, period: `${MONTHS[period.month - 1]} ${period.year}`, dayLabel }} />
       </Toolbar>
       <h2 className="mb-3 text-lg font-semibold text-ink">{MONTHS[period.month - 1]} {period.year}</h2>
       {error && <Alert tone="danger">{error}</Alert>}
@@ -380,7 +394,7 @@ function Monthly() {
             <Stat label="Meta" value={data.goal ? `${String(data.goal.pct).replace('.', ',')}%` : '—'} hint={data.goal ? `${money(data.goal.achieved)} de ${money(data.goal.target)}` : 'Sem meta neste mês'} tone={data.goal && data.goal.pct >= 100 ? 'positive' : undefined} />
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader title="Do que entrou ao que ficou" description="Lucro líquido real depois de todas as despesas do mês." />
               <div className="flex flex-col gap-2.5">
@@ -429,7 +443,7 @@ function Monthly() {
             </Card>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Card padded={false}>
               <div className="p-5 pb-0"><CardHeader title="Semanas do mês" description={data.best_week ? `Melhor: semana ${data.best_week.week}${data.worst_week ? ` · pior: semana ${data.worst_week.week}` : ''}` : undefined} /></div>
               <div className="px-5 pb-5">
@@ -470,7 +484,7 @@ function Monthly() {
             </Card>
             <Card className="lg:col-span-2">
               <CardHeader title="Chenecas" description={`Novas ${money(data.debts.new_total)} · recebidas ${money(data.debts.received_total)} · em aberto ${money(data.debts.outstanding_total)}`} />
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <h3 className="mb-1 text-sm font-medium text-ink-muted">Novas no mês</h3>
                   {data.debts.new.length === 0 ? <p className="text-sm text-ink-muted">Nenhuma.</p> : data.debts.new.map((d) => <KeyValue key={d.id} label={d.debtor} value={money(d.amount)} />)}

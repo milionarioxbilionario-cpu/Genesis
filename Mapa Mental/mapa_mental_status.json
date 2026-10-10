@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-09",
+  "updatedAt": "2026-10-10",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -354,10 +354,10 @@
     },
     "frontend/src/utils/receiptPrinter.js": {
       "status": "partial",
-      "summary": "Impressao do talao: Web Serial (impressora termica ligada) com recurso a window.print(). O PDFVectorial do recibo vive em receiptPdf.js.",
+      "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
       "role": "Recibo (impressao).",
       "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
-      "notes": "O que falha em muitos ambientes (sem Web Serial e com o popup bloqueado) ja nao e o caminho principal: o PDF e descarregado sempre antes, com o nome pedido. 09/10/2026: o QR deixou de apontar para genesis.co.mz (dominio que nao e nosso) e usa saleVerifyUrl() = origem da app + /verify/<id>."
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Antes o window.open prendia o utilizador na app do ecra principal do iPhone. 09/10: QR = origem da app + /verify/<id>. Parcial: a impressora serie pede a porta a cada impressao (Fase 8.8)."
     },
     "frontend/src/db/localDb.js": {
       "status": "ok",
@@ -1039,7 +1039,7 @@
     },
     "backend/src/services/reports.js": {
       "status": "ok",
-      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "notes": "10/10/2026 Fase 8.1: top_products/top_profitable por niveis (services/ranking.js); ranking.test 6/6 + fase8_1.mjs. 04/10 Fase 4: verify_system 194/194.",
       "summary": "Relatorios diario/semanal/mensal, rastreio (timeline), metas 12 meses.",
       "role": "Relatorios."
     },
@@ -1051,13 +1051,13 @@
     },
     "frontend/src/pages/owner/Reports.jsx": {
       "status": "ok",
-      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
-      "summary": "Ecra dos relatorios: KPIs, resumo, rastreio com filtros, cascata mensal.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Grelhas com grid-cols-1 (antes 426 px num ecra de 390).",
+      "summary": "Ecra dos relatorios: KPIs, ranking por niveis, rastreio com filtros, cascata mensal, botao PDF / imprimir por separador.",
       "role": "Painel do dono."
     },
     "frontend/src/components/SaleDrawer.jsx": {
       "status": "ok",
-      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
       "summary": "Recibo completo de uma venda num Drawer, com reimprimir.",
       "role": "Painel do dono."
     },
@@ -1144,7 +1144,7 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao)."
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
@@ -1170,6 +1170,66 @@
       "summary": "Pesquisa sem acentos nem maiusculas (foldText/nameMatches): acucar encontra Açúcar.",
       "role": "Pesquisa de produtos (POS, quebra/pedido, Produtos do dono).",
       "notes": "09/10/2026 (Fase 7.2): tests/search.test.mjs 4/4 + pos.mjs no browser."
+    },
+    "backend/src/services/ranking.js": {
+      "status": "ok",
+      "summary": "Ranking por niveis dos relatorios (empates partilham o lugar, ate 3 niveis, sem o nivel mais baixo).",
+      "role": "Relatorios.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "backend/tests/ranking.test.js": {
+      "status": "ok",
+      "summary": "Testes do ranking por niveis (6).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/utils/pdf/deliver.js": {
+      "status": "ok",
+      "summary": "Entrega de PDF: folha de partilha no telemovel/tablet, descarga no computador.",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/utils/pdf/text.js": {
+      "status": "ok",
+      "summary": "Texto seguro para o PDF (Latin-1) e nomes de ficheiro validos.",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/utils/pdf/receiptPdf.js": {
+      "status": "ok",
+      "summary": "Recibo em PDF no formato de talao (80 mm), com QR.",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/utils/pdf/reportPdf.js": {
+      "status": "ok",
+      "summary": "Relatorio diario/semanal/mensal em PDF A4 com rastreio.",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/utils/timelineText.js": {
+      "status": "ok",
+      "summary": "Texto de cada movimento do rastreio, partilhado pelo ecra e pelo PDF.",
+      "role": "Relatorios.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/components/PdfButton.jsx": {
+      "status": "ok",
+      "summary": "Botao PDF / imprimir (gera, partilha ou descarrega).",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/src/components/PdfReadyDialog.jsx": {
+      "status": "ok",
+      "summary": "Dialogo \"PDF pronto\" quando o iPhone pede um toque novo para partilhar.",
+      "role": "PDF.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "frontend/tests/e2e/fase8_1.mjs": {
+      "status": "ok",
+      "summary": "Teste de browser da Fase 8.1 (ranking, PDF, recibo sem janela nova, 390 px).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
     }
   }
 }

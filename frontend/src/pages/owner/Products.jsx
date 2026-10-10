@@ -198,7 +198,7 @@ function Stock({ products }) {
           />
         </div>
       )}
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <h2 className="mb-2 font-semibold text-ink">A repor</h2>
           <Table

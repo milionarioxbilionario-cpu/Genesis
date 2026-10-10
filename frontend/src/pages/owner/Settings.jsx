@@ -68,7 +68,7 @@ function Store({ s, reload }) {
       {error && <Alert tone="danger">{error}</Alert>}
       <Card>
         <CardHeader title="Dados da loja" description="Aparecem no recibo e nas mensagens." />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input label="Nome" value={store.name} onChange={(e) => setStore({ ...store, name: e.target.value })} className="sm:col-span-2" />
           <Input label="Localização" value={store.location} onChange={(e) => setStore({ ...store, location: e.target.value })} />
           <Input label="Telefone (WhatsApp)" value={store.phone} onChange={(e) => setStore({ ...store, phone: e.target.value })} />

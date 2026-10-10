@@ -6,6 +6,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      // O jsPDF traz partes opcionais (html2canvas, DOMPurify, canvg) que o
+      // Genesis nao usa: so carregam com doc.html()/SVG. Nao vao para a cache
+      // offline (~380 KB a menos na instalacao).
+      workbox: { globIgnores: ['**/html2canvas*', '**/purify*', '**/index.es-*'] },
       manifest: {
         name: 'Genesis POS',
         short_name: 'Genesis',

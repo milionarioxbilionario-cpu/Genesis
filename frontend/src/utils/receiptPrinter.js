@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { deliverPdf, prefersShare } from './pdf/deliver';
 
 const formatCurrency = (value) => {
   const numeric = Number(value || 0) / 100;
@@ -155,26 +156,58 @@ async function tryWebSerialPrint(shopName, sale, items) {
   }
 }
 
+// Moldura escondida na propria pagina: imprime sem abrir janela nova. A janela
+// nova (window.open) ficava sem botao de voltar na app do ecra principal do
+// iPhone e prendia o utilizador no recibo (teste do fundador, 10/10/2026).
+function printHtmlInIframe(html) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.setAttribute('tabindex', '-1');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(frame);
+    const remove = () => { if (frame.isConnected) frame.remove(); };
+    const doc = frame.contentDocument;
+    doc.open(); doc.write(html); doc.close();
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      const win = frame.contentWindow;
+      try { win.addEventListener('afterprint', () => setTimeout(remove, 500)); } catch (_) {}
+      try { win.focus(); win.print(); } catch (_) {}
+      setTimeout(remove, 60000);
+      resolve();
+    };
+    frame.addEventListener('load', go);
+    setTimeout(go, 500);
+  });
+}
+
+// Carrega o gerador de PDF antes do toque: a folha de partilha do iPhone so
+// abre se o toque ainda estiver "fresco" quando o PDF fica pronto.
+export function preloadReceiptPdf() {
+  if (prefersShare()) import('./pdf/receiptPdf').catch(() => {});
+}
+
+// Telemovel/tablet: PDF de talao pela folha de partilha (imprimir, guardar,
+// WhatsApp). Computador: impressora serie (se houver) ou dialogo de impressao.
+// Devolve { ok, via } ou { needsTap, file } (ver utils/pdf/deliver.js).
 export async function printReceipt({ shopName = 'Genesis', shopLocation, cashierName, sale = {}, items = [] }) {
-  const qrDataUrl = await generateQrDataUrl(sale.id);
-  const html = buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qrDataUrl });
-
   if (typeof window === 'undefined') return { ok: false, reason: 'não é ambiente browser' };
-
-  const webSerialResult = await tryWebSerialPrint(shopName, sale, items);
-  if (webSerialResult.ok) return webSerialResult;
+  const qrDataUrl = await generateQrDataUrl(sale.id);
 
   try {
-    const printWindow = window.open('', '_blank', 'width=440,height=620,print-background=true');
-    if (!printWindow) throw new Error('Não foi possível abrir janela de impressão');
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    await new Promise((resolve) => {
-      const onLoad = () => { try { printWindow.focus(); } catch (_) {} try { printWindow.print(); } catch (_) {} resolve(); };
-      printWindow.addEventListener('load', onLoad);
-      setTimeout(onLoad, 400);
-    });
+    if (prefersShare()) {
+      const { buildReceiptPdf } = await import('./pdf/receiptPdf');
+      const { blob, filename } = buildReceiptPdf({ shopName, shopLocation, cashierName, sale, items, qrDataUrl });
+      return await deliverPdf(blob, filename);
+    }
+
+    const webSerialResult = await tryWebSerialPrint(shopName, sale, items);
+    if (webSerialResult.ok) return webSerialResult;
+
+    await printHtmlInIframe(buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qrDataUrl }));
     return { ok: true, reason: 'impressa via browser print' };
   } catch (err) {
     console.error('Receipt printing failed entirely', err);

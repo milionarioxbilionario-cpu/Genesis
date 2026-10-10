@@ -58,7 +58,7 @@ export default function Home() {
         ) : Array.from({ length: 4 }).map((_, i) => <Card key={i}><Skeleton className="h-4 w-24" /><Skeleton className="mt-3 h-6 w-32" /></Card>)}
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader title="Últimos 7 dias" description="Receita por dia" />
           <div className="h-56">
@@ -106,7 +106,7 @@ export default function Home() {
         </Card>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader title="Stock baixo" action={<Link to="/app/produtos?tab=stock" className="text-sm text-accent">Ver stock</Link>} />
           {!alerts.data ? <Skeleton className="h-20 w-full" /> : alerts.data.lowStockProducts.length === 0 ? (

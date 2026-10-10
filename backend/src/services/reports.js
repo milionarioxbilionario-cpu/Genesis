@@ -8,6 +8,7 @@
 const prisma = require('../utils/prisma');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('./monthlyDeductions');
 const { recommendRestock } = require('./restock');
+const { rankByTiers } = require('./ranking');
 
 const SHRINK_REASON = { broken: 'Partido', expired: 'Validade expirada', internal_consumption: 'Consumo interno', other: 'Outro' };
 const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.abs(before)) * 1000) / 10 : null);
@@ -107,9 +108,10 @@ async function summarize(tenantId, start, end) {
     discounts_total: discounts,
     by_payment: byPayment,
     by_day: [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date)),
-    top_products: [...productList].sort((a, b) => b.quantity - a.quantity).slice(0, 10),
-    // "Mais vendido" (quantidade) e "mais rentavel" (lucro) sao coisas diferentes.
-    top_profitable: [...productList].sort((a, b) => b.profit - a.profit).slice(0, 10),
+    // Ranking por niveis (services/ranking.js). "Mais vendido" (quantidade) e
+    // "mais rentavel" (lucro) sao coisas diferentes.
+    top_products: rankByTiers(productList, 'quantity'),
+    top_profitable: rankByTiers(productList, 'profit'),
     most_sold: [...productList].sort((a, b) => b.quantity - a.quantity)[0] || null,
     most_profitable: [...productList].sort((a, b) => b.profit - a.profit)[0] || null,
     losses,
