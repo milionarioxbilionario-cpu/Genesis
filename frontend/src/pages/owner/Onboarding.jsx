@@ -42,7 +42,7 @@ export default function Onboarding() {
           const key = p.name.toLowerCase();
           if (seen.has(key)) continue;
           seen.add(key);
-          rows.push({ key, include: true, name: p.name, category: p.category || 'Geral', sell: Math.round(Number(p.price_mzn || 0) * 100), cost: Math.round(Number(p.cost_mzn || 0) * 100), stock: String(p.stock || 0), barcode: p.barcode || '', image_url: p.image_url || null });
+          rows.push({ key, include: true, name: p.name, category: p.category || 'Geral', sell: Math.round(Number(p.price_mzn || 0) * 100), cost: Math.round(Number(p.cost_mzn || 0) * 100), stock: String(p.stock || 0), barcode: p.barcode || '', image_url: p.image_url || null, icon: p.icon || null });
         }
         setCatalog(rows);
       });
@@ -75,7 +75,7 @@ export default function Onboarding() {
       await api.put('/api/settings/hours', hours);
       // Por ultimo: importa o catalogo e marca o onboarding como concluido.
       await api.post(`/api/catalogs/${mainType}/import`, {
-        products: included.map((p) => ({ name: p.name.trim(), price_mzn: p.sell / 100, cost_mzn: p.cost / 100, stock: Number(p.stock) || 0, category: p.category, barcode: p.barcode.trim() || null, image_url: p.image_url })),
+        products: included.map((p) => ({ name: p.name.trim(), price_mzn: p.sell / 100, cost_mzn: p.cost / 100, stock: Number(p.stock) || 0, category: p.category, barcode: p.barcode.trim() || null, image_url: p.image_url, icon: p.icon || null })),
       });
       navigate('/app', { replace: true });
     } catch (err) { setError(errorMessage(err)); } finally { setSaving(false); }

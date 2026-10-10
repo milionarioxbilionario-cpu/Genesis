@@ -21,6 +21,8 @@ const { clearTenantStatusCache } = require('../utils/tenantStatus');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { createSupportCode } = require('../utils/supportCodes');
+const { iconSchema } = require('../utils/productIcons');
+const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -68,6 +70,7 @@ router.get('/overview', asyncHandler(async (req, res) => {
     mrr: tenants.filter((t) => t.status === 'active').reduce((s, t) => s + (t.subscription_price || 0), 0),
     trials_ending_soon: tenants.filter((t) => t.status === 'trial' && t.trial_ends_at && t.trial_ends_at < in7days).length,
     new_this_month: tenants.filter((t) => t.created_at >= monthStart).length,
+    catalog_suggestions: await prisma.catalogSuggestion.count({ where: { status: 'pending' } }),
     growth,
   });
 }));
@@ -182,6 +185,56 @@ router.post('/tenants/:tenantId/support', asyncHandler(async (req, res) => {
   const code = createSupportCode({ ownerUserId: owner.id, tenantId: tenant.id, adminUserId: req.user.userId });
   await audit(req, 'SUPPORT_CODE_ISSUED', tenant.id, null, { owner: owner.id });
   res.json({ url: `${APP_URL()}/suporte#${code}` });
+}));
+
+// ---------------------------------------------------------------- sugestoes
+// Produtos que as lojas criaram fora do catalogo-mestre (Fase 8.2). Agrupados
+// por tipo de negocio + nome; sem nomes de lojas (so quantas e os precos).
+const BUSINESS_TYPES = ['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro'];
+const groupKeySchema = z.object({
+  business_type: z.enum(BUSINESS_TYPES),
+  name_key: z.string().min(1).max(200),
+});
+
+router.get('/catalog-suggestions', asyncHandler(async (req, res) => {
+  const rows = await prisma.catalogSuggestion.findMany({ where: { status: 'pending' }, orderBy: { created_at: 'asc' } });
+  res.json({ pending: rows.length, groups: groupSuggestions(rows) });
+}));
+
+router.post('/catalog-suggestions/accept', asyncHandler(async (req, res) => {
+  const parsed = groupKeySchema.extend({
+    product_name: z.string().trim().min(1, 'nome em falta').max(120),
+    category: z.string().trim().min(1).max(60),
+    suggested_cost: z.number().int().nonnegative(),
+    suggested_sell: z.number().int().positive('preço de venda tem de ser maior que zero'),
+    barcode: z.string().trim().regex(/^[0-9A-Za-z-]{4,32}$/, 'código de barras inválido').nullish(),
+    icon: iconSchema,
+  }).safeParse(req.body);
+  if (!parsed.success) throw httpError(400, parsed.error.errors[0].message, 'INVALID_SUGGESTION');
+  const d = parsed.data;
+  const created = await prisma.$transaction(async (tx) => {
+    const pending = await tx.catalogSuggestion.findMany({ where: { business_type: d.business_type, name_key: d.name_key, status: 'pending' }, select: { id: true } });
+    if (!pending.length) throw httpError(404, 'Sugestão já tratada ou inexistente', 'SUGGESTION_NOT_FOUND');
+    const existing = await tx.masterCatalog.findMany({ where: { business_type: d.business_type }, select: { product_name: true } });
+    if (existing.some((m) => nameKey(m.product_name) === nameKey(d.product_name))) throw httpError(409, 'Esse produto já está no catálogo-mestre deste tipo de negócio', 'ALREADY_IN_CATALOG');
+    const row = await tx.masterCatalog.create({ data: {
+      business_type: d.business_type, product_name: d.product_name, category: d.category,
+      suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell, barcode: d.barcode || null, icon: d.icon || null,
+    } });
+    await tx.catalogSuggestion.updateMany({ where: { id: { in: pending.map((p) => p.id) } }, data: { status: 'added', resolved_at: new Date(), resolved_by: req.user.userId } });
+    return { row, stores: pending.length };
+  });
+  await writeAudit({ req, tenantId: null, action: 'CATALOG_SUGGESTION_ADDED', entityType: 'master_catalog', entityId: created.row.id, oldValue: null, newValue: { business_type: d.business_type, product_name: d.product_name, suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell } });
+  res.status(201).json({ id: created.row.id, message: 'Acrescentado ao catálogo-mestre.' });
+}));
+
+router.post('/catalog-suggestions/dismiss', asyncHandler(async (req, res) => {
+  const parsed = groupKeySchema.safeParse(req.body);
+  if (!parsed.success) throw httpError(400, 'Sugestão inválida', 'INVALID_SUGGESTION');
+  const r = await prisma.catalogSuggestion.updateMany({ where: { ...parsed.data, status: 'pending' }, data: { status: 'dismissed', resolved_at: new Date(), resolved_by: req.user.userId } });
+  if (!r.count) throw httpError(404, 'Sugestão já tratada ou inexistente', 'SUGGESTION_NOT_FOUND');
+  await writeAudit({ req, tenantId: null, action: 'CATALOG_SUGGESTION_DISMISSED', entityType: 'catalog_suggestion', entityId: null, oldValue: null, newValue: parsed.data });
+  res.json({ dismissed: r.count });
 }));
 
 module.exports = router;

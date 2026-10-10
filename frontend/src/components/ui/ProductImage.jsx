@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Beef, Beer, Coffee, Cookie, Croissant, CupSoda, Drumstick, Droplet, Egg, Fish, Flame, Martini, Package, Sandwich, Snowflake, SprayCan, UtensilsCrossed, Wheat, Zap } from 'lucide-react';
 import { cx } from './cx';
+import { iconByKey } from './productIcons';
 
 // Icone por categoria quando o produto nao tem foto (ou a foto falha).
 // Ordem importa: a primeira regra que bater ganha.
@@ -30,10 +31,11 @@ export function categoryIcon(category = '', name = '') {
   return (RULES.find(([re]) => re.test(category)) || RULES.find(([re]) => re.test(text)) || [null, Package])[1];
 }
 
-// Foto do produto (data:image da camara do dono ou https) com recurso ao icone.
+// Foto do produto (data:image da camara do dono ou https) com recurso ao icone:
+// o escolhido pelo dono (product.icon) ou, sem escolha, o da categoria.
 export function ProductImage({ product, size = 48, className }) {
   const [failed, setFailed] = useState(false);
-  const Icon = categoryIcon(product.category, product.name);
+  const Icon = iconByKey(product.icon) || categoryIcon(product.category, product.name);
   const showPhoto = product.image_url && !failed;
   return (
     <span className={cx('flex shrink-0 items-center justify-center overflow-hidden rounded bg-subtle', className)} style={{ width: size, height: size }} aria-hidden="true">

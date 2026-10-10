@@ -7,6 +7,8 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
 const { imageUrlSchema } = require('../utils/productImage');
+const { recordCatalogSuggestions } = require('../utils/catalogSuggestions');
+const { iconSchema } = require('../utils/productIcons');
 
 // Fonte unica: tabela MasterCatalog (carregada por scripts/seed_master_catalogs.js
 // a partir de data/master_catalogs.json). Ja nao ha templates escritos aqui.
@@ -25,6 +27,7 @@ router.get('/:businessType', asyncHandler(async (req, res) => {
     category: r.category,
     barcode: r.barcode || null,
     image_url: r.image_url || null,
+    icon: r.icon || null,
   }));
   res.json({ businessType, template: { categories: [...new Set(rows.map((r) => r.category))].sort(), sampleProducts } });
 }));
@@ -38,6 +41,7 @@ const productSchema = z.object({
   category: z.string().trim().max(60).optional(),
   barcode: z.string().trim().regex(/^[0-9A-Za-z-]{4,32}$/, 'código de barras inválido').nullish(),
   image_url: imageUrlSchema,
+  icon: iconSchema,
 });
 const importSchema = z.object({ products: z.array(productSchema).max(1000) });
 
@@ -71,6 +75,7 @@ router.post('/:businessType/import', auth, requireRole('owner'), asyncHandler(as
     name: p.name,
     barcode: p.barcode || null,
     image_url: p.image_url || null,
+    icon: p.icon || null,
     sell_price: toCents(p.price_mzn),
     cost_price: toCents(p.cost_mzn),
     stock_qty: p.stock || 0,
@@ -83,6 +88,8 @@ router.post('/:businessType/import', auth, requireRole('owner'), asyncHandler(as
     // Stock inicial = um lote por produto (sem validade: entra depois por compra).
     const lots = createData.filter((p) => p.stock_qty > 0).map((p) => ({ tenant_id: tenantId, product_id: p.id, quantity_remaining: p.stock_qty, unit_cost: p.cost_price }));
     if (lots.length) await tx.stockLot.createMany({ data: lots });
+    // Produtos escritos a mao no onboarding (fora do catalogo-mestre) -> sugestao ao admin.
+    await recordCatalogSuggestions(tx, { tenantId, products: createData, businessType: req.params.businessType });
     await tx.tenant.update({ where: { id: tenantId }, data: { onboarding_completed: true } });
     await tx.auditLog.create({ data: {
       tenant_id: tenantId,

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, Inbox, LayoutDashboard, LogOut, ScrollText, Store } from 'lucide-react';
+import { BookOpen, Inbox, LayoutDashboard, Lightbulb, LogOut, ScrollText, Store } from 'lucide-react';
 import {
-  Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, PageHeader,
-  Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
+  Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, MoneyInput, PageHeader,
+  PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
 } from '@ui';
 
 // PAINEL DO SUPER ADMIN (Genesis 2.0) — build separada do produto. Mesmo
@@ -95,6 +95,7 @@ const NAV = [
   { to: '/pedidos', label: 'Pedidos de conta', icon: Inbox },
   { to: '/lojas', label: 'Lojas', icon: Store },
   { to: '/catalogos', label: 'Catálogos-mestre', icon: BookOpen },
+  { to: '/sugestoes', label: 'Sugestões', icon: Lightbulb },
   { to: '/auditoria', label: 'Auditoria', icon: ScrollText },
 ];
 
@@ -144,6 +145,11 @@ function Overview() {
             <Stat label="Pedidos pendentes" value={String(data.pending)} />
             <Stat label="Suspensas / bloqueadas" value={String(data.suspended + data.blocked)} tone={data.suspended + data.blocked ? 'danger' : undefined} />
           </div>
+          {data.catalog_suggestions > 0 && (
+            <Alert tone="info" className="mt-4" title={`${data.catalog_suggestions} produto(s) novo(s) nas lojas`}>
+              As lojas acrescentaram produtos que não estão no catálogo-mestre. <NavLink to="/sugestoes" className="font-medium text-accent-text underline">Ver sugestões</NavLink>
+            </Alert>
+          )}
           <Card className="mt-4">
             <CardHeader title="Lojas na plataforma" description="Últimos 6 meses (activas, em teste e suspensas)." />
             <div className="flex h-40 items-end gap-3">
@@ -374,6 +380,83 @@ function Catalogs() {
   );
 }
 
+// ---------------------------------------------------------------- sugestoes
+// Produtos que as lojas criaram e que nao estao no catalogo-mestre (Fase 8.2).
+// Sem nomes de lojas: so quantas lojas e os precos que usam.
+function Suggestions() {
+  const toast = useToast();
+  const { data, error, loading, reload } = useLoad('/api/admin/catalog-suggestions');
+  const [open, setOpen] = useState(null);
+  const [busy, setBusy] = useState('');
+  async function accept() {
+    setBusy('accept');
+    try {
+      await api.post('/api/admin/catalog-suggestions/accept', {
+        business_type: open.business_type, name_key: open.name_key, product_name: open.product_name.trim(), category: open.category.trim() || 'Geral',
+        suggested_cost: open.cost, suggested_sell: open.sell, barcode: open.barcode?.trim() || null, icon: open.icon || null,
+      });
+      toast('Acrescentado ao catálogo-mestre. As lojas novas deste tipo já o recebem.');
+      setOpen(null); reload();
+    } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+  }
+  async function dismiss(g) {
+    setBusy('dismiss');
+    try { await api.post('/api/admin/catalog-suggestions/dismiss', { business_type: g.business_type, name_key: g.name_key }); toast('Sugestão ignorada.'); setOpen(null); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+  }
+  return (
+    <>
+      <PageHeader title="Sugestões do catálogo" description="Produtos que as lojas acrescentaram e que não estão no catálogo-mestre. Ao acrescentar, as lojas novas desse tipo passam a recebê-los no início." />
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <Table
+        columns={[
+          { key: 'name', header: 'Produto', render: (g) => <div className="flex items-center gap-3"><ProductImage product={{ name: g.product_name, category: g.category, icon: g.icon }} size={32} /><div><p className="text-ink">{g.product_name}</p><p className="text-xs text-ink-muted">{g.category}{g.barcode ? ' · ' + g.barcode : ''}</p></div></div> },
+          { key: 'type', header: 'Tipo de negócio', render: (g) => TYPES[g.business_type] || g.business_type },
+          { key: 'stores', header: 'Lojas', align: 'right', render: (g) => g.stores },
+          { key: 'cost', header: 'Compra (média)', align: 'right', render: (g) => money(g.avg_cost) },
+          { key: 'sell', header: 'Venda (média)', align: 'right', render: (g) => <span>{money(g.avg_sell)}{g.min_sell !== g.max_sell && <span className="block text-xs text-ink-muted">{money(g.min_sell)} – {money(g.max_sell)}</span>}</span> },
+          { key: 'when', header: 'Último', render: (g) => <span className="whitespace-nowrap text-ink-2">{date(g.last_at)}</span> },
+        ]}
+        rows={data?.groups || []}
+        rowKey={(g) => g.business_type + '|' + g.name_key}
+        loading={loading && !data}
+        onRowClick={(g) => setOpen({ ...g, cost: g.avg_cost, sell: g.avg_sell })}
+        empty={<p className="py-10 text-center text-ink-muted">Nenhuma sugestão por tratar.</p>}
+      />
+      <Drawer
+        open={Boolean(open)}
+        onClose={() => setOpen(null)}
+        title="Acrescentar ao catálogo-mestre"
+        description={open ? `${TYPES[open.business_type] || open.business_type} · pedido por ${open.stores} loja(s)` : ''}
+        footer={open && (
+          <>
+            <Button variant="danger-ghost" className="mr-auto" loading={busy === 'dismiss'} onClick={() => dismiss(open)}>Ignorar</Button>
+            <Button onClick={() => setOpen(null)}>Cancelar</Button>
+            <Button variant="primary" loading={busy === 'accept'} disabled={!open.product_name.trim() || !(open.sell > 0)} onClick={accept}>Acrescentar</Button>
+          </>
+        )}
+      >
+        {open && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-ink-2">Pode corrigir o nome e os preços antes de acrescentar (ficam como sugestão para as lojas novas).</p>
+            <Input label="Nome" value={open.product_name} onChange={(e) => setOpen({ ...open, product_name: e.target.value })} />
+            <Input label="Categoria" value={open.category} onChange={(e) => setOpen({ ...open, category: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <MoneyInput label="Preço de compra sugerido" valueCents={open.cost} onChangeCents={(v) => setOpen({ ...open, cost: v })} />
+              <MoneyInput label="Preço de venda sugerido" valueCents={open.sell} onChangeCents={(v) => setOpen({ ...open, sell: v })} />
+            </div>
+            <KeyValue label="Preços de venda nas lojas" value={open.min_sell === open.max_sell ? money(open.min_sell) : `${money(open.min_sell)} – ${money(open.max_sell)}`} />
+            <Input label="Código de barras" value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" />
+            <Select label="Ícone" value={open.icon || ''} onChange={(e) => setOpen({ ...open, icon: e.target.value || null })}>
+              <option value="">Automático (pela categoria)</option>
+              {PRODUCT_ICONS.map((i) => <option key={i.key} value={i.key}>{i.label}</option>)}
+            </Select>
+          </div>
+        )}
+      </Drawer>
+    </>
+  );
+}
+
 // ---------------------------------------------------------------- auditoria
 function Audit() {
   const { data, loading } = useLoad('/api/admin/audit');
@@ -406,6 +489,7 @@ export default function App() {
               <Route path="pedidos" element={<Requests />} />
               <Route path="lojas" element={<Tenants />} />
               <Route path="catalogos" element={<Catalogs />} />
+              <Route path="sugestoes" element={<Suggestions />} />
               <Route path="auditoria" element={<Audit />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

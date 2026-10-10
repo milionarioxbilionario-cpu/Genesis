@@ -1648,3 +1648,68 @@ FICOU POR FAZER
 - O botao "Enviar por WhatsApp" da lista de compras e do fecho do mes
   usa o mesmo tipo de janela nova. Pode prender da mesma forma no
   iPhone. Fica anotado para veres no teste.
+
+==================================================================
+10/10/2026 — PUBLICADO A 8.1 + FASE 8.2: PRODUTO (ICONE, VALIDADES,
+STOCK) E PRODUTOS NOVOS A CHEGAR AO TEU PAINEL DE ADMIN
+==================================================================
+
+PUBLICACAO
+- A 8.1 (PDF dos relatorios, recibo sem janela nova, ranking) esta em
+  genesismz.com e no GitHub. Corri o teste no proprio site e passou.
+  Falta o teu teste no iPhone verdadeiro.
+
+O QUE PEDISTE (8.2)
+1. Trocar o icone do produto (ex.: gota para o Aqua Plus, relampago
+   para energeticos).
+2. Registar a validade ali mesmo no produto, sem te mandar para outro
+   sitio.
+3. No "Novo produto": icone, validade e stock ja ali.
+4. Ver o stock actual no produto e ter um botao "Stock".
+5. Produtos fora do catalogo, com varias validades (50 a 17, 50 a 20)
+   e fornecedor opcional.
+6. Esses produtos novos chegarem ao teu painel de super admin, com o
+   preco de compra e de venda, e com um botao para os pores no catalogo
+   que as lojas novas recebem.
+
+O QUE FIZ
+1. No produto ha uma grelha com 32 icones. "Automatico" usa o da
+   categoria. Se o produto tiver foto, a foto aparece no lugar do icone.
+2. Ao editar um produto aparece "Stock actual: 100 un." e cada lote com
+   a sua validade. Mudas a data e carregas em "Guardar". Se so parte das
+   unidades tem outra data, mudas tambem o numero (ex.: 20 das 50).
+3. No "Novo produto" escreves a quantidade e a validade. Com "Outra
+   validade" acrescentas mais linhas. O fornecedor e opcional ("Sem
+   fornecedor (ja tinha este stock)").
+4. O botao "Stock" guarda as alteracoes e abre o Stock com o produto ja
+   escolhido.
+5. Quando uma loja cria um produto que nao existe no catalogo do
+   Genesis, aparece no teu painel em "Sugestoes" (e um aviso na Visao
+   geral). Ves: tipo de negocio, quantas lojas o pediram, preco medio
+   de compra e de venda. NAO aparece o nome das lojas, como escolheste
+   para as vendas perdidas. Podes corrigir nome e precos e carregar em
+   "Acrescentar": a partir dai as lojas novas desse tipo ja o recebem.
+   Tambem podes "Ignorar".
+6. Codigo de barras: como confirmaste, nao vou guardar "lido / nao
+   lido". Fica para a fase dos dispositivos.
+
+AINDA NAO MUDEI
+- O botao verde "Entrada de stock" no separador Stock ainda funciona
+  como antes. Na 8.3 passa a ser so para produtos novos, e o "Ajuste
+  manual" ganha os botoes "Adicionar" e "Retirar". Fiz assim porque,
+  se mudasse ja, as compras de produtos que ja tens ficavam sem
+  caminho.
+
+FUNCIONOU?
+- Sim nos testes: verificacao do servidor 32 de 32 para esta fase. No
+  browser testei tudo: dono no computador e no iPhone simulado, e tu no
+  painel admin a acrescentar o produto ao catalogo. Os testes antigos
+  (stock, onboarding, balcao, fluxos, 8.1) tambem passaram.
+- Ainda nao esta publicado em genesismz.com.
+
+UMA COISA PARA DECIDIRES
+- O login deixa no maximo 5 entradas por internet (IP) a cada 15
+  minutos. Conta tambem as entradas certas, nao so as erradas. Se tu e
+  um funcionario entrarem varias vezes no mesmo dia pela mesma rede da
+  loja, podem ficar bloqueados 15 minutos. Queres que so conte as
+  tentativas erradas?
