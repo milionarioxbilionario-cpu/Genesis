@@ -186,7 +186,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `routes/master_catalogs.js` (antigo, montado em `/api/master_catalogs`) | Rotas do super admin FORA de `/api/admin` (sem `adminOriginCheck`; só JWT + papel) | ⚠️ por rever na 8.6 (edição do catálogo-mestre) | 10/10 — leitura |
 | Limite de login (`routes/auth.js`: 5 por IP / 15 min, conta também os logins certos) | Correcto contra força bruta; mas uma loja com PC + telemóvel atrás do mesmo IP pode bater no limite só com logins certos | ⚠️ observação para o fundador decidir (não alterado) | 10/10 — leitura + 2 testes caíram nele |
 
-### Fase 8.3-A — turno por dia + fecho explicado (10/10/2026) — **local, ainda NÃO publicado**
+### Fase 8.3-A — turno por dia + fecho explicado (10/10/2026) — **publicado em genesismz.com (`992e14d`, 10/10); `flows.mjs` passou contra o site público**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | `backend/src/utils/shiftDay.js` (puro) + `utils/shift.js` | Um fecho por dia de Maputo: fechou hoje → reabrir hoje só com o PIN do dono; dia novo → abre sozinho; turno que passa da meia-noite fecha como turno do dia em que começou (`ShiftClosing.shift_day`). Esperado = dinheiro desde o **início do turno** (o mais recente entre o último fecho e o último `SHIFT_OPENED`) — antes desde o último fecho, o que fez o Kleyton herdar 160 MT de vendas de 06/10 | ✅ CONFIRMADO FUNCIONAL | 10/10 — `shiftDay.test.js` 8/8; `verify_system 21` (contra servidor real: mesmo dia, dia seguinte, 24/24, caso Kleyton) |
@@ -197,6 +197,14 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `backend/scripts/limpar_fechos_teste_kleyton.js` | Limpeza acima (pré-visualização sem `--aplicar`); usa a hora da BD | ✅ usado uma vez | 10/10 |
 | Relógio deste PC | **63 min atrasado** face ao servidor e à BD (10/10 16:26 vs 17:29 UTC). Prisma `@default(now())` usa o relógio do processo → registos criados a partir deste PC ficam com hora errada | ⚠️ o fundador deve correr `w32tm /resync` (já aconteceu a 28/09 com 8 h) | 10/10 — `date -u` vs cabeçalho `Date` do servidor e `select now()` |
 | `utils/shiftLock.js` | Inalterado (3 contagens abaixo → bloqueado até o dono). Nota: sem desbloqueio, conta as falhas desde a meia-noite do **servidor** (UTC) | ⚠️ fuso por rever | 10/10 — leitura |
+| Erro de JS no painel do dono em produção (`Cannot read properties of undefined (reading 'Ab')`, código do descodificador WebP dentro do jsPDF) | Apareceu 1 vez em `flows.mjs` contra genesismz.com logo após publicar; não se repetiu (2.ª corrida de `flows` + visita a todas as páginas do dono: 0 erros). Suspeita: navegação a meio do pré-carregamento do jsPDF (botão PDF dos Relatórios) | ⚠️ intermitente, não reproduzido | 10/10 — 1 em 3 corridas |
+
+### Fase 8.3-B — Entrada de stock só para produtos novos + Ajuste manual Adicionar/Retirar (10/10/2026) — **local, ainda NÃO publicado**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `frontend/src/pages/owner/ProductDrawer.jsx` (novo, extraído de `Products.jsx`) | O formulário do produto (foto, ícone, preços, validade, «Outra validade», fornecedor, stock actual e lotes ao editar, botão «Stock») passa a ser um componente; `LotRows` partilhado (linhas quantidade + validade) | ✅ CONFIRMADO FUNCIONAL | 10/10 — `stock.mjs`, `fase8_2.mjs` |
+| `frontend/src/pages/owner/Products.jsx` (separador Stock) | **«Entrada de stock»** abre o formulário de **produto novo** (título «Entrada de stock», «Unidades que entram»). **«Ajuste manual»**: produto + stock actual + `Adicionar`/`Retirar`, quantidade sempre positiva. Adicionar = linhas quantidade+validade, custo unitário, fornecedor opcional, «Fica com N un.». Retirar = quantidade + motivo (não deixa passar do stock). O botão diz «Adicionar 20 un.» / «Retirar 5 un.». `?ajustar=<id>` continua | ✅ CONFIRMADO FUNCIONAL (Chromium, PC + iPhone 390 px) | 10/10 — `stock.mjs` 18/18 + capturas revistas |
+| `backend/src/routes/inventory.js` (`POST /stock`) | Aceita `lots[]` (1–20 linhas, quantidade > 0, validade AAAA-MM-DD) numa só transacção: uma entrada + um lote por linha, custo e histórico de custo uma vez, produto passa a «com validade» se alguma linha tiver data, **auditoria `STOCK_ENTRY`** (antes não havia). Formato antigo (`quantity`) continua. Com fornecedor, o custo de entrega conta uma visita por dia | ✅ CONFIRMADO FUNCIONAL | 10/10 — `verify_system 22` 18/18; `5` e `14` sem regressão |
 
 ---
 
@@ -776,3 +784,40 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Prova:** `shiftDay.test.js` 8/8 (inclui o caso real do Kleyton e a fronteira 23:59/00:01); todos os unitários a passar; `verify_system.js` **completo 2–21 numa corrida: 334/334**; browser: `flows` (confirmação, texto, resumo «Esperado em dinheiro 250 = Contado 250») passou 2×, `fase8_1` e `fase8_2` passaram, `pos` passou na 2.ª corrida (a 1.ª ficou à espera do ecrã de venda depois do PIN, 0 erros de JS; a 2.ª passou sem mudanças — instabilidade de rede/BD); captura 28c revista; base final: 2 lojas reais, 1 super admin, catálogo 209.
 - Não feito: publicar a Fase A (pede confirmação); Safari real.
 - Segue-se: paragem. Depois da confirmação: publicar a Fase A; 8.3-B (Entrada de stock só para novos + Ajuste Adicionar/Retirar).
+
+### [2026-10-10] — Publicação da 8.3-A + push; Fase 8.3-B: Entrada de stock só para produtos novos + Ajuste Adicionar/Retirar
+- Pedido do fundador: «publica no genesismz.com, faz push e avança para a 8.3».
+- **Publicação 8.3-A:** `git push` `adb4cce..992e14d`; `publicar.sh` → "PUBLICADO 992e14d". De fora: /, /terminal e admin respondem 200; `/api/auth/me` e `/api/pos/shift` respondem 401. O bloco do terminal publicado contém «Sim, fechar o turno». **`flows.mjs` contra genesismz.com:**
+  - 1.ª corrida: todos os passos OK, mas 1 erro de JS no painel do dono (`reading 'Ab'`, dentro do descodificador WebP do jsPDF).
+  - Visita a todas as páginas do dono com a pilha do erro: 0 erros.
+  - 2.ª corrida de `flows`: todos os fluxos passaram, 0 erros.
+  - Fica ⚠️ intermitente na Parte A.
+  - Lojas de teste apagadas.
+- **8.3-B, ficheiros:**
+  - `frontend/src/pages/owner/ProductDrawer.jsx` (novo; formulário do produto extraído de `Products.jsx` + `LotRows` partilhado).
+  - `frontend/src/pages/owner/Products.jsx`:
+    - «Entrada de stock» abre o formulário de produto novo.
+    - «Ajuste manual» com Adicionar/Retirar e quantidade positiva.
+  - `backend/src/routes/inventory.js` (`POST /stock` com `lots[]`, auditoria `STOCK_ENTRY`).
+  - `backend/scripts/verify_system.js` (secção 22).
+  - `frontend/tests/e2e/stock.mjs` (reescrito para o ecrã novo + iPhone).
+- **Porquê:** o fundador pediu «Entrada de stock só para produtos novos» e «ajuste manual com botões adicionar/retirar e números positivos». A compra de um produto que já existe passou para Ajuste › Adicionar, com várias validades, custo e fornecedor.
+- **Prova:**
+  - `verify_system 5 14 22`: todas passaram. A 22 tem 18/18:
+    - 2 validades → 2 lotes certos;
+    - custo actualizado uma vez no histórico;
+    - auditoria +100;
+    - **entrega do fornecedor conta 1 visita e não 2**;
+    - 400 para linha a 0, data errada, sem quantidade e mais de 20 linhas;
+    - formato antigo continua;
+    - caixista 403; produto de outra loja 404;
+    - retirar 60 sai por FEFO; retirar a mais 400.
+  - `stock.mjs` 18/18, 0 erros de JS:
+    - Adicionar 12 + 8 com 2 validades, custo 19 MT (1900 centavos), fornecedor;
+    - Retirar bloqueado acima do stock e sem motivo; Retirar 5 sai do lote que expira primeiro (12 → 7);
+    - Entrada de stock = produto novo 10 un. a 30/50 MT;
+    - aviso no Início; dias de aviso;
+    - iPhone 390 px sem deslocamento horizontal.
+  - Capturas s1, s2 e s5 revistas.
+- Regressão no browser: `flows` passou (0 erros de JS); `fase8_2` passou todo (formulário extraído, botão «Stock» → Ajuste com o produto escolhido, sugestões no admin). A 1.ª tentativa de `fase8_2` não arrancou porque faltava a conta de super admin de teste. Base final: 2 lojas reais, 1 super admin, catálogo 209.
+- Segue-se: paragem e confirmação do fundador antes de publicar a 8.3-B; depois 8.4 (vendas perdidas).

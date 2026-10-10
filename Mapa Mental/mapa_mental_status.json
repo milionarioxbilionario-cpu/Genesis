@@ -139,8 +139,9 @@
     },
     "backend/src/routes/inventory.js": {
       "status": "ok",
-      "summary": "Entradas de stock (compras a fornecedores) e ajustes.",
-      "role": "Stock."
+      "summary": "Fornecedores e compras de stock: POST /stock aceita varias validades (lots[]) numa transaccao, auditoria STOCK_ENTRY.",
+      "role": "Stock.",
+      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
     },
     "backend/src/routes/catalogs.js": {
       "status": "ok",
@@ -1265,9 +1266,9 @@
     },
     "frontend/src/pages/owner/Products.jsx": {
       "status": "ok",
-      "summary": "frontend/src/pages/owner/Products.jsx",
-      "role": "",
-      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+      "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
+      "role": "Painel do dono.",
+      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
     },
     "backend/src/utils/shiftDay.js": {
       "status": "ok",
@@ -1286,6 +1287,18 @@
       "summary": "Limpeza unica dos fechos de teste da loja do Kleyton (pedido do fundador 10/10).",
       "role": "Scripts.",
       "notes": "Usado uma vez a 10/10/2026."
+    },
+    "frontend/src/pages/owner/ProductDrawer.jsx": {
+      "status": "ok",
+      "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
+      "role": "Painel do dono.",
+      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
+    },
+    "frontend/tests/e2e/stock.mjs": {
+      "status": "ok",
+      "summary": "Teste de browser do separador Stock (Ajuste Adicionar/Retirar, Entrada de stock = produto novo, validades, iPhone).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
     }
   }
 }
