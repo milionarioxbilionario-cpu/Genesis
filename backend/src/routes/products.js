@@ -6,12 +6,19 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { imageUrlSchema } = require('../utils/productImage');
 const { addLot, consumeLots } = require('../utils/stockLots');
+const { iconSchema } = require('../utils/productIcons');
+const { recordCatalogSuggestions } = require('../utils/catalogSuggestions');
+
+// "AAAA-MM-DD" que existe mesmo no calendario (31-02 nao passa).
+const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'data de validade inválida')
+  .refine((d) => !Number.isNaN(Date.parse(d + 'T00:00:00Z')) && new Date(d + 'T00:00:00Z').toISOString().slice(0, 10) === d, 'data de validade inválida');
 
 const productSchema = z.object({
   name: z.string().min(1),
   category: z.string().min(1).default('Geral'),
   barcode: z.string().optional().nullable(),
   image_url: imageUrlSchema,
+  icon: iconSchema,
   sell_price: z.number().int().nonnegative().default(0),
   cost_price: z.number().int().nonnegative().default(0),
   stock_qty: z.number().int().nonnegative().default(0),
@@ -41,43 +48,129 @@ router.get('/', auth, requireRole('owner', 'cashier'), async (req, res) => {
   }
 });
 
+// Criar produto (Fase 8.2): o stock inicial pode vir em varios lotes, cada um
+// com a sua validade (ex.: 50 un. a 17/10 e 50 a 20/10), e com fornecedor
+// opcional — com fornecedor fica uma entrada de stock (entra no custo de
+// entrega do mes). Produto fora do catalogo-mestre vira sugestao para o admin.
+const createProductSchema = productSchema.extend({
+  lots: z.array(z.object({
+    quantity: z.number().int().positive('quantidade do lote tem de ser maior que zero').max(1_000_000),
+    expiry_date: isoDay.nullish(),
+  })).max(20, 'no máximo 20 validades').optional(),
+  supplier_id: z.string().min(1).nullish(),
+});
+
 router.post('/', auth, requireRole('owner'), async (req, res) => {
   try {
-    const data = productSchema.parse(req.body);
+    const data = createProductSchema.parse(req.body);
     const tenantId = req.user.tenantId;
+    const lots = data.lots
+      ? data.lots.map((l) => ({ quantity: l.quantity, expiry_date: l.expiry_date || null }))
+      : (data.stock_qty > 0 ? [{ quantity: data.stock_qty, expiry_date: data.has_expiry ? data.expiry_date || null : null }] : []);
+    const stockQty = lots.reduce((sum, l) => sum + l.quantity, 0);
+    const hasExpiry = Boolean(data.has_expiry || lots.some((l) => l.expiry_date));
 
     const product = await prisma.$transaction(async (tx) => {
-      const created = await tx.product.create({
-      data: {
-        tenant: { connect: { id: tenantId } },
-        name: data.name,
-        category: data.category,
-        barcode: data.barcode || null,
-        image_url: data.image_url || null,
-        cost_price: data.cost_price,
-        sell_price: data.sell_price,
-        stock_qty: data.stock_qty,
-        min_stock: data.min_stock,
-        has_expiry: data.has_expiry,
-        expiry_date: data.expiry_date ? new Date(data.expiry_date) : null,
-        is_active: true
+      if (data.supplier_id) {
+        const supplier = await tx.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: tenantId } });
+        if (!supplier) { const e = new Error('Fornecedor não pertence a esta loja'); e.statusCode = 400; throw e; }
       }
+      const created = await tx.product.create({
+        data: {
+          tenant: { connect: { id: tenantId } },
+          name: data.name.trim(),
+          category: data.category,
+          barcode: data.barcode || null,
+          image_url: data.image_url || null,
+          icon: data.icon || null,
+          cost_price: data.cost_price,
+          sell_price: data.sell_price,
+          stock_qty: stockQty,
+          min_stock: data.min_stock,
+          has_expiry: hasExpiry,
+          is_active: true
+        }
       });
-      // Stock inicial = primeiro lote (com a validade, se o produto tem).
-      await addLot(tx, {
-        tenantId, productId: created.id, quantity: data.stock_qty,
-        expiryDate: data.has_expiry ? data.expiry_date : null, unitCost: data.cost_price,
-      });
+      for (const lot of lots) {
+        const entry = data.supplier_id
+          ? await tx.stockEntry.create({ data: { tenant_id: tenantId, product_id: created.id, quantity: lot.quantity, unit_cost: data.cost_price, supplier_id: data.supplier_id, recorded_by: req.user.userId } })
+          : null;
+        await addLot(tx, { tenantId, productId: created.id, quantity: lot.quantity, expiryDate: lot.expiry_date, unitCost: data.cost_price, stockEntryId: entry ? entry.id : null });
+      }
+      await recordCatalogSuggestions(tx, { tenantId, products: [created] });
+      await tx.auditLog.create({ data: {
+        tenant_id: tenantId, user_id: req.user.userId, action: 'CREATE_PRODUCT', entity_type: 'product', entity_id: created.id,
+        new_value: JSON.stringify({ name: created.name, sell_price: created.sell_price, cost_price: created.cost_price, stock_qty: stockQty, lots, supplier_id: data.supplier_id || null }),
+        ip_address: req.ip || '0.0.0.0',
+      } });
       return created;
     });
 
     return res.status(201).json(product);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
+      return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos', details: err.errors });
     }
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     console.error('Create product error', err);
     return res.status(500).json({ error: 'Erro ao criar produto' });
+  }
+});
+
+// Lotes do produto (stock por validade) — so o dono.
+router.get('/:id/lots', auth, requireRole('owner'), async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const product = await prisma.product.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, select: { id: true, stock_qty: true } });
+    if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+    const lots = await prisma.stockLot.findMany({ where: { tenant_id: tenantId, product_id: product.id, quantity_remaining: { gt: 0 } }, orderBy: [{ expiry_date: 'asc' }, { created_at: 'asc' }] });
+    return res.json({
+      stock_qty: product.stock_qty,
+      lots: lots.map((l) => ({ id: l.id, quantity: l.quantity_remaining, expiry_date: l.expiry_date ? l.expiry_date.toISOString().slice(0, 10) : null, unit_cost: l.unit_cost, created_at: l.created_at })),
+    });
+  } catch (err) {
+    console.error('List lots error', err);
+    return res.status(500).json({ error: 'Erro ao listar lotes' });
+  }
+});
+
+// Validade de um lote, ali mesmo no produto (Fase 8.2). Com `quantity` menor
+// que o lote, so essas unidades passam a ter a nova validade (o lote divide-se:
+// ex.: das 100 sem data, 50 expiram a 17 e 50 a 20). A quantidade total nao muda.
+router.patch('/:id/lots/:lotId', auth, requireRole('owner'), async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const data = z.object({ expiry_date: isoDay.nullable(), quantity: z.number().int().positive().optional() }).parse(req.body);
+    const result = await prisma.$transaction(async (tx) => {
+      const lot = await tx.stockLot.findFirst({ where: { id: req.params.lotId, product_id: req.params.id, tenant_id: tenantId } });
+      if (!lot || lot.quantity_remaining <= 0) { const e = new Error('Lote não encontrado'); e.statusCode = 404; throw e; }
+      const qty = data.quantity ?? lot.quantity_remaining;
+      if (qty > lot.quantity_remaining) { const e = new Error(`Este lote só tem ${lot.quantity_remaining} un.`); e.statusCode = 400; throw e; }
+      const expiry = data.expiry_date ? new Date(data.expiry_date) : null;
+      let changed;
+      if (qty === lot.quantity_remaining) {
+        changed = await tx.stockLot.update({ where: { id: lot.id }, data: { expiry_date: expiry } });
+      } else {
+        // Guarda atomica: uma venda pelo meio pode ter levado unidades do lote.
+        const r = await tx.stockLot.updateMany({ where: { id: lot.id, tenant_id: tenantId, quantity_remaining: { gte: qty } }, data: { quantity_remaining: { decrement: qty } } });
+        if (r.count !== 1) { const e = new Error('O lote mudou entretanto. Tente de novo.'); e.statusCode = 409; throw e; }
+        changed = await tx.stockLot.create({ data: { tenant_id: tenantId, product_id: lot.product_id, quantity_remaining: qty, expiry_date: expiry, unit_cost: lot.unit_cost, stock_entry_id: lot.stock_entry_id } });
+      }
+      if (expiry) await tx.product.update({ where: { id: lot.product_id }, data: { has_expiry: true } });
+      await tx.auditLog.create({ data: {
+        tenant_id: tenantId, user_id: req.user.userId, action: 'LOT_EXPIRY_CHANGED', entity_type: 'product', entity_id: lot.product_id,
+        old_value: JSON.stringify({ lot_id: lot.id, quantity: qty, expiry_date: lot.expiry_date }),
+        new_value: JSON.stringify({ lot_id: changed.id, quantity: qty, expiry_date: data.expiry_date }),
+        ip_address: req.ip || '0.0.0.0',
+      } });
+      return changed;
+    });
+    return res.json({ id: result.id, quantity: result.quantity_remaining, expiry_date: data.expiry_date });
+  } catch (err) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos' });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
+    console.error('Lot expiry error', err);
+    return res.status(500).json({ error: 'Erro ao mudar a validade' });
   }
 });
 
@@ -107,6 +200,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.category !== 'undefined') updateData.category = data.category;
     if (typeof data.barcode !== 'undefined') updateData.barcode = data.barcode || null;
     if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
+    if (typeof data.icon !== 'undefined') updateData.icon = data.icon || null;
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
     if (typeof data.sell_price !== 'undefined') updateData.sell_price = data.sell_price;
     if (typeof data.min_stock !== 'undefined') updateData.min_stock = data.min_stock;
@@ -116,6 +210,8 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
 
     const updated = await prisma.$transaction(async (tx) => {
       const p = await tx.product.update({ where: { id }, data: updateData });
+      // Sugestao ainda por decidir no admin acompanha o produto (nome, precos).
+      await tx.catalogSuggestion.updateMany({ where: { tenant_id: tenantId, product_id: id, status: 'pending' }, data: { product_name: p.name, category: p.category, icon: p.icon, barcode: p.barcode, cost_price: p.cost_price, sell_price: p.sell_price } });
 
       // Historico de custo (especificacao 6.4): rastrear quando o preco de
       // compra mudou. Antes a tabela existia mas nada a escrevia.

@@ -123,7 +123,7 @@
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
       "security": "requireRole('super_admin') + adminOriginCheck.",
-      "notes": " 09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador)."
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).  09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador)."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -133,8 +133,9 @@
     },
     "backend/src/routes/products.js": {
       "status": "ok",
-      "summary": "CRUD de produtos com scoping por tenant e historico de precos.",
-      "role": "Catalogo."
+      "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
+      "role": "Catalogo.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
     },
     "backend/src/routes/inventory.js": {
       "status": "ok",
@@ -145,12 +146,13 @@
       "status": "ok",
       "summary": "Catalogo pre-definido por tipo de negocio (GET publico) e importacao para a loja no fim do onboarding.",
       "role": "Onboarding.",
-      "notes": "Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
     },
     "backend/src/routes/master_catalogs.js": {
-      "status": "ok",
-      "summary": "Serve o catalogo mestre global usado como sugestao no onboarding.",
-      "role": "Onboarding."
+      "status": "partial",
+      "summary": "Rotas antigas do catalogo-mestre (listar/acrescentar).",
+      "role": "Catalogo-mestre.",
+      "issue": "10/10/2026: montadas em /api/master_catalogs, fora de /api/admin (sem adminOriginCheck). Rever na 8.6."
     },
     "backend/src/routes/demand_captures.js": {
       "status": "ok",
@@ -427,7 +429,7 @@
       "status": "partial",
       "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
       "role": "Painel da plataforma.",
-      "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado."
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado."
     },
     "admin-frontend/src/main.jsx": {
       "status": "ok",
@@ -1005,7 +1007,7 @@
       "status": "ok",
       "summary": "Foto do produto ou icone da categoria.",
       "role": "UI kit.",
-      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). 04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser."
     },
     "frontend/src/utils/imageResize.js": {
       "status": "ok",
@@ -1230,6 +1232,42 @@
       "summary": "Teste de browser da Fase 8.1 (ranking, PDF, recibo sem janela nova, 390 px).",
       "role": "Testes.",
       "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+    },
+    "backend/src/utils/productIcons.js": {
+      "status": "ok",
+      "summary": "Lista de icones que o dono pode escolher (validacao no servidor).",
+      "role": "Produtos.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "backend/src/utils/catalogSuggestions.js": {
+      "status": "ok",
+      "summary": "Produtos criados fora do catalogo-mestre -> sugestoes ao super admin (agrupadas, sem nomes de lojas).",
+      "role": "Catalogo-mestre.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "backend/tests/catalogSuggestions.test.js": {
+      "status": "ok",
+      "summary": "Testes das sugestoes (3).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "frontend/src/components/ui/productIcons.js": {
+      "status": "ok",
+      "summary": "32 icones de produto (desenho + nome em portugues).",
+      "role": "Design system.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "frontend/tests/e2e/fase8_2.mjs": {
+      "status": "ok",
+      "summary": "Teste de browser da Fase 8.2 (formulario, validades, botao Stock, sugestoes no admin).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "frontend/src/pages/owner/Products.jsx": {
+      "status": "ok",
+      "summary": "frontend/src/pages/owner/Products.jsx",
+      "role": "",
+      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
     }
   }
 }

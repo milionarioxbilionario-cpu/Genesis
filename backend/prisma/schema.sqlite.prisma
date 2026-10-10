@@ -59,6 +59,7 @@ model Tenant {
   demand_captures       DemandCapture[]
   employees             Employee[]
   expenses              Expense[]
+  catalog_suggestions   CatalogSuggestion[]
   shopping_lists        ShoppingList[]
   shopping_list_items   ShoppingListItem[]
   fixed_costs           FixedCost[]
@@ -105,6 +106,8 @@ model Product {
   category              String
   barcode               String?
   image_url             String?
+  /// Icone escolhido pelo dono (chave de utils/productIcons.js); null = icone da categoria.
+  icon                  String?
   cost_price            Int                   @default(0)
   sell_price            Int                   @default(0)
   stock_qty             Int                   @default(0)
@@ -318,6 +321,7 @@ model MasterCatalog {
   suggested_sell Int
   barcode        String?
   image_url      String?
+  icon           String?
 }
 
 model ProductPriceHistory {
@@ -413,3 +417,28 @@ model ShoppingListItem {
   @@index([tenant_id, list_id])
 }
 
+
+// Produto criado por um dono e que nao existe no catalogo-mestre do tipo de
+// negocio da loja (Fase 8.2). O super admin ve-os agrupados por nome e pode
+// acrescenta-los ao catalogo-mestre. Fotografia do produto no momento.
+model CatalogSuggestion {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  product_id    String
+  business_type String
+  product_name  String
+  name_key      String
+  category      String
+  icon          String?
+  barcode       String?
+  cost_price    Int       @default(0)
+  sell_price    Int       @default(0)
+  status        String    @default("pending")
+  created_at    DateTime  @default(now())
+  resolved_at   DateTime?
+  resolved_by   String?
+  tenant        Tenant    @relation(fields: [tenant_id], references: [id])
+
+  @@unique([tenant_id, product_id])
+  @@index([status, business_type, name_key])
+}

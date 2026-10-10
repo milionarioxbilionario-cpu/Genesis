@@ -32,7 +32,7 @@ DECLARE t text;
 BEGIN
   -- Tabelas com tenant_id directo.
   FOREACH t IN ARRAY ARRAY['Product','Sale','StockEntry','Employee','Supplier','FixedCost','Debt',
-                           'DemandCapture','ShrinkageRecord','ShiftClosing','SaleGoal','ProductPriceHistory','PosTerminal','StockLot','Expense','ShoppingList','ShoppingListItem']
+                           'DemandCapture','ShrinkageRecord','ShiftClosing','SaleGoal','ProductPriceHistory','PosTerminal','StockLot','Expense','ShoppingList','ShoppingListItem','CatalogSuggestion']
   LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_%s ON public.%I', lower(t), t);

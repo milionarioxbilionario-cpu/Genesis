@@ -1,19 +1,19 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-10T12:36:40.154Z */
+   Gerado em: 2026-10-10T14:43:29.032Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-10T12:36:40.154Z",
+ "generatedAt": "2026-10-10T14:43:29.032Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 204,
+  "files": 210,
   "planned": 5,
-  "links": 337,
-  "lines": 28684,
+  "links": 345,
+  "lines": 29594,
   "byStatus": {
-   "ok": 129,
-   "partial": 12,
+   "ok": 134,
+   "partial": 13,
    "broken": 0,
    "planned": 5,
    "untracked": 63
@@ -22,10 +22,10 @@ window.GENESIS_MINDMAP = {
    "infra": 12,
    "docs": 11,
    "admin": 9,
-   "backend-data": 50,
-   "backend": 53,
+   "backend-data": 52,
+   "backend": 55,
    "frontend-pub": 4,
-   "frontend": 67,
+   "frontend": 69,
    "scripts": 3
   }
  },
@@ -36,7 +36,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "lucide-react",
-   "count": 21
+   "count": 22
   },
   {
    "pkg": "bcrypt",
@@ -55,11 +55,11 @@ window.GENESIS_MINDMAP = {
    "count": 17
   },
   {
-   "pkg": "crypto",
-   "count": 15
+   "pkg": "zod",
+   "count": 16
   },
   {
-   "pkg": "zod",
+   "pkg": "crypto",
    "count": 15
   },
   {
@@ -68,26 +68,26 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
-   "count": 11
+   "count": 12
   },
   {
    "pkg": "node:fs",
-   "count": 10
+   "count": 11
   },
   {
    "pkg": "node:test",
-   "count": 9
+   "count": 10
   },
   {
    "pkg": "node:assert",
+   "count": 10
+  },
+  {
+   "pkg": "@playwright/test",
    "count": 9
   },
   {
    "pkg": "path",
-   "count": 8
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 8
   },
   {
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 50,
+   "nodes": 52,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -179,8 +179,9 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261004_fecho_mes": 1,
     "backend/prisma/migrations/20261004_lista_compras": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
+    "backend/prisma/migrations/20261010_icone_sugestoes": 1,
     "backend/scripts": 26,
-    "backend/tests": 8,
+    "backend/tests": 9,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -188,13 +189,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 53,
+   "nodes": 55,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 16,
     "backend/src/services": 10,
-    "backend/src/utils": 20,
+    "backend/src/utils": 22,
     "backend/src/jobs": 1
    }
   },
@@ -211,12 +212,12 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 67,
+   "nodes": 69,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
     "frontend/src/components": 4,
-    "frontend/src/components/ui": 7,
+    "frontend/src/components/ui": 8,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
     "frontend/src/layouts": 1,
@@ -227,7 +228,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/ui": 1,
     "frontend/src/utils": 12,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 8,
+    "frontend/tests/e2e": 9,
     "frontend/tests": 3
    }
   },
@@ -279,8 +280,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 724,
-   "size": 135263,
+   "lines": 750,
+   "size": 143215,
    "externals": [
     "@prisma/client"
    ],
@@ -323,8 +324,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1236,
-   "size": 66261,
+   "lines": 1274,
+   "size": 68943,
    "externals": [
     "nodemailer"
    ],
@@ -452,12 +453,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "partial",
    "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
-   "notes": "DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado.",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado.",
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 418,
-   "size": 24359,
+   "lines": 502,
+   "size": 30231,
    "externals": [
     "react",
     "react-router-dom",
@@ -872,6 +873,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261010_icone_sugestoes/migration.sql",
+   "path": "backend/prisma/migrations/20261010_icone_sugestoes/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261010_icone_sugestoes",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 38,
+   "size": 2059,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -885,7 +907,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 91,
-   "size": 5117,
+   "size": 5137,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -905,8 +927,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 399,
-   "size": 13821,
+   "lines": 428,
+   "size": 14874,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -928,8 +950,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 416,
-   "size": 14703,
+   "lines": 445,
+   "size": 15756,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1126,8 +1148,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 84,
-   "size": 6042,
+   "lines": 87,
+   "size": 6369,
    "externals": [
     "dotenv",
     "fs",
@@ -1580,8 +1602,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 930,
-   "size": 73477,
+   "lines": 1007,
+   "size": 81776,
    "externals": [
     "dotenv",
     "crypto",
@@ -1815,12 +1837,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
-   "notes": " 09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).  09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador).",
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 188,
-   "size": 11679,
+   "lines": 241,
+   "size": 15617,
    "externals": [
     "express",
     "bcrypt",
@@ -1833,13 +1855,15 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/tenantStatus.js",
     "backend/src/utils/http.js",
     "backend/src/utils/audit.js",
-    "backend/src/utils/supportCodes.js"
+    "backend/src/utils/supportCodes.js",
+    "backend/src/utils/productIcons.js",
+    "backend/src/utils/catalogSuggestions.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 6
+   "outbound": 8
   },
   {
    "id": "backend/src/routes/auth.js",
@@ -1889,12 +1913,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Catalogo pre-definido por tipo de negocio (GET publico) e importacao para a loja no fim do onboarding.",
-   "notes": "Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo.",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo.",
    "role": "Onboarding.",
    "security": "",
    "planned": false,
-   "lines": 103,
-   "size": 5233,
+   "lines": 110,
+   "size": 5647,
    "externals": [
     "crypto",
     "express",
@@ -1905,13 +1929,15 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
     "backend/src/utils/http.js",
-    "backend/src/utils/productImage.js"
+    "backend/src/utils/productImage.js",
+    "backend/src/utils/catalogSuggestions.js",
+    "backend/src/utils/productIcons.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 7
   },
   {
    "id": "backend/src/routes/dashboard.js",
@@ -2009,10 +2035,10 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "ok",
-   "summary": "Serve o catalogo mestre global usado como sugestao no onboarding.",
+   "status": "partial",
+   "summary": "Rotas antigas do catalogo-mestre (listar/acrescentar).",
    "notes": "",
-   "role": "Onboarding.",
+   "role": "Catalogo-mestre.",
    "security": "",
    "planned": false,
    "lines": 93,
@@ -2123,13 +2149,13 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/routes",
    "ext": ".js",
    "status": "ok",
-   "summary": "CRUD de produtos com scoping por tenant e historico de precos.",
-   "notes": "",
+   "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 274,
-   "size": 11115,
+   "lines": 370,
+   "size": 18037,
    "externals": [
     "express",
     "zod"
@@ -2139,13 +2165,15 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
     "backend/src/utils/productImage.js",
-    "backend/src/utils/stockLots.js"
+    "backend/src/utils/stockLots.js",
+    "backend/src/utils/productIcons.js",
+    "backend/src/utils/catalogSuggestions.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 7
   },
   {
    "id": "backend/src/routes/refresh.js",
@@ -2631,6 +2659,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 3
   },
   {
+   "id": "backend/src/utils/catalogSuggestions.js",
+   "path": "backend/src/utils/catalogSuggestions.js",
+   "label": "catalogSuggestions.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Produtos criados fora do catalogo-mestre -> sugestoes ao super admin (agrupadas, sem nomes de lojas).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "role": "Catalogo-mestre.",
+   "security": "",
+   "planned": false,
+   "lines": 73,
+   "size": 3531,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/admin.js",
+    "backend/src/routes/catalogs.js",
+    "backend/src/routes/products.js",
+    "backend/tests/catalogSuggestions.test.js"
+   ],
+   "inbound": 4,
+   "outbound": 0
+  },
+  {
    "id": "backend/src/utils/dbEngine2.js",
    "path": "backend/src/utils/dbEngine2.js",
    "label": "dbEngine2.js",
@@ -2836,6 +2890,33 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 38,
    "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/productIcons.js",
+   "path": "backend/src/utils/productIcons.js",
+   "label": "productIcons.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Lista de icones que o dono pode escolher (validacao no servidor).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "role": "Produtos.",
+   "security": "",
+   "planned": false,
+   "lines": 16,
+   "size": 769,
+   "externals": [
+    "zod"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/admin.js",
+    "backend/src/routes/catalogs.js",
+    "backend/src/routes/products.js"
+   ],
+   "inbound": 3,
+   "outbound": 0
   },
   {
    "id": "backend/src/utils/productImage.js",
@@ -3165,6 +3246,32 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 3,
    "outbound": 0
+  },
+  {
+   "id": "backend/tests/catalogSuggestions.test.js",
+   "path": "backend/tests/catalogSuggestions.test.js",
+   "label": "catalogSuggestions.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Testes das sugestoes (3).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "role": "Testes.",
+   "security": "",
+   "planned": false,
+   "lines": 25,
+   "size": 1753,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/catalogSuggestions.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "backend/tests/fefo.test.js",
@@ -3917,22 +4024,23 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Foto do produto ou icone da categoria.",
-   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). 04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser.",
    "role": "UI kit.",
    "security": "",
    "planned": false,
-   "lines": 46,
-   "size": 2001,
+   "lines": 48,
+   "size": 2145,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
-    "frontend/src/components/ui/cx.js"
+    "frontend/src/components/ui/cx.js",
+    "frontend/src/components/ui/productIcons.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 1
+   "outbound": 2
   },
   {
    "id": "frontend/src/components/ui/cx.js",
@@ -3974,8 +4082,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 8,
-   "size": 554,
+   "lines": 9,
+   "size": 613,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -4006,6 +4114,31 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx"
    ],
    "inbound": 25,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/src/components/ui/productIcons.js",
+   "path": "frontend/src/components/ui/productIcons.js",
+   "label": "productIcons.js",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "32 icones de produto (desenho + nome em portugues).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "role": "Design system.",
+   "security": "",
+   "planned": false,
+   "lines": 46,
+   "size": 2379,
+   "externals": [
+    "lucide-react"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/src/components/ui/ProductImage.jsx"
+   ],
+   "inbound": 1,
    "outbound": 0
   },
   {
@@ -4419,7 +4552,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 258,
-   "size": 18111,
+   "size": 18155,
    "externals": [
     "react",
     "react-router-dom",
@@ -4445,14 +4578,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
+   "status": "ok",
+   "summary": "frontend/src/pages/owner/Products.jsx",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 287,
-   "size": 18548,
+   "lines": 403,
+   "size": 26619,
    "externals": [
     "react",
     "react-router-dom",
@@ -5369,6 +5502,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/fase8_2.mjs",
+   "path": "frontend/tests/e2e/fase8_2.mjs",
+   "label": "fase8_2.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Teste de browser da Fase 8.2 (formulario, validades, botao Stock, sugestoes no admin).",
+   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "role": "Testes.",
+   "security": "",
+   "planned": false,
+   "lines": 151,
+   "size": 10185,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/fecho_mes.mjs",
    "path": "frontend/tests/e2e/fecho_mes.mjs",
    "label": "fecho_mes.mjs",
@@ -6182,6 +6340,14 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/supportCodes.js"
   },
   {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/productIcons.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/catalogSuggestions.js"
+  },
+  {
    "source": "backend/src/routes/auth.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -6232,6 +6398,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/catalogs.js",
    "target": "backend/src/utils/productImage.js"
+  },
+  {
+   "source": "backend/src/routes/catalogs.js",
+   "target": "backend/src/utils/catalogSuggestions.js"
+  },
+  {
+   "source": "backend/src/routes/catalogs.js",
+   "target": "backend/src/utils/productIcons.js"
   },
   {
    "source": "backend/src/routes/dashboard.js",
@@ -6396,6 +6570,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/products.js",
    "target": "backend/src/utils/stockLots.js"
+  },
+  {
+   "source": "backend/src/routes/products.js",
+   "target": "backend/src/utils/productIcons.js"
+  },
+  {
+   "source": "backend/src/routes/products.js",
+   "target": "backend/src/utils/catalogSuggestions.js"
   },
   {
    "source": "backend/src/routes/refresh.js",
@@ -6594,6 +6776,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/prisma.js"
   },
   {
+   "source": "backend/tests/catalogSuggestions.test.js",
+   "target": "backend/src/utils/catalogSuggestions.js"
+  },
+  {
    "source": "backend/tests/fefo.test.js",
    "target": "backend/src/utils/fefo.js"
   },
@@ -6768,6 +6954,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/components/ui/ProductImage.jsx",
    "target": "frontend/src/components/ui/cx.js"
+  },
+  {
+   "source": "frontend/src/components/ui/ProductImage.jsx",
+   "target": "frontend/src/components/ui/productIcons.js"
   },
   {
    "source": "frontend/src/hooks/useOfflineSync.js",

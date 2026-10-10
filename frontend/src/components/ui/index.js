@@ -5,3 +5,4 @@ export { Field, Input, Select, Textarea, MoneyInput, PinPad, Segmented } from '.
 export { Card, CardHeader, Stat, Badge, Table, Pagination, EmptyState, Skeleton, Alert, ProgressBar, Tabs, PageHeader, Toolbar, KeyValue } from './Data';
 export { Dialog, Drawer, ConfirmProvider, useConfirm, ToastProvider, useToast } from './Overlay';
 export { ProductImage, categoryIcon } from './ProductImage';
+export { PRODUCT_ICONS, iconByKey } from './productIcons';

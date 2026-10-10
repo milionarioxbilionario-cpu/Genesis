@@ -93,7 +93,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -909,7 +909,84 @@ async function test19() {
   ok(c.status === 200 && c.data?.sale?.status === 'cancelled', 'venda cancelada aparece como cancelada', c.data?.sale);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19 };
+async function test20() {
+  section(20, 'Produto: icone, varias validades, fornecedor, lotes e sugestoes ao catalogo-mestre (Fase 8.2)');
+  const owner = ownerClient();
+  const tag = ctx.tenant.id.slice(0, 8);
+  const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const supplier = await prisma.supplier.create({ data: { tenant_id: ctx.tenant.id, name: 'Fornecedor 8.2', phone: '84 000 0000', delivery_cost_per_visit: 30000 } });
+  const base = { name: 'Cotonetes ' + tag, category: 'Higiene', sell_price: 6000, cost_price: 3500, min_stock: 5 };
+
+  ok((await owner.req('POST', '/api/products', { ...base, icon: 'foguete' })).status === 400, 'icone desconhecido = 400');
+  ok((await owner.req('POST', '/api/products', { ...base, lots: [{ quantity: 5, expiry_date: '2026-02-31' }] })).status === 400, 'validade inexistente (31/02) = 400');
+  ok((await owner.req('POST', '/api/products', { ...base, lots: [{ quantity: 0 }] })).status === 400, 'lote com 0 unidades = 400');
+  ok((await owner.req('POST', '/api/products', { ...base, supplier_id: crypto.randomUUID(), lots: [{ quantity: 5 }] })).status === 400, 'fornecedor de outra loja / inexistente = 400');
+
+  const c = await owner.req('POST', '/api/products', { ...base, icon: 'bath', supplier_id: supplier.id, lots: [{ quantity: 50, expiry_date: day(20) }, { quantity: 50, expiry_date: day(10) }] });
+  ok(c.status === 201 && c.data?.stock_qty === 100 && c.data?.icon === 'bath' && c.data?.has_expiry === true, 'criado com icone, 100 un. e validade', c.data);
+  const pid = c.data?.id;
+  const entries = await prisma.stockEntry.findMany({ where: { product_id: pid } });
+  ok(entries.length === 2 && entries.every((e) => e.supplier_id === supplier.id && e.unit_cost === 3500), 'com fornecedor: 2 entradas de stock (contam no custo de entrega)', entries);
+  let lots = (await owner.req('GET', `/api/products/${pid}/lots`)).data;
+  ok(lots?.stock_qty === 100 && lots.lots.length === 2 && lots.lots[0].expiry_date === day(10) && lots.lots[1].expiry_date === day(20), 'lotes: 50 a ' + day(10) + ' e 50 a ' + day(20) + ' (o que expira primeiro em cima)', lots);
+
+  const noSup = await owner.req('POST', '/api/products', { name: 'Agulhas ' + tag, category: 'Costura', sell_price: 1000, cost_price: 500, lots: [{ quantity: 10 }] });
+  ok(noSup.status === 201 && (await prisma.stockEntry.count({ where: { product_id: noSup.data?.id } })) === 0 && (await prisma.stockLot.count({ where: { product_id: noSup.data?.id } })) === 1, 'sem fornecedor: so o lote (sem entrada de compra)');
+
+  // Sugestoes ao catalogo-mestre: produto conhecido nao conta, o novo sim.
+  const known = await prisma.masterCatalog.findFirst({ select: { product_name: true } });
+  const k = await owner.req('POST', '/api/products', { name: '  ' + known.product_name.toUpperCase() + ' ', category: 'Geral', sell_price: 9900, cost_price: 5000 });
+  ok(k.status === 201 && (await prisma.catalogSuggestion.count({ where: { product_id: k.data?.id } })) === 0, 'produto do catalogo-mestre (outra escrita) nao vira sugestao');
+  const sug = await prisma.catalogSuggestion.findFirst({ where: { product_id: pid } });
+  ok(sug && sug.status === 'pending' && sug.business_type === 'bottle_store' && sug.cost_price === 3500 && sug.sell_price === 6000 && sug.icon === 'bath', 'produto novo: sugestao pendente com custo, preco e icone', sug);
+  ok((await owner.req('PATCH', '/api/products/' + pid, { sell_price: 6500 })).status === 200 && (await prisma.catalogSuggestion.findFirst({ where: { product_id: pid } })).sell_price === 6500, 'mudar o preco actualiza a sugestao pendente');
+  ok((await prisma.runWithTenant(crypto.randomUUID(), () => prisma.catalogSuggestion.count({ where: { tenant_id: ctx.tenant.id } }))) === 0, 'sugestoes invisiveis noutra loja (RLS)');
+
+  // Validade ali mesmo: dividir um lote e mudar outro.
+  const first = lots.lots[0];
+  ok((await owner.req('PATCH', `/api/products/${pid}/lots/${first.id}`, { expiry_date: day(5), quantity: 51 })).status === 400, 'dividir mais do que o lote tem = 400');
+  ok((await owner.req('PATCH', `/api/products/${noSup.data.id}/lots/${first.id}`, { expiry_date: day(5) })).status === 404, 'lote de outro produto = 404');
+  const split = await owner.req('PATCH', `/api/products/${pid}/lots/${first.id}`, { expiry_date: day(3), quantity: 20 });
+  ok(split.status === 200 && split.data?.quantity === 20, '20 das 50 passam a validade ' + day(3), split);
+  lots = (await owner.req('GET', `/api/products/${pid}/lots`)).data;
+  ok(lots.lots.length === 3 && lots.lots.reduce((s, l) => s + l.quantity, 0) === 100 && lots.lots[0].expiry_date === day(3) && lots.lots[0].quantity === 20, 'agora 3 lotes, total continua 100', lots.lots);
+  const nolot = (await owner.req('GET', `/api/products/${noSup.data.id}/lots`)).data.lots[0];
+  const set = await owner.req('PATCH', `/api/products/${noSup.data.id}/lots/${nolot.id}`, { expiry_date: day(30) });
+  ok(set.status === 200 && (await prisma.product.findUnique({ where: { id: noSup.data.id } })).has_expiry === true, 'lote sem data recebe validade; produto passa a "com validade"');
+  ok((await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'LOT_EXPIRY_CHANGED' } })) === 2, 'auditoria: LOT_EXPIRY_CHANGED (2)');
+  ok((await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'CREATE_PRODUCT', entity_id: pid } })) === 1, 'auditoria: CREATE_PRODUCT');
+
+  const term = await cashierTerminal();
+  ok((await term.req('GET', `/api/products/${pid}/lots`)).status === 403, 'caixista nao ve lotes (403)');
+  ok((await term.req('POST', '/api/products', { ...base, name: 'X ' + tag })).status === 403, 'caixista nao cria produtos (403)');
+
+  // Painel do super admin.
+  const admin = adminClient();
+  const list = await admin.req('GET', '/api/admin/catalog-suggestions');
+  const group = list.data?.groups?.find((g) => g.name_key === 'cotonetes ' + tag);
+  ok(list.status === 200 && group && group.stores === 1 && group.avg_cost === 3500 && group.avg_sell === 6500 && group.category === 'Higiene', 'admin ve a sugestao com custo e preco', group);
+  ok(!JSON.stringify(list.data).includes(ctx.tenant.id) && !JSON.stringify(list.data).includes(ctx.tenant.name), 'admin: sem id nem nome da loja');
+  ok((await admin.req('GET', '/api/admin/overview')).data?.catalog_suggestions >= 2, 'visao geral conta as sugestoes pendentes');
+  ok((await owner.req('GET', '/api/admin/catalog-suggestions')).status === 403, 'dono nao chega as sugestoes (403)');
+  const acc = { business_type: 'bottle_store', name_key: group.name_key, product_name: 'Cotonetes ' + tag, category: 'Higiene', suggested_cost: 3500, suggested_sell: 6500, icon: 'bath' };
+  ok((await admin.req('POST', '/api/admin/catalog-suggestions/accept', { ...acc, suggested_sell: 0 })).status === 400, 'aceitar com preco 0 = 400');
+  const a = await admin.req('POST', '/api/admin/catalog-suggestions/accept', acc);
+  const row = a.data?.id ? await prisma.masterCatalog.findUnique({ where: { id: a.data.id } }) : null;
+  try {
+    ok(a.status === 201 && row && row.icon === 'bath' && row.suggested_sell === 6500 && row.business_type === 'bottle_store', 'aceite: entra no catalogo-mestre (com icone)', a);
+    ok((await prisma.catalogSuggestion.findFirst({ where: { product_id: pid } })).status === 'added', 'sugestao marcada como acrescentada');
+    ok((await admin.req('POST', '/api/admin/catalog-suggestions/accept', acc)).status === 404, 'aceitar outra vez = 404');
+    const cat = await fetch(BASE + '/api/catalogs/bottle_store').then((r) => r.json());
+    ok(cat.template.sampleProducts.some((p) => p.name === 'Cotonetes ' + tag), 'lojas novas (onboarding) ja recebem o produto');
+    const d = await admin.req('POST', '/api/admin/catalog-suggestions/dismiss', { business_type: 'bottle_store', name_key: 'agulhas ' + tag });
+    ok(d.status === 200 && (await prisma.catalogSuggestion.findFirst({ where: { product_id: noSup.data.id } })).status === 'dismissed', 'ignorar sugestao');
+    ok((await prisma.auditLog.count({ where: { action: { in: ['CATALOG_SUGGESTION_ADDED', 'CATALOG_SUGGESTION_DISMISSED'] }, user_id: ctx.admin.id } })) === 2, 'auditoria do admin (2)');
+  } finally {
+    if (row) await prisma.masterCatalog.delete({ where: { id: row.id } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20 };
 
 (async () => {
   await prisma.ready();
