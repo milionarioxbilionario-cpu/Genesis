@@ -283,6 +283,8 @@ model ShiftClosing {
   expected_amount Int
   difference      Int
   closed_at       DateTime @default(now())
+  /// Dia de Maputo (AAAA-MM-DD) em que o turno comecou — um fecho por dia (utils/shiftDay.js).
+  shift_day       String?
   cashier         User     @relation("ShiftClosedBy", fields: [cashier_user_id], references: [id])
   tenant          Tenant   @relation(fields: [tenant_id], references: [id])
 }

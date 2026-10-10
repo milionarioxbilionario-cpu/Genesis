@@ -986,7 +986,73 @@ async function test20() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20 };
+async function test21() {
+  section(21, 'Turno por dia: um fecho por dia de Maputo, abre sozinho no dia seguinte, turno 24/24 (10/10/2026)');
+  const term = await cashierTerminal();
+  const cid = ctx.cashier.id;
+  const t = ctx.tenant.id;
+  const day = (offsetDays) => new Date(Date.now() + 2 * 3600 * 1000 + offsetDays * 86400000).toISOString().slice(0, 10);
+  const reset = async () => {
+    await prisma.shiftClosing.deleteMany({ where: { tenant_id: t, cashier_user_id: cid } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, entity_id: cid, action: { in: ['SHIFT_OPENED', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'CASHIER_UNLOCKED', 'POS_LOGIN'] } } });
+    await prisma.sale.updateMany({ where: { tenant_id: t, cashier_user_id: cid }, data: { status: 'cancelled' } });
+  };
+  const shift = async () => (await term.req('GET', '/api/pos/shift')).data;
+  const close = (v) => term.req('POST', '/api/pos/shift/close', { declared_amount: v });
+  const lastClosing = () => prisma.shiftClosing.findFirst({ where: { tenant_id: t, cashier_user_id: cid }, orderBy: { closed_at: 'desc' } });
+
+  await reset();
+  ok((await shift()).open === true, 'sem fecho nenhum: turno aberto');
+  ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }))).status === 201, 'venda em dinheiro de 100 MT');
+  ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID(), payment_method: 'emola' }))).status === 201, 'venda em e-Mola de 100 MT');
+  const c1 = await close(10000);
+  ok(c1.status === 201 && c1.data?.summary?.expected_cash === 10000 && c1.data?.summary?.other?.emola === 10000, 'fecho: esperado so o dinheiro (100); e-Mola 100 a parte no resumo', c1.data);
+  ok(c1.data?.shift_day === day(0) && c1.data?.open_again === false, 'fecho gasta o dia de hoje (' + day(0) + ')', c1.data);
+  ok((await lastClosing()).shift_day === day(0), 'shift_day gravado no fecho');
+  ok((await shift()).open === false, 'mesmo dia: turno fechado');
+  ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }))).data?.code === 'SHIFT_CLOSED', 'mesmo dia: nao vende sem o PIN do dono (409)');
+
+  // Dia seguinte: o fecho passa a ser de ontem -> abre sozinho, sem PIN.
+  const c = await lastClosing();
+  await prisma.shiftClosing.update({ where: { id: c.id }, data: { closed_at: new Date(c.closed_at.getTime() - 86400000), shift_day: day(-1) } });
+  const next = await shift();
+  ok(next.open === true && next.auto === true, 'dia novo: o perfil abre sozinho', next);
+  ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }))).status === 201, 'dia novo: vende sem PIN (201)');
+  ok((await close(9000)).data?.code === 'COUNT_BELOW_EXPECTED', 'esperado do dia novo = so as vendas deste turno (90 < 100 recusado)');
+  await prisma.auditLog.deleteMany({ where: { tenant_id: t, entity_id: cid, action: 'SHIFT_ATTEMPT_FAIL' } });
+
+  // 24/24: turno que comecou ontem as 15h e fecha hoje de madrugada = fecho de ONTEM.
+  await reset();
+  const anteontem = await prisma.shiftClosing.create({ data: { tenant_id: t, cashier_user_id: cid, counted_amount: 0, expected_amount: 0, difference: 0, closed_at: new Date(Date.now() - 2 * 86400000), shift_day: day(-2) } });
+  const ontem15h = new Date(Date.parse(day(-1) + 'T15:00:00+02:00'));
+  await prisma.auditLog.create({ data: { tenant_id: t, user_id: cid, action: 'POS_LOGIN', entity_type: 'user', entity_id: cid, created_at: ontem15h, ip_address: '0.0.0.0' } });
+  const late = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }));
+  ok(late.status === 201, 'vende no turno que vem de ontem');
+  const c2 = await close(10000);
+  ok(c2.status === 201 && c2.data?.shift_day === day(-1) && c2.data?.open_again === true, 'fecho conta como turno de ONTEM e o de hoje ja pode comecar', c2.data);
+  ok((await shift()).open === true, 'depois de fechar o turno de ontem: aberto sem PIN');
+  ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }))).status === 201, 'turno de hoje: vende sem PIN');
+  const c3 = await close(10000);
+  ok(c3.status === 201 && c3.data?.shift_day === day(0) && c3.data?.open_again === false, 'segundo fecho gasta o dia de hoje', c3.data);
+  ok((await shift()).open === false, 'agora fechado ate amanha (ou PIN do dono)');
+  ok(anteontem.id && (await prisma.shiftClosing.count({ where: { tenant_id: t, cashier_user_id: cid } })) === 3, 'tres fechos registados');
+
+  // Caso real do Kleyton: venda solta entre o fecho e a reabertura nao conta.
+  await prisma.sale.create({ data: {
+    tenant_id: t, cashier_user_id: cid, total_amount: 16000, total_cost: 9000, payment_method: 'cash', amount_received: 16000, change_given: 0, status: 'completed', daily_number: 99,
+    items: { create: [{ product_id: ctx.product.id, product_name: ctx.product.name, quantity: 1, unit_sell_price: 16000, unit_cost_price: 9000 }] },
+  } });
+  const reopen = await term.req('POST', '/api/pos/shift/open', { pin: PIN });
+  ok(reopen.status === 201 && reopen.data?.open === true, 'dono reabre hoje com o PIN');
+  const c4 = await close(0);
+  ok(c4.status === 201 && c4.data?.summary?.expected_cash === 0, 'reaberto sem vendas: fecha com 0 (a venda solta de 160 MT antes da reabertura nao entra)', c4.data);
+  ok(c4.data?.shift_day === day(0), 'turno reaberto pelo dono conta no dia da reabertura');
+
+  // Estado limpo para quem vier depois.
+  await reset();
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21 };
 
 (async () => {
   await prisma.ready();

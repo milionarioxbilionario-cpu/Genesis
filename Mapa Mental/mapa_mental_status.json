@@ -1001,7 +1001,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK."
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1126,9 +1126,9 @@
     },
     "backend/src/utils/shift.js": {
       "status": "ok",
-      "summary": "Turno e fecho cego: estado aberto/fechado (SHIFT_OPENED na auditoria), esperado nunca revelado antes de contar.",
-      "role": "Fecho de caixa.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "summary": "Fecho cego: esperado = dinheiro desde o inicio do turno; turno por dia; resumo depois de aceite.",
+      "role": "Turno / fecho cego.",
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser."
     },
     "backend/src/utils/authPin.js": {
       "status": "ok",
@@ -1146,13 +1146,13 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
     },
     "backend/src/routes/verify.js": {
       "status": "ok",
@@ -1268,6 +1268,24 @@
       "summary": "frontend/src/pages/owner/Products.jsx",
       "role": "",
       "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+    },
+    "backend/src/utils/shiftDay.js": {
+      "status": "ok",
+      "summary": "Regra pura do turno por dia: um fecho por dia de Maputo, abre sozinho no dia seguinte, turno 24/24 conta no dia em que comecou.",
+      "role": "Turno / fecho cego.",
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser."
+    },
+    "backend/tests/shiftDay.test.js": {
+      "status": "ok",
+      "summary": "Testes do turno por dia (8).",
+      "role": "Testes.",
+      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser."
+    },
+    "backend/scripts/limpar_fechos_teste_kleyton.js": {
+      "status": "ok",
+      "summary": "Limpeza unica dos fechos de teste da loja do Kleyton (pedido do fundador 10/10).",
+      "role": "Scripts.",
+      "notes": "Usado uma vez a 10/10/2026."
     }
   }
 }

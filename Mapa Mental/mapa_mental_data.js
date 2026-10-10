@@ -1,29 +1,29 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-10T14:43:29.032Z */
+   Gerado em: 2026-10-10T17:52:46.139Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-10T14:43:29.032Z",
+ "generatedAt": "2026-10-10T17:52:46.139Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 210,
+  "files": 214,
   "planned": 5,
-  "links": 345,
-  "lines": 29594,
+  "links": 348,
+  "lines": 29931,
   "byStatus": {
-   "ok": 134,
+   "ok": 137,
    "partial": 13,
    "broken": 0,
    "planned": 5,
-   "untracked": 63
+   "untracked": 64
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 9,
-   "backend-data": 52,
-   "backend": 55,
+   "backend-data": 55,
+   "backend": 56,
    "frontend-pub": 4,
    "frontend": 69,
    "scripts": 3
@@ -39,15 +39,15 @@ window.GENESIS_MINDMAP = {
    "count": 22
   },
   {
+   "pkg": "dotenv",
+   "count": 20
+  },
+  {
    "pkg": "bcrypt",
    "count": 20
   },
   {
    "pkg": "react-router-dom",
-   "count": 19
-  },
-  {
-   "pkg": "dotenv",
    "count": 19
   },
   {
@@ -64,7 +64,7 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "@prisma/client",
-   "count": 13
+   "count": 14
   },
   {
    "pkg": "node:path",
@@ -76,11 +76,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:test",
-   "count": 10
+   "count": 11
   },
   {
    "pkg": "node:assert",
-   "count": 10
+   "count": 11
   },
   {
    "pkg": "@playwright/test",
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 52,
+   "nodes": 55,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -180,8 +180,9 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261004_lista_compras": 1,
     "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/prisma/migrations/20261010_icone_sugestoes": 1,
-    "backend/scripts": 26,
-    "backend/tests": 9,
+    "backend/prisma/migrations/20261011_turno_dia": 1,
+    "backend/scripts": 27,
+    "backend/tests": 10,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -189,13 +190,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 55,
+   "nodes": 56,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 16,
     "backend/src/services": 10,
-    "backend/src/utils": 22,
+    "backend/src/utils": 23,
     "backend/src/jobs": 1
    }
   },
@@ -280,8 +281,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 750,
-   "size": 143215,
+   "lines": 779,
+   "size": 150438,
    "externals": [
     "@prisma/client"
    ],
@@ -324,8 +325,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1274,
-   "size": 68943,
+   "lines": 1292,
+   "size": 70191,
    "externals": [
     "nodemailer"
    ],
@@ -894,6 +895,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261011_turno_dia/migration.sql",
+   "path": "backend/prisma/migrations/20261011_turno_dia/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261011_turno_dia",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 5,
+   "size": 297,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -927,8 +949,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 428,
-   "size": 14874,
+   "lines": 430,
+   "size": 14998,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -950,8 +972,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 445,
-   "size": 15756,
+   "lines": 447,
+   "size": 15880,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1241,6 +1263,30 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 1
+  },
+  {
+   "id": "backend/scripts/limpar_fechos_teste_kleyton.js",
+   "path": "backend/scripts/limpar_fechos_teste_kleyton.js",
+   "label": "limpar_fechos_teste_kleyton.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Limpeza unica dos fechos de teste da loja do Kleyton (pedido do fundador 10/10).",
+   "notes": "Usado uma vez a 10/10/2026.",
+   "role": "Scripts.",
+   "security": "",
+   "planned": false,
+   "lines": 49,
+   "size": 3285,
+   "externals": [
+    "dotenv",
+    "@prisma/client"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
   },
   {
    "id": "backend/scripts/restore_owner_password.js",
@@ -1602,8 +1648,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1007,
-   "size": 81776,
+   "lines": 1073,
+   "size": 87192,
    "externals": [
     "dotenv",
     "crypto",
@@ -2728,17 +2774,18 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 47,
-   "size": 2053,
+   "size": 2066,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
     "backend/scripts/verify_system.js",
     "backend/src/services/expiryJob.js",
     "backend/src/services/tenantAlerts.js",
+    "backend/src/utils/shiftDay.js",
     "backend/src/utils/stockLots.js",
     "backend/tests/fefo.test.js"
    ],
-   "inbound": 5,
+   "inbound": 6,
    "outbound": 0
   },
   {
@@ -3006,26 +3053,53 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/utils",
    "ext": ".js",
    "status": "ok",
-   "summary": "Turno e fecho cego: estado aberto/fechado (SHIFT_OPENED na auditoria), esperado nunca revelado antes de contar.",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
-   "role": "Fecho de caixa.",
+   "summary": "Fecho cego: esperado = dinheiro desde o inicio do turno; turno por dia; resumo depois de aceite.",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser.",
+   "role": "Turno / fecho cego.",
    "security": "",
    "planned": false,
-   "lines": 113,
-   "size": 5568,
+   "lines": 134,
+   "size": 7240,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/utils/shiftLock.js",
     "backend/src/utils/audit.js",
-    "backend/src/utils/http.js"
+    "backend/src/utils/http.js",
+    "backend/src/utils/shiftDay.js"
    ],
    "usedBy": [
     "backend/src/routes/pos.js",
     "backend/src/routes/sales.js"
    ],
    "inbound": 2,
-   "outbound": 4
+   "outbound": 5
+  },
+  {
+   "id": "backend/src/utils/shiftDay.js",
+   "path": "backend/src/utils/shiftDay.js",
+   "label": "shiftDay.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Regra pura do turno por dia: um fecho por dia de Maputo, abre sozinho no dia seguinte, turno 24/24 conta no dia em que comecou.",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser.",
+   "role": "Turno / fecho cego.",
+   "security": "",
+   "planned": false,
+   "lines": 43,
+   "size": 2353,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [
+    "backend/src/utils/shift.js",
+    "backend/tests/shiftDay.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 1
   },
   {
    "id": "backend/src/utils/shiftLock.js",
@@ -3424,6 +3498,32 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/services/restock.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/shiftDay.test.js",
+   "path": "backend/tests/shiftDay.test.js",
+   "label": "shiftDay.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Testes do turno por dia (8).",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser.",
+   "role": "Testes.",
+   "security": "",
+   "planned": false,
+   "lines": 64,
+   "size": 3640,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/shiftDay.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -4806,12 +4906,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 281,
-   "size": 14513,
+   "lines": 311,
+   "size": 16439,
    "externals": [
     "react",
     "qrcode",
@@ -4842,12 +4942,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK.",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK.",
    "role": "",
    "security": "",
    "planned": false,
    "lines": 418,
-   "size": 24333,
+   "size": 24389,
    "externals": [
     "react",
     "lucide-react"
@@ -4878,12 +4978,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
    "lines": 177,
-   "size": 8473,
+   "size": 8472,
    "externals": [
     "react",
     "react-router-dom",
@@ -5564,8 +5664,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 279,
-   "size": 16520,
+   "lines": 287,
+   "size": 17479,
    "externals": [
     "node:fs",
     "node:path",
@@ -6764,6 +6864,14 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/http.js"
   },
   {
+   "source": "backend/src/utils/shift.js",
+   "target": "backend/src/utils/shiftDay.js"
+  },
+  {
+   "source": "backend/src/utils/shiftDay.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
    "source": "backend/src/utils/stockLots.js",
    "target": "backend/src/utils/fefo.js"
   },
@@ -6802,6 +6910,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/tests/restock.test.js",
    "target": "backend/src/services/restock.js"
+  },
+  {
+   "source": "backend/tests/shiftDay.test.js",
+   "target": "backend/src/utils/shiftDay.js"
   },
   {
    "source": "backend/tests/shoppingList.test.js",

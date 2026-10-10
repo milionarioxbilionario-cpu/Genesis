@@ -175,8 +175,11 @@ try {
 
   // Fecho de turno (cego).
   await term.getByRole('button', { name: 'Fechar turno' }).click();
+  ok(await term.getByText('só o dinheiro vivo').isVisible(), 'fecho: avisa que conta só o dinheiro vivo (M-Pesa, e-Mola e cartão não)');
   await term.getByLabel('Dinheiro contado na gaveta').fill('10');
   await term.getByRole('button', { name: 'Confirmar contagem' }).click();
+  ok(await term.getByText('Confirma este valor?').isVisible() && await term.getByText('10,00 MT', { exact: true }).isVisible(), 'fecho: pede confirmação do valor antes de enviar (10,00 MT)');
+  await term.getByRole('button', { name: 'Sim, fechar o turno' }).click();
   await term.getByText(/menor do que o dinheiro/).waitFor({ timeout: T });
   ok(true, 'fecho cego: contagem abaixo do esperado e recusada');
   await shot(term, '27-pos-fecho-cego');
@@ -206,6 +209,7 @@ try {
   await term.getByRole('button', { name: 'Fechar turno' }).click();
   await term.getByLabel('Dinheiro contado na gaveta').fill('250');
   await term.getByRole('button', { name: 'Confirmar contagem' }).click();
+  await term.getByRole('button', { name: 'Sim, fechar o turno' }).click();
   await term.getByText(/ainda não chegaram ao servidor/).waitFor({ timeout: T });
   ok(true, 'fecho com venda offline por enviar: recusado com explicacao');
   await shot(term, '28b-pos-fecho-com-pendentes');
@@ -217,9 +221,13 @@ try {
   await term.getByRole('button', { name: 'Fechar turno' }).click();
   await term.getByLabel('Dinheiro contado na gaveta').fill('250');
   await term.getByRole('button', { name: 'Confirmar contagem' }).click();
-  await term.getByText('Este perfil só volta a vender').waitFor({ timeout: T });
+  await term.getByRole('button', { name: 'Sim, fechar o turno' }).click();
+  await term.getByText('Abre sozinho amanhã; hoje só com o PIN do dono.').waitFor({ timeout: T });
+  const resumo = await term.getByRole('dialog').textContent();
+  ok(/Esperado em dinheiros*250,00 MT/.test(resumo) && /Contado na gavetas*250,00 MT/.test(resumo) && /Valor certo./.test(resumo), 'fecho aceite: mostra a conta (esperado 250 = contado 250)', resumo);
+  await shot(term, '28c-pos-fecho-resumo');
   await term.getByRole('button', { name: 'Concluir' }).click();
-  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ timeout: T });
+  await term.getByText('Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.').waitFor({ timeout: T });
   ok(await term.getByRole('button', { name: /Laurentina Preta 550ml/ }).isDisabled(), 'turno fechado: produtos desactivados');
   // Fase 7.3: aqui (ja com rede) o aviso 'Sem ligacao: a usar o catalogo
   // guardado' ficava no ecra ate a venda seguinte (captura 29 de 09/10).
@@ -229,16 +237,16 @@ try {
   // O cadeado e uma pausa: voltar a entrar com o PIN NAO reabre o turno.
   await term.getByRole('button', { name: 'Bloquear terminal' }).click();
   await term.getByText('Quem está a vender?').waitFor({ timeout: T });
-  ok(await term.getByText('Turno fechado').isVisible(), 'perfis: o caixista aparece com o turno fechado');
+  ok(await term.getByText('Fechado hoje').isVisible(), 'perfis: o caixista aparece "Fechado hoje"');
   await term.getByRole('button', { name: /Carlos/ }).click();
   await term.getByText('Introduza o seu PIN').waitFor();
   await term.keyboard.type('2468');
-  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ timeout: T });
+  await term.getByText('Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.').waitFor({ timeout: T });
   ok(true, 'voltar a entrar com o PIN do caixista nao reabre o turno');
   await term.getByRole('button', { name: 'Abrir turno novo' }).click();
   await term.getByLabel('PIN do dono').fill(fx.authPin);
   await term.getByRole('button', { name: 'Autorizar' }).click();
-  await term.getByText('Este perfil não vende até o dono abrir um turno novo.').waitFor({ state: 'detached', timeout: T });
+  await term.getByText('Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.').waitFor({ state: 'detached', timeout: T });
   ok(await term.getByRole('button', { name: /Laurentina Preta 550ml/ }).isEnabled(), 'PIN do dono: turno novo aberto, volta a vender');
 
   // ------------------------------------------------------------- telemovel

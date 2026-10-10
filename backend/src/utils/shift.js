@@ -4,52 +4,60 @@
 // routes/shift_closings.js. Agora o terminal (routes/pos.js) e o unico sitio
 // onde se fecha um turno, e e o PROPRIO caixista que o fecha.
 //
-// Regras (inalteradas):
-//  - esperado = vendas em DINHEIRO do caixista desde o ultimo fecho (ou desde
-//    o inicio do dia); o valor esperado NUNCA e devolvido antes de contar;
+// Regras:
+//  - esperado = vendas em DINHEIRO do caixista desde o INICIO do turno (o mais
+//    recente entre o ultimo fecho e a ultima abertura); M-Pesa, e-Mola e
+//    cartao nao entram na gaveta. O valor esperado NUNCA e devolvido antes de
+//    contar; depois de um fecho aceite volta o resumo;
 //  - declarar menos do que o esperado = tentativa falhada; 3 falhas desde o
 //    ultimo desbloqueio do dono = perfil bloqueado (ver utils/shiftLock.js);
-//  - TURNO FECHADO (06/10/2026): depois de um fecho aceite o caixista NAO
-//    vende ate o dono abrir um turno novo com o PIN de autorizacao no terminal
-//    (registo SHIFT_OPENED na auditoria, que e append-only). Antes o turno era
-//    so a "janela desde o ultimo fecho" e o caixista continuava a vender. O
-//    cadeado do terminal e uma pausa: nao fecha nem abre o turno.
+//  - TURNO POR DIA (10/10/2026, utils/shiftDay.js): um fecho por dia de
+//    Maputo. Fechado hoje -> so o dono reabre (PIN, registo SHIFT_OPENED na
+//    auditoria append-only); dia novo -> abre sozinho. Um turno que passa da
+//    meia-noite fecha como turno do dia em que comecou. O cadeado do terminal
+//    e uma pausa: nao fecha nem abre o turno.
 const prisma = require('./prisma');
 const { getShiftLock, MAX_ATTEMPTS } = require('./shiftLock');
 const { writeAudit } = require('./audit');
 const { httpError } = require('./http');
+const { decideShift, shiftDayOf } = require('./shiftDay');
 
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-// Aberto se nunca houve fecho, ou se o dono o reabriu depois do ultimo fecho.
 // `db` pode ser a transaccao da venda (routes/sales.js).
-async function shiftStatus(db, tenantId, cashierId) {
-  const lastClosing = await db.shiftClosing.findFirst({
+async function shiftStatus(db, tenantId, cashierId, now = new Date()) {
+  const recentClosings = await db.shiftClosing.findMany({
     where: { tenant_id: tenantId, cashier_user_id: cashierId },
     orderBy: { closed_at: 'desc' },
+    take: 5,
   });
-  if (!lastClosing) return { open: true, lastClosing: null, openedAt: null };
-  const reopened = await db.auditLog.findFirst({
-    where: { tenant_id: tenantId, action: 'SHIFT_OPENED', entity_id: cashierId, created_at: { gt: lastClosing.closed_at } },
+  const lastClosing = recentClosings[0] || null;
+  const opened = await db.auditLog.findFirst({
+    where: { tenant_id: tenantId, action: 'SHIFT_OPENED', entity_id: cashierId, ...(lastClosing ? { created_at: { gt: lastClosing.closed_at } } : {}) },
     orderBy: { created_at: 'desc' },
   });
-  return { open: Boolean(reopened), lastClosing, openedAt: reopened ? reopened.created_at : null };
+  const openedAt = opened ? opened.created_at : null;
+  const d = decideShift({ recentClosings, openedAt, now });
+  return { open: d.open, auto: d.auto, closedToday: d.closedToday, since: d.since, lastClosing, openedAt };
 }
 
 async function shiftWindow(tenantId, cashierId) {
   const status = await shiftStatus(prisma, tenantId, cashierId);
-  const { lastClosing } = status;
-  const since = lastClosing ? lastClosing.closed_at : startOfToday();
-  const base = { tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed', created_at: { gt: since } };
-  const [cashAgg, openSales] = await Promise.all([
-    prisma.sale.aggregate({ where: { ...base, payment_method: 'cash' }, _sum: { total_amount: true } }),
-    prisma.sale.count({ where: base }),
+  const base = { tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed', ...(status.since ? { created_at: { gt: status.since } } : {}) };
+  const byMethod = await prisma.sale.groupBy({ by: ['payment_method'], where: base, _sum: { total_amount: true }, _count: true });
+  const totals = Object.fromEntries(byMethod.map((g) => [g.payment_method, Number(g._sum.total_amount || 0)]));
+  const openSales = byMethod.reduce((n, g) => n + g._count, 0);
+  return { ...status, expectedCash: totals.cash || 0, totals, openSales };
+}
+
+// Primeira actividade do turno (entrar no perfil ou vender) — da o dia do turno
+// quando nao houve abertura registada.
+async function firstActivityAt(tenantId, cashierId, since) {
+  const after = since ? { created_at: { gt: since } } : {};
+  const [login, sale] = await Promise.all([
+    prisma.auditLog.findFirst({ where: { tenant_id: tenantId, action: 'POS_LOGIN', entity_id: cashierId, ...after }, orderBy: { created_at: 'asc' }, select: { created_at: true } }),
+    prisma.sale.findFirst({ where: { tenant_id: tenantId, cashier_user_id: cashierId, ...after }, orderBy: { created_at: 'asc' }, select: { created_at: true } }),
   ]);
-  return { ...status, since, expectedCash: Number(cashAgg._sum.total_amount || 0), openSales };
+  const times = [login?.created_at, sale?.created_at].filter(Boolean).sort((a, b) => a - b);
+  return times[0] || null;
 }
 
 // Estado visivel no POS: nunca inclui o valor esperado.
@@ -57,6 +65,8 @@ async function getShiftState(tenantId, cashierId) {
   const [win, lock] = await Promise.all([shiftWindow(tenantId, cashierId), getShiftLock(prisma, tenantId, cashierId)]);
   return {
     open: win.open,
+    auto: win.auto,
+    closedToday: win.closedToday,
     openedAt: win.openedAt,
     hasOpenSales: win.openSales > 0,
     salesCount: win.openSales,
@@ -67,6 +77,8 @@ async function getShiftState(tenantId, cashierId) {
   };
 }
 
+const NON_CASH = ['mpesa', 'emola', 'card', 'mobile_money'];
+
 async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   if (!Number.isInteger(declared) || declared < 0) throw httpError(400, 'Valor inválido', 'INVALID_AMOUNT');
   const lock = await getShiftLock(prisma, tenantId, cashier.id);
@@ -74,7 +86,7 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
 
   const win = await shiftWindow(tenantId, cashier.id);
   if (!win.open) {
-    throw httpError(409, 'Este turno já está fechado. O dono abre um turno novo com o PIN dele.', 'NO_OPEN_SHIFT');
+    throw httpError(409, 'O turno de hoje já está fechado. Abre sozinho amanhã; hoje só com o PIN do dono.', 'NO_OPEN_SHIFT');
   }
 
   const detail = { cashierName: cashier.name, declared, expected: win.expectedCash };
@@ -95,18 +107,27 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
     };
   }
 
+  const shiftDay = shiftDayOf({ openedAt: win.openedAt, firstActivityAt: win.openedAt ? null : await firstActivityAt(tenantId, cashier.id, win.since) });
   const difference = declared - win.expectedCash;
   const record = await prisma.shiftClosing.create({
-    data: { tenant_id: tenantId, cashier_user_id: cashier.id, counted_amount: declared, expected_amount: win.expectedCash, difference },
+    data: { tenant_id: tenantId, cashier_user_id: cashier.id, counted_amount: declared, expected_amount: win.expectedCash, difference, shift_day: shiftDay },
   });
-  await writeAudit({ req, tenantId, action: 'SHIFT_CLOSING_OK', entityType: 'shift_closing', entityId: record.id, newValue: { ...detail, difference } });
+  await writeAudit({ req, tenantId, action: 'SHIFT_CLOSING_OK', entityType: 'shift_closing', entityId: record.id, newValue: { ...detail, difference, shift_day: shiftDay } });
+  // Depois de aceite (ja nao e cego): a conta do turno. Turno de ontem fechado
+  // de madrugada -> o de hoje ja pode comecar.
+  const after = await shiftStatus(prisma, tenantId, cashier.id);
   return {
     status: 201,
     body: {
       ok: true, accepted: true, exact: difference === 0, difference, closed_at: record.closed_at,
+      shift_day: shiftDay, open_again: after.open,
+      summary: {
+        expected_cash: win.expectedCash, counted: declared, difference,
+        other: Object.fromEntries(NON_CASH.filter((m) => win.totals[m]).map((m) => [m, win.totals[m]])),
+      },
       message: difference === 0 ? 'Turno fechado. Valor certo.' : 'Turno fechado. O valor a mais ficou registado para o dono.',
     },
   };
 }
 
-module.exports = { getShiftState, closeShiftBlind, shiftStatus, startOfToday };
+module.exports = { getShiftState, closeShiftBlind, shiftStatus };

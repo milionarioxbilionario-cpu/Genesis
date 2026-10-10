@@ -173,7 +173,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `vite.config.js` (workbox `globIgnores`) | As partes opcionais do jsPDF (html2canvas, DOMPurify, canvg ≈ 380 KB) não entram na cache offline; o gerador (≈ 420 KB) entra, para recibos offline | ✅ CONFIRMADO | 10/10 — `dist/sw.js` sem esses ficheiros; `index.html` só pré-carrega o índice |
 | `window.open('')` em `ShoppingLists.jsx:79` e `MonthCloseDialog.jsx:68` (WhatsApp) | Mesmo padrão de janela em branco; na app do ecrã principal do iPhone pode prender como o recibo | ⚠️ NÃO VERIFICADO (fora desta mini-meta) | 10/10 — grep |
 
-### Fase 8.2 — formulário do produto + sugestões ao catálogo-mestre (10/10/2026) — **local, ainda NÃO publicado**
+### Fase 8.2 — formulário do produto + sugestões ao catálogo-mestre (10/10/2026) — **publicado em genesismz.com (`adb4cce`, 10/10); `fase8_2.mjs` passou contra o site público (dono + super admin)**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | Migração `20261010_icone_sugestoes` (aplicada com `db execute`) | `Product.icon`, `MasterCatalog.icon`, tabela `CatalogSuggestion` (RLS `tenant_isolation_catalogsuggestion`, CHECK do estado, único por loja+produto); `rls_v2.sql` actualizado | ✅ CONFIRMADO | 10/10 — consulta a `information_schema`/`pg_policies`: colunas, RLS activo, política e permissões |
@@ -185,6 +185,18 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `frontend/src/pages/owner/Products.jsx` (Catálogo + Stock) | Formulário: escolha do ícone; «Preço de compra»/«Preço de venda»; novo produto com «Stock que já tem» em linhas quantidade+validade e «Outra validade», fornecedor opcional, total; editar mostra «Stock actual» e cada lote com unidades+validade; botão «Stock» guarda e abre Stock → Ajuste manual com o produto escolhido (`?ajustar=<id>`) | ✅ CONFIRMADO FUNCIONAL | 10/10 — `fase8_2.mjs` (PC e 390 px) + capturas revistas |
 | `routes/master_catalogs.js` (antigo, montado em `/api/master_catalogs`) | Rotas do super admin FORA de `/api/admin` (sem `adminOriginCheck`; só JWT + papel) | ⚠️ por rever na 8.6 (edição do catálogo-mestre) | 10/10 — leitura |
 | Limite de login (`routes/auth.js`: 5 por IP / 15 min, conta também os logins certos) | Correcto contra força bruta; mas uma loja com PC + telemóvel atrás do mesmo IP pode bater no limite só com logins certos | ⚠️ observação para o fundador decidir (não alterado) | 10/10 — leitura + 2 testes caíram nele |
+
+### Fase 8.3-A — turno por dia + fecho explicado (10/10/2026) — **local, ainda NÃO publicado**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `backend/src/utils/shiftDay.js` (puro) + `utils/shift.js` | Um fecho por dia de Maputo: fechou hoje → reabrir hoje só com o PIN do dono; dia novo → abre sozinho; turno que passa da meia-noite fecha como turno do dia em que começou (`ShiftClosing.shift_day`). Esperado = dinheiro desde o **início do turno** (o mais recente entre o último fecho e o último `SHIFT_OPENED`) — antes desde o último fecho, o que fez o Kleyton herdar 160 MT de vendas de 06/10 | ✅ CONFIRMADO FUNCIONAL | 10/10 — `shiftDay.test.js` 8/8; `verify_system 21` (contra servidor real: mesmo dia, dia seguinte, 24/24, caso Kleyton) |
+| Migração `20261011_turno_dia` | `ShiftClosing.shift_day` (texto, só ADD COLUMN); fechos antigos = dia de Maputo em que fecharam | ✅ CONFIRMADO | 10/10 — `information_schema`: coluna `text` |
+| `utils/shift.js` (`closeShiftBlind`) + `pages/pos/PosDialogs.jsx` | Fecho aceite devolve o resumo (dinheiro esperado, contado, diferença, M-Pesa/e-Mola/cartão à parte) e `open_again`; o diálogo diz «conte **só o dinheiro vivo**» e pede sempre «Contou X MT. Confirma?» antes de enviar (só no ecrã; um aviso por limiar revelaria o esperado) | ✅ CONFIRMADO FUNCIONAL | 10/10 — `verify_system 21`; `flows.mjs` |
+| `PosScreen.jsx` / `Terminal.jsx` | «Turno de hoje fechado — abre sozinho amanhã; hoje com o PIN do dono»; perfil «Fechado hoje» | ✅ CONFIRMADO FUNCIONAL | 10/10 — `flows.mjs` |
+| Loja do Kleyton (dados) | Fechos de teste apagados a pedido do fundador (4 fechos + 17 registos de auditoria de turno; 9 vendas ficam); cada caixista recomeça o turno com `SHIFT_OPENED` (motivo registado) | ✅ CONFIRMADO | 10/10 — consulta: 0 fechos, Kleyton e Wendy abertos, esperado 0 MT |
+| `backend/scripts/limpar_fechos_teste_kleyton.js` | Limpeza acima (pré-visualização sem `--aplicar`); usa a hora da BD | ✅ usado uma vez | 10/10 |
+| Relógio deste PC | **63 min atrasado** face ao servidor e à BD (10/10 16:26 vs 17:29 UTC). Prisma `@default(now())` usa o relógio do processo → registos criados a partir deste PC ficam com hora errada | ⚠️ o fundador deve correr `w32tm /resync` (já aconteceu a 28/09 com 8 h) | 10/10 — `date -u` vs cabeçalho `Date` do servidor e `select now()` |
+| `utils/shiftLock.js` | Inalterado (3 contagens abaixo → bloqueado até o dono). Nota: sem desbloqueio, conta as falhas desde a meia-noite do **servidor** (UTC) | ⚠️ fuso por rever | 10/10 — leitura |
 
 ---
 
@@ -751,3 +763,16 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Estado final da BD verificado: 2 lojas reais (Loja de Kleyton, SPAR — esta não foi criada por mim), 1 super admin, 0 sugestões, catálogo-mestre com 209 produtos (como antes).
 - Não feito: publicar a 8.2 (não foi pedido); iPhone real.
 - Segue-se: paragem entre fases. 8.3 — "Entrada de stock" só para produtos novos (reutiliza este formulário) + "Ajuste manual" com Adicionar/Retirar (quantidade positiva; Adicionar com validade, custo e fornecedor opcional, para as compras de produtos existentes).
+
+### [2026-10-10] — Publicação da 8.2 + push; Fase 8.3-A: turno por dia e fecho explicado
+- Pedido do fundador: publicar a 8.2, investigar fechos estranhos na loja do Kleyton, um fecho por dia com reabertura automática no dia seguinte (lojas 24/24), depois a 8.3. Plano aprovado: `~/.claude/plans/publica-no-genesismz-com-noble-trinket.md`.
+- **Publicação 8.2:** `publicar.sh` → "PUBLICADO adb4cce"; `git push` `5315522..adb4cce`; de fora: /, /entrar, admin 200, `/api/auth/me` 401, `/api/admin/catalog-suggestions` 403 sem origem admin, `/api/catalogs/bottle_store` com o campo `icon`. **`fase8_2.mjs` contra genesismz.com + admin.genesismz.com: todos os passos passaram** (loja e admin de teste apagados).
+- **Diagnóstico (dados reais, só leitura):**
+  - Wendy: 1 279 MT em dinheiro + 75 MT em **e-Mola**. O esperado conta só dinheiro → 1 279; 1 300 → +21. Correcto, mas o ecrã não o explicava.
+  - Kleyton: vendas de 85 e 75 MT feitas **depois** do fecho de 06/10 (antes da 7.1) ficaram no esperado do turno seguinte (desde o último fecho) → 160 MT com 0 vendas novas, depois 275 MT. Não houve acumulação dos testes de 2 790.
+- **Mudanças:** `utils/shiftDay.js` (novo, puro), `utils/shift.js` (esperado desde o início do turno; dia do turno no fecho; resumo e `open_again` depois de aceite), `utils/fefo.js` (exporta `dayInMaputo`), `ShiftClosing.shift_day` (migração `20261011_turno_dia`, aplicada; schemas iguais), `pages/pos/{PosDialogs,PosScreen,Terminal}.jsx` (texto «só dinheiro vivo», confirmação «Contou X MT. Confirma?», resumo, «Fechado hoje»), `scripts/verify_system.js` (secção 21), `tests/shiftDay.test.js`, `tests/e2e/flows.mjs`, `scripts/limpar_fechos_teste_kleyton.js`.
+- **Decisão minha (dentro do pedido):** o fundador escolheu «pedir confirmação quando passa 10% do esperado». Isso deixava o caixista descobrir o esperado sem gastar tentativas. Por isso a confirmação é sempre e só no ecrã.
+- **Limpeza pedida** (fundador: «apague sim»): 4 fechos + 17 registos de auditoria de turno apagados na loja do Kleyton; 9 vendas ficam; `SHIFT_OPENED` por caixista com o motivo. **Erro apanhado:** o 1.º `SHIFT_OPENED` ficou com a hora deste PC, **63 min atrasado** face à BD/servidor → ficava antes das vendas de 18:50 e o Kleyton voltava a ter 115 MT de esperado. Acertado para `now()` da BD (o 1.º `UPDATE` falhou porque `new_value` é jsonb na BD real — corrigido com `::text`); o script passou a usar a hora da BD. Resultado: Kleyton e Wendy abertos, esperado 0 MT.
+- **Prova:** `shiftDay.test.js` 8/8 (inclui o caso real do Kleyton e a fronteira 23:59/00:01); todos os unitários a passar; `verify_system.js` **completo 2–21 numa corrida: 334/334**; browser: `flows` (confirmação, texto, resumo «Esperado em dinheiro 250 = Contado 250») passou 2×, `fase8_1` e `fase8_2` passaram, `pos` passou na 2.ª corrida (a 1.ª ficou à espera do ecrã de venda depois do PIN, 0 erros de JS; a 2.ª passou sem mudanças — instabilidade de rede/BD); captura 28c revista; base final: 2 lojas reais, 1 super admin, catálogo 209.
+- Não feito: publicar a Fase A (pede confirmação); Safari real.
+- Segue-se: paragem. Depois da confirmação: publicar a Fase A; 8.3-B (Entrada de stock só para novos + Ajuste Adicionar/Retirar).

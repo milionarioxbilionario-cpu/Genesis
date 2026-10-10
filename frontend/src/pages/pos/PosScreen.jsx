@@ -83,7 +83,7 @@ export default function PosScreen({ info, cashier, onLock }) {
   const change = payment === 'cash' ? Math.max(0, received - total) : 0;
   const freeLimit = Math.floor(subtotal * (info.store.discount_free_pct ?? 10) / 100);
   const locked = Boolean(shift?.locked);
-  // Turno fechado: so o dono abre outro (PIN). Sem resposta do servidor
+  // Turno fechado HOJE: so o dono reabre (PIN); amanha abre sozinho. Sem resposta do servidor
   // (offline) o estado anterior mantem-se e a venda nao fica presa.
   const shiftClosed = shift?.open === false;
   const blocked = locked || shiftClosed;
@@ -253,9 +253,9 @@ export default function PosScreen({ info, cashier, onLock }) {
         </Alert>
       )}
       {!locked && shiftClosed && (
-        <Alert tone="warning" className="m-4 mb-0" title="Turno fechado">
+        <Alert tone="warning" className="m-4 mb-0" title="Turno de hoje fechado">
           <span className="flex flex-wrap items-center gap-3">
-            <span>Este perfil não vende até o dono abrir um turno novo.</span>
+            <span>Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.</span>
             <Button size="sm" variant="primary" onClick={() => setDialog({ openShift: true })}>Abrir turno novo</Button>
           </span>
         </Alert>
