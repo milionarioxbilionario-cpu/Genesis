@@ -1,22 +1,22 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-10T17:52:46.139Z */
+   Gerado em: 2026-10-10T20:49:58.586Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-10T17:52:46.139Z",
+ "generatedAt": "2026-10-10T20:49:58.586Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 214,
+  "files": 215,
   "planned": 5,
-  "links": 348,
-  "lines": 29931,
+  "links": 353,
+  "lines": 30207,
   "byStatus": {
-   "ok": 137,
+   "ok": 139,
    "partial": 13,
    "broken": 0,
    "planned": 5,
-   "untracked": 64
+   "untracked": 63
   },
   "byGroup": {
    "infra": 12,
@@ -25,18 +25,22 @@ window.GENESIS_MINDMAP = {
    "backend-data": 55,
    "backend": 56,
    "frontend-pub": 4,
-   "frontend": 69,
+   "frontend": 70,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 37
+   "count": 38
   },
   {
    "pkg": "lucide-react",
-   "count": 22
+   "count": 23
+  },
+  {
+   "pkg": "react-router-dom",
+   "count": 20
   },
   {
    "pkg": "dotenv",
@@ -45,10 +49,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "bcrypt",
    "count": 20
-  },
-  {
-   "pkg": "react-router-dom",
-   "count": 19
   },
   {
    "pkg": "express",
@@ -213,7 +213,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 69,
+   "nodes": 70,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -224,7 +224,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/layouts": 1,
     "frontend/src/pages": 2,
     "frontend/src/pages/auth": 5,
-    "frontend/src/pages/owner": 10,
+    "frontend/src/pages/owner": 11,
     "frontend/src/pages/pos": 3,
     "frontend/src/ui": 1,
     "frontend/src/utils": 12,
@@ -281,8 +281,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 779,
-   "size": 150438,
+   "lines": 823,
+   "size": 155320,
    "externals": [
     "@prisma/client"
    ],
@@ -325,8 +325,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1292,
-   "size": 70191,
+   "lines": 1305,
+   "size": 71209,
    "externals": [
     "nodemailer"
    ],
@@ -1648,8 +1648,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1073,
-   "size": 87192,
+   "lines": 1121,
+   "size": 91806,
    "externals": [
     "dotenv",
     "crypto",
@@ -2051,13 +2051,13 @@ window.GENESIS_MINDMAP = {
    "dir": "backend/src/routes",
    "ext": ".js",
    "status": "ok",
-   "summary": "Entradas de stock (compras a fornecedores) e ajustes.",
-   "notes": "",
+   "summary": "Fornecedores e compras de stock: POST /stock aceita varias validades (lots[]) numa transaccao, auditoria STOCK_ENTRY.",
+   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
    "role": "Stock.",
    "security": "",
    "planned": false,
-   "lines": 194,
-   "size": 7663,
+   "lines": 218,
+   "size": 9242,
    "externals": [
     "express",
     "zod"
@@ -4201,6 +4201,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
@@ -4213,7 +4214,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 25,
+   "inbound": 26,
    "outbound": 0
   },
   {
@@ -4672,6 +4673,39 @@ window.GENESIS_MINDMAP = {
    "outbound": 5
   },
   {
+   "id": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "path": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "label": "ProductDrawer.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
+   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "role": "Painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 229,
+   "size": 14882,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/imageResize.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/owner/Products.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 5
+  },
+  {
    "id": "frontend/src/pages/owner/Products.jsx",
    "path": "frontend/src/pages/owner/Products.jsx",
    "label": "Products.jsx",
@@ -4679,13 +4713,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
    "status": "ok",
-   "summary": "frontend/src/pages/owner/Products.jsx",
-   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
-   "role": "",
+   "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
+   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 403,
-   "size": 26619,
+   "lines": 240,
+   "size": 15177,
    "externals": [
     "react",
     "react-router-dom",
@@ -4696,8 +4730,8 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/search.js",
-    "frontend/src/utils/imageResize.js",
     "frontend/src/pages/owner/ShoppingLists.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
@@ -5080,6 +5114,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Settings.jsx",
@@ -5093,7 +5128,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 22,
+   "inbound": 23,
    "outbound": 0
   },
   {
@@ -5124,6 +5159,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
@@ -5139,7 +5175,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/timelineText.js",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 24,
+   "inbound": 25,
    "outbound": 0
   },
   {
@@ -5160,7 +5196,7 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "frontend/src/pages/owner/Products.jsx"
+    "frontend/src/pages/owner/ProductDrawer.jsx"
    ],
    "inbound": 1,
    "outbound": 0
@@ -5515,6 +5551,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
     "frontend/src/pages/owner/Reports.jsx",
     "frontend/src/pages/owner/Sales.jsx",
@@ -5523,7 +5560,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx"
    ],
-   "inbound": 9,
+   "inbound": 10,
    "outbound": 2
   },
   {
@@ -5759,14 +5796,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/tests/e2e",
    "ext": ".mjs",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Teste de browser do separador Stock (Ajuste Adicionar/Retirar, Entrada de stock = produto novo, validades, iPhone).",
+   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "role": "Testes.",
    "security": "",
    "planned": false,
-   "lines": 67,
-   "size": 3941,
+   "lines": 148,
+   "size": 10230,
    "externals": [
     "node:fs",
     "node:path",
@@ -7256,6 +7293,26 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/pages/auth/RequestAccount.jsx"
   },
   {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/utils/imageResize.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
    "source": "frontend/src/pages/owner/Products.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -7273,11 +7330,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
-   "target": "frontend/src/utils/imageResize.js"
+   "target": "frontend/src/pages/owner/ShoppingLists.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
-   "target": "frontend/src/pages/owner/ShoppingLists.jsx"
+   "target": "frontend/src/pages/owner/ProductDrawer.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",

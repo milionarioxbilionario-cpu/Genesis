@@ -1052,7 +1052,55 @@ async function test21() {
   await reset();
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21 };
+// ---------------------------------------------------------------------------
+async function test22() {
+  section(22, 'Compra de produto que ja existe com varias validades (Ajuste manual > Adicionar, Fase 8.3)');
+  const owner = ownerClient();
+  const t = ctx.tenant.id;
+  const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const now = new Date();
+  const ym = `year=${now.getFullYear()}&month=${now.getMonth() + 1}`;
+  const created = await owner.req('POST', '/api/products', { name: 'Sumo Lotes Teste', category: 'Bebidas', sell_price: 6000, cost_price: 4000, has_expiry: false });
+  ok(created.status === 201, 'produto sem validade, sem stock', created);
+  const pid = created.data.id;
+  const sup = await owner.req('POST', '/api/inventory/suppliers', { name: 'Fornecedor Lotes Teste', delivery_cost_per_visit: 15000 });
+  ok(sup.status === 201, 'fornecedor com entrega de 150 MT', sup);
+  const delivery = async () => (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data?.deductions?.total_supplier_delivery;
+  const d0 = await delivery();
+
+  const buy = (body) => owner.req('POST', '/api/inventory/stock', { product_id: pid, unit_cost: 4200, supplier_id: sup.data.id, ...body });
+  const r = await buy({ lots: [{ quantity: 50, expiry_date: day(7) }, { quantity: 50, expiry_date: day(10) }] });
+  ok(r.status === 201 && r.data?.entries?.length === 2 && r.data?.lots?.length === 2, 'uma compra com 2 validades (50 a 7 dias + 50 a 10 dias): 201, 2 entradas, 2 lotes', r.data);
+  const p = await prisma.product.findUnique({ where: { id: pid } });
+  const lots = await prisma.stockLot.findMany({ where: { product_id: pid }, orderBy: { expiry_date: 'asc' } });
+  ok(p.stock_qty === 100 && lots.map((l) => l.quantity_remaining).join(',') === '50,50' && lots.map((l) => l.expiry_date.toISOString().slice(0, 10)).join(',') === day(7) + ',' + day(10), 'stock 100 = 50 + 50, cada lote com a sua validade');
+  ok(p.has_expiry === true && p.cost_price === 4200, 'produto passa a "com validade" e custo actualizado para 42 MT');
+  ok((await prisma.productPriceHistory.count({ where: { product_id: pid, new_cost: 4200 } })) === 1, 'mudanca de custo no historico (uma vez)');
+  const audit = await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'STOCK_ENTRY', entity_id: pid } });
+  ok(audit && JSON.parse(audit.new_value).added === 100 && JSON.parse(audit.old_value).stock_qty === 0, 'auditoria STOCK_ENTRY: +100 (de 0 para 100)', audit?.new_value);
+  const d1 = await delivery();
+  ok(d1 - d0 === 15000, 'custo de entrega conta UMA visita do fornecedor (150 MT), nao uma por validade', [d0, d1]);
+
+  ok((await buy({ lots: [{ quantity: 0, expiry_date: null }] })).status === 400, 'linha com 0 unidades: 400');
+  ok((await buy({ lots: [{ quantity: 5, expiry_date: '17/10/2026' }] })).status === 400, 'validade em formato errado: 400');
+  ok((await buy({ quantity: 0 })).status === 400, 'sem quantidade: 400');
+  ok((await buy({ lots: Array.from({ length: 21 }, () => ({ quantity: 1 })) })).status === 400, 'mais de 20 validades: 400');
+  const single = await buy({ quantity: 3, supplier_id: null });
+  ok(single.status === 201 && (await prisma.product.findUnique({ where: { id: pid } })).stock_qty === 103, 'formato antigo (quantity sem lotes) continua a funcionar: 103');
+  const term = await cashierTerminal();
+  ok((await term.req('POST', '/api/inventory/stock', { product_id: pid, unit_cost: 1, quantity: 5 })).status === 403, 'caixista nao regista compras (403)');
+  const other = await prisma.product.findFirst({ where: { tenant_id: { not: t } }, select: { id: true } });
+  if (other) ok((await owner.req('POST', '/api/inventory/stock', { product_id: other.id, unit_cost: 1, quantity: 5 })).status === 404, 'produto de outra loja: 404');
+
+  // Retirar (quantidade positiva no ecra = delta negativo): sai por FEFO.
+  const out = await owner.req('PATCH', '/api/products/' + pid + '/stock', { delta: -60, reason: 'contagem fisica' });
+  ok(out.status === 200, 'retirar 60 com motivo (200)', out);
+  const after = await prisma.stockLot.findMany({ where: { product_id: pid }, orderBy: [{ expiry_date: 'asc' }, { created_at: 'asc' }] });
+  ok(after.reduce((s, l) => s + l.quantity_remaining, 0) === 43 && after[0].quantity_remaining === 0 && after[1].quantity_remaining === 40, 'saem primeiro as 50 que expiram antes, depois 10 das outras; ficam 43', after.map((l) => l.quantity_remaining));
+  ok((await owner.req('PATCH', '/api/products/' + pid + '/stock', { delta: -44, reason: 'contagem fisica' })).status === 400, 'retirar mais do que ha: 400');
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22 };
 
 (async () => {
   await prisma.ready();

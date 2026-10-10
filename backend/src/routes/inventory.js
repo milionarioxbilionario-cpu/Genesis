@@ -16,12 +16,20 @@ const supplierSchema = z.object({
   is_active: z.boolean().optional().default(true)
 });
 
+// Compra de um produto que ja existe (Fase 8.3, "Ajuste manual" > Adicionar):
+// uma quantidade com uma validade, ou varias linhas `lots` (ex.: 50 un. a 17/10
+// e 50 a 20/10). Cada linha e uma entrada + um lote; com fornecedor, o custo de
+// entrega conta uma visita por dia (services/monthlyDeductions.js).
 const stockEntrySchema = z.object({
   product_id: z.string().uuid(),
-  quantity: z.number().int().nonnegative(),
+  quantity: z.number().int().nonnegative().optional(),
   unit_cost: z.number().int().nonnegative(),
   supplier_id: z.string().uuid().nullable().optional(),
   expiry_date: expiryDateSchema,
+  lots: z.array(z.object({
+    quantity: z.number().int().positive('quantidade do lote tem de ser maior que zero').max(1_000_000),
+    expiry_date: expiryDateSchema,
+  })).min(1).max(20, 'no máximo 20 validades').optional(),
   reason: z.string().optional().default('purchase')
 });
 
@@ -87,7 +95,11 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
       const supplier = await prisma.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: req.user.tenantId } });
       if (!supplier) return res.status(400).json({ error: 'Fornecedor não pertence a esta loja' });
     }
-    if (data.quantity <= 0) return res.status(400).json({ error: 'Quantidade tem de ser maior que zero' });
+    const lots = data.lots
+      ? data.lots.map((l) => ({ quantity: l.quantity, expiry_date: l.expiry_date || null }))
+      : [{ quantity: data.quantity || 0, expiry_date: data.expiry_date || null }];
+    const total = lots.reduce((sum, l) => sum + l.quantity, 0);
+    if (!(total > 0)) return res.status(400).json({ error: 'Quantidade tem de ser maior que zero', code: 'INVALID_QUANTITY' });
 
     const result = await prisma.$transaction(async (tx) => {
       // Increment atomico (antes: valor absoluto lido fora da transaccao — uma
@@ -95,8 +107,9 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
       const updatedProduct = await tx.product.update({
         where: { id: data.product_id },
         data: {
-          stock_qty: { increment: data.quantity },
-          cost_price: data.unit_cost
+          stock_qty: { increment: total },
+          cost_price: data.unit_cost,
+          ...(lots.some((l) => l.expiry_date) ? { has_expiry: true } : {}),
         }
       });
       if (data.unit_cost !== product.cost_price) {
@@ -106,24 +119,35 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
         } });
       }
 
-      const newEntry = await tx.stockEntry.create({
-        data: {
-          tenant_id: req.user.tenantId,
-          product_id: data.product_id,
-          quantity: data.quantity,
-          unit_cost: data.unit_cost,
-          supplier_id: data.supplier_id || null,
-          recorded_by: req.user.userId,
-          created_at: new Date()
-        }
-      });
-      // Cada compra e um lote com a sua validade (FEFO nas saidas).
-      const lot = await addLot(tx, {
-        tenantId: req.user.tenantId, productId: product.id, quantity: data.quantity,
-        expiryDate: data.expiry_date || null, unitCost: data.unit_cost, stockEntryId: newEntry.id,
-      });
+      // Cada linha e um lote com a sua validade (FEFO nas saidas).
+      const entries = [];
+      const created = [];
+      for (const l of lots) {
+        const entry = await tx.stockEntry.create({
+          data: {
+            tenant_id: req.user.tenantId,
+            product_id: data.product_id,
+            quantity: l.quantity,
+            unit_cost: data.unit_cost,
+            supplier_id: data.supplier_id || null,
+            recorded_by: req.user.userId,
+            created_at: new Date()
+          }
+        });
+        entries.push(entry);
+        created.push(await addLot(tx, {
+          tenantId: req.user.tenantId, productId: product.id, quantity: l.quantity,
+          expiryDate: l.expiry_date, unitCost: data.unit_cost, stockEntryId: entry.id,
+        }));
+      }
+      await tx.auditLog.create({ data: {
+        tenant_id: req.user.tenantId, user_id: req.user.userId, action: 'STOCK_ENTRY', entity_type: 'product', entity_id: product.id,
+        old_value: JSON.stringify({ stock_qty: product.stock_qty, cost_price: product.cost_price }),
+        new_value: JSON.stringify({ name: product.name, stock_qty: updatedProduct.stock_qty, added: total, lots, unit_cost: data.unit_cost, supplier_id: data.supplier_id || null }),
+        ip_address: req.ip || '0.0.0.0',
+      } });
 
-      return { product: updatedProduct, entry: newEntry, lot };
+      return { product: updatedProduct, entry: entries[0], lot: created[0], entries, lots: created };
     });
 
     return res.status(201).json(result);

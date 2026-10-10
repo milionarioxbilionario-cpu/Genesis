@@ -1770,3 +1770,37 @@ FUNCIONOU?
   Kleyton). Testes no browser do balcao, dos relatorios e dos produtos
   passaram.
 - Ainda NAO publicado. Diz-me se publico, para testares no telemovel.
+
+==========================================================================
+10/10/2026 (noite) — Publiquei o turno por dia e fiz a 8.3 (stock)
+==========================================================================
+PUBLICADO
+- O fecho de turno por dia ja esta em genesismz.com e no GitHub.
+  Testei o balcao no proprio site e passou.
+- Na primeira corrida apareceu uma vez um erro escondido da biblioteca
+  de PDF no painel do dono. Nas corridas seguintes nao voltou. Fica
+  anotado para vigiar.
+
+O QUE MUDOU NO SEPARADOR STOCK (8.3, ainda NAO publicado)
+1. "Entrada de stock" agora e so para produtos NOVOS: abre o mesmo
+   formulario do "Novo produto" (nome, preco de compra e de venda, icone,
+   validades, fornecedor opcional).
+2. "Ajuste manual" e para produtos que ja tem:
+   - escolhe o produto e ve o stock actual;
+   - carrega em "Adicionar" ou "Retirar" e escreve so numeros
+     positivos (nada de "-3");
+   - Adicionar: pode separar validades (ex.: 50 a 17/10 e 50 a 20/10),
+     pôr o custo por unidade e o fornecedor. Mostra "Fica com N un.";
+   - Retirar: quantidade e motivo. Nao deixa tirar mais do que ha.
+     Saem primeiro as unidades que expiram antes;
+   - o botao diz o que vai acontecer: "Adicionar 20 un." ou
+     "Retirar 5 un.".
+3. Cada compra fica agora registada na auditoria (antes nao ficava).
+4. Uma compra com varias validades ao mesmo fornecedor conta UMA visita
+   (custo de entrega) no relatorio do mes, nao uma por validade.
+
+FUNCIONOU?
+- Sim nos testes: verificacao do sistema do stock passou (18 de 18 na
+  parte nova). O teste no browser do stock passou 18 de 18, tambem no
+  tamanho de iPhone.
+- Ainda NAO publicado: diz-me se publico.
