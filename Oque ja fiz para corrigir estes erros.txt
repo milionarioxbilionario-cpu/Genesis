@@ -1713,3 +1713,60 @@ UMA COISA PARA DECIDIRES
   um funcionario entrarem varias vezes no mesmo dia pela mesma rede da
   loja, podem ficar bloqueados 15 minutos. Queres que so conte as
   tentativas erradas?
+
+==================================================================
+10/10/2026 — 8.2 PUBLICADA + FECHO DE TURNO: O QUE ACONTECEU E O
+TURNO POR DIA
+==================================================================
+
+PUBLICACAO
+- A 8.2 (icone, validades, botao Stock, sugestoes no teu painel) esta
+  em genesismz.com e no GitHub. Corri o teste no proprio site, como
+  dono e como super admin, e passou.
+
+O QUE ACONTECEU NOS TEUS FECHOS (vi os registos reais)
+1. Wendy, 1 300 MT aceite com "+21": a venda de 1 279 MT foi em
+   dinheiro e a de 75 MT foi em e-Mola. O fecho so conta o dinheiro
+   vivo da gaveta (o e-Mola esta no telemovel, nao na gaveta). Por isso
+   o esperado era 1 279 e sobraram 21. Imprimir ou nao o recibo nao tem
+   nada a ver. O sistema estava certo, mas nao o explicava.
+2. Kleyton, "abaixo do esperado" sem vender nada: no dia 06/10 (antes
+   da correccao de 09/10) ele vendeu 85 MT e 75 MT DEPOIS de fechar o
+   turno. Essas vendas ficaram para o turno seguinte: 160 MT, e depois
+   275 MT com as tuas vendas de 85 + 30. Nao foram os testes de 2 790.
+
+O QUE FIZ
+1. Turno por dia: cada caixista tem um fecho por dia (a meia-noite de
+   Maputo).
+   - Fechou hoje: so volta a vender hoje com o PIN do dono.
+   - No dia seguinte o perfil abre sozinho, sem PIN.
+   - Bottle store 24/24: se entrou as 15h e so fecha as 2h da manha,
+     esse fecho conta como o do dia anterior. As 15h desse dia ainda
+     pode abrir sem PIN; ao fechar outra vez (ex.: 22h) gasta o fecho
+     desse dia.
+2. O esperado passa a contar so desde que o turno abriu. Vendas soltas
+   de antes (como as de 06/10) ja nao entram.
+3. No fecho aparece em destaque: "Conte so o dinheiro vivo. M-Pesa,
+   e-Mola e cartao nao entram nesta conta."
+4. Antes de fechar, o terminal pergunta sempre "Contou X MT. Confirma?"
+   com o valor em grande. Apanha enganos como escrever 20 000 em vez
+   de 200.
+   - Mudei uma coisa na tua escolha: so avisar quando passa 10% do
+     esperado deixava o caixista descobrir quanto devia ter na gaveta.
+     Assim nao da pistas.
+5. Depois de fechado mostra a conta: esperado em dinheiro, contado,
+   diferenca e o e-Mola / M-Pesa / cartao a parte.
+6. Apaguei os fechos de teste da loja do Kleyton, como pediste. As
+   vendas ficam. O Kleyton e a Wendy comecam um turno novo, com 0 MT
+   esperado.
+
+ATENCAO AO RELOGIO DESTE PC
+- Este computador esta 1 hora atrasado. Ja aconteceu antes (8 horas,
+  a 28/09). Num PowerShell de administrador: w32tm /resync
+
+FUNCIONOU?
+- Sim nos testes: verificacao completa do sistema 334 de 334 (inclui o
+  turno por dia: mesmo dia, dia seguinte, caso 24/24 e o caso real do
+  Kleyton). Testes no browser do balcao, dos relatorios e dos produtos
+  passaram.
+- Ainda NAO publicado. Diz-me se publico, para testares no telemovel.

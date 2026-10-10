@@ -85,6 +85,9 @@ export function CloseShiftDialog({ shift, onClose, onDone, syncNow }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Antes de enviar pede sempre 'Contou X MT. Confirma?' (so no ecra): apanha
+  // engano de teclado (ex.: 20 000 em vez de 200) sem revelar o esperado.
+  const [confirming, setConfirming] = useState(false);
   async function submit() {
     setBusy(true); setError('');
     try {
@@ -103,6 +106,8 @@ export function CloseShiftDialog({ shift, onClose, onDone, syncNow }) {
     } finally { setBusy(false); }
   }
   const noShift = shift && shift.open === false;
+  const s = result?.summary;
+  const dayLabel = (iso) => (iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '');
   return (
     <Dialog
       open
@@ -110,22 +115,47 @@ export function CloseShiftDialog({ shift, onClose, onDone, syncNow }) {
       title="Fechar turno"
       description="Conte o dinheiro da gaveta e introduza o total. O sistema só compara depois."
       onClose={onClose}
-      footer={result?.ok ? <Button variant="primary" onClick={onClose}>Concluir</Button> : (
-        <><Button onClick={onClose}>Cancelar</Button><Button variant="primary" loading={busy} disabled={noShift || shift?.locked || result?.locked} onClick={submit}>Confirmar contagem</Button></>
+      footer={result?.ok ? <Button variant="primary" onClick={onClose}>Concluir</Button> : confirming ? (
+        <><Button onClick={() => setConfirming(false)}>Corrigir</Button><Button variant="primary" loading={busy} onClick={() => { setConfirming(false); submit(); }} autoFocus>Sim, fechar o turno</Button></>
+      ) : (
+        <><Button onClick={onClose}>Cancelar</Button><Button variant="primary" disabled={noShift || shift?.locked || result?.locked} onClick={() => { setError(''); setConfirming(true); }}>Confirmar contagem</Button></>
       )}
     >
       {shift?.locked || result?.locked ? (
         <Alert tone="danger" title="Perfil bloqueado">Três contagens abaixo do esperado. O dono tem de desbloquear este perfil no painel (Equipa).</Alert>
       ) : noShift && !result ? (
-        <Alert tone="info">O turno já está fechado. Para vender de novo, o dono abre um turno novo com o PIN dele.</Alert>
+        <Alert tone="info">Já fechou o turno de hoje. Abre sozinho amanhã; para vender hoje, o dono abre um turno novo com o PIN dele.</Alert>
       ) : result?.ok ? (
-        <Alert tone="positive" title="Turno fechado">{result.message} Este perfil só volta a vender quando o dono abrir um turno novo.</Alert>
+        <>
+          <Alert tone="positive" title={result.open_again ? `Turno de ${dayLabel(result.shift_day)} fechado` : 'Turno de hoje fechado'}>
+            {result.exact ? 'Valor certo.' : 'O valor a mais fica registado para o dono.'} {result.open_again ? 'O turno de hoje já pode começar.' : 'Abre sozinho amanhã; hoje só com o PIN do dono.'}
+          </Alert>
+          {s && (
+            <div className="mt-3 rounded border border-border p-3">
+              <KeyValue label="Esperado em dinheiro" value={money(s.expected_cash)} />
+              <KeyValue label="Contado na gaveta" value={money(s.counted)} />
+              <KeyValue label="Diferença" value={money(s.difference, { sign: true })} strong tone={s.difference === 0 ? 'positive' : 'warning'} />
+              {Object.keys(s.other || {}).length > 0 && (
+                <>
+                  <div className="my-1 border-t border-border" />
+                  {Object.entries(s.other).map(([m, v]) => <KeyValue key={m} label={`${PAYMENT_LABEL[m] || m} (não entra na gaveta)`} value={money(v)} />)}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      ) : confirming ? (
+        <div className="text-center">
+          <p className="text-base text-ink-2">Contou na gaveta</p>
+          <p className="num my-2 text-3xl font-semibold text-ink">{money(counted)}</p>
+          <p className="text-base text-ink-2">Confirma este valor?</p>
+        </div>
       ) : (
         <>
           {result && !result.ok && <Alert tone="warning" className="mb-3">{result.error}</Alert>}
           {error && <Alert tone="danger" className="mb-3">{error}</Alert>}
+          <Alert tone="info" className="mb-3">Conte <strong>só o dinheiro vivo</strong> da gaveta. M-Pesa, e-Mola e cartão não entram nesta conta.</Alert>
           <MoneyInput label="Dinheiro contado na gaveta" valueCents={counted} onChangeCents={setCounted} autoFocus />
-          <p className="mt-2 text-xs text-ink-muted">Conta só o dinheiro físico. Vendas por cartão e M-Pesa não entram na gaveta.</p>
         </>
       )}
     </Dialog>

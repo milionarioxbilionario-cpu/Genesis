@@ -43,4 +43,4 @@ function daysUntilExpiry(expiryDate, now = new Date()) {
   return Math.round((Date.parse(dayOfDate(expiryDate)) - Date.parse(dayInMaputo(now))) / 86400000);
 }
 
-module.exports = { sortFefo, allocateFefo, isExpired, daysUntilExpiry };
+module.exports = { sortFefo, allocateFefo, isExpired, daysUntilExpiry, dayInMaputo };
