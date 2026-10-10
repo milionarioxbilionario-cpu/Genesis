@@ -162,6 +162,17 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `backend/src/routes/admin.js` (aprovar pedido) | Email do pedido já com conta → 409 `EMAIL_IN_USE`, pedido continua pendente, nenhuma conta criada (antes inventava `<nome>.<hora>@genesis.co.mz`) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js 11` |
 | Pedido **sem** email | Continua a gerar um login `<loja>@genesis.co.mz` (domínio que não é nosso; o reset de senha nunca lhe chega) | ⚠️ DECISÃO DO FUNDADOR em aberto: tornar o email obrigatório no pedido, ou outro identificador | 09/10 — leitura |
 
+### Fase 8.1 — iPhone: PDF dos relatórios, recibo sem janela nova, ranking por níveis (10/10/2026) — **local, ainda NÃO publicado em genesismz.com**
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| `backend/src/services/ranking.js` + `services/reports.js` (`top_products`, `top_profitable`) | Ranking por níveis (decisão do fundador 10/10): empates partilham o lugar; até 3 níveis; nunca o nível mais baixo, excepto se só houver um; no lucro só entram valores > 0. Antes: ordenar e cortar em 10 | ✅ CONFIRMADO FUNCIONAL | 10/10 — `ranking.test.js` 6/6; `fase8_1.mjs`: venda 3/2/1/1 → API e ecrã com 2M (1.º) e Coca-Cola (2.º); lucros 66/34/30/15 → 3 lugares sem Sumol |
+| `frontend/src/utils/pdf/{deliver,text,receiptPdf,reportPdf}.js`, `components/{PdfButton,PdfReadyDialog}.jsx`, `utils/timelineText.js` | PDF gerado no browser (jsPDF 4.2.1 + autotable 5.0.8, carregados só no clique). Telemóvel/tablet (toque ou app do ecrã principal): folha de partilha do sistema (imprimir, Ficheiros, WhatsApp); se o iPhone recusar por o toque já não estar "fresco" → diálogo "PDF pronto" com novo toque. Computador: descarga. Nomes: `Relatório diário - <Loja> (DD-MM-AAAA).pdf`, `Recibo_<n> - <Loja> (DD-MM-AAAA - HH-MM-SS).pdf` (`:` não é válido em nomes de ficheiro) | ✅ CONFIRMADO no Chromium (descarga + partilha emulada) · ⚠️ NÃO VERIFICADO no iPhone real (folha de partilha a sério) | 10/10 — `fase8_1.mjs` 32/32; PDF diário e talão desenhados com pdf.js e revistos à vista |
+| `frontend/src/pages/owner/Reports.jsx` | Botão "PDF / imprimir" em cada separador (substitui `window.print()`, que não faz nada na app do ecrã principal do iPhone); o PDF leva o rastreio do período (até 1000 movimentos) | ✅ CONFIRMADO FUNCIONAL (Chromium) | 10/10 — `fase8_1.mjs`, `reports.mjs` |
+| `frontend/src/utils/receiptPrinter.js` + `PosDialogs.jsx` + `SaleDrawer.jsx` | Recibo: telemóvel/tablet → PDF de talão (80 mm) pela partilha; computador → impressora série (se houver) ou impressão numa moldura escondida na própria página. **Nunca abre janela nova** (antes `window.open` prendia o utilizador na app do ecrã principal, sem botão de voltar) | ✅ CONFIRMADO no Chromium · ⚠️ NÃO VERIFICADO no iPhone real | 10/10 — `fase8_1.mjs` (0 janelas novas em tablet, PC e iPhone emulado) |
+| Grelhas dos ecrãs do dono (`Reports`, `Home`, `Products`, `Settings`, `Onboarding`) | `grid-cols-1` no telemóvel: uma tabela larga esticava os Relatórios para 426 px num ecrã de 390 → o telefone afastava o zoom e o rodapé das gavetas (botões do recibo) ficava abaixo do ecrã visível | ✅ CONFIRMADO nos Relatórios (diário/semanal/mensal cabem em 390 px) · ⚠️ restantes ecrãs corrigidos por precaução, sem medição com dados largos | 10/10 — `fase8_1.mjs` |
+| `vite.config.js` (workbox `globIgnores`) | As partes opcionais do jsPDF (html2canvas, DOMPurify, canvg ≈ 380 KB) não entram na cache offline; o gerador (≈ 420 KB) entra, para recibos offline | ✅ CONFIRMADO | 10/10 — `dist/sw.js` sem esses ficheiros; `index.html` só pré-carrega o índice |
+| `window.open('')` em `ShoppingLists.jsx:79` e `MonthCloseDialog.jsx:68` (WhatsApp) | Mesmo padrão de janela em branco; na app do ecrã principal do iPhone pode prender como o recibo | ⚠️ NÃO VERIFICADO (fora desta mini-meta) | 10/10 — grep |
+
 ---
 
 ## Parte B — JORNAL CRONOLÓGICO
@@ -675,3 +686,38 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Não feito: publicar a 7.3 e o push (pedem confirmação); Safari real do iPhone.
 - Segue-se: paragem entre fases.
 
+
+### [2026-10-10] — Novo teste do fundador no iPhone (lista de pedidos, por planear)
+- Recebido com 9 capturas. Nada implementado ainda; registado para não se perder (REGRA 8: pedidos explícitos do fundador).
+- Verificado no código antes de planear: não existe página de auditoria para o dono; `DemandCapture` exige `product_id` (não aceita produto fora do catálogo nem quantidade/preço); o admin só ACRESCENTA ao catálogo-mestre (`POST /api/master_catalogs`), não edita; "Imprimir / PDF" dos relatórios usa `window.print()` (não funciona na app do ecrã principal do iPhone); recibo usa Web Serial (não existe no iPhone).
+- Pedidos:
+  1. Admin: editar produtos do catálogo-mestre (nome, custo, preço).
+  2. Auditoria do dono: página nova com tudo (stock, edições, PINs…), filtros hoje/semana/mês e por tipo, abrir cada registo; retenção (fica o mês corrente + o anterior, o resto apaga-se) — modelo exacto por decidir.
+  3. Vendas perdidas no terminal: o caixista regista também produtos fora do catálogo (texto livre, quantidade, preço unitário opcional); "algo semelhante no super admin" — por esclarecer.
+  4. Formulário de produto: escolher o ícone (relâmpago, gota…); validade registada ali mesmo; o mesmo no "Novo produto"; ver o stock actual; botão "Stock" que guarda e abre o Stock com o produto escolhido.
+  5. Stock: "Entrada de stock" passa a ser só para produtos NOVOS (nome, custo, preço, validade com vários lotes — ex.: 50 un. a 17, 50 un. a 20 —, fornecedor opcional); "Ajuste manual" com botões Adicionar/Retirar e quantidade positiva (sem escrever −50).
+  6. 🔴 iPhone (app no ecrã principal): "Imprimir / PDF" dos relatórios não funciona; o recibo abre sem botão de voltar e prende o utilizador.
+  7. Definições: dia da semana do relatório semanal e hora dos relatórios diário/semanal/mensal (envio por WhatsApp — o envio em si ainda não existe, exige Twilio).
+  8. Leitor de código de barras e impressora: opção de ligar visível (formulário de produto, POS); ao entrar no perfil, perguntar pelos dispositivos com "Não tenho" para saltar.
+  9. 🔴 Relatório: "mais vendidos" e "mais rentáveis" mostram todos os produtos vendidos (teste com 5 produtos → os 5 nas duas listas). Causa confirmada: `services/reports.js:110-112` ordena e corta em 10, sem limiar. Pedido: ranking por níveis (ex.: 10, 9, 8 → top 3; vendas de 2 e de 1 → só os de 2) — regra exacta por confirmar.
+- Segue-se: o fundador confirma a ordem e responde às dúvidas; uma fase de cada vez.
+
+### [2026-10-10] — Pedido adicional do fundador: leitura de código de barras pela câmara + códigos por unidade (por planear, entra na 8.8)
+- Nada implementado; registado para não se perder (REGRA 8: pedido explícito do fundador).
+- Pedido:
+  1. No telemóvel, ler o código de barras com a câmara; ao apontar, se o código estiver registado num produto, o produto entra logo no carrinho (rápido e automático).
+  2. Código não registado → mensagem "Produto não cadastrado".
+  3. Stock desce sempre, com ou sem leitura; cada linha da venda regista se o código foi lido ou não.
+  4. Em Stock: registar códigos por unidade (ex.: recebeu 3 águas → regista 3 códigos); na venda sai a unidade cujo código foi lido; vender sem ler conta como uma das unidades por ler (registou 3, vendeu 1 sem ler → espera só 2 leituras); vender todo o stock sem leituras apaga os códigos guardados desse produto.
+- Dúvida a decidir antes de implementar o ponto 4: o código do fabricante (EAN) é igual em todas as unidades do mesmo produto (as 3 Águas Namaacha 1,5L têm o mesmo número), por isso o controlo unidade a unidade só funciona com etiquetas próprias com código único impressas pelo Genesis. Proposta: um código por produto (EAN) + câmara + marca "lido/não lido" por linha; etiquetas únicas só se o fundador quiser esse controlo em produtos específicos.
+- Nota técnica: o Safari do iPhone não tem `BarcodeDetector`; a leitura pela câmara precisa de uma biblioteca (ex.: ZXing).
+- Segue-se: o fundador decide o ponto 4; implementação na Fase 8.8 (dispositivos), depois das fases anteriores.
+
+### [2026-10-10] — Fase 8.1: PDF dos relatórios e recibo no iPhone + ranking por níveis
+- Decisões do fundador (10/10): ordem "defeitos primeiro"; ranking "top 3 níveis, sem o último"; auditoria "dono escolhe, mínimo 2 meses"; vendas perdidas no admin "pedidos fora do catálogo" (sem dizer a loja).
+- Ficheiros: novos `backend/src/services/ranking.js`, `backend/tests/ranking.test.js`, `frontend/src/utils/pdf/{deliver,text,receiptPdf,reportPdf}.js`, `frontend/src/utils/timelineText.js`, `frontend/src/components/{PdfButton,PdfReadyDialog}.jsx`, `frontend/tests/e2e/fase8_1.mjs`; alterados `backend/src/services/reports.js`, `frontend/src/utils/receiptPrinter.js`, `pages/pos/PosDialogs.jsx`, `components/SaleDrawer.jsx`, `pages/owner/{Reports,Home,Products,Settings,Onboarding}.jsx`, `vite.config.js`, `package.json` (+ `jspdf@4.2.1`, `jspdf-autotable@5.0.8`).
+- Causas: (1) `window.print()` não faz nada na app do ecrã principal do iPhone; (2) o recibo abria `window.open` → janela sem botão de voltar; (3) achado na prova: os Relatórios tinham 426 px num ecrã de 390 (grelha sem `grid-cols-1`), o telefone afastava o zoom e o rodapé da gaveta do recibo ficava fora do ecrã visível — pode ter contribuído para o "sem botão de voltar"; (4) ranking cortava em 10 sem limiar.
+- Erros meus apanhados na prova: `manualChunks` para o jsPDF fez o `index.html` pré-carregar 422 KB em todas as páginas → revertido. No teste: contava a página inicial como "janela nova"; reutilizava a loja de teste (quantidades a dobrar); a captura de página inteira do Playwright desfaz por momentos a emulação de toque (o recibo seguia o caminho do computador) → no telemóvel só se captura o ecrã visível. As minhas sondas repetidas esgotaram o limite de logins do backend de teste (4100) → reiniciei só esse processo.
+- Prova: `ranking.test.js` 6/6; restantes unitários backend (monthlyDeductions 8, paymentMethods 4, fefo 7, restock 7, shoppingList 5, monthClose 6) e frontend (search + offline_queue 12) a passar; `vite build` OK; `fase8_1.mjs` **32/32**, 0 erros JS (2×: antes e depois do último retoque); `reports.mjs` passou, 0 erros JS; `flows.mjs` todos os fluxos passaram, 0 erros JS (lojas de teste novas em cada um, apagadas); PDF diário (2 páginas) e talão desenhados com pdf.js e revistos (acentos certos, sem caracteres partidos, ranking certo).
+- Não feito: iPhone real (só o fundador); publicar; `window.open('')` do WhatsApp (mesmo padrão, registado em Parte A).
+- Segue-se: paragem — o fundador testa; depois 8.2 (formulário do produto: ícone, validade, stock, botão Stock).

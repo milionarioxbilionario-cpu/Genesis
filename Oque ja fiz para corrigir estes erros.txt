@@ -1601,3 +1601,50 @@ PRECISO DE UMA DECISAO TUA
   login do tipo nomedaloja@genesis.co.mz. Esse endereco nao recebe
   emails (nem o de recuperar a senha). Opcoes: tornar o email
   obrigatorio no pedido de conta, ou outra ideia tua.
+
+==================================================================
+10/10/2026 — FASE 8.1: RELATORIOS EM PDF E RECIBO NO IPHONE + RANKING
+==================================================================
+
+O QUE ESTAVA MAL (do teu teste no iPhone)
+1. "Imprimir / PDF" dos relatorios nao fazia nada na app do ecra
+   principal do iPhone.
+2. Ao pedir o recibo, abria-se uma janela nova sem botao de voltar e
+   ficavas preso nela.
+3. "Mais vendidos" e "mais rentaveis" mostravam todos os produtos
+   vendidos (com 5 produtos, apareciam os 5).
+4. Descoberto durante a prova: no telemovel, a pagina dos relatorios
+   ficava mais larga do que o ecra. O telefone afastava o zoom e os
+   botoes de baixo do recibo ficavam fora do ecra.
+
+O QUE FIZ
+1. O botao passou a chamar-se "PDF / imprimir" e existe em cada
+   separador (diario, semanal, mensal). No telemovel abre a folha de
+   partilha do iPhone, de onde imprimes, guardas em Ficheiros ou
+   envias por WhatsApp. No computador descarrega o ficheiro. Nome:
+   "Relatorio diario - <Loja> (10-10-2026).pdf". O PDF leva tudo:
+   resumo, rankings, pagamentos, perdas, fechos e o rastreio.
+2. O recibo ja nao abre janela nova. No telemovel/tablet sai um PDF
+   em formato de talao pela folha de partilha. No computador imprime
+   sem sair da pagina. Nome: "Recibo_001 - <Loja> (10-10-2026 -
+   14-13-41).pdf". Nas horas usei "-" porque ":" nao e permitido em
+   nomes de ficheiro.
+3. Ranking como escolheste: ate 3 lugares, empates partilham o lugar,
+   e o nivel mais baixo nao aparece (so aparece se todos venderam o
+   mesmo). Nos "mais rentaveis" so entram produtos que deram lucro.
+4. A pagina passou a caber no ecra do telemovel (corrigi tambem o
+   mesmo padrao noutras paginas do painel).
+
+FUNCIONOU?
+- Sim nos testes: teste do ranking 6 de 6; teste no browser 32 de 32
+  (tablet, computador e iPhone simulado, nenhuma janela nova);
+  testes antigos dos relatorios e do balcao a passar. Abri o PDF e o
+  talao gerados e conferi a vista: acentos certos, ranking certo.
+- NAO testado num iPhone verdadeiro. Tens de confirmar tu depois de
+  publicado: carregar em "PDF / imprimir" e em "Imprimir recibo".
+- Ainda nao esta publicado em genesismz.com.
+
+FICOU POR FAZER
+- O botao "Enviar por WhatsApp" da lista de compras e do fecho do mes
+  usa o mesmo tipo de janela nova. Pode prender da mesma forma no
+  iPhone. Fica anotado para veres no teste.

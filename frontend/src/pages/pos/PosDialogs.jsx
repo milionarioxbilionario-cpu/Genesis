@@ -4,7 +4,8 @@ import { CheckCircle2, Printer } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import { newUuid, SYNC_STATE } from '../../utils/syncPolicy';
-import { printReceipt, saleVerifyUrl } from '../../utils/receiptPrinter';
+import { preloadReceiptPdf, printReceipt, saleVerifyUrl } from '../../utils/receiptPrinter';
+import PdfReadyDialog from '../../components/PdfReadyDialog';
 import { foldText, nameMatches } from '../../utils/search';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
 import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Select, Spinner, useToast } from '../../components/ui';
@@ -31,6 +32,8 @@ export function AuthorizationPinDialog({ title, description, error, onCancel, on
 export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   const [qr, setQr] = useState('');
   const [printing, setPrinting] = useState(false);
+  const [pdfFile, setPdfFile] = useState(null);
+  useEffect(() => { preloadReceiptPdf(); }, []);
   useEffect(() => {
     QRCode.toDataURL(saleVerifyUrl(sale.id), { width: 120, margin: 1 }).then(setQr).catch(() => setQr(''));
   }, [sale.id]);
@@ -38,11 +41,12 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   async function print() {
     setPrinting(true);
     try {
-      await printReceipt({
+      const res = await printReceipt({
         shopName: store.name, shopLocation: store.location, cashierName: cashier.name,
         sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, created_at: sale.created_at || new Date().toISOString() },
         items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
       });
+      if (res?.needsTap) setPdfFile(res.file);
     } finally { setPrinting(false); }
   }
   return (
@@ -63,6 +67,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
         {sale.change_given > 0 && <KeyValue label="Troco" value={money(sale.change_given)} strong tone="positive" />}
       </div>
       {qr && <img src={qr} alt="QR de verificação da venda" className="mx-auto mt-3 h-24 w-24" />}
+      <PdfReadyDialog file={pdfFile} onClose={() => setPdfFile(null)} />
     </Dialog>
   );
 }

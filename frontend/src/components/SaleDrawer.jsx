@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Printer } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import { printReceipt } from '../utils/receiptPrinter';
+import { preloadReceiptPdf, printReceipt } from '../utils/receiptPrinter';
+import PdfReadyDialog from './PdfReadyDialog';
 import { money, dateTime, timeSec, PAYMENT_LABEL } from '../utils/format';
 import { Button, Drawer, KeyValue } from './ui';
 
@@ -9,6 +10,15 @@ import { Button, Drawer, KeyValue } from './ui';
 // desconto, pagamento, margem e reimpressao do recibo.
 export default function SaleDrawer({ sale, onClose }) {
   const { tenant } = useOutletContext() || {};
+  const [pdfFile, setPdfFile] = useState(null);
+  useEffect(() => { if (sale) preloadReceiptPdf(); }, [sale]);
+  async function reprint() {
+    const res = await printReceipt({
+      shopName: tenant?.name, shopLocation: tenant?.location, cashierName: sale.cashier?.name,
+      sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
+    });
+    if (res?.needsTap) setPdfFile(res.file);
+  }
   return (
     <Drawer
       open={Boolean(sale)}
@@ -16,10 +26,7 @@ export default function SaleDrawer({ sale, onClose }) {
       title={sale ? `Venda n.º ${String(sale.daily_number || '').padStart(3, '0')}` : ''}
       description={sale ? `${dateTime(sale.created_at)} (${timeSec(sale.created_at)}) · ${sale.cashier?.name || ''}` : ''}
       footer={sale && sale.status !== 'cancelled' && (
-        <Button icon={Printer} onClick={() => printReceipt({
-          shopName: tenant?.name, shopLocation: tenant?.location, cashierName: sale.cashier?.name,
-          sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
-        })}>Reimprimir recibo</Button>
+        <Button icon={Printer} onClick={reprint}>Reimprimir recibo</Button>
       )}
     >
       {sale && (
@@ -40,6 +47,7 @@ export default function SaleDrawer({ sale, onClose }) {
           {sale.change_given > 0 && <KeyValue label="Troco" value={money(sale.change_given)} />}
         </>
       )}
+      <PdfReadyDialog file={pdfFile} onClose={() => setPdfFile(null)} />
     </Drawer>
   );
 }

@@ -104,7 +104,7 @@ export default function Onboarding() {
 
         {step === 0 && (
           <Section title="Que tipo de negócio tem?" description="Carregamos um catálogo de produtos adequado.">
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {BUSINESS_TYPES.map((t) => (
                 <Choice key={t.value} checked={mainType === t.value} onClick={() => { setMainType(t.value); setExtraTypes((x) => x.filter((v) => v !== t.value)); setCatalog(null); }}>{t.label}</Choice>
               ))}
@@ -114,7 +114,7 @@ export default function Onboarding() {
 
         {step === 1 && (
           <Section title="Vende também outra coisa?" description="Opcional. Ex.: bottle store com churrasqueira.">
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {BUSINESS_TYPES.filter((t) => t.value !== mainType && t.value !== 'outro').map((t) => (
                 <Choice key={t.value} checked={extraTypes.includes(t.value)} onClick={() => { setExtraTypes((x) => (x.includes(t.value) ? x.filter((v) => v !== t.value) : [...x, t.value])); setCatalog(null); }}>{t.label}</Choice>
               ))}
