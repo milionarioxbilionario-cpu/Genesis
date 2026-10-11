@@ -6,6 +6,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 
+// Fase 8.8: depois do PIN o terminal pergunta pelos dispositivos; aqui salta-se.
+async function skipDevices(p) {
+  await p.getByText('Venda actual').waitFor({ timeout: 120000 });
+  const b = p.getByRole('button', { name: 'Não tenho — saltar' });
+  if (await b.count()) await b.click();
+}
+
 const BASE = process.env.BASE || 'http://localhost:5180';
 const fx = JSON.parse(fs.readFileSync(process.env.FIXTURE, 'utf8'));
 const SHOTS = process.env.SHOTS || 'shots';
@@ -68,6 +75,7 @@ try {
   await term.getByRole('button', { name: /Carlos/ }).click({ timeout: T });
   await term.getByText('Introduza o seu PIN').waitFor();
   await term.keyboard.type(fx.cashier.pin);
+  await skipDevices(term);
   await term.getByText('Venda actual').waitFor({ timeout: T });
   await term.getByText('Laurentina Preta 550ml').first().waitFor({ timeout: T });
 
@@ -89,7 +97,7 @@ try {
   // Leitor: codigo desconhecido.
   await search.fill('6009999999999');
   await search.press('Enter');
-  await term.getByText('Este código não existe no catálogo').waitFor({ timeout: 5000 });
+  await term.getByText('Produto não cadastrado').waitFor({ timeout: 5000 });
   ok(true, 'codigo desconhecido: aviso em vez de silencio');
   await shot(term, 'p3-pos-codigo-desconhecido');
   // Pesquisa sem acentos (Fase 7.2): 'agua' encontra 'Água Namaacha 1,5L'.

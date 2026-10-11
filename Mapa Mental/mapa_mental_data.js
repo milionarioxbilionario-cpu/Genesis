@@ -1,22 +1,22 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-11T12:43:48.725Z */
+   Gerado em: 2026-10-11T14:59:59.983Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-11T12:43:48.725Z",
+ "generatedAt": "2026-10-11T14:59:59.983Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
   "files": 237,
   "planned": 5,
-  "links": 386,
-  "lines": 32756,
+  "links": 392,
+  "lines": 32934,
   "byStatus": {
-   "ok": 151,
-   "partial": 12,
+   "ok": 155,
+   "partial": 13,
    "broken": 0,
    "planned": 5,
-   "untracked": 74
+   "untracked": 69
   },
   "byGroup": {
    "infra": 12,
@@ -284,8 +284,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 937,
-   "size": 179760,
+   "lines": 958,
+   "size": 187450,
    "externals": [
     "@prisma/client"
    ],
@@ -328,8 +328,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1370,
-   "size": 73171,
+   "lines": 1400,
+   "size": 74131,
    "externals": [
     "nodemailer"
    ],
@@ -1739,8 +1739,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1390,
-   "size": 117805,
+   "lines": 1425,
+   "size": 120880,
    "externals": [
     "dotenv",
     "crypto",
@@ -2264,12 +2264,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
-   "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).",
+   "notes": "11/10/2026 Fase 8.8: codigo de barras unico por loja (409 DUPLICATE_BARCODE). verify_system 27 7/7.",
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 370,
-   "size": 18037,
+   "lines": 381,
+   "size": 19053,
    "externals": [
     "express",
     "zod"
@@ -4083,8 +4083,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 35,
-   "size": 813,
+   "lines": 37,
+   "size": 876,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4188,10 +4188,10 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/components",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "partial",
+   "summary": "Leitura de codigo de barras pela camara (ZXing).",
+   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com camara falsa (EAN-13); camara real nao verificada.",
+   "role": "Camara.",
    "security": "",
    "planned": false,
    "lines": 83,
@@ -4204,8 +4204,11 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/components/ui/index.js"
    ],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/pages/owner/ProductDrawer.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx"
+   ],
+   "inbound": 2,
    "outbound": 1
   },
   {
@@ -4313,8 +4316,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 54,
-   "size": 2749,
+   "lines": 56,
+   "size": 2895,
    "externals": [
     "react",
     "lucide-react",
@@ -5040,12 +5043,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
-   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "notes": "11/10/2026 Fase 8.8: Ler codigo com a camara. fase8_8.mjs, stock.mjs, fase8_2.mjs.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 229,
-   "size": 14882,
+   "lines": 235,
+   "size": 15462,
    "externals": [
     "react",
     "react-router-dom",
@@ -5056,13 +5059,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/imageResize.js",
+    "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/pages/owner/Products.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/Products.jsx",
@@ -5298,10 +5302,10 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
+   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19.",
+   "role": "Terminal.",
    "security": "",
    "planned": false,
    "lines": 83,
@@ -5314,8 +5318,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/devices.js",
     "frontend/src/components/ui/index.js"
    ],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/pages/pos/PosScreen.jsx"
+   ],
+   "inbound": 1,
    "outbound": 2
   },
   {
@@ -5331,8 +5337,8 @@ window.GENESIS_MINDMAP = {
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 336,
-   "size": 18466,
+   "lines": 338,
+   "size": 18604,
    "externals": [
     "react",
     "qrcode",
@@ -5363,17 +5369,20 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "11/10/2026 Fase 8.4: Produto em falta e Quebra no telemovel (icones); Vendas em icone < 640 px. fase8_4.mjs + pos.mjs + flows.mjs.",
+   "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 422,
-   "size": 25050,
+   "lines": 446,
+   "size": 26779,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
+    "frontend/src/components/BarcodeScanner.jsx",
+    "frontend/src/pages/pos/DevicesDialog.jsx",
+    "frontend/src/utils/devices.js",
     "frontend/src/utils/api.js",
     "frontend/src/db/localDb.js",
     "frontend/src/hooks/useOfflineSync.js",
@@ -5388,7 +5397,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx"
    ],
    "inbound": 1,
-   "outbound": 9
+   "outbound": 12
   },
   {
    "id": "frontend/src/pages/pos/Terminal.jsx",
@@ -5399,12 +5408,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
-   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 177,
-   "size": 8472,
+   "lines": 178,
+   "size": 8541,
    "externals": [
     "react",
     "react-router-dom",
@@ -5532,8 +5541,8 @@ window.GENESIS_MINDMAP = {
    "role": "Auditoria do dono.",
    "security": "",
    "planned": false,
-   "lines": 72,
-   "size": 6741,
+   "lines": 73,
+   "size": 6781,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js"
@@ -5551,10 +5560,10 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "partial",
+   "summary": "Preferencias de dispositivos do aparelho; impressora USB (Web Serial) e Bluetooth (Web Bluetooth).",
+   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com impressoras simuladas; hardware real nao verificado.",
+   "role": "Dispositivos.",
    "security": "",
    "planned": false,
    "lines": 116,
@@ -5564,9 +5573,11 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/pdf/deliver.js"
    ],
    "usedBy": [
-    "frontend/src/pages/pos/DevicesDialog.jsx"
+    "frontend/src/pages/pos/DevicesDialog.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/utils/receiptPrinter.js"
    ],
-   "inbound": 1,
+   "inbound": 3,
    "outbound": 1
   },
   {
@@ -5576,10 +5587,10 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte).",
+   "notes": "11/10/2026 Fase 8.8: escpos.test.mjs 4/4; impressora real nao verificada.",
+   "role": "Impressora de recibos.",
    "security": "",
    "planned": false,
    "lines": 79,
@@ -5587,9 +5598,10 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
+    "frontend/src/utils/receiptPrinter.js",
     "frontend/tests/escpos.test.mjs"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
   },
   {
@@ -5856,19 +5868,21 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "partial",
+   "status": "ok",
    "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Antes o window.open prendia o utilizador na app do ecra principal do iPhone. 09/10: QR = origem da app + /verify/<id>. Parcial: a impressora serie pede a porta a cada impressao (Fase 8.8).",
+   "notes": "11/10/2026 Fase 8.8: PDF sempre no aparelho + impressora escolhida (USB/Bluetooth/computador). fase8_8.mjs + fase8_1.mjs.",
    "role": "Recibo (impressao).",
    "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
    "planned": false,
-   "lines": 233,
-   "size": 10869,
+   "lines": 232,
+   "size": 10982,
    "externals": [
     "qrcode"
    ],
    "dependsOn": [
     "frontend/src/utils/pdf/deliver.js",
+    "frontend/src/utils/escpos.js",
+    "frontend/src/utils/devices.js",
     "frontend/src/utils/pdf/receiptPdf.js"
    ],
    "usedBy": [
@@ -5876,7 +5890,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
    "inbound": 2,
-   "outbound": 2
+   "outbound": 4
   },
   {
    "id": "frontend/src/utils/search.js",
@@ -6090,8 +6104,8 @@ window.GENESIS_MINDMAP = {
    "role": "Testes.",
    "security": "",
    "planned": false,
-   "lines": 193,
-   "size": 14021,
+   "lines": 205,
+   "size": 14580,
    "externals": [
     "node:fs",
     "node:path",
@@ -6209,14 +6223,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/tests/e2e",
    "ext": ".mjs",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Browser: dispositivos, camara falsa, impressoras simuladas, PDF.",
+   "notes": "11/10/2026: 19/19.",
+   "role": "Teste E2E.",
    "security": "",
    "planned": false,
-   "lines": 233,
-   "size": 15755,
+   "lines": 240,
+   "size": 16494,
    "externals": [
     "node:fs",
     "node:path",
@@ -6265,8 +6279,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 287,
-   "size": 17479,
+   "lines": 296,
+   "size": 17826,
    "externals": [
     "node:fs",
     "node:path",
@@ -6316,8 +6330,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 162,
-   "size": 9864,
+   "lines": 170,
+   "size": 10170,
    "externals": [
     "node:fs",
     "node:path",
@@ -6341,8 +6355,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 129,
-   "size": 8626,
+   "lines": 137,
+   "size": 8946,
    "externals": [
     "node:fs",
     "node:path",
@@ -8008,6 +8022,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/components/BarcodeScanner.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8196,6 +8214,18 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/components/BarcodeScanner.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/pages/pos/DevicesDialog.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/utils/devices.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
@@ -8293,6 +8323,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/receiptPrinter.js",
    "target": "frontend/src/utils/pdf/deliver.js"
+  },
+  {
+   "source": "frontend/src/utils/receiptPrinter.js",
+   "target": "frontend/src/utils/escpos.js"
+  },
+  {
+   "source": "frontend/src/utils/receiptPrinter.js",
+   "target": "frontend/src/utils/devices.js"
   },
   {
    "source": "frontend/src/utils/receiptPrinter.js",

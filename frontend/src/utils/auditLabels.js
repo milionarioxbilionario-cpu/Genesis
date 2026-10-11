@@ -48,6 +48,7 @@ const WEEKDAY = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 's
 export function fieldValue(k, v) {
   if (v === null || v === undefined || v === '') return '—';
   if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+  if (k === 'image_url') return 'foto';
   if (MONEY.has(k) && typeof v === 'number') return money(v);
   if (k === 'weekly_report_day' && typeof v === 'number') return WEEKDAY[v] || String(v);
   if (k === 'lots' && Array.isArray(v)) return v.map((l) => `${l.quantity} un.${l.expiry_date ? ' até ' + date(l.expiry_date) : ''}`).join(' · ');

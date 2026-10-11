@@ -9,6 +9,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, devices } from '@playwright/test';
 
+// Fase 8.8: depois do PIN o terminal pergunta pelos dispositivos; aqui salta-se.
+async function skipDevices(p) {
+  await p.getByText('Venda actual').waitFor({ timeout: 120000 });
+  const b = p.getByRole('button', { name: 'Não tenho — saltar' });
+  if (await b.count()) await b.click();
+}
+
 const BASE = process.env.BASE || 'http://localhost:5180';
 const fx = JSON.parse(fs.readFileSync(process.env.FIXTURE, 'utf8'));
 const SHOTS = process.env.SHOTS || 'shots';
@@ -71,6 +78,7 @@ try {
   await term.getByRole('button', { name: /Carlos/ }).click({ timeout: T });
   await term.getByText('Introduza o seu PIN').waitFor();
   await term.keyboard.type(fx.cashier.pin);
+  await skipDevices(term);
   await term.getByText('Venda actual').waitFor({ timeout: T });
   ok(await term.evaluate(() => matchMedia('(pointer: coarse)').matches), 'terminal emulado como ecrã de toque');
 
@@ -136,7 +144,11 @@ try {
 
   console.log('\n=== Reimprimir recibo no computador: imprime na própria página ===');
   await owner.getByRole('tab', { name: 'Diário' }).click();
-  await owner.locator('tbody tr', { hasText: 'Venda n.º' }).first().click({ timeout: T });
+  await owner.locator('tbody tr', { hasText: 'Venda n.º' }).first().click({ timeout: 30000 }).catch(async (e) => {
+    await shot(owner, '83-diario-sem-venda');
+    console.log('  (diagnostico) url=' + owner.url() + ' linhas=' + JSON.stringify((await owner.locator('tbody tr').allTextContents()).slice(0, 8)));
+    throw e;
+  });
   await owner.getByRole('button', { name: 'Reimprimir recibo' }).click({ timeout: 10000 });
   const framed = await owner.waitForFunction(() => document.querySelector('iframe[aria-hidden="true"]'), null, { timeout: 10000 }).then(() => true).catch(() => false);
   ok(framed, 'recibo vai para uma moldura escondida (sem window.open)');

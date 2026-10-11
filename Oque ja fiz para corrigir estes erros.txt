@@ -1864,3 +1864,18 @@ Prova: a verificação do servidor deu 17 de 17 e o teste no browser do admin pa
 Prova: a verificação do servidor deu 16 de 16, os testes do horário 8 de 8 e o teste no browser 7 de 7. Corri também a verificação completa do sistema para garantir que a mudança de horário não estragou nada.
 
 4) Corrigi também um erro na auditoria (8.5) que a verificação completa apanhou: depois de eu (super admin) entrar numa loja em modo suporte, a página de auditoria dessa loja deixava de abrir (dava erro). Agora abre, e esse acesso aparece como «Equipa Genesis (suporte)». Testei com a versão antiga (dava erro) e com a nova (funciona).
+
+
+==================== 11/10/2026 — Horários dos relatórios (8.7) publicados e dispositivos (8.8) ====================
+1) Os horários dos relatórios (8.7) estão em genesismz.com. Testei no site e passou. O envio automático continua desligado, como decidiste.
+
+2) Dispositivos (8.8), no terminal do caixista:
+   - Logo depois do PIN aparece «Dispositivos»: o leitor de código de barras (leitor, câmara ou não uso) e a impressora (USB, Bluetooth, a do computador, ou só PDF). Há «Não tenho — saltar». Só pergunta uma vez por caixista naquele aparelho; depois muda-se no botão «Dispositivos», ao lado da pesquisa.
+   - Câmara: o botão com a câmara, ao lado da pesquisa, lê o código de barras. Se o produto estiver registado, entra logo na venda («Coca-Cola adicionado»). Se não estiver, diz «Produto não cadastrado». No formulário do produto (painel do dono) há o mesmo botão para preencher o código de barras.
+   - Impressora: a USB fica lembrada (não volta a perguntar em cada recibo, como acontecia antes), a Bluetooth liga uma vez por sessão, e o recibo sai no formato próprio das mini-impressoras, com o QR de verificação.
+   - Recibo SEMPRE guardado no aparelho, com ou sem impressora: no Android e no computador o PDF é descarregado; no iPhone abre a partilha com «Guardar em Ficheiros». No iPhone, descarregar diretamente prende a app (o problema que corrigimos na 8.1).
+   - Dois produtos da mesma loja já não podem ter o mesmo código de barras (senão a câmara não sabia qual pôr).
+   - Limites dos telemóveis: o iPhone não deixa nenhum browser ligar-se a impressoras. Aí o recibo vai em PDF para a app da impressora. Impressoras Bluetooth antigas («clássicas») também não ligam pelo browser.
+
+Prova: o teste no browser deu 19 de 19, com uma câmara simulada a mostrar um código de barras e impressoras simuladas que guardam o que receberiam. Os testes antigos do terminal continuam a passar.
+O que falta, e só tu podes fazer: experimentar com a câmara real do telemóvel e com uma impressora USB e outra Bluetooth de verdade.

@@ -60,6 +60,14 @@ const createProductSchema = productSchema.extend({
   supplier_id: z.string().min(1).nullish(),
 });
 
+// Fase 8.8: a camara do telemovel poe no carrinho o produto do codigo lido —
+// dois produtos activos com o mesmo codigo na mesma loja tornavam isso ambiguo.
+async function assertBarcodeFree(tx, tenantId, barcode, exceptId) {
+  if (!barcode) return;
+  const other = await tx.product.findFirst({ where: { tenant_id: tenantId, barcode, is_active: true, ...(exceptId ? { NOT: { id: exceptId } } : {}) }, select: { name: true } });
+  if (other) { const e = new Error(`O código ${barcode} já é do produto «${other.name}».`); e.statusCode = 409; e.code = 'DUPLICATE_BARCODE'; throw e; }
+}
+
 router.post('/', auth, requireRole('owner'), async (req, res) => {
   try {
     const data = createProductSchema.parse(req.body);
@@ -71,6 +79,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
     const hasExpiry = Boolean(data.has_expiry || lots.some((l) => l.expiry_date));
 
     const product = await prisma.$transaction(async (tx) => {
+      await assertBarcodeFree(tx, tenantId, data.barcode ? data.barcode.trim() : null);
       if (data.supplier_id) {
         const supplier = await tx.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: tenantId } });
         if (!supplier) { const e = new Error('Fornecedor não pertence a esta loja'); e.statusCode = 400; throw e; }
@@ -80,7 +89,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
           tenant: { connect: { id: tenantId } },
           name: data.name.trim(),
           category: data.category,
-          barcode: data.barcode || null,
+          barcode: (data.barcode || '').trim() || null,
           image_url: data.image_url || null,
           icon: data.icon || null,
           cost_price: data.cost_price,
@@ -111,7 +120,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos', details: err.errors });
     }
-    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
     console.error('Create product error', err);
     return res.status(500).json({ error: 'Erro ao criar produto' });
   }
@@ -198,7 +207,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     const updateData = {};
     if (typeof data.name !== 'undefined') updateData.name = data.name;
     if (typeof data.category !== 'undefined') updateData.category = data.category;
-    if (typeof data.barcode !== 'undefined') updateData.barcode = data.barcode || null;
+    if (typeof data.barcode !== 'undefined') updateData.barcode = (data.barcode || '').trim() || null;
     if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
     if (typeof data.icon !== 'undefined') updateData.icon = data.icon || null;
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
@@ -209,6 +218,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.is_active !== 'undefined') updateData.is_active = data.is_active;
 
     const updated = await prisma.$transaction(async (tx) => {
+      if (updateData.barcode && updateData.barcode !== existing.barcode) await assertBarcodeFree(tx, tenantId, updateData.barcode, id);
       const p = await tx.product.update({ where: { id }, data: updateData });
       // Sugestao ainda por decidir no admin acompanha o produto (nome, precos).
       await tx.catalogSuggestion.updateMany({ where: { tenant_id: tenantId, product_id: id, status: 'pending' }, data: { product_name: p.name, category: p.category, icon: p.icon, barcode: p.barcode, cost_price: p.cost_price, sell_price: p.sell_price } });
@@ -247,6 +257,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
     }
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
     console.error('Update product error', err);
     return res.status(500).json({ error: 'Erro ao atualizar produto' });
   }

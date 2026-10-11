@@ -50,6 +50,7 @@ export default function Terminal() {
       <PosScreen
         info={state.info}
         cashier={state.cashier}
+        askDevices={Boolean(state.justLoggedIn)}
         onLock={async () => { await api.post('/api/pos/lock').catch(() => {}); load(); }}
       />
     );
@@ -58,7 +59,7 @@ export default function Terminal() {
     <ProfilesScreen
       info={state.info}
       notice={state.notice}
-      onLoggedIn={(cashier) => setState({ status: 'selling', info: state.info, cashier })}
+      onLoggedIn={(cashier) => setState({ status: 'selling', info: state.info, cashier, justLoggedIn: true })}
     />
   );
 }
