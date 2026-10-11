@@ -32,7 +32,14 @@ const hoursSchema = z.object({
 const discountSchema = z.object({ discount_free_pct: z.number().int().min(0).max(100) });
 const monthCloseSchema = z.object({ month_close_day: z.number().int().min(1, 'entre 1 e 28').max(28, 'entre 1 e 28') });
 const { RETENTION_OPTIONS } = require('../utils/auditGroups');
+const { reportsWhatsappEnabled } = require('../services/reportJob');
 const auditRetentionSchema = z.object({ months: z.number().int().refine((m) => RETENTION_OPTIONS.includes(m), 'Escolha 2, 3, 6, 12 ou 24 meses (mínimo 2).') });
+const reportScheduleSchema = z.object({
+  daily_report_time: z.string().regex(HHMM, 'Hora do relatório diário inválida (HH:MM).'),
+  weekly_report_day: z.number().int().min(0, 'Dia da semana entre domingo (0) e sábado (6).').max(6, 'Dia da semana entre domingo (0) e sábado (6).'),
+  weekly_report_time: z.string().regex(HHMM, 'Hora do relatório semanal inválida (HH:MM).'),
+  monthly_report_time: z.string().regex(HHMM, 'Hora do relatório mensal inválida (HH:MM).'),
+});
 const expiryAlertSchema = z.object({ expiry_alert_days: z.number().int().min(1, 'mínimo 1 dia').max(90, 'máximo 90 dias') });
 const pinSchema = z.object({
   pin: z.string().regex(/^\d{4,6}$/, 'O PIN tem 4 a 6 dígitos'),
@@ -57,6 +64,9 @@ router.get('/', asyncHandler(async (req, res) => {
     expiry_alert_days: t.expiry_alert_days,
     month_close_day: t.month_close_day,
     audit_retention_months: t.audit_retention_months,
+    report_schedule: { daily_report_time: t.daily_report_time, weekly_report_day: t.weekly_report_day, weekly_report_time: t.weekly_report_time, monthly_report_time: t.monthly_report_time },
+    // Envio automatico desligado ate haver numero WhatsApp Business aprovado (decisao 11/10).
+    reports_whatsapp_enabled: reportsWhatsappEnabled(),
     authorization_pin_configured: Boolean(t.cancel_pin_hash),
     status: t.status,
     trial_ends_at: t.trial_ends_at,
@@ -95,6 +105,15 @@ router.put('/expiry-alert', asyncHandler(async (req, res) => {
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_EXPIRY_ALERT', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true, ...data });
+}));
+
+// Horarios dos relatorios por WhatsApp (Fase 8.7, pedido do fundador 10/10).
+router.put('/report-schedule', asyncHandler(async (req, res) => {
+  const data = reportScheduleSchema.parse(req.body);
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { daily_report_time: true, weekly_report_day: true, weekly_report_time: true, monthly_report_time: true } });
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data });
+  await writeAudit({ req, action: 'UPDATE_REPORT_SCHEDULE', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
+  res.json({ ok: true, report_schedule: data });
 }));
 
 // Quantos meses a auditoria guarda (Fase 8.5; decisao do fundador: o dono

@@ -37,6 +37,11 @@ model Tenant {
   expiry_alert_days     Int                   @default(7)
   // Fase 8.5: meses que a auditoria guarda (minimo 2 = este mes + o anterior).
   audit_retention_months Int                  @default(2)
+  // Fase 8.7: horarios dos relatorios por WhatsApp (o dia do mensal e month_close_day).
+  daily_report_time     String                @default("21:00")
+  weekly_report_day     Int                   @default(1)
+  weekly_report_time    String                @default("08:00")
+  monthly_report_time   String                @default("08:00")
   month_close_day       Int                   @default(1)
   pos_terminals         PosTerminal[]
   audit_logs            AuditLog[]

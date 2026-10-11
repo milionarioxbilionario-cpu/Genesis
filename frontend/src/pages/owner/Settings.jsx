@@ -85,6 +85,7 @@ function Store({ s, reload }) {
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'hours'} onClick={() => save('hours')}>Guardar</Button></div>
       </Card>
+      <ReportSchedule s={s} reload={reload} />
       <Card>
         <CardHeader title="Validades" description="Quantos dias antes da data de validade um lote aparece nos alertas. No dia seguinte à validade, o que não se vendeu é registado como perda automaticamente." />
         <div className="flex items-end gap-3">
@@ -102,6 +103,55 @@ function Store({ s, reload }) {
         </div>
       </Card>
     </div>
+  );
+}
+
+// Horarios dos relatorios por WhatsApp (Fase 8.7, pedido do fundador 10/10).
+// O envio automatico fica desligado ate haver numero WhatsApp Business
+// aprovado (decisao 11/10): as preferencias ficam guardadas.
+const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+function ReportSchedule({ s, reload }) {
+  const toast = useToast();
+  const [form, setForm] = useState(s.report_schedule || { daily_report_time: '21:00', weekly_report_day: 1, weekly_report_time: '08:00', monthly_report_time: '08:00' });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const opening = s.hours?.opening_time || '08:00';
+  const covers = (t) => (t < opening ? 'de ontem, completo' : 'de hoje, até essa hora');
+  const valid = HHMM_RE.test(form.daily_report_time) && HHMM_RE.test(form.weekly_report_time) && HHMM_RE.test(form.monthly_report_time);
+  async function save() {
+    setBusy(true); setError('');
+    try {
+      await api.put('/api/settings/report-schedule', { ...form, weekly_report_day: Number(form.weekly_report_day) });
+      toast('Horários dos relatórios guardados.');
+      reload();
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  return (
+    <Card>
+      <CardHeader title="Relatórios por WhatsApp" description="Quando quer receber cada relatório no WhatsApp da loja." />
+      {!s.reports_whatsapp_enabled && <Alert tone="info" className="mb-4">O envio automático ainda não está ligado. As suas escolhas ficam guardadas e passam a valer quando for ligado.</Alert>}
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_1fr] sm:items-end">
+          <Input label="Diário — hora" type="time" value={form.daily_report_time} onChange={set('daily_report_time')} />
+          <p className="pb-2 text-sm text-ink-muted">Às {form.daily_report_time || '—'} recebe o relatório {covers(form.daily_report_time)}.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_10rem_1fr] sm:items-end">
+          <Select label="Semanal — dia" value={String(form.weekly_report_day)} onChange={set('weekly_report_day')}>
+            {WEEKDAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+          </Select>
+          <Input label="Semanal — hora" type="time" value={form.weekly_report_time} onChange={set('weekly_report_time')} />
+          <p className="pb-2 text-sm text-ink-muted">Os 7 dias até {form.weekly_report_time < opening ? 'ontem' : 'esse dia'}.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_1fr] sm:items-end">
+          <Input label="Mensal — hora" type="time" value={form.monthly_report_time} onChange={set('monthly_report_time')} />
+          <p className="pb-2 text-sm text-ink-muted">No dia {s.month_close_day ?? 1} de cada mês (o dia do «Fecho do mês»), com o mês anterior.</p>
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy} disabled={!valid} onClick={save}>Guardar horários</Button></div>
+    </Card>
   );
 }
 

@@ -1,4 +1,9 @@
 require('dotenv').config();
+// Dia, semana e mes contam pelo relogio de MAPUTO (decisao do fundador 10/10:
+// o dia muda a meia-noite de Maputo). O servidor de producao esta em UTC: sem
+// isto os relatorios iam das 02:00 as 01:59 e o bloqueio do turno contava o
+// dia de Londres. APP_TZ permite outro fuso no futuro.
+process.env.TZ = process.env.APP_TZ || 'Africa/Maputo';
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -271,6 +276,7 @@ prisma.ready()
       // Perda automatica de lotes vencidos (15 s apos arrancar e de hora a hora).
       require('./services/expiryJob').startExpiryJob();
       require('./services/auditRetention').startAuditRetentionJob();
+      require('./services/reportJob').startReportJob();
     });
   })
   .catch((error) => {
