@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CircleAlert, Lock, Minus, Plus, ScanBarcode, Search, Trash2, WifiOff } from 'lucide-react';
+import { CircleAlert, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Trash2, WifiOff } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import useOfflineSync from '../../hooks/useOfflineSync';
@@ -227,7 +227,7 @@ export default function PosScreen({ info, cashier, onLock }) {
   return (
     <div className="flex h-screen flex-col bg-bg">
       {/* Barra superior */}
-      <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-4 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
           <div className="min-w-0 leading-tight">
@@ -235,13 +235,17 @@ export default function PosScreen({ info, cashier, onLock }) {
             <p className="truncate text-xs text-ink-muted">{cashier.name} · {info.terminal.name}</p>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2 text-sm">
+        <div className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
           {!isOnline && <span className="hidden items-center gap-1.5 text-warning sm:flex"><WifiOff size={15} /> Offline</span>}
           {pendingCount > 0 && <span className="hidden text-ink-muted sm:inline">{pendingCount} por enviar</span>}
           {rejectedCount > 0 && <span className="hidden text-danger sm:inline">{rejectedCount} recusado(s)</span>}
-          <Button size="sm" variant="ghost" onClick={() => setDialog('recent')}>Vendas</Button>
+          <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => setDialog('recent')}>Vendas</Button>
+          <IconButton label="Vendas" icon={ReceiptText} size="sm" variant="ghost" className="sm:hidden" onClick={() => setDialog('recent')} />
           <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('demand')}>Produto em falta</Button>
           <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('shrink')}>Quebra</Button>
+          {/* Telemovel: os mesmos dois botoes em icone (antes nao havia forma de os abrir). */}
+          <IconButton label="Produto em falta" icon={PackageSearch} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('demand')} />
+          <IconButton label="Quebra" icon={PackageX} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('shrink')} />
           <Button size="sm" onClick={() => setDialog('close')}>Fechar turno</Button>
           <IconButton label="Bloquear terminal" icon={Lock} size="sm" variant="secondary" onClick={onLock} />
         </div>
@@ -410,8 +414,8 @@ export default function PosScreen({ info, cashier, onLock }) {
       {dialog?.receipt && <ReceiptDialog store={info.store} cashier={cashier} {...dialog.receipt} onClose={() => setDialog(null)} />}
       {dialog === 'close' && <CloseShiftDialog shift={shift} syncNow={syncNow} onClose={() => setDialog(null)} onDone={() => { refreshShift(); }} />}
       {dialog === 'recent' && <RecentSalesDialog onClose={() => setDialog(null)} onChanged={() => { refreshCatalog(); refreshShift(); }} />}
-      {dialog === 'shrink' && <ShrinkageDialog products={products} onClose={() => setDialog(null)} onSaved={() => { refreshCounts(); refreshCatalog(); }} />}
-      {dialog === 'demand' && <DemandDialog products={products} onClose={() => setDialog(null)} onSaved={refreshCounts} />}
+      {dialog === 'shrink' && <ShrinkageDialog products={products} cashier={cashier} onClose={() => setDialog(null)} onSaved={() => { refreshCounts(); refreshCatalog(); }} />}
+      {dialog === 'demand' && <DemandDialog products={products} cashier={cashier} onClose={() => setDialog(null)} onSaved={refreshCounts} />}
     </div>
   );
 }

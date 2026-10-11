@@ -1804,3 +1804,19 @@ FUNCIONOU?
   parte nova). O teste no browser do stock passou 18 de 18, tambem no
   tamanho de iPhone.
 - Ainda NAO publicado: diz-me se publico.
+
+
+==================== 11/10/2026 — Stock (8.3) publicado e vendas perdidas (8.4) ====================
+O que pediste: publicar, enviar para o GitHub e continuar com todas as fases que faltam sem parar para perguntar.
+
+1) O stock (8.3) está publicado em genesismz.com. Testei no próprio site, no PC e no tamanho de iPhone: comprar um produto com duas validades, retirar com motivo e criar um produto novo pela «Entrada de stock». Passou tudo (18 de 18).
+
+2) Vendas perdidas (8.4): o caixista regista o que o cliente pediu e não havia.
+   - «Do catálogo»: escolhe o produto e quantas unidades.
+   - «Fora do catálogo»: escreve o que o cliente pediu (ex.: cotonetes), quantas unidades e, se souber, o preço.
+   - No telemóvel o botão não existia (só aparecia no computador). Agora aparece como ícone.
+   - Tu (dono) vês nos Relatórios, em «Vendas perdidas»: o produto, «fora do catálogo», as unidades e quanto terias vendido.
+   - No super admin há uma página nova, «Pedidos de clientes»: o que os clientes pedem em todas as lojas e elas não têm, com quantas lojas pediram e o preço indicado. Não mostra o nome das lojas, como escolheste.
+   - Corrigi também um problema: se o caixista registasse uma quebra ou uma venda perdida sem internet, e a sessão dele expirasse antes de a rede voltar, o registo era recusado. Agora chega.
+
+Prova: a verificação do servidor deu 25 de 25. O teste no browser passou (terminal no iPhone, relatório do dono e página do admin). Os testes antigos do terminal, do balcão e dos relatórios continuam a passar.

@@ -97,8 +97,12 @@ function Breakdown({ r }) {
         </Card>
       )}
       <Card>
-        <CardHeader title="Oportunidades perdidas" description="Produtos pedidos por clientes quando não havia." />
-        {r.lost_demand.length === 0 ? <p className="text-ink-muted">Nenhum pedido registado.</p> : r.lost_demand.map((d) => <KeyValue key={d.product_id} label={d.name} value={`${d.requests}×`} />)}
+        <CardHeader title="Vendas perdidas" description="O que os clientes pediram e não havia (registado pelos caixistas)." />
+        {r.lost_demand.length === 0 ? <p className="text-ink-muted">Nenhum pedido registado.</p> : r.lost_demand.map((d) => (
+          <KeyValue key={d.key || d.product_id}
+            label={<span className="flex flex-wrap items-center gap-2">{d.name}{d.outside && <Badge tone="neutral">fora do catálogo</Badge>}</span>}
+            value={<span className="text-right"><span className="num">{int(d.units)} un.</span>{d.requests > 1 && <span className="text-ink-muted"> · {d.requests} pedidos</span>}{d.estimated_value != null && <span className="block text-sm text-ink-muted num">≈ {money(d.estimated_value)}</span>}</span>} />
+        ))}
       </Card>
       <Card>
         <CardHeader title="Cancelamentos" description={r.cancellations.length ? `${r.cancellations.length} venda(s) · ${money(r.cancelled_total)}` : undefined} />

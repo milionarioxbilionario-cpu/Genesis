@@ -94,7 +94,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `backend/src/utils/sessionUser.js` + `middleware/auth.js` + `routes/refresh.js` | Cada pedido/refresh valida conta activa + senha actual (pv); logout apaga access e refresh | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 7 |
 | `backend/src/utils/prisma.js` | Timeout das transacções 45 s (antes 5 s: ~1,2 s/query → TODAS as vendas davam 500) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — venda 201 em Postgres real |
 | `frontend/src/db/localDb.js` (v6), `utils/syncPolicy.js`, `utils/offlineQueue.js`, `hooks/useOfflineSync.js` | Fila offline com `sync_state` (o booleano lançava DataError e nada sincronizava); id fixo por venda; só rede/5xx vão para a fila; recusas visíveis | ✅ CONFIRMADO FUNCIONAL (lógica); ⚠️ NÃO VERIFICADO no browser | 03/10/2026 — `node --test tests/offline_queue.test.mjs` 8/8 + secção 6 ponta-a-ponta |
-| `backend/src/routes/shrinkage_records.js`, `demand_captures.js` | Idempotentes por id; atómicos; só regras de negócio são 4xx (BD em baixo = 500) | ✅ CONFIRMADO FUNCIONAL | 03/10/2026 — secção 6 |
+| `backend/src/routes/shrinkage_records.js`, `demand_captures.js` | Idempotentes por id; atómicos; só regras de negócio são 4xx (BD em baixo = 500). `demand_captures` reescrito na 8.4 (ver Fase 8.4) | ✅ CONFIRMADO FUNCIONAL | 11/10/2026 — `verify_system 23` + secção 6 |
 | RLS no Postgres | `postgres` tem `rolbypassrls=true`, nenhuma tabela com FORCE | 🔴 CONHECIDO COMO QUEBRADO (decorativo) | 03/10/2026 — consulta a pg_roles/pg_class |
 
 ### Genesis 2.0 — 03/10/2026 (prova: `scripts/verify_system.js` 13 secções + browser real `frontend/tests/e2e/flows.mjs` e `admin-frontend/tests/admin_flows.mjs`)
@@ -199,12 +199,24 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `utils/shiftLock.js` | Inalterado (3 contagens abaixo → bloqueado até o dono). Nota: sem desbloqueio, conta as falhas desde a meia-noite do **servidor** (UTC) | ⚠️ fuso por rever | 10/10 — leitura |
 | Erro de JS no painel do dono em produção (`Cannot read properties of undefined (reading 'Ab')`, código do descodificador WebP dentro do jsPDF) | Apareceu 1 vez em `flows.mjs` contra genesismz.com logo após publicar; não se repetiu (2.ª corrida de `flows` + visita a todas as páginas do dono: 0 erros). Suspeita: navegação a meio do pré-carregamento do jsPDF (botão PDF dos Relatórios) | ⚠️ intermitente, não reproduzido | 10/10 — 1 em 3 corridas |
 
-### Fase 8.3-B — Entrada de stock só para produtos novos + Ajuste manual Adicionar/Retirar (10/10/2026) — **local, ainda NÃO publicado**
+### Fase 8.3-B — Entrada de stock só para produtos novos + Ajuste manual Adicionar/Retirar (10/10/2026) — **publicado em genesismz.com (`f7f2576`, 11/10); `stock.mjs` 18/18 contra o site público**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | `frontend/src/pages/owner/ProductDrawer.jsx` (novo, extraído de `Products.jsx`) | O formulário do produto (foto, ícone, preços, validade, «Outra validade», fornecedor, stock actual e lotes ao editar, botão «Stock») passa a ser um componente; `LotRows` partilhado (linhas quantidade + validade) | ✅ CONFIRMADO FUNCIONAL | 10/10 — `stock.mjs`, `fase8_2.mjs` |
 | `frontend/src/pages/owner/Products.jsx` (separador Stock) | **«Entrada de stock»** abre o formulário de **produto novo** (título «Entrada de stock», «Unidades que entram»). **«Ajuste manual»**: produto + stock actual + `Adicionar`/`Retirar`, quantidade sempre positiva. Adicionar = linhas quantidade+validade, custo unitário, fornecedor opcional, «Fica com N un.». Retirar = quantidade + motivo (não deixa passar do stock). O botão diz «Adicionar 20 un.» / «Retirar 5 un.». `?ajustar=<id>` continua | ✅ CONFIRMADO FUNCIONAL (Chromium, PC + iPhone 390 px) | 10/10 — `stock.mjs` 18/18 + capturas revistas |
 | `backend/src/routes/inventory.js` (`POST /stock`) | Aceita `lots[]` (1–20 linhas, quantidade > 0, validade AAAA-MM-DD) numa só transacção: uma entrada + um lote por linha, custo e histórico de custo uma vez, produto passa a «com validade» se alguma linha tiver data, **auditoria `STOCK_ENTRY`** (antes não havia). Formato antigo (`quantity`) continua. Com fornecedor, o custo de entrega conta uma visita por dia | ✅ CONFIRMADO FUNCIONAL | 10/10 — `verify_system 22` 18/18; `5` e `14` sem regressão |
+
+### Fase 8.4 — Vendas perdidas no terminal (do catálogo e fora dele) + «Pedidos de clientes» no admin (11/10/2026)
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| Migração `20261011_vendas_perdidas` (aplicada com `db execute`) | `DemandCapture`: `product_id` passa a opcional; `product_name`, `name_key`, `quantity` (por defeito 1), `unit_price` (centavos, opcional); CHECK «produto ou nome» e «quantidade > 0, preço ≥ 0»; índice parcial dos pedidos fora do catálogo. Compatível com o código antigo (registos antigos = 1 un.) | ✅ CONFIRMADO | 11/10 — `information_schema` + `pg_constraint` |
+| `backend/src/routes/demand_captures.js` | Produto da loja **ou** texto livre (2–80), quantidade 1–1000, preço opcional; nome escrito igual a um produto da loja conta como esse produto; auditado; utilizador sempre real (antes podia gravar `null` em coluna obrigatória) | ✅ CONFIRMADO FUNCIONAL | 11/10 — `verify_system 23` 25/25 |
+| `backend/src/utils/lostRequests.js` (puro) + `services/reports.js` | Relatório do dono «Vendas perdidas» por produto ou nome (sem acentos/maiúsculas): unidades, pedidos, valor estimado (preço de venda; fora do catálogo = preço indicado; sem preço = sem valor). A recomendação de compra usa as unidades pedidas (só produtos do catálogo). Rastreio «Cliente pediu: X ×N (fora do catálogo)» | ✅ CONFIRMADO FUNCIONAL | 11/10 — `lostRequests.test.js` 3/3; `verify_system 23`; `reports.mjs` |
+| `routes/admin.js` `GET /lost-requests` + `overview.lost_requests_30d` + `admin-frontend` página «Pedidos de clientes» | Pedidos fora do catálogo de todas as lojas, por tipo de negócio + nome: nº de lojas, pedidos, unidades, preço indicado (média e intervalo), último; 30/90/365 dias; **sem nomes nem ids das lojas** (decisão 10/10); aviso na Visão geral | ✅ CONFIRMADO FUNCIONAL | 11/10 — `verify_system 23`; `fase8_4.mjs` |
+| `frontend/src/pages/pos/PosDialogs.jsx` (`DemandDialog`, `ShrinkageDialog`) | «Do catálogo» / «Fora do catálogo» + quantidade + preço unitário opcional (MT → centavos). Os dois diálogos guardam `seller_user_id`: antes a fila offline levava 401 quando a sessão do caixista já tinha expirado (só as vendas o mandavam) | ✅ CONFIRMADO FUNCIONAL | 11/10 — `fase8_4.mjs` (iPhone 13); `verify_system 23` |
+| `frontend/src/pages/pos/PosScreen.jsx` (cabeçalho) | No telemóvel, «Produto em falta» e «Quebra» passam a existir (ícones; antes escondidos abaixo de 768 px); «Vendas» em ícone abaixo de 640 px para o nome da loja caber | ✅ CONFIRMADO (390 px, captura revista) | 11/10 — `fase8_4.mjs` |
+| `frontend/src/pages/owner/Reports.jsx` + `utils/pdf/reportPdf.js` | Cartão e tabela do PDF «Vendas perdidas»: nome, «fora do catálogo», unidades, pedidos, ≈ valor | ✅ CONFIRMADO no ecrã · ⚠️ tabela do PDF não revista à vista nesta mini-meta (`fase8_1.mjs` gera o PDF diário sem erro) | 11/10 — `fase8_4.mjs`, `fase8_1.mjs` |
+| `Settings.jsx` (Fecho do mês) | Corrigido `replace(/D/g…)` → `/\D/g` (deixava passar letras no dia do fecho); grep ao repositório: 0 restantes | ✅ CONFIRMADO | 11/10 — grep |
 
 ---
 
@@ -821,3 +833,26 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
   - Capturas s1, s2 e s5 revistas.
 - Regressão no browser: `flows` passou (0 erros de JS); `fase8_2` passou todo (formulário extraído, botão «Stock» → Ajuste com o produto escolhido, sugestões no admin). A 1.ª tentativa de `fase8_2` não arrancou porque faltava a conta de super admin de teste. Base final: 2 lojas reais, 1 super admin, catálogo 209.
 - Segue-se: paragem e confirmação do fundador antes de publicar a 8.3-B; depois 8.4 (vendas perdidas).
+
+### [2026-10-11] — Publicação da 8.3-B + push; Fase 8.4: vendas perdidas fora do catálogo + «Pedidos de clientes» no admin
+- Pedido do fundador (11/10): «publica no genesismz.com, faz push e avança para todas as fases restantes, não precisas parar para confirmar… só pare se precisares de uma validação minha». Regra 1 aplicada como meio-termo: 8.4–8.8 = mini-metas da Fase 8, cada uma com prova, publicação e checkpoint curto; paragem a sério no fim da Fase 8. Plano: `~/.claude/plans/publica-no-genesismz-com-noble-trinket.md`.
+- Decisões do fundador (11/10): 8.7 — preferências + envio programado construído mas **desligado** (`REPORTS_WHATSAPP=true` para ligar, depois de número WhatsApp Business aprovado); 8.8 — impressora USB + Bluetooth, e o recibo **sempre** guardado em PDF no aparelho (Android e iPhone), haja ou não impressora.
+- **Publicação 8.3-B:** `git push` `992e14d..f7f2576`; `publicar.sh` → «PUBLICADO f7f2576». De fora: /, /entrar, admin 200; `/api/auth/me` 401; **`stock.mjs` contra https://genesismz.com: 18/18, 0 erros de JS** (loja de teste apagada).
+- **8.4, ficheiros:** migração `20261011_vendas_perdidas` + `schema.prisma`/`schema.sqlite.prisma` (iguais); `routes/demand_captures.js` (reescrito com `asyncHandler`); novos `utils/lostRequests.js` + `tests/lostRequests.test.js`; `services/reports.js`; `routes/admin.js`; `scripts/verify_system.js` (secção 23); frontend `pages/pos/{PosDialogs,PosScreen}.jsx`, `pages/owner/Reports.jsx`, `utils/pdf/reportPdf.js`, `pages/owner/Settings.jsx` (regex); `admin-frontend/src/App.jsx` (página «Pedidos de clientes»); novo `tests/e2e/fase8_4.mjs`.
+- **Encontrado e corrigido:**
+  - quebras e vendas perdidas na fila offline sem `seller_user_id` → 401 depois de a sessão expirar;
+  - `demand_captures` gravava `null` em colunas obrigatórias;
+  - «Produto em falta» e «Quebra» não existiam no telemóvel;
+  - `/D/g` no dia do fecho.
+- **Erros meus apanhados:**
+  - as barras invertidas de 2 expressões regulares perderam-se ao escrever o diálogo por script (`/s+/`, `/D/`); vistas no grep antes de testar e corrigidas;
+  - no teste, «Do catálogo» apanhava também «Fora do catálogo», e o localizador do cartão dos Relatórios apanhava só o cabeçalho (o ecrã estava certo, captura revista);
+  - o cabeçalho do terminal no iPhone ficou «B..» com os ícones novos → «Vendas» passou a ícone no telemóvel.
+- **Prova:**
+  - `verify_system 23` **25/25**: do catálogo e fora; 7 casos 400; idempotência; offline com o cookie do terminal 201/401/403; quebra offline 201; relatório 6 un./~150 MT e 4 un./400 MT; rastreio; RLS entre 2 lojas; admin 2 lojas/7 un./30 MT sem nomes; 403 para o dono e sem origem. Secção 5 sem regressão.
+  - Unitários: backend 70/70 (11 ficheiros), frontend 12/12. Builds OK.
+  - `fase8_4.mjs` **passou**: iPhone 13 com o botão visível e 390 px sem deslocamento; fora do catálogo 3 un. × 25 MT = 75 MT; Heineken 2 un.; quantidade 0 bloqueada; o dono vê nos Relatórios; o admin vê sem o nome da loja.
+  - Regressão `pos`, `flows`, `reports` e `fase8_1`: passaram, 0 erros de JS (backend reiniciado antes de cada um).
+  - Capturas l1–l4 revistas.
+- Também nesta sessão (para a 8.5): migração `20261011_auditoria_retencao` já aplicada (coluna com valor por defeito 2 + índice `idx_auditlog_tenant_created_at`, que não existia na BD real). Contagem a seco da retenção de 2 meses nas lojas reais = **0 registos a apagar** (Kleyton 71 registos, o mais antigo de 05/10; SPAR 0).
+- Segue-se: publicar a 8.4; 8.5 auditoria.

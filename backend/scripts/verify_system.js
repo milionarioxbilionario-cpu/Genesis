@@ -1100,7 +1100,79 @@ async function test22() {
   ok((await owner.req('PATCH', '/api/products/' + pid + '/stock', { delta: -44, reason: 'contagem fisica' })).status === 400, 'retirar mais do que ha: 400');
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22 };
+// Fase 8.4: vendas perdidas fora do catalogo (caixista) + agregado no admin.
+async function test23() {
+  section(23, 'Vendas perdidas: do catalogo e fora dele, quantidade e preco; admin sem nomes de lojas');
+  const cashier = await cashierTerminal();
+  const tag = 'Cotonete Verif ' + Date.now().toString().slice(-6);
+  const ids = [];
+  const post = async (c, body) => { const id = crypto.randomUUID(); ids.push(id); return c.req('POST', '/api/demand_captures', { id, ...body }); };
+
+  const a = await post(cashier, { product_id: ctx.product.id, quantity: 3 });
+  ok(a.status === 201, 'do catalogo com 3 un.: 201', a);
+  const b = await post(cashier, { product_name: '  ' + tag + '  ', quantity: 4, unit_price: 2500 });
+  ok(b.status === 201 && b.data.product_id === null, 'fora do catalogo (4 un. a 25 MT): 201', b);
+  const row = await prisma.demandCapture.findUnique({ where: { id: ids[1] } });
+  ok(row && row.product_id === null && row.product_name === tag && row.quantity === 4 && row.unit_price === 2500 && row.recorded_by === ctx.cashier.id && row.name_key === tag.toLowerCase(), 'gravado: nome limpo, quantidade, preco em centavos, caixista real', row);
+  const c = await post(cashier, { product_name: 'CERVEJA  teste' });
+  ok(c.status === 201 && c.data.product_id === ctx.product.id, 'nome escrito igual a um produto da loja conta como esse produto', c.data);
+
+  for (const [body, why] of [[{}, 'sem produto nem nome'], [{ product_name: tag, quantity: 0 }, 'quantidade 0'], [{ product_name: tag, quantity: 1.5 }, 'quantidade decimal'], [{ product_name: tag, unit_price: -1 }, 'preco negativo'], [{ product_name: 'x' }, 'nome com 1 letra'], [{ product_name: tag, quantity: 1001 }, 'quantidade acima de 1000'], [{ product_id: crypto.randomUUID() }, 'produto de outra loja/inexistente']]) {
+    const r = await cashier.req('POST', '/api/demand_captures', { id: crypto.randomUUID(), ...body });
+    ok(r.status === 400, why + ': 400', r.status);
+  }
+  const again = await cashier.req('POST', '/api/demand_captures', { id: ids[1], product_name: tag, quantity: 4 });
+  ok(again.status === 200 && (await prisma.demandCapture.count({ where: { id: ids[1] } })) === 1, 'mesmo id 2x: idempotente (200, 1 registo)');
+
+  // Fila offline com a sessao do caixista expirada: cookie do terminal + seller_user_id.
+  const term = await pairedTerminal('Balcao vendas perdidas');
+  const off = await post(term, { product_name: tag, quantity: 2, seller_user_id: ctx.cashier.id });
+  ok(off.status === 201, 'offline: cookie do terminal + seller_user_id = 201 (antes a fila nao o mandava)', off);
+  const noSeller = await term.req('POST', '/api/demand_captures', { id: crypto.randomUUID(), product_name: tag });
+  ok(noSeller.status === 401, 'offline sem seller_user_id: 401 NO_SESSION', noSeller.status);
+  const forged = await term.req('POST', '/api/demand_captures', { id: crypto.randomUUID(), product_name: tag, seller_user_id: ctx.owner.id });
+  ok(forged.status === 403, 'offline com o dono como vendedor: 403', forged.status);
+  const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: ctx.product.id, quantity: 1, reason: 'broken', seller_user_id: ctx.cashier.id });
+  ok(sh.status === 201, 'quebra offline com seller_user_id: 201', sh);
+
+  // Relatorio do dono.
+  const owner = ownerClient();
+  const day = await owner.req('GET', '/api/owner/reports/daily');
+  const lost = day.data?.lost_demand || [];
+  const out = lost.find((d) => d.outside && d.name === tag);
+  const cat = lost.find((d) => d.product_id === ctx.product.id);
+  ok(out && out.units === 6 && out.requests === 2 && out.unit_price === 2500 && out.estimated_value === 15000, 'relatorio: fora do catalogo 6 un., 2 pedidos, ~150 MT', out);
+  ok(cat && cat.units === 4 && cat.requests === 2 && cat.estimated_value === 40000, 'relatorio: do catalogo 4 un. (3+1) a 100 MT = 400 MT', cat);
+  const dd = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const tl = await owner.req('GET', `/api/owner/reports/timeline?types=demand&from=${dd(-1)}&to=${dd(1)}`);
+  ok(tl.status === 200 && JSON.stringify(tl.data).includes(tag + ' ×4 (fora do catálogo)'), 'cronologia: "Cliente pediu: ' + tag + ' ×4 (fora do catalogo)"', tl.status);
+
+  // Outra loja: o admin agrega 2 lojas; RLS nao mistura.
+  const other = await prisma.tenant.create({ data: { name: 'TESTE-SEGURANCA-B-' + Date.now(), owner_name: 'B', business_type: 'bottle_store', location: 'T', phone: '840000001', status: 'active', onboarding_completed: true } });
+  const otherOwner = await prisma.user.create({ data: { tenant_id: other.id, role: 'owner', name: 'Dono B', email: 'verif-b-' + Date.now() + '@teste.local', password_hash: 'x', is_active: true } });
+  try {
+    await prisma.demandCapture.create({ data: { tenant_id: other.id, product_name: tag.toUpperCase(), name_key: tag.toLowerCase(), quantity: 1, unit_price: 3500, recorded_by: otherOwner.id } });
+    const bReport = await client(signAccessToken(otherOwner)).req('GET', '/api/owner/reports/daily');
+    const bLost = bReport.data?.lost_demand || [];
+    ok(bReport.status === 200 && bLost.length === 1 && bLost[0].units === 1, 'loja B so ve o seu pedido (1 un.), nao os da loja A', bLost);
+    const adm = await adminClient().req('GET', '/api/admin/lost-requests?days=30');
+    const g = (adm.data?.groups || []).find((x) => x.name_key === tag.toLowerCase());
+    ok(adm.status === 200 && g && g.stores === 2 && g.requests === 3 && g.units === 7 && g.avg_price === 3000, 'admin: 2 lojas, 3 pedidos, 7 un., preco medio 30 MT', g);
+    const txt = JSON.stringify(adm.data);
+    ok(!txt.includes(ctx.tenant.name) && !txt.includes(other.name) && !txt.includes(ctx.tenant.id) && !txt.includes(other.id), 'admin: sem nomes nem ids de lojas');
+    const ov = await adminClient().req('GET', '/api/admin/overview');
+    ok(ov.status === 200 && ov.data.lost_requests_30d >= 3, 'visao geral conta os pedidos fora do catalogo (30 dias)', ov.data?.lost_requests_30d);
+    ok((await owner.req('GET', '/api/admin/lost-requests', undefined, { Origin: ADMIN_ORIGIN })).status === 403, 'dono no /api/admin/lost-requests: 403');
+    ok((await client(signAccessToken(ctx.admin)).req('GET', '/api/admin/lost-requests')).status === 403, 'admin sem a origem do painel: 403');
+  } finally {
+    await prisma.demandCapture.deleteMany({ where: { tenant_id: other.id } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: other.id } });
+    await prisma.user.delete({ where: { id: otherOwner.id } });
+    await prisma.tenant.delete({ where: { id: other.id } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23 };
 
 (async () => {
   await prisma.ready();

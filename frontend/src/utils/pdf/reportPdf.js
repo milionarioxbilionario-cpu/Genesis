@@ -118,8 +118,8 @@ function breakdown(pdf, r) {
   pdf.heading(`Perdas${r.losses.length ? ` · ${money(r.losses_total)} ao custo` : ''}`);
   pdf.table(['Data', 'Produto', 'Qtd.', 'Motivo', 'Valor'], r.losses.map((l) => [dateTime(l.recorded_at), l.name, int(l.quantity), l.reason_label, '-' + money(l.value)]), { right: [2, 4], empty: 'Nenhuma perda registada.' });
 
-  pdf.heading('Oportunidades perdidas (pedidos quando não havia)');
-  pdf.table(['Produto', 'Pedidos'], r.lost_demand.map((d) => [d.name, `${d.requests}x`]), { right: [1], empty: 'Nenhum pedido registado.' });
+  pdf.heading('Vendas perdidas (o que os clientes pediram e não havia)');
+  pdf.table(['Produto', 'Unid.', 'Pedidos', 'Valor estimado'], r.lost_demand.map((x) => [x.outside ? `${x.name} (fora do catálogo)` : x.name, int(x.units ?? x.requests), int(x.requests), x.estimated_value != null ? money(x.estimated_value) : '—']), { right: [1, 2, 3], empty: 'Nenhum pedido registado.' });
 
   pdf.heading(`Cancelamentos${r.cancellations.length ? ` · ${money(r.cancelled_total)}` : ''}`);
   pdf.table(['Data', 'Caixista', 'Motivo', 'Valor'], r.cancellations.map((c) => [dateTime(c.created_at), c.cashier, c.reason || 'sem motivo', money(c.total_amount)]), { right: [3], empty: 'Nenhum.' });
