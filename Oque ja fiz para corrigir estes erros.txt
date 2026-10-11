@@ -1879,3 +1879,17 @@ Prova: a verificação do servidor deu 16 de 16, os testes do horário 8 de 8 e 
 
 Prova: o teste no browser deu 19 de 19, com uma câmara simulada a mostrar um código de barras e impressoras simuladas que guardam o que receberiam. Os testes antigos do terminal continuam a passar.
 O que falta, e só tu podes fazer: experimentar com a câmara real do telemóvel e com uma impressora USB e outra Bluetooth de verdade.
+
+
+==================== 11/10/2026 — Dispositivos (8.8) publicados — Fase 8 completa ====================
+1) A parte dos dispositivos (8.8) está em genesismz.com. Testei no próprio site, com uma loja de teste que apaguei no fim: 19 de 19 passaram, sem erros. O teste fez isto:
+   - depois do PIN, o terminal pergunta pelo leitor e pela impressora, e só pergunta uma vez;
+   - a câmara (simulada) leu o código de barras e a Coca-Cola entrou logo na venda;
+   - um código que não existe mostra «Produto não cadastrado»;
+   - o recibo ficou guardado em PDF e foi para a impressora (USB e Bluetooth simuladas);
+   - no computador, o 2.º recibo já não pede outra vez a impressora.
+2) O servidor está a funcionar, sem erros no registo. O código já estava no GitHub.
+3) Com isto, a Fase 8 inteira (da 8.1 à 8.8) está publicada.
+
+O que falta, e só tu podes fazer: experimentar com a câmara real do telemóvel e com uma impressora USB e outra Bluetooth de verdade. Se algo falhar, manda-me uma captura.
+Próximo passo: escolhes a fase seguinte.
