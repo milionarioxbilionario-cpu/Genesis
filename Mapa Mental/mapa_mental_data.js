@@ -1,22 +1,22 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-11T09:14:07.527Z */
+   Gerado em: 2026-10-11T09:53:28.206Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-11T09:14:07.527Z",
+ "generatedAt": "2026-10-11T09:53:28.206Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 225,
+  "files": 226,
   "planned": 5,
-  "links": 371,
-  "lines": 31206,
+  "links": 375,
+  "lines": 31440,
   "byStatus": {
-   "ok": 142,
+   "ok": 147,
    "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 71
+   "untracked": 67
   },
   "byGroup": {
    "infra": 12,
@@ -25,7 +25,7 @@ window.GENESIS_MINDMAP = {
    "backend-data": 59,
    "backend": 59,
    "frontend-pub": 4,
-   "frontend": 73,
+   "frontend": 74,
    "scripts": 3
   }
  },
@@ -68,6 +68,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
+   "count": 14
+  },
+  {
+   "pkg": "node:fs",
    "count": 13
   },
   {
@@ -79,12 +83,8 @@ window.GENESIS_MINDMAP = {
    "count": 13
   },
   {
-   "pkg": "node:fs",
-   "count": 12
-  },
-  {
    "pkg": "@playwright/test",
-   "count": 10
+   "count": 11
   },
   {
    "pkg": "path",
@@ -215,7 +215,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 73,
+   "nodes": 74,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -231,7 +231,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/ui": 1,
     "frontend/src/utils": 13,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 10,
+    "frontend/tests/e2e": 11,
     "frontend/tests": 3
    }
   },
@@ -283,8 +283,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 859,
-   "size": 162570,
+   "lines": 888,
+   "size": 168740,
    "externals": [
     "@prisma/client"
    ],
@@ -327,8 +327,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1318,
-   "size": 70703,
+   "lines": 1348,
+   "size": 72173,
    "externals": [
     "nodemailer"
    ],
@@ -993,8 +993,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 435,
-   "size": 15178,
+   "lines": 437,
+   "size": 15316,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1016,8 +1016,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 452,
-   "size": 16060,
+   "lines": 454,
+   "size": 16198,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1593,7 +1593,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 101,
-   "size": 5174,
+   "size": 5188,
    "externals": [
     "dotenv",
     "@prisma/client",
@@ -1730,8 +1730,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 280,
-   "size": 10820,
+   "lines": 281,
+   "size": 10889,
    "externals": [
     "dotenv",
     "express",
@@ -1763,11 +1763,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/verify.js",
     "backend/src/utils/http.js",
-    "backend/src/services/expiryJob.js"
+    "backend/src/services/expiryJob.js",
+    "backend/src/services/auditRetention.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 23
+   "outbound": 24
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -2102,12 +2103,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Fornecedores e compras de stock: POST /stock aceita varias validades (lots[]) numa transaccao, auditoria STOCK_ENTRY.",
-   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "notes": "11/10/2026: auditoria STOCK_ENTRY guarda tambem o preco de compra novo. verify_system 22 + fase8_5.mjs.",
    "role": "Stock.",
    "security": "",
    "planned": false,
    "lines": 218,
-   "size": 9242,
+   "size": 9281,
    "externals": [
     "express",
     "zod"
@@ -2163,12 +2164,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
-   "notes": "GET /api/owner/tenant alimenta o nome real da loja no shell; nunca dados de demonstracao.",
+   "notes": "11/10/2026 Fase 8.5: GET /audit com periodo, tipo, cursor e detalhe. verify_system 24 (24/24).",
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 435,
-   "size": 24257,
+   "lines": 481,
+   "size": 26769,
    "externals": [
     "express",
     "crypto",
@@ -2188,13 +2189,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/http.js",
     "backend/src/utils/audit.js",
     "backend/src/utils/terminals.js",
-    "backend/src/services/monthClose.js"
+    "backend/src/services/monthClose.js",
+    "backend/src/utils/auditGroups.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 12
+   "outbound": 13
   },
   {
    "id": "backend/src/routes/pos.js",
@@ -2346,12 +2348,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
-   "notes": "04/10/2026 Fase 5.1: /expenses; verify_system 16 23/23.",
+   "notes": "11/10/2026 Fase 8.5: PUT /audit-retention (2/3/6/12/24). verify_system 24.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 233,
-   "size": 11794,
+   "lines": 246,
+   "size": 12838,
    "externals": [
     "express",
     "bcrypt",
@@ -2362,13 +2364,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
     "backend/src/utils/http.js",
-    "backend/src/utils/audit.js"
+    "backend/src/utils/audit.js",
+    "backend/src/utils/auditGroups.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "backend/src/routes/shoppingLists.js",
@@ -2470,10 +2473,10 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/services",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Apaga a auditoria mais antiga que a retencao de cada loja (minimo 2 meses), nunca as accoes protegidas nem as do admin.",
+   "notes": "11/10/2026 Fase 8.5: verify_system 24; contagem a seco nas lojas reais = 0.",
+   "role": "Job (6 em 6 h).",
    "security": "",
    "planned": false,
    "lines": 62,
@@ -2484,9 +2487,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/auditGroups.js"
    ],
    "usedBy": [
-    "backend/scripts/verify_system.js"
+    "backend/scripts/verify_system.js",
+    "backend/src/index.js"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 2
   },
   {
@@ -2758,10 +2762,10 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Puro: tipos da auditoria, periodos de Maputo (hoje/semana/mes), corte da retencao, accoes protegidas.",
+   "notes": "11/10/2026 Fase 8.5: auditGroups.test.js 3/3.",
+   "role": "Auditoria do dono.",
    "security": "",
    "planned": false,
    "lines": 70,
@@ -2772,10 +2776,12 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "backend/scripts/verify_system.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/settings.js",
     "backend/src/services/auditRetention.js",
     "backend/tests/auditGroups.test.js"
    ],
-   "inbound": 3,
+   "inbound": 5,
    "outbound": 1
   },
   {
@@ -4773,14 +4779,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/owner",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Definicoes > Auditoria: retencao, Hoje/Semana/Mes/Tudo, tipo, lista, detalhe antes/depois.",
+   "notes": "11/10/2026 Fase 8.5: fase8_5.mjs 16/16 (PC + iPhone).",
+   "role": "Pagina do dono.",
    "security": "",
    "planned": false,
-   "lines": 155,
-   "size": 8261,
+   "lines": 164,
+   "size": 8711,
    "externals": [
     "react"
    ],
@@ -4790,8 +4796,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/auditLabels.js",
     "frontend/src/components/ui/index.js"
    ],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/pages/owner/Settings.jsx"
+   ],
+   "inbound": 1,
    "outbound": 4
   },
   {
@@ -5033,12 +5041,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
-   "notes": "04/10/2026 Fase 5.1: despesas avulsas; fase5.mjs 9/9.",
+   "notes": "11/10/2026 Fase 8.5: separador Auditoria usa AuditLogPage. fase8_5.mjs + stock.mjs.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 368,
-   "size": 24555,
+   "lines": 342,
+   "size": 22545,
    "externals": [
     "react",
     "react-router-dom",
@@ -5047,6 +5055,7 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
+    "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js"
    ],
@@ -5054,7 +5063,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/owner/ShoppingLists.jsx",
@@ -5357,14 +5366,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Nomes em portugues das accoes e campos da auditoria; diferencas antes/depois.",
+   "notes": "11/10/2026 Fase 8.5: fase8_5.mjs.",
+   "role": "Auditoria do dono.",
    "security": "",
    "planned": false,
-   "lines": 67,
-   "size": 6453,
+   "lines": 72,
+   "size": 6741,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js"
@@ -5924,6 +5933,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 139,
    "size": 8588,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/fase8_5.mjs",
+   "path": "frontend/tests/e2e/fase8_5.mjs",
+   "label": "fase8_5.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: auditoria do dono (filtros, detalhe, retencao, iPhone).",
+   "notes": "11/10/2026: 16/16.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 123,
+   "size": 7709,
    "externals": [
     "node:fs",
     "node:path",
@@ -6688,6 +6722,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/expiryJob.js"
   },
   {
+   "source": "backend/src/index.js",
+   "target": "backend/src/services/auditRetention.js"
+  },
+  {
    "source": "backend/src/middleware/auth.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -6936,6 +6974,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/monthClose.js"
   },
   {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/auditGroups.js"
+  },
+  {
    "source": "backend/src/routes/pos.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7070,6 +7112,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/settings.js",
    "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/utils/auditGroups.js"
   },
   {
    "source": "backend/src/routes/shoppingLists.js",
@@ -7734,6 +7780,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Settings.jsx",
    "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/pages/owner/AuditLogPage.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Settings.jsx",

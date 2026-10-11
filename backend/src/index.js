@@ -271,6 +271,7 @@ prisma.ready()
       console.log(`Genesis backend running on port ${port}`);
       // Perda automatica de lotes vencidos (15 s apos arrancar e de hora a hora).
       require('./services/expiryJob').startExpiryJob();
+      require('./services/auditRetention').startAuditRetentionJob();
     });
   })
   .catch((error) => {

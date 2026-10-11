@@ -92,7 +92,7 @@ async function run() {
 
   // Final health checks
   const auditRes = await fetch(`${API_BASE}/api/owner/audit`, { headers: authHeader });
-  console.log('Audit entries count:', (await auditRes.json()).length);
+  console.log('Audit entries count:', ((await auditRes.json()).items || []).length);
 
   console.log('Smoke tests completed successfully');
   await prisma.$disconnect();

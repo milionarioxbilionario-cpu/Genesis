@@ -143,7 +143,7 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
       await tx.auditLog.create({ data: {
         tenant_id: req.user.tenantId, user_id: req.user.userId, action: 'STOCK_ENTRY', entity_type: 'product', entity_id: product.id,
         old_value: JSON.stringify({ stock_qty: product.stock_qty, cost_price: product.cost_price }),
-        new_value: JSON.stringify({ name: product.name, stock_qty: updatedProduct.stock_qty, added: total, lots, unit_cost: data.unit_cost, supplier_id: data.supplier_id || null }),
+        new_value: JSON.stringify({ name: product.name, stock_qty: updatedProduct.stock_qty, cost_price: updatedProduct.cost_price, added: total, lots, unit_cost: data.unit_cost, supplier_id: data.supplier_id || null }),
         ip_address: req.ip || '0.0.0.0',
       } });
 
