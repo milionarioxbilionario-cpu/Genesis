@@ -330,58 +330,85 @@ function TenantDrawer({ id, onClose, onChanged }) {
 }
 
 // ---------------------------------------------------------------- catalogos
+// Catalogo-mestre (Fase 8.6, pedido do fundador 10/10): ver, procurar,
+// acrescentar e EDITAR (nome, categoria, precos em centavos, codigo, icone).
+// So as lojas novas recebem as alteracoes; as que ja existem mantem os seus.
+const EMPTY_MASTER = { id: null, product_name: '', category: '', suggested_cost: 0, suggested_sell: 0, barcode: '', icon: null };
 function Catalogs() {
   const toast = useToast();
-  const { data, error, reload } = useLoad('/api/master_catalogs');
   const [type, setType] = useState('bottle_store');
-  const [form, setForm] = useState({ name: '', category: '', cost: '', sell: '' });
+  const [q, setQ] = useState('');
+  const { data, error, loading, reload } = useLoad('/api/admin/master-catalog?type=' + type);
+  const [open, setOpen] = useState(null);
   const [busy, setBusy] = useState(false);
-  const template = (data?.templates || []).find((t) => t.businessType === type);
-  async function add(e) {
-    e.preventDefault();
+  const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const rows = (data?.products || []).filter((p) => !q.trim() || fold(p.product_name + ' ' + p.category + ' ' + (p.barcode || '')).includes(fold(q.trim())));
+  async function save() {
     setBusy(true);
+    const body = {
+      product_name: open.product_name.trim(), category: open.category.trim() || 'Geral',
+      suggested_cost: open.suggested_cost || 0, suggested_sell: open.suggested_sell || 0,
+      barcode: open.barcode?.trim() || null, icon: open.icon || null,
+    };
     try {
-      await api.post('/api/master_catalogs', { businessType: type, categories: [form.category || 'Geral'], sampleProducts: [{ name: form.name.trim(), category: form.category || 'Geral', cost_mzn: Number(form.cost.replace(',', '.')), price_mzn: Number(form.sell.replace(',', '.')) }] });
-      toast('Produto acrescentado ao catálogo-mestre.');
-      setForm({ name: '', category: form.category, cost: '', sell: '' });
-      reload();
+      if (open.id) await api.put('/api/admin/master-catalog/' + open.id, body);
+      else await api.post('/api/admin/master-catalog', { ...body, business_type: type });
+      toast(open.id ? 'Produto actualizado. As lojas novas já o recebem assim.' : 'Produto acrescentado ao catálogo-mestre.');
+      setOpen(null); reload();
     } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(false); }
   }
   return (
     <>
-      <PageHeader title="Catálogos-mestre" description="Produtos sugeridos às lojas novas no onboarding, por tipo de negócio." />
+      <PageHeader title="Catálogos-mestre" description="Produtos sugeridos às lojas novas no onboarding, por tipo de negócio. Toque num produto para o editar." />
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Toolbar>
         <Select aria-label="Tipo de negócio" value={type} onChange={(e) => setType(e.target.value)} className="w-56">
-          {Object.entries(TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          {Object.entries(TYPES).map(([v, l]) => <option key={v} value={v}>{l}{data?.counts?.[v] != null ? ` (${data.counts[v]})` : ''}</option>)}
         </Select>
+        <Input aria-label="Procurar no catálogo" placeholder="Procurar…" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-64" />
+        <Button variant="primary" className="ml-auto" onClick={() => setOpen({ ...EMPTY_MASTER })}>Novo produto</Button>
       </Toolbar>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Table
-            columns={[
-              { key: 'name', header: 'Produto' },
-              { key: 'cost', header: 'Custo sugerido', align: 'right', render: (p) => money(Math.round(p.cost_mzn * 100)) },
-              { key: 'sell', header: 'Preço sugerido', align: 'right', render: (p) => money(Math.round(p.price_mzn * 100)) },
-            ]}
-            rows={template?.sampleProducts || []}
-            rowKey="name"
-            empty={<p className="py-10 text-center text-ink-muted">Sem produtos neste tipo. O onboarding usa a lista base do sistema.</p>}
-          />
-        </div>
-        <Card>
-          <CardHeader title="Acrescentar produto" />
-          <form onSubmit={add} className="flex flex-col gap-3">
-            <Input label="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <Input label="Categoria" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+      <Alert tone="info" className="mb-4">As alterações valem para as lojas novas. As lojas que já existem mantêm os seus produtos e preços.</Alert>
+      <Table
+        columns={[
+          { key: 'name', header: 'Produto', render: (p) => <div className="flex items-center gap-3"><ProductImage product={{ name: p.product_name, category: p.category, icon: p.icon }} size={32} /><div><p className="text-ink">{p.product_name}</p><p className="text-xs text-ink-muted">{p.category}{p.barcode ? ' · ' + p.barcode : ''}</p></div></div> },
+          { key: 'cost', header: 'Compra sugerida', align: 'right', render: (p) => money(p.suggested_cost) },
+          { key: 'sell', header: 'Venda sugerida', align: 'right', render: (p) => money(p.suggested_sell) },
+        ]}
+        rows={rows}
+        rowKey="id"
+        loading={loading && !data}
+        onRowClick={(p) => setOpen({ ...p, barcode: p.barcode || '' })}
+        empty={<p className="py-10 text-center text-ink-muted">{q ? 'Nenhum produto encontrado.' : 'Sem produtos neste tipo.'}</p>}
+      />
+      <Drawer
+        open={Boolean(open)}
+        onClose={() => setOpen(null)}
+        title={open?.id ? 'Editar produto' : 'Novo produto'}
+        description={TYPES[type]}
+        footer={open && (
+          <>
+            <Button onClick={() => setOpen(null)}>Cancelar</Button>
+            <Button variant="primary" loading={busy} disabled={!open.product_name.trim() || !(open.suggested_sell > 0)} onClick={save}>Guardar</Button>
+          </>
+        )}
+      >
+        {open && (
+          <div className="flex flex-col gap-4">
+            <Input label="Nome" value={open.product_name} onChange={(e) => setOpen({ ...open, product_name: e.target.value })} />
+            <Input label="Categoria" value={open.category} onChange={(e) => setOpen({ ...open, category: e.target.value })} />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Custo (MT)" inputMode="decimal" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
-              <Input label="Preço (MT)" inputMode="decimal" value={form.sell} onChange={(e) => setForm({ ...form, sell: e.target.value })} />
+              <MoneyInput label="Preço de compra sugerido" valueCents={open.suggested_cost} onChangeCents={(v) => setOpen({ ...open, suggested_cost: v })} />
+              <MoneyInput label="Preço de venda sugerido" valueCents={open.suggested_sell} onChangeCents={(v) => setOpen({ ...open, suggested_sell: v })} />
             </div>
-            <Button type="submit" variant="primary" loading={busy} disabled={!form.name.trim() || !(Number(form.sell.replace(',', '.')) > 0)}>Acrescentar</Button>
-          </form>
-        </Card>
-      </div>
+            <Input label="Código de barras" value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" />
+            <Select label="Ícone" value={open.icon || ''} onChange={(e) => setOpen({ ...open, icon: e.target.value || null })}>
+              <option value="">Automático (pela categoria)</option>
+              {PRODUCT_ICONS.map((i) => <option key={i.key} value={i.key}>{i.label}</option>)}
+            </Select>
+          </div>
+        )}
+      </Drawer>
     </>
   );
 }

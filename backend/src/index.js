@@ -8,7 +8,6 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const salesRoutes = require('./routes/sales');
 const catalogRoutes = require('./routes/catalogs');
-const masterCatalogRoutes = require('./routes/master_catalogs');
 const productsRoutes = require('./routes/products');
 const ownerRoutes = require('./routes/owner');
 const dashboardRoutes = require('./routes/dashboard');
@@ -227,7 +226,7 @@ app.use('/api/refresh', refreshRoute);
 // Catálogos públicos (templates) e import (protegido)
 app.use('/api/catalogs', catalogRoutes);
 // Master catalogs (admin)
-app.use('/api/master_catalogs', masterCatalogRoutes);
+// /api/master_catalogs (antigo) retirado na Fase 8.6: o catalogo-mestre vive em /api/admin/master-catalog.
 // Produtos do tenant
 app.use('/api/products', productsRoutes);
 app.use('/api/owner', ownerRoutes);

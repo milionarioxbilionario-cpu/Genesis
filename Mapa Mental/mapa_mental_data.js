@@ -1,29 +1,29 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-11T09:53:28.206Z */
+   Gerado em: 2026-10-11T10:24:45.886Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-11T09:53:28.206Z",
+ "generatedAt": "2026-10-11T10:24:45.886Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
   "files": 226,
   "planned": 5,
-  "links": 375,
-  "lines": 31440,
+  "links": 371,
+  "lines": 31598,
   "byStatus": {
-   "ok": 147,
-   "partial": 12,
+   "ok": 149,
+   "partial": 11,
    "broken": 0,
    "planned": 5,
-   "untracked": 67
+   "untracked": 66
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
-   "admin": 9,
+   "admin": 10,
    "backend-data": 59,
-   "backend": 59,
+   "backend": 58,
    "frontend-pub": 4,
    "frontend": 74,
    "scripts": 3
@@ -52,14 +52,18 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "express",
-   "count": 17
-  },
-  {
-   "pkg": "zod",
    "count": 16
   },
   {
+   "pkg": "node:path",
+   "count": 15
+  },
+  {
    "pkg": "crypto",
+   "count": 15
+  },
+  {
+   "pkg": "zod",
    "count": 15
   },
   {
@@ -67,12 +71,8 @@ window.GENESIS_MINDMAP = {
    "count": 14
   },
   {
-   "pkg": "node:path",
-   "count": 14
-  },
-  {
    "pkg": "node:fs",
-   "count": 13
+   "count": 14
   },
   {
    "pkg": "node:test",
@@ -155,11 +155,11 @@ window.GENESIS_MINDMAP = {
    "id": "admin",
    "label": "Super Admin",
    "tone": "#a855f7",
-   "nodes": 9,
+   "nodes": 10,
    "clusters": {
     "admin-frontend": 5,
     "admin-frontend/src": 3,
-    "admin-frontend/tests": 1
+    "admin-frontend/tests": 2
    }
   },
   {
@@ -192,11 +192,11 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 59,
+   "nodes": 58,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
-    "backend/src/routes": 16,
+    "backend/src/routes": 15,
     "backend/src/services": 11,
     "backend/src/utils": 25,
     "backend/src/jobs": 1
@@ -283,8 +283,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 888,
-   "size": 168740,
+   "lines": 911,
+   "size": 173160,
    "externals": [
     "@prisma/client"
    ],
@@ -327,8 +327,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1348,
-   "size": 72173,
+   "lines": 1352,
+   "size": 72280,
    "externals": [
     "nodemailer"
    ],
@@ -460,8 +460,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 543,
-   "size": 33077,
+   "lines": 570,
+   "size": 35264,
    "externals": [
     "react",
     "react-router-dom",
@@ -567,6 +567,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 105,
    "size": 5611,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:module"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "admin-frontend/tests/fase8_6.mjs",
+   "path": "admin-frontend/tests/fase8_6.mjs",
+   "label": "fase8_6.mjs",
+   "group": "admin",
+   "dir": "admin-frontend/tests",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: super admin acrescenta e edita o catalogo-mestre; onboarding recebe.",
+   "notes": "11/10/2026: 8/8.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 106,
+   "size": 6143,
    "externals": [
     "node:fs",
     "node:path",
@@ -1180,14 +1205,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend-data",
    "dir": "backend/scripts",
    "ext": ".js",
-   "status": "untracked",
+   "status": "ok",
    "summary": "",
-   "notes": "",
+   "notes": "11/10/2026: limpa produtos de teste do catalogo-mestre.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 32,
-   "size": 2067,
+   "lines": 35,
+   "size": 2296,
    "externals": [
     "dotenv",
     "fs",
@@ -1692,8 +1717,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1279,
-   "size": 106649,
+   "lines": 1317,
+   "size": 111121,
    "externals": [
     "dotenv",
     "crypto",
@@ -1726,12 +1751,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
-   "notes": "O fecho de turno esta montado so com requireRole('owner').",
+   "notes": "11/10/2026: sem /api/master_catalogs; arranca auditRetention (8.5).",
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 281,
-   "size": 10889,
+   "lines": 280,
+   "size": 10878,
    "externals": [
     "dotenv",
     "express",
@@ -1746,7 +1771,6 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/admin.js",
     "backend/src/routes/sales.js",
     "backend/src/routes/catalogs.js",
-    "backend/src/routes/master_catalogs.js",
     "backend/src/routes/products.js",
     "backend/src/routes/owner.js",
     "backend/src/routes/dashboard.js",
@@ -1768,7 +1792,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 24
+   "outbound": 23
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -1823,14 +1847,13 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/catalogs.js",
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
-    "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 11,
+   "inbound": 10,
    "outbound": 4
   },
   {
@@ -1884,14 +1907,13 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/catalogs.js",
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
-    "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 10,
+   "inbound": 9,
    "outbound": 0
   },
   {
@@ -1931,12 +1953,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
-   "notes": "11/10/2026 Fase 8.4: GET /lost-requests (sem nomes de lojas) + overview.lost_requests_30d. verify_system 23.",
+   "notes": "11/10/2026 Fase 8.6: GET/POST /master-catalog, PUT /master-catalog/:id (centavos, 409 nome repetido, auditado). verify_system 25 (17/17).",
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 261,
-   "size": 17042,
+   "lines": 312,
+   "size": 20567,
    "externals": [
     "express",
     "bcrypt",
@@ -2124,36 +2146,6 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 1,
    "outbound": 4
-  },
-  {
-   "id": "backend/src/routes/master_catalogs.js",
-   "path": "backend/src/routes/master_catalogs.js",
-   "label": "master_catalogs.js",
-   "group": "backend",
-   "dir": "backend/src/routes",
-   "ext": ".js",
-   "status": "partial",
-   "summary": "Rotas antigas do catalogo-mestre (listar/acrescentar).",
-   "notes": "",
-   "role": "Catalogo-mestre.",
-   "security": "",
-   "planned": false,
-   "lines": 93,
-   "size": 3031,
-   "externals": [
-    "express",
-    "zod"
-   ],
-   "dependsOn": [
-    "backend/src/utils/prisma.js",
-    "backend/src/middleware/rbac.js",
-    "backend/src/middleware/auth.js"
-   ],
-   "usedBy": [
-    "backend/src/index.js"
-   ],
-   "inbound": 1,
-   "outbound": 3
   },
   {
    "id": "backend/src/routes/owner.js",
@@ -3056,7 +3048,6 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/dashboard.js",
     "backend/src/routes/demand_captures.js",
     "backend/src/routes/inventory.js",
-    "backend/src/routes/master_catalogs.js",
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
@@ -3077,7 +3068,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 39,
+   "inbound": 38,
    "outbound": 1
   },
   {
@@ -6651,10 +6642,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
-   "target": "backend/src/routes/master_catalogs.js"
-  },
-  {
-   "source": "backend/src/index.js",
    "target": "backend/src/routes/products.js"
   },
   {
@@ -6912,18 +6899,6 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/inventory.js",
    "target": "backend/src/utils/stockLots.js"
-  },
-  {
-   "source": "backend/src/routes/master_catalogs.js",
-   "target": "backend/src/utils/prisma.js"
-  },
-  {
-   "source": "backend/src/routes/master_catalogs.js",
-   "target": "backend/src/middleware/rbac.js"
-  },
-  {
-   "source": "backend/src/routes/master_catalogs.js",
-   "target": "backend/src/middleware/auth.js"
   },
   {
    "source": "backend/src/routes/owner.js",

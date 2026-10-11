@@ -1258,7 +1258,45 @@ async function test24() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24 };
+// Fase 8.6: o super admin edita o catalogo-mestre (centavos, origem do painel).
+async function test25() {
+  section(25, 'Catalogo-mestre: listar, acrescentar e editar no admin; lojas novas recebem a alteracao');
+  const admin = adminClient();
+  const tag = 'Sumo Verif ' + Date.now().toString().slice(-6);
+  const ids = [];
+  try {
+    const list = await admin.req('GET', '/api/admin/master-catalog?type=bottle_store');
+    ok(list.status === 200 && Array.isArray(list.data.products) && list.data.products.every((p) => p.id && Number.isInteger(p.suggested_sell)) && list.data.counts.bottle_store === list.data.products.length, 'lista com id e precos em centavos (' + (list.data?.products?.length) + ' produtos)', list.status);
+    ok((await admin.req('GET', '/api/admin/master-catalog?type=xpto')).status === 400, 'tipo invalido: 400');
+    const add = await admin.req('POST', '/api/admin/master-catalog', { business_type: 'bottle_store', product_name: tag, category: 'Sumos', suggested_cost: 3000, suggested_sell: 4500, icon: 'droplet', barcode: null });
+    ok(add.status === 201 && add.data.suggested_sell === 4500, 'acrescentar: 201 (45,00 MT em centavos)', add);
+    if (add.data?.id) ids.push(add.data.id);
+    const id = add.data.id;
+    ok((await admin.req('POST', '/api/admin/master-catalog', { business_type: 'bottle_store', product_name: tag.toUpperCase(), category: 'Sumos', suggested_cost: 1, suggested_sell: 2 })).status === 409, 'mesmo nome (maiusculas) no mesmo tipo: 409');
+    const ed = await admin.req('PUT', '/api/admin/master-catalog/' + id, { product_name: tag + ' 1L', category: 'Sumos', suggested_cost: 3200, suggested_sell: 5000, icon: 'droplet', barcode: '6001234999999' });
+    ok(ed.status === 200 && ed.data.product_name === tag + ' 1L' && ed.data.suggested_sell === 5000 && ed.data.barcode === '6001234999999', 'editar nome, preco e codigo: 200', ed);
+    for (const [body, why] of [[{ product_name: tag, category: 'S', suggested_cost: 0, suggested_sell: 0 }, 'venda 0'], [{ product_name: tag, category: 'S', suggested_cost: 1, suggested_sell: 10.5 }, 'preco nao inteiro (centavos)'], [{ product_name: tag, category: 'S', suggested_cost: 1, suggested_sell: 100, icon: 'nao-existe' }, 'icone invalido'], [{ product_name: tag, category: 'S', suggested_cost: 1, suggested_sell: 100, barcode: 'a b' }, 'codigo invalido'], [{ product_name: '', category: 'S', suggested_cost: 1, suggested_sell: 100 }, 'sem nome']]) {
+      ok((await admin.req('PUT', '/api/admin/master-catalog/' + id, body)).status === 400, why + ': 400');
+    }
+    const other = list.data.products[0];
+    if (other) ok((await admin.req('PUT', '/api/admin/master-catalog/' + id, { product_name: other.product_name, category: 'S', suggested_cost: 1, suggested_sell: 100 })).status === 409, 'renomear para um nome que ja existe: 409');
+    ok((await admin.req('PUT', '/api/admin/master-catalog/00000000-0000-0000-0000-000000000000', { product_name: 'x', category: 'S', suggested_cost: 1, suggested_sell: 100 })).status === 404, 'produto inexistente: 404');
+    const pub = await fetch(BASE + '/api/catalogs/bottle_store').then((r) => r.json());
+    const seen = pub.template.sampleProducts.find((p) => p.name === tag + ' 1L');
+    ok(seen && seen.price_mzn === 50 && seen.cost_mzn === 32 && seen.icon === 'droplet', 'onboarding (lojas novas) ja recebe o produto editado (50 MT)', seen);
+    const aud = await prisma.auditLog.findMany({ where: { entity_id: id, action: { in: ['MASTER_CATALOG_CREATED', 'MASTER_CATALOG_UPDATED'] } } });
+    const upd = aud.find((x) => x.action === 'MASTER_CATALOG_UPDATED');
+    ok(aud.length === 2 && upd && JSON.parse(upd.old_value).suggested_sell === 4500 && JSON.parse(upd.new_value).suggested_sell === 5000 && upd.tenant_id === null, 'auditado (criado + alterado 45 -> 50 MT, sem loja)');
+    ok((await ownerClient().req('PUT', '/api/admin/master-catalog/' + id, { product_name: 'x', category: 'S', suggested_cost: 1, suggested_sell: 100 }, { Origin: ADMIN_ORIGIN })).status === 403, 'dono: 403');
+    ok((await client(signAccessToken(ctx.admin)).req('GET', '/api/admin/master-catalog')).status === 403, 'admin sem a origem do painel: 403');
+    ok((await admin.req('GET', '/api/master_catalogs')).status === 404, 'rota antiga /api/master_catalogs: 404');
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { entity_id: { in: ids } } });
+    await prisma.masterCatalog.deleteMany({ where: { id: { in: ids } } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25 };
 
 (async () => {
   await prisma.ready();
