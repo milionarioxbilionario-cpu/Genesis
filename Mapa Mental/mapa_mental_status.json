@@ -135,7 +135,7 @@
       "status": "ok",
       "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
       "role": "Catalogo.",
-      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin)."
+      "notes": "11/10/2026 Fase 8.8: codigo de barras unico por loja (409 DUPLICATE_BARCODE). verify_system 27 7/7."
     },
     "backend/src/routes/inventory.js": {
       "status": "ok",
@@ -351,11 +351,11 @@
       "role": "Estado do POS."
     },
     "frontend/src/utils/receiptPrinter.js": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
       "role": "Recibo (impressao).",
       "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Antes o window.open prendia o utilizador na app do ecra principal do iPhone. 09/10: QR = origem da app + /verify/<id>. Parcial: a impressora serie pede a porta a cada impressao (Fase 8.8)."
+      "notes": "11/10/2026 Fase 8.8: PDF sempre no aparelho + impressora escolhida (USB/Bluetooth/computador). fase8_8.mjs + fase8_1.mjs."
     },
     "frontend/src/db/localDb.js": {
       "status": "ok",
@@ -997,7 +997,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "11/10/2026 Fase 8.4: Produto em falta e Quebra no telemovel (icones); Vendas em icone < 640 px. fase8_4.mjs + pos.mjs + flows.mjs."
+      "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1148,7 +1148,7 @@
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
-      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN."
     },
     "backend/src/routes/verify.js": {
       "status": "ok",
@@ -1287,7 +1287,7 @@
       "status": "ok",
       "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
       "role": "Painel do dono.",
-      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
+      "notes": "11/10/2026 Fase 8.8: Ler codigo com a camara. fase8_8.mjs, stock.mjs, fase8_2.mjs."
     },
     "frontend/tests/e2e/stock.mjs": {
       "status": "ok",
@@ -1364,6 +1364,36 @@
       "summary": "Browser: horarios dos relatorios nas Definicoes.",
       "role": "Teste E2E.",
       "notes": "11/10/2026: 7/7."
+    },
+    "frontend/src/utils/escpos.js": {
+      "status": "ok",
+      "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte).",
+      "role": "Impressora de recibos.",
+      "notes": "11/10/2026 Fase 8.8: escpos.test.mjs 4/4; impressora real nao verificada."
+    },
+    "frontend/src/utils/devices.js": {
+      "status": "partial",
+      "summary": "Preferencias de dispositivos do aparelho; impressora USB (Web Serial) e Bluetooth (Web Bluetooth).",
+      "role": "Dispositivos.",
+      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com impressoras simuladas; hardware real nao verificado."
+    },
+    "frontend/src/components/BarcodeScanner.jsx": {
+      "status": "partial",
+      "summary": "Leitura de codigo de barras pela camara (ZXing).",
+      "role": "Camara.",
+      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com camara falsa (EAN-13); camara real nao verificada."
+    },
+    "frontend/src/pages/pos/DevicesDialog.jsx": {
+      "status": "ok",
+      "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
+      "role": "Terminal.",
+      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19."
+    },
+    "frontend/tests/e2e/fase8_8.mjs": {
+      "status": "ok",
+      "summary": "Browser: dispositivos, camara falsa, impressoras simuladas, PDF.",
+      "role": "Teste E2E.",
+      "notes": "11/10/2026: 19/19."
     }
   }
 }

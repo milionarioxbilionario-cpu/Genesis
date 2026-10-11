@@ -5,6 +5,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 
+// Fase 8.8: depois do PIN o terminal pergunta pelos dispositivos; aqui salta-se.
+async function skipDevices(p) {
+  await p.getByText('Venda actual').waitFor({ timeout: 120000 });
+  const b = p.getByRole('button', { name: 'Não tenho — saltar' });
+  if (await b.count()) await b.click();
+}
+
 const BASE = process.env.BASE || 'http://localhost:5180';
 const fx = JSON.parse(fs.readFileSync(process.env.FIXTURE, 'utf8'));
 const SHOTS = process.env.SHOTS || 'shots';
@@ -50,6 +57,7 @@ try {
   await term.getByRole('button', { name: /Carlos/ }).click({ timeout: T });
   await term.getByText('Introduza o seu PIN').waitFor();
   await term.keyboard.type(fx.cashier.pin);
+  await skipDevices(term);
   await term.getByText('Venda actual').waitFor({ timeout: T });
   await term.locator('button[data-tile]', { hasText: '2M 340ml' }).click({ timeout: T });
   await term.locator('button[data-tile]', { hasText: 'Coca-Cola 500ml' }).click();

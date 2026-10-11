@@ -30,6 +30,7 @@ export function AuthorizationPinDialog({ title, description, error, onCancel, on
 }
 
 export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
+  const toast = useToast();
   const [qr, setQr] = useState('');
   const [printing, setPrinting] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
@@ -47,6 +48,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
         items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
       });
       if (res?.needsTap) setPdfFile(res.file);
+      if (res?.printError) toast('Recibo guardado em PDF. A impressora falhou: ' + res.printError, 'danger');
     } finally { setPrinting(false); }
   }
   return (

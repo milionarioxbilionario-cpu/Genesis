@@ -1369,7 +1369,42 @@ async function test26() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26 };
+// Fase 8.8: codigo de barras unico por loja (a camara poe no carrinho o produto do codigo lido).
+async function test27() {
+  section(27, 'Codigo de barras unico por loja (camara e leitor sem ambiguidade)');
+  const owner = ownerClient();
+  const code = '560' + Date.now().toString().slice(-10);
+  const a = await owner.req('POST', '/api/products', { name: 'Codigo A ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0, barcode: code });
+  ok(a.status === 201, 'produto A com o codigo: 201', a.status);
+  const b = await owner.req('POST', '/api/products', { name: 'Codigo B ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0, barcode: ' ' + code + ' ' });
+  ok(b.status === 409 && b.data?.code === 'DUPLICATE_BARCODE' && /Codigo A/.test(b.data.error), 'criar outro com o mesmo codigo (com espacos): 409 com o nome do produto', b);
+  const c = await owner.req('POST', '/api/products', { name: 'Codigo C ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0 });
+  ok(c.status === 201, 'produto C sem codigo: 201');
+  const ed = await owner.req('PATCH', '/api/products/' + c.data.id, { barcode: code });
+  ok(ed.status === 409 && ed.data?.code === 'DUPLICATE_BARCODE', 'editar C para o codigo de A: 409', ed.status);
+  const same = await owner.req('PATCH', '/api/products/' + a.data.id, { barcode: code, sell_price: 1100 });
+  ok(same.status === 200 && same.data.sell_price === 1100, 'editar A sem mudar o codigo: 200');
+  // Outra loja pode usar o mesmo codigo (o EAN do fabricante e igual em todo o lado).
+  const other = await prisma.tenant.create({ data: { name: 'TESTE-SEGURANCA-D-' + Date.now(), owner_name: 'D', business_type: 'bottle_store', location: 'T', phone: '840000003', status: 'active', onboarding_completed: true } });
+  const otherOwner = await prisma.user.create({ data: { tenant_id: other.id, role: 'owner', name: 'Dono D', email: 'verif-d-' + Date.now() + '@teste.local', password_hash: 'x', is_active: true } });
+  try {
+    const d = await client(signAccessToken(otherOwner)).req('POST', '/api/products', { name: 'Codigo D ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0, barcode: code });
+    ok(d.status === 201, 'outra loja com o mesmo codigo: 201', d.status);
+  } finally {
+    const pids = (await prisma.product.findMany({ where: { tenant_id: other.id }, select: { id: true } })).map((p) => p.id);
+    await prisma.catalogSuggestion.deleteMany({ where: { tenant_id: other.id } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: other.id } });
+    await prisma.product.deleteMany({ where: { id: { in: pids } } });
+    await prisma.user.delete({ where: { id: otherOwner.id } });
+    await prisma.tenant.delete({ where: { id: other.id } });
+  }
+  // Desactivar A liberta o codigo.
+  await owner.req('DELETE', '/api/products/' + a.data.id);
+  const again = await owner.req('PATCH', '/api/products/' + c.data.id, { barcode: code });
+  ok(again.status === 200, 'depois de remover A, C pode usar o codigo: 200', again.status);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27 };
 
 (async () => {
   await prisma.ready();

@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CircleAlert, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Trash2, WifiOff } from 'lucide-react';
+import { Camera, CircleAlert, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Settings2, Trash2, WifiOff } from 'lucide-react';
+import BarcodeScanner from '../../components/BarcodeScanner';
+import DevicesDialog from './DevicesDialog';
+import { wasAsked } from '../../utils/devices';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import useOfflineSync from '../../hooks/useOfflineSync';
@@ -27,7 +30,7 @@ const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], 
 //    global que finalizasse a venda — o leitor disparava vendas por acidente.
 //  - so vai para a fila offline o que falhou por rede/servidor; uma recusa de
 //    regra mostra o motivo e mantem o cesto.
-export default function PosScreen({ info, cashier, onLock }) {
+export default function PosScreen({ info, cashier, onLock, askDevices = false }) {
   const toast = useToast();
   const { isOnline, pendingCount, rejectedCount, refreshCounts, syncNow } = useOfflineSync();
   const [products, setProducts] = useState([]);
@@ -47,6 +50,10 @@ export default function PosScreen({ info, cashier, onLock }) {
   const [scan, setScan] = useState(null); // ultima leitura: { code, name?, ok, at }
   const pendingSale = useRef(null);
   const searchRef = useRef(null);
+  // Fase 8.8: dispositivos perguntados logo depois do PIN (uma vez por caixista
+  // neste aparelho) e camara para ler codigos de barras.
+  const [devicesOpen, setDevicesOpen] = useState(() => askDevices && !wasAsked(cashier.id));
+  const [camera, setCamera] = useState(false);
   const gridRef = useRef(null);
 
   const refreshCatalog = useCallback(async () => {
@@ -68,7 +75,7 @@ export default function PosScreen({ info, cashier, onLock }) {
     const t = setInterval(() => { refreshCatalog(); refreshShift(); }, 30000);
     return () => clearInterval(t);
   }, [catalogSource, isOnline, refreshCatalog, refreshShift]);
-  useEffect(() => { if (!dialog) searchRef.current?.focus(); }, [dialog, cart.length]);
+  useEffect(() => { if (!dialog && !devicesOpen && !camera) searchRef.current?.focus(); }, [dialog, cart.length, devicesOpen, camera]);
 
   const categories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(), [products]);
   const visible = useMemo(() => {
@@ -100,6 +107,17 @@ export default function PosScreen({ info, cashier, onLock }) {
     });
   }
   const setQty = (id, q) => setCart((c) => c.flatMap((l) => (l.product_id !== id ? [l] : q <= 0 ? [] : [{ ...l, quantity: Math.min(q, l.stock) }])));
+
+  // Codigo lido pela camara: conhecido entra logo no carrinho (pedido do fundador).
+  function onCameraCode(code) {
+    const p = products.find((x) => (x.barcode || '').toLowerCase() === code.toLowerCase());
+    if (!p) return { ok: false, message: `Produto não cadastrado (${code})` };
+    const inCart = cart.find((l) => l.product_id === p.id)?.quantity || 0;
+    if (inCart + 1 > (p.stock_qty || 0)) return { ok: false, message: `Sem stock suficiente de ${p.name}.` };
+    add(p);
+    setScan({ code, name: p.name, ok: true, at: Date.now() });
+    return { ok: true, message: `${p.name} adicionado (${inCart + 1} na venda)` };
+  }
 
   function onSearchKey(e) {
     if (e.key === 'ArrowDown') { e.preventDefault(); focusTile(0); return; }
@@ -274,7 +292,8 @@ export default function PosScreen({ info, cashier, onLock }) {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Produtos */}
         <section className="flex min-h-0 flex-1 flex-col p-4">
-          <div className="relative">
+          <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
             <input
               ref={searchRef}
@@ -285,6 +304,9 @@ export default function PosScreen({ info, cashier, onLock }) {
               aria-label="Pesquisar produto"
               className="h-11 w-full rounded border border-border-strong bg-surface pl-9 pr-3 text-md text-ink focus:border-accent focus:shadow-focus focus:outline-none"
             />
+          </div>
+          <IconButton label="Ler com a câmara" icon={Camera} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setCamera(true)} />
+          <IconButton label="Dispositivos" icon={Settings2} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setDevicesOpen(true)} />
           </div>
           {categories.length > 1 && (
             <div className="mt-3 flex gap-1.5 overflow-x-auto scrollbar-none">
@@ -300,7 +322,7 @@ export default function PosScreen({ info, cashier, onLock }) {
               {scan.ok ? <ScanBarcode size={18} className="shrink-0 text-accent" /> : <CircleAlert size={18} className="shrink-0 text-warning" />}
               <span className="num shrink-0 rounded bg-surface px-2 py-0.5 text-sm tracking-wider text-ink">{scan.code}</span>
               <span className="min-w-0 truncate text-sm text-ink">
-                {scan.ok ? <><span className="font-medium">{scan.name}</span> adicionado</> : 'Este código não existe no catálogo. O dono regista-o em Produtos.'}
+                {scan.ok ? <><span className="font-medium">{scan.name}</span> adicionado</> : 'Produto não cadastrado. O dono regista-o em Produtos.'}
               </span>
             </div>
           )}
@@ -415,6 +437,8 @@ export default function PosScreen({ info, cashier, onLock }) {
       {dialog === 'close' && <CloseShiftDialog shift={shift} syncNow={syncNow} onClose={() => setDialog(null)} onDone={() => { refreshShift(); }} />}
       {dialog === 'recent' && <RecentSalesDialog onClose={() => setDialog(null)} onChanged={() => { refreshCatalog(); refreshShift(); }} />}
       {dialog === 'shrink' && <ShrinkageDialog products={products} cashier={cashier} onClose={() => setDialog(null)} onSaved={() => { refreshCounts(); refreshCatalog(); }} />}
+      {devicesOpen && <DevicesDialog cashier={cashier} onClose={() => setDevicesOpen(false)} />}
+      <BarcodeScanner open={camera} continuous onClose={() => setCamera(false)} onCode={onCameraCode} />
       {dialog === 'demand' && <DemandDialog products={products} cashier={cashier} onClose={() => setDialog(null)} onSaved={refreshCounts} />}
     </div>
   );

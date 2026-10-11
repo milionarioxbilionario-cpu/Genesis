@@ -7,6 +7,13 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 import QRCode from 'qrcode';
 
+// Fase 8.8: depois do PIN o terminal pergunta pelos dispositivos; aqui salta-se.
+async function skipDevices(p) {
+  await p.getByText('Venda actual').waitFor({ timeout: 120000 });
+  const b = p.getByRole('button', { name: 'Não tenho — saltar' });
+  if (await b.count()) await b.click();
+}
+
 const BASE = process.env.BASE || 'http://localhost:5180';
 const fx = JSON.parse(fs.readFileSync(process.env.FIXTURE, 'utf8'));
 const SHOTS = process.env.SHOTS || 'shots';
@@ -95,6 +102,7 @@ try {
   await term.getByText('Introduza o seu PIN').waitFor();
   await shot(term, '22-terminal-pin');
   await term.keyboard.type('2468');
+  await skipDevices(term);
   await term.getByText('Venda actual').waitFor({ timeout: T });
   await term.getByText('Laurentina Preta 550ml').first().waitFor({ timeout: T });
   ok(true, 'PIN -> ecra de vendas');
@@ -241,6 +249,7 @@ try {
   await term.getByRole('button', { name: /Carlos/ }).click();
   await term.getByText('Introduza o seu PIN').waitFor();
   await term.keyboard.type('2468');
+  await skipDevices(term);
   await term.getByText('Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.').waitFor({ timeout: T });
   ok(true, 'voltar a entrar com o PIN do caixista nao reabre o turno');
   await term.getByRole('button', { name: 'Abrir turno novo' }).click();

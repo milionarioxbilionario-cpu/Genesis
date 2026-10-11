@@ -1,10 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Boxes, Camera, Plus, Trash2 } from 'lucide-react';
+import { Boxes, Camera, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { int, errorMessage } from '../../utils/format';
 import { photoToDataUrl } from '../../utils/imageResize';
+import BarcodeScanner from '../../components/BarcodeScanner';
 import { Button, Drawer, IconButton, Input, MoneyInput, PRODUCT_ICONS, ProductImage, Select, Skeleton, categoryIcon, cx, useConfirm, useToast, Alert } from '../../components/ui';
 
 // Formulario do produto (novo ou editar). Usado pelo Catalogo ("Novo produto")
@@ -46,6 +47,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
   const suppliers = useApi('/api/inventory/suppliers');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
   const photoInput = useRef(null);
   const categories = useMemo(() => [...new Set((products.data || []).map((p) => p.category))].sort(), [products.data]);
 
@@ -121,8 +123,12 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
           <Input label="Nome" value={editing.name} onChange={(e) => set('name')(e.target.value)} autoFocus />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Categoria" list="categorias" value={editing.category} onChange={(e) => set('category')(e.target.value)} />
-            <Input label="Código de barras" value={editing.barcode} onChange={(e) => set('barcode')(e.target.value)} inputClassName="num" />
+            <div className="flex items-end gap-1.5">
+              <Input label="Código de barras" value={editing.barcode || ''} onChange={(e) => set('barcode')(e.target.value)} inputClassName="num" className="min-w-0 flex-1" />
+              <IconButton label="Ler código com a câmara" icon={ScanBarcode} variant="secondary" className="h-10 w-10 shrink-0" onClick={() => setScanning(true)} />
+            </div>
           </div>
+          <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onCode={(code) => { set('barcode')(code); return { ok: true, message: 'Código lido: ' + code }; }} />
           <datalist id="categorias">{categories.map((c) => <option key={c} value={c} />)}</datalist>
           <IconPicker product={editing} value={editing.icon} onChange={set('icon')} />
           <div className="grid grid-cols-2 gap-3">

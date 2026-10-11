@@ -1,5 +1,7 @@
 import QRCode from 'qrcode';
-import { deliverPdf, prefersShare } from './pdf/deliver';
+import { deliverPdf, downloadBlob, prefersShare } from './pdf/deliver';
+import { buildEscPosReceipt } from './escpos';
+import { getDevicePrefs, sendToPrinter } from './devices';
 
 const formatCurrency = (value) => {
   const numeric = Number(value || 0) / 100;
@@ -129,33 +131,6 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
   `;
 }
 
-async function tryWebSerialPrint(shopName, sale, items) {
-  if (typeof navigator === 'undefined' || !('serial' in navigator)) {
-    return { ok: false, reason: 'Web Serial não disponível neste navegador' };
-  }
-  try {
-    const port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 9600 });
-    const writer = port.writable.getWriter();
-    const encoder = new TextEncoder();
-    const lines = [
-      shopName,
-      new Date(sale.created_at || Date.now()).toLocaleString('pt-MZ'),
-      `Pagamento: ${sale.payment_method || 'Dinheiro'}`,
-      `Total: ${formatCurrency(sale.total_amount || 0)}`,
-      '',
-      ...((items || []).map((i) => `${i.product_name || 'Produto'} x${(i.quantity || 1)} ${formatCurrency(i.unit_sell_price || 0)}`)),
-    ];
-    await writer.write(encoder.encode(lines.join('\n')));
-    writer.releaseLock();
-    await port.close();
-    return { ok: true, reason: 'impressa via Web Serial' };
-  } catch (err) {
-    console.warn('Web Serial print failed, falling back to browser print', err);
-    return { ok: false, reason: err?.message || 'erro na serial' };
-  }
-}
-
 // Moldura escondida na propria pagina: imprime sem abrir janela nova. A janela
 // nova (window.open) ficava sem botao de voltar na app do ecra principal do
 // iPhone e prendia o utilizador no recibo (teste do fundador, 10/10/2026).
@@ -184,41 +159,65 @@ function printHtmlInIframe(html) {
   });
 }
 
-// Carrega o gerador de PDF antes do toque: a folha de partilha do iPhone so
-// abre se o toque ainda estiver "fresco" quando o PDF fica pronto.
+// O PDF do recibo e sempre gerado; carrega-se o gerador antes do toque (a
+// folha de partilha do iPhone so abre se o toque ainda estiver "fresco").
 export function preloadReceiptPdf() {
-  if (prefersShare()) import('./pdf/receiptPdf').catch(() => {});
+  import('./pdf/receiptPdf').catch(() => {});
 }
 
-// Telemovel/tablet: PDF de talao pela folha de partilha (imprimir, guardar,
-// WhatsApp). Computador: impressora serie (se houver) ou dialogo de impressao.
-// Devolve { ok, via } ou { needsTap, file } (ver utils/pdf/deliver.js).
+const isAndroid = () => typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '');
+
+// Recibo guardado SEMPRE no aparelho, haja ou nao impressora (decisao do
+// fundador 11/10/2026): Android e computador descarregam o ficheiro; iPhone/
+// iPad usa a folha de partilha («Guardar em Ficheiros») — a descarga na app do
+// ecra principal do iPhone abre o PDF por cima e prende o utilizador (8.1).
+async function saveReceiptPdf(blob, filename) {
+  if (isAndroid()) { downloadBlob(blob, filename); return { ok: true, via: 'download' }; }
+  return deliverPdf(blob, filename);
+}
+
+// Imprimir recibo (Fase 8.8): 1) PDF no aparelho, ainda dentro do toque;
+// 2) a impressora escolhida em «Dispositivos»: USB (Web Serial) ou Bluetooth
+// em ESC/POS, ou a janela de impressao do computador.
+// Devolve { ok, via, printed, printError } ou { needsTap, file } (iPhone).
 export async function printReceipt({ shopName = 'Genesis', shopLocation, cashierName, sale = {}, items = [] }) {
   if (typeof window === 'undefined') return { ok: false, reason: 'não é ambiente browser' };
   const qrDataUrl = await generateQrDataUrl(sale.id);
+  const { printer } = getDevicePrefs();
 
+  let pdf = { ok: false };
   try {
-    if (prefersShare()) {
-      const { buildReceiptPdf } = await import('./pdf/receiptPdf');
-      const { blob, filename } = buildReceiptPdf({ shopName, shopLocation, cashierName, sale, items, qrDataUrl });
-      return await deliverPdf(blob, filename);
-    }
-
-    const webSerialResult = await tryWebSerialPrint(shopName, sale, items);
-    if (webSerialResult.ok) return webSerialResult;
-
-    await printHtmlInIframe(buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qrDataUrl }));
-    return { ok: true, reason: 'impressa via browser print' };
+    const { buildReceiptPdf } = await import('./pdf/receiptPdf');
+    const { blob, filename } = buildReceiptPdf({ shopName, shopLocation, cashierName, sale, items, qrDataUrl });
+    pdf = await saveReceiptPdf(blob, filename);
   } catch (err) {
-    console.error('Receipt printing failed entirely', err);
+    console.error('PDF do recibo falhou', err);
+    pdf = { ok: false, reason: err?.message || 'erro no PDF' };
+  }
+
+  let printed = null;
+  let printError = '';
+  try {
+    if (printer === 'usb' || printer === 'bluetooth') {
+      printed = await sendToPrinter(buildEscPosReceipt({ shopName, shopLocation, cashierName, sale, items, verifyUrl: sale.id ? saleVerifyUrl(sale.id) : null }), printer);
+    } else if (printer === 'system' && !prefersShare()) {
+      await printHtmlInIframe(buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qrDataUrl }));
+      printed = 'system';
+    }
+  } catch (err) {
+    console.warn('Impressora falhou; o recibo ficou em PDF', err);
+    printError = err?.message || 'A impressora não respondeu.';
+  }
+
+  if (!pdf.ok && !pdf.needsTap && !printed) {
     try {
       const pending = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
       pending.push({ shopName, shopLocation, cashierName, sale: JSON.parse(JSON.stringify(sale)), items: JSON.parse(JSON.stringify(items)), qrDataUrl, failedAt: new Date().toISOString() });
       if (pending.length > 50) pending.splice(0, pending.length - 50);
       localStorage.setItem(LS_KEY, JSON.stringify(pending));
     } catch (e) { console.warn('Could not queue receipt for retry', e); }
-    return { ok: false, reason: err?.message || 'erro ao imprimir' };
   }
+  return { ...pdf, ok: Boolean(pdf.ok || printed), printed, printError };
 }
 
 export function getPendingReceipts() {

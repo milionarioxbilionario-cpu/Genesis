@@ -4,13 +4,14 @@ import { useOutletContext } from 'react-router-dom';
 import { preloadReceiptPdf, printReceipt } from '../utils/receiptPrinter';
 import PdfReadyDialog from './PdfReadyDialog';
 import { money, dateTime, timeSec, PAYMENT_LABEL } from '../utils/format';
-import { Button, Drawer, KeyValue } from './ui';
+import { Button, Drawer, KeyValue, useToast } from './ui';
 
 // Detalhe de uma venda no painel do dono (Vendas e Relatorios): itens,
 // desconto, pagamento, margem e reimpressao do recibo.
 export default function SaleDrawer({ sale, onClose }) {
   const { tenant } = useOutletContext() || {};
   const [pdfFile, setPdfFile] = useState(null);
+  const toast = useToast();
   useEffect(() => { if (sale) preloadReceiptPdf(); }, [sale]);
   async function reprint() {
     const res = await printReceipt({
@@ -18,6 +19,7 @@ export default function SaleDrawer({ sale, onClose }) {
       sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
     });
     if (res?.needsTap) setPdfFile(res.file);
+    if (res?.printError) toast('Recibo guardado em PDF. A impressora falhou: ' + res.printError, 'danger');
   }
   return (
     <Drawer
