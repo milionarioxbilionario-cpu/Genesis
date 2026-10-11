@@ -160,7 +160,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `frontend/src/pages/pos/PosScreen.jsx` (catálogo guardado) | Com o catálogo em cache e rede disponível, volta a pedir o catálogo (logo e de 30 em 30 s); o aviso "Sem ligação: a usar o catálogo guardado" sai sozinho | ✅ CONFIRMADO no ponto da captura 29 (`flows.mjs`: com rede, sem aviso) · ⚠️ a verificação passa também se o aviso nunca chegar a aparecer; a contraprova é a captura 29 da versão anterior (mesmos passos, aviso visível) | 09/10 — `flows.mjs` todos os fluxos |
 | `admin-frontend/src/App.jsx` (modo suporte) | O separador abre no próprio toque (antes do pedido) e recebe o link depois; se o browser bloquear, aparece "Tocar aqui para abrir o modo suporte" | ✅ CONFIRMADO no Chromium (normal + bloqueio simulado) · ⚠️ NÃO VERIFICADO no Safari do iPhone (fundador) | 09/10 — `admin_flows.mjs` 7/7 |
 | `backend/src/routes/admin.js` (aprovar pedido) | Email do pedido já com conta → 409 `EMAIL_IN_USE`, pedido continua pendente, nenhuma conta criada (antes inventava `<nome>.<hora>@genesis.co.mz`) | ✅ CONFIRMADO FUNCIONAL | 09/10 — `verify_system.js 11` |
-| Pedido **sem** email | Resolvido na **9.1** (decisão do fundador 12/10: email obrigatório) — ver Fase 9 | ✅ CORRIGIDO (local, por publicar) | 12/10 — `verify_system 11` |
+| Pedido **sem** email | Resolvido na **9.1** (decisão do fundador 12/10: email obrigatório) — ver Fase 9 | ✅ CORRIGIDO (publicado `1e44239`, 12/10) | 12/10 — `verify_system 11` |
 
 ### Fase 8.1 — iPhone: PDF dos relatórios, recibo sem janela nova, ranking por níveis (10/10/2026) — **publicado em genesismz.com (`5315522`, 10/10); `fase8_1.mjs` passou contra o site público**
 | Caminho | O que faz | Estado | Última verificação |
@@ -184,7 +184,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `backend/src/routes/admin.js` (`/catalog-suggestions`, `/accept`, `/dismiss`; `overview.catalog_suggestions`) + `admin-frontend/src/App.jsx` (página «Sugestões», aviso na Visão geral) | Agrupado por tipo de negócio + nome; nº de lojas, compra/venda média e intervalo; **sem id nem nome das lojas** (decisão 10/10). Acrescentar (corrigindo nome/preços/ícone) cria a linha no catálogo-mestre → lojas novas recebem-no no onboarding; 409 se já existe; Ignorar | ✅ CONFIRMADO FUNCIONAL | 10/10 — `verify_system 20`; `fase8_2.mjs` (admin real no browser) |
 | `frontend/src/pages/owner/Products.jsx` (Catálogo + Stock) | Formulário: escolha do ícone; «Preço de compra»/«Preço de venda»; novo produto com «Stock que já tem» em linhas quantidade+validade e «Outra validade», fornecedor opcional, total; editar mostra «Stock actual» e cada lote com unidades+validade; botão «Stock» guarda e abre Stock → Ajuste manual com o produto escolhido (`?ajustar=<id>`) | ✅ CONFIRMADO FUNCIONAL | 10/10 — `fase8_2.mjs` (PC e 390 px) + capturas revistas |
 | `routes/master_catalogs.js` (antigo, montado em `/api/master_catalogs`) | **Retirado na 8.6** (substituído por `/api/admin/master-catalog`); a rota antiga responde 404 | ✅ RESOLVIDO | 11/10 — `verify_system 25` |
-| Limite de login (`routes/auth.js`) | Resolvido na **9.2** (decisão do fundador 12/10: só contam as tentativas erradas) — ver Fase 9 | ✅ CORRIGIDO (local, por publicar) | 12/10 — `verify_system 28` + contraprova |
+| Limite de login (`routes/auth.js`) | Resolvido na **9.2** (decisão do fundador 12/10: só contam as tentativas erradas) — ver Fase 9 | ✅ CORRIGIDO (publicado `1e44239`, 12/10) | 12/10 — `verify_system 28` + contraprova |
 
 ### Fase 8.3-A — turno por dia + fecho explicado (10/10/2026) — **publicado em genesismz.com (`992e14d`, 10/10); `flows.mjs` passou contra o site público**
 | Caminho | O que faz | Estado | Última verificação |
@@ -261,7 +261,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `frontend/src/utils/auditLabels.js` | Fotos de produto no detalhe da auditoria aparecem como «foto» (antes o texto base64 inteiro) | ✅ CONFIRMADO (leitura) | 11/10 |
 | Bluetooth «clássico» (SPP) e iPhone | Nenhum browser lhes dá acesso: nesses casos o recibo sai em PDF para a app da impressora; o ecrã explica-o | ⚠️ limite da plataforma (documentado) | 11/10 |
 
-### Fase 9 — decisões do fundador de 12/10/2026 (email obrigatório, limite do login, idioma PT/EN) — **9.1 e 9.2 locais, ainda NÃO publicadas**
+### Fase 9 — decisões do fundador de 12/10/2026 (email obrigatório, limite do login, idioma PT/EN) — **9.1 e 9.2 publicadas em genesismz.com (`1e44239`, 12/10); `pedir_conta.mjs` 6/6 e 7 logins certos seguidos = 200 contra o site público**
 Decisões (12/10): **1a** email obrigatório no pedido de conta; **2a** o limite do login conta só as tentativas erradas; **idioma** PT/EN no painel do dono, no terminal e no painel super admin; cada pessoa escolhe a sua língua; nomes em inglês só para os produtos do catálogo-mestre (preenchidos pelo super admin), os criados pelo dono ficam como ele os escreveu; pesquisa nas duas línguas («water» encontra «Água»); recibos, PDFs e mensagens de WhatsApp saem na língua de quem os gera.
 
 | Caminho | O que faz | Estado | Última verificação |
@@ -273,7 +273,7 @@ Decisões (12/10): **1a** email obrigatório no pedido de conta; **2a** o limite
 | `backend/src/routes/auth.js` (limite do login) | **9.2** Só contam as tentativas erradas (4xx): 5 por IP + email e 20 por IP, em 15 min; 429 `TOO_MANY_LOGINS`. Antes: 5 por IP contando também as certas | ✅ CONFIRMADO FUNCIONAL | 12/10 — `verify_system 28` 6/6 (7 logins certos = 200; 6.ª errada = 429; conta travada também com a senha certa; outra conta do mesmo IP livre; 20 contas diferentes → 429). **Contraprova** com o código antigo: o 6.º login certo dava 429 (4 falhas). Secções 2 e 7 sem regressão; `flows.mjs` passou |
 | Limite do login Google (`googleLimiter`, 20 por IP / 15 min, conta também os certos) | Não alterado (o token é verificado pelo Google; não há senha a adivinhar) | ⚠️ por rever se houver queixas | 12/10 — leitura |
 | Idioma PT/EN | Por planear (fase grande, em várias partes) | ❌ NÃO EXISTE AINDA | 12/10 |
-| Lojas de teste esquecidas na BD (`TESTE-SEGURANCA-1791740053050`, `-C-1791742891217`, `-1791755776159`, `-1791755776159-DUP` + 2 super admins `@teste.local`) | Restos das verificações de 11/10 e de uma corrida de 12/10 em que a rede caiu. A limpeza (script que só aceita `TESTE-SEGURANCA-*`) foi recusada pelas permissões | ⚠️ à espera da autorização do fundador | 12/10 — pré-visualização |
+| Lojas de teste esquecidas na BD (`TESTE-SEGURANCA-1791740053050`, `-C-1791742891217`, `-1791755776159`, `-1791755776159-DUP` + 2 super admins `@teste.local`) | Restos das verificações de 11/10 e de uma corrida de 12/10 em que a rede caiu. A limpeza (script que só aceita `TESTE-SEGURANCA-*`) foi recusada pelas permissões | ✅ APAGADAS com autorização do fundador (12/10) | 12/10 — script: 4 lojas + 2 admins apagados; ficam Loja de Kleyton, SPAR e 1 super admin |
 
 ---
 
@@ -986,3 +986,10 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Incidentes:** (1) a rede até à BD caiu a meio da 1.ª corrida da secção 11 → a limpeza falhou e deixou `TESTE-SEGURANCA-1791755776159` (+ `-DUP` + admin de teste); a 2.ª corrida passou e apagou a sua loja. (2) Encontradas na BD 2 lojas de teste de 11/10 que o jornal da 8.8 dava como apagadas (`TESTE-SEGURANCA-1791740053050`, criada 17:34 UTC, e `-C-1791742891217`, 18:21 UTC). A limpeza das 4 foi recusada pelas permissões (apagar na BD partilhada com a produção) → pede autorização do fundador. Script em scratchpad, só nomes `TESTE-SEGURANCA-*` e admins `teste-seguranca-*-admin@teste.local`.
 - Não feito: publicar 9.1/9.2 e push (pedem confirmação nesta sessão); limpeza das lojas de teste.
 - Segue-se: com a confirmação do fundador, publicar 9.1 + 9.2 e testar no site; depois planear o idioma (9.3+).
+
+### [2026-10-12] — Publicação da 9.1 + 9.2; limpeza das lojas de teste esquecidas
+- Pedido explícito do fundador nesta sessão («1 sim, 2 sim, 3 sim»): publicar + push, apagar as lojas de teste, mudar o email da conta da SPAR (falta o fundador dizer qual).
+- `git push` `231b551..1e44239`; `publicar.sh` → «PUBLICADO 1e44239» (o 1.º `curl` falhou durante o arranque, a verificação seguinte deu «backend OK»); serviço `active`, `journalctl` dos 20 min seguintes sem linhas de erro.
+- Prova contra https://genesismz.com: pedido de conta sem email → **400**; `pedir_conta.mjs` **6/6, 0 erros de JS** (pedido interceptado, nada gravado); loja de teste temporária → **7 logins certos seguidos = 200** em todos (antes o 6.º dava 429); loja apagada.
+- Limpeza: 4 lojas `TESTE-SEGURANCA-*` + 2 super admins `@teste.local` apagados; ficam Loja de Kleyton, SPAR e 1 super admin. A 1.ª tentativa não apagou nada: lançada fora de `backend/`, o `dbEngine2.clientAlreadyFor` (lê `process.cwd()/node_modules/.prisma`) não encontrou o cliente, chamou `npx prisma generate` e o `npx` foi buscar `prisma@8.0.0-rc.22`, que falhou («No command registered for generate») antes de qualquer consulta. Repetida a partir de `backend/`: OK. Não é defeito do produto (o servidor e os scripts correm em `backend/`); regra para mim: scripts que usam `src/utils/prisma` só a partir de `backend/`.
+- Segue-se: o fundador indica o email verdadeiro da conta da SPAR; depois o plano do idioma PT/EN (9.3+).

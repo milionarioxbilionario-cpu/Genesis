@@ -1914,3 +1914,12 @@ Prova: a verificação do servidor passou em tudo, o teste do formulário no bro
 3) Encontrei 4 lojas de teste esquecidas na base de dados (nomes «TESTE-SEGURANCA-…»). Ficaram de testes meus de ontem e de hoje, num momento em que a internet caiu. Não são lojas reais. Tentei apagá-las, mas o sistema de permissões pede a tua autorização, porque a base de dados é a mesma da loja real.
 
 Falta: publicar a 9.1 e a 9.2 no genesismz.com (preciso da tua confirmação nesta sessão).
+
+
+==================== 12/10/2026 — Email obrigatório e limite de logins publicados; lojas de teste apagadas ====================
+1) O email obrigatório (9.1) e o novo limite de logins (9.2) estão em genesismz.com. Testei no próprio site:
+   - um pedido de conta sem email é recusado;
+   - o formulário «Pedir conta» passou 6 de 6;
+   - 7 entradas certas seguidas com a mesma conta passaram todas (antes a 6.ª era bloqueada).
+2) Apaguei as 4 lojas de teste esquecidas («TESTE-SEGURANCA-…») e 2 contas de super admin de teste. Na base de dados ficam só as tuas lojas (Loja de Kleyton e SPAR) e a tua conta de super admin.
+3) Para mudar o email da conta da SPAR preciso que me digas qual é o email verdadeiro.
