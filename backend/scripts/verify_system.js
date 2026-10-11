@@ -1107,6 +1107,8 @@ async function test23() {
   const tag = 'Cotonete Verif ' + Date.now().toString().slice(-6);
   const ids = [];
   const post = async (c, body) => { const id = crypto.randomUUID(); ids.push(id); return c.req('POST', '/api/demand_captures', { id, ...body }); };
+  // Na bateria completa a seccao 6 ja registou pedidos deste produto hoje: compara-se com o ponto de partida.
+  const base = ((await ownerClient().req('GET', '/api/owner/reports/daily')).data?.lost_demand || []).find((d) => d.product_id === ctx.product.id) || { units: 0, requests: 0 };
 
   const a = await post(cashier, { product_id: ctx.product.id, quantity: 3 });
   ok(a.status === 201, 'do catalogo com 3 un.: 201', a);
@@ -1142,7 +1144,7 @@ async function test23() {
   const out = lost.find((d) => d.outside && d.name === tag);
   const cat = lost.find((d) => d.product_id === ctx.product.id);
   ok(out && out.units === 6 && out.requests === 2 && out.unit_price === 2500 && out.estimated_value === 15000, 'relatorio: fora do catalogo 6 un., 2 pedidos, ~150 MT', out);
-  ok(cat && cat.units === 4 && cat.requests === 2 && cat.estimated_value === 40000, 'relatorio: do catalogo 4 un. (3+1) a 100 MT = 400 MT', cat);
+  ok(cat && cat.units - base.units === 4 && cat.requests - base.requests === 2 && cat.estimated_value === cat.units * 10000, 'relatorio: do catalogo +4 un. (3+1) a 100 MT cada', { cat, base });
   const dd = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
   const tl = await owner.req('GET', `/api/owner/reports/timeline?types=demand&from=${dd(-1)}&to=${dd(1)}`);
   ok(tl.status === 200 && JSON.stringify(tl.data).includes(tag + ' ×4 (fora do catálogo)'), 'cronologia: "Cliente pediu: ' + tag + ' ×4 (fora do catalogo)"', tl.status);
@@ -1200,8 +1202,14 @@ async function test24() {
   const stockG = await list('period=today&group=stock');
   const se = stockG.data.items.find((a) => a.action === 'STOCK_ENTRY');
   ok(se && stockG.data.items.every((a) => a.group === 'stock') && se.new_value.added === 7 && se.user_name === 'Dono Teste', 'tipo Stock: entrada +7 com quem fez', se && se.new_value);
+  // Acesso de suporte do super admin (utilizador que a RLS da loja nao ve):
+  // antes fazia a auditoria inteira dar 500.
+  await prisma.auditLog.create({ data: { tenant_id: t, user_id: ctx.admin.id, action: 'SUPPORT_SESSION_OPENED', entity_type: 'tenant', entity_id: t, ip_address: '127.0.0.1' } });
   const sec = await list('period=today&group=security');
-  ok(sec.data.items.some((a) => a.action === 'AUTH_PIN_CHANGED') && !JSON.stringify(sec.data).includes('975310'), 'tipo PINs: mudanca de PIN aparece, sem o PIN', sec.data.items.map((a) => a.action));
+  const sup = (sec.data?.items || []).find((a) => a.action === 'SUPPORT_SESSION_OPENED');
+  ok(sec.status === 200 && sup && sup.user_name === 'Equipa Genesis (suporte)', 'registo do acesso de suporte: 200 e aparece como «Equipa Genesis (suporte)»', sec.status);
+  if (!Array.isArray(sec.data?.items)) console.log('  (diagnostico) tipo PINs devolveu', sec.status, JSON.stringify(sec.data).slice(0, 300));
+  ok(Array.isArray(sec.data?.items) && sec.data.items.some((a) => a.action === 'AUTH_PIN_CHANGED') && !JSON.stringify(sec.data).includes('975310'), 'tipo PINs: mudanca de PIN aparece, sem o PIN', (sec.data?.items || []).map((a) => a.action));
   const month = await list('period=month&group=products');
   ok(month.status === 200 && !month.data.items.some((a) => a.id === old40.id), 'mes: registo de ha 40 dias nao aparece');
   const all = await list('period=all&group=products');
@@ -1244,13 +1252,15 @@ async function test24() {
     await runAuditRetention({ tenantId: t });
     ok((await exists(old100)) && (await exists(old40)) && (await exists(oldPin)), 'retencao 6 meses: registos de 40, 100 e 150 dias ficam');
     await owner.req('PUT', '/api/settings/audit-retention', { months: 2 });
+    const { getShiftLock } = require('../src/utils/shiftLock');
+    const lockBefore = await getShiftLock(prisma, t, ctx.cashier.id);
     const removed = await runAuditRetention({ tenantId: t });
     ok(!(await exists(old100)) && !(await exists(oldPin)) && removed >= 2, 'retencao 2 meses: venda de ha 100 dias e PIN errado de ha 150 apagados (' + removed + ')');
     ok((await exists(old40)) === (new Date(now - 40 * DAY) >= retentionCutoff({ months: 2 })), 'registo de ha 40 dias segue a regra do mes corrente + anterior');
     ok((await exists(oldUnlock)) && (await exists(oldFail)), 'protegidos ficam: desbloqueio e contagem errada antigos');
     ok((await exists(otherOld)) && (await exists(adminOld)), 'outra loja e registos do admin intactos');
-    const lock = await require('../src/utils/shiftLock').getShiftLock(prisma, t, ctx.cashier.id);
-    ok(lock && typeof lock.attempts === 'number' && lock.locked === false, 'bloqueio do turno continua a ler a auditoria (nao bloqueado)', lock);
+    const lockAfter = await getShiftLock(prisma, t, ctx.cashier.id);
+    ok(JSON.stringify(lockAfter) === JSON.stringify(lockBefore), 'a limpeza nao muda o estado do bloqueio do caixista', { lockBefore, lockAfter });
   } finally {
     await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: otherTenant.id }, { id: adminOld.id }] } });
     await prisma.user.delete({ where: { id: otherOwner.id } });
@@ -1296,7 +1306,70 @@ async function test25() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25 };
+// Fase 8.7: horarios dos relatorios + envio programado (desligado) + dia de Maputo.
+async function test26() {
+  section(26, 'Horarios dos relatorios por WhatsApp; envio programado sem repetir; dia do relatorio = dia de Maputo');
+  const { runReportJob } = require('../src/services/reportJob');
+  const owner = ownerClient();
+  const t = ctx.tenant.id;
+  const g0 = await owner.req('GET', '/api/settings');
+  ok(g0.status === 200 && g0.data.report_schedule && g0.data.report_schedule.daily_report_time === '21:00' && g0.data.report_schedule.weekly_report_day === 1 && g0.data.reports_whatsapp_enabled === false, 'por defeito: diario 21:00, semanal a segunda; envio automatico desligado', g0.data && g0.data.report_schedule);
+  const body = { daily_report_time: '00:00', weekly_report_day: 5, weekly_report_time: '18:30', monthly_report_time: '07:15' };
+  const put = await owner.req('PUT', '/api/settings/report-schedule', body);
+  ok(put.status === 200, 'guardar horarios: 200', put);
+  const g1 = await owner.req('GET', '/api/settings');
+  ok(JSON.stringify(g1.data.report_schedule) === JSON.stringify(body), 'gravado e devolvido igual', g1.data.report_schedule);
+  ok(await prisma.auditLog.count({ where: { tenant_id: t, action: 'UPDATE_REPORT_SCHEDULE' } }) === 1, 'mudanca auditada');
+  for (const [b, why] of [[{ ...body, daily_report_time: '24:00' }, 'hora 24:00'], [{ ...body, weekly_report_day: 7 }, 'dia 7'], [{ ...body, monthly_report_time: '7:15' }, 'hora sem zero'], [{ daily_report_time: '20:00' }, 'campos em falta']]) {
+    ok((await owner.req('PUT', '/api/settings/report-schedule', b)).status === 400, why + ': 400');
+  }
+  const cashier = await cashierTerminal();
+  ok((await cashier.req('PUT', '/api/settings/report-schedule', body)).status === 403, 'caixista: 403');
+
+  // Envio programado com um enviador falso (nada sai para o WhatsApp).
+  const maputoNow = new Date(Date.now() + 2 * 3600000);
+  const today = maputoNow.toISOString().slice(0, 10);
+  const dow = maputoNow.getUTCDay();
+  const dom = maputoNow.getUTCDate();
+  await prisma.tenant.update({ where: { id: t }, data: { daily_report_time: '00:00', weekly_report_day: dow, weekly_report_time: '00:00', monthly_report_time: '00:00', month_close_day: dom <= 28 ? dom : 1, opening_time: '08:00' } });
+  const sent = [];
+  const fake = async (m) => { sent.push(m); return { ok: true, sid: 'teste' }; };
+  const n1 = await runReportJob({ tenantId: t, send: fake });
+  const kindsSent = sent.map((m) => (/Relatório (diário|semanal|mensal)/.exec(m.message) || [])[1]).sort();
+  const expected = dom <= 28 ? ['diário', 'mensal', 'semanal'] : ['diário', 'semanal'];
+  ok(n1 === expected.length && JSON.stringify(kindsSent) === JSON.stringify(expected), 'diario (ontem, completo), semanal e mensal enviados: ' + n1, kindsSent);
+  ok(sent.every((m) => m.to === '+258840000000' && /Receita: .* MT/.test(m.message) && /genesismz\.com\/app\/relatorios|\/app\/relatorios/.test(m.message)), 'para o WhatsApp da loja, com receita em MT e o link', sent[0] && sent[0].message);
+  const yday = new Date(Date.parse(today + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+  ok(await prisma.auditLog.count({ where: { tenant_id: t, action: 'REPORT_SENT', entity_id: 'daily:' + yday } }) === 1, 'auditado com a chave do periodo (daily:' + yday + ')');
+  const n2 = await runReportJob({ tenantId: t, send: fake });
+  ok(n2 === 0 && sent.length === expected.length, 'segunda corrida (ex.: reinicio): nada repetido');
+  // Falha do envio: fica registada e nao insiste de 5 em 5 minutos.
+  await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'REPORT_SENT', entity_id: 'daily:' + yday } });
+  const n3 = await runReportJob({ tenantId: t, send: async () => { throw new Error('modelo nao aprovado'); } });
+  const fail = await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'REPORT_SEND_FAILED', entity_id: 'daily:' + yday } });
+  ok(n3 === 0 && fail && JSON.parse(fail.new_value).reason === 'modelo nao aprovado', 'falha registada com o motivo');
+  ok((await runReportJob({ tenantId: t, send: fake })) === 0, 'depois da falha nao repete');
+
+  // Dia do relatorio = dia de Maputo, mesmo com o servidor em UTC (producao).
+  // Venda as 00:30 de hoje em Maputo (= 22:30 UTC de ontem).
+  const saleAt = new Date(Date.parse(today + 'T00:30:00Z') - 2 * 3600000);
+  const sale = await prisma.sale.create({ data: {
+    tenant_id: t, cashier_user_id: ctx.cashier.id, total_amount: 77700, total_cost: 1000, payment_method: 'cash', amount_received: 77700, change_given: 0, status: 'completed', daily_number: 98, created_at: saleAt,
+    items: { create: [{ product_id: ctx.product.id, product_name: ctx.product.name, quantity: 1, unit_sell_price: 77700, unit_cost_price: 1000 }] },
+  } });
+  try {
+    const dToday = await owner.req('GET', '/api/owner/reports/daily?date=' + today);
+    const dYday = await owner.req('GET', '/api/owner/reports/daily?date=' + yday);
+    const inToday = (dToday.data.gross_revenue || 0) >= 77700;
+    const inYday = (dYday.data.gross_revenue || 0) >= 77700 && (dYday.data.gross_revenue % 77700 === 0);
+    ok(inToday && !inYday, 'venda as 00:30 de Maputo conta HOJE, nao ontem (servidor de teste com TZ=' + (process.env.SERVER_TZ_NOTE || '?') + ')', { hoje: dToday.data.gross_revenue, ontem: dYday.data.gross_revenue });
+  } finally {
+    await prisma.saleItem.deleteMany({ where: { sale_id: sale.id } });
+    await prisma.sale.delete({ where: { id: sale.id } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26 };
 
 (async () => {
   await prisma.ready();

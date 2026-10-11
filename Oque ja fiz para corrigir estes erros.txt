@@ -1848,3 +1848,19 @@ Prova: a verificação do servidor deu 24 de 24 e o teste no browser deu 16 de 1
 3) Achei um problema que vou corrigir na próxima parte (8.7): o servidor está no horário de Londres (UTC), 2 horas atrás de Maputo. Nos relatórios, uma venda feita entre a meia-noite e as 2 da manhã conta no dia anterior. No meu computador não se via porque está no horário de Maputo.
 
 Prova: a verificação do servidor deu 17 de 17 e o teste no browser do admin passou. Os testes antigos do admin (aprovar pedidos, modo suporte, sugestões) continuam a passar.
+
+
+==================== 11/10/2026 — Catálogo-mestre (8.6) publicado e horários dos relatórios (8.7) ====================
+1) A edição do catálogo-mestre (8.6) está em admin.genesismz.com. Testei lá: acrescentar, editar o nome e o preço, e ver que as lojas novas recebem o produto alterado. Passou.
+
+2) Horários dos relatórios (8.7), em Definições › Loja › «Relatórios por WhatsApp»:
+   - Escolhes a hora do relatório diário. A página explica o que recebes: «Às 00:00 recebe o relatório de ontem, completo» ou «Às 19:00 recebe o relatório de hoje, até essa hora» (como disseste).
+   - Escolhes o dia da semana e a hora do semanal (sexta, sábado, domingo, segunda…).
+   - Escolhes a hora do mensal. O dia é o do «Fecho do mês».
+   - O envio automático já está construído, mas desligado, como decidiste: só liga quando houver o número de WhatsApp Business aprovado. A página avisa disso. Quando ligar, cada relatório é enviado uma só vez, mesmo que o servidor reinicie.
+
+3) Corrigi um erro que apanhei: o servidor estava no horário de Londres. Uma venda feita entre a meia-noite e as 2 da manhã aparecia no relatório do dia anterior. Agora o servidor conta o dia de Maputo. Testei com um servidor de teste igual ao de produção, e confirmei que sem a correção o erro aparecia.
+
+Prova: a verificação do servidor deu 16 de 16, os testes do horário 8 de 8 e o teste no browser 7 de 7. Corri também a verificação completa do sistema para garantir que a mudança de horário não estragou nada.
+
+4) Corrigi também um erro na auditoria (8.5) que a verificação completa apanhou: depois de eu (super admin) entrar numa loja em modo suporte, a página de auditoria dessa loja deixava de abrir (dava erro). Agora abre, e esse acesso aparece como «Equipa Genesis (suporte)». Testei com a versão antiga (dava erro) e com a nova (funciona).

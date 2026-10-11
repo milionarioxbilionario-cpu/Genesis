@@ -1,42 +1,42 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-11T10:24:45.886Z */
+   Gerado em: 2026-10-11T12:43:48.725Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-11T10:24:45.886Z",
+ "generatedAt": "2026-10-11T12:43:48.725Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 226,
+  "files": 237,
   "planned": 5,
-  "links": 371,
-  "lines": 31598,
+  "links": 386,
+  "lines": 32756,
   "byStatus": {
-   "ok": 149,
-   "partial": 11,
+   "ok": 151,
+   "partial": 12,
    "broken": 0,
    "planned": 5,
-   "untracked": 66
+   "untracked": 74
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 10,
-   "backend-data": 59,
-   "backend": 58,
+   "backend-data": 61,
+   "backend": 60,
    "frontend-pub": 4,
-   "frontend": 74,
+   "frontend": 81,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 39
+   "count": 41
   },
   {
    "pkg": "lucide-react",
-   "count": 23
+   "count": 24
   },
   {
    "pkg": "react-router-dom",
@@ -51,12 +51,16 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
-   "pkg": "express",
+   "pkg": "node:path",
+   "count": 17
+  },
+  {
+   "pkg": "node:fs",
    "count": 16
   },
   {
-   "pkg": "node:path",
-   "count": 15
+   "pkg": "express",
+   "count": 16
   },
   {
    "pkg": "crypto",
@@ -67,24 +71,20 @@ window.GENESIS_MINDMAP = {
    "count": 15
   },
   {
+   "pkg": "node:test",
+   "count": 15
+  },
+  {
+   "pkg": "node:assert",
+   "count": 15
+  },
+  {
    "pkg": "@prisma/client",
    "count": 14
   },
   {
-   "pkg": "node:fs",
-   "count": 14
-  },
-  {
-   "pkg": "node:test",
-   "count": 13
-  },
-  {
-   "pkg": "node:assert",
-   "count": 13
-  },
-  {
    "pkg": "@playwright/test",
-   "count": 11
+   "count": 13
   },
   {
    "pkg": "path",
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 59,
+   "nodes": 61,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -181,10 +181,11 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261004_stock_lotes": 1,
     "backend/prisma/migrations/20261010_icone_sugestoes": 1,
     "backend/prisma/migrations/20261011_auditoria_retencao": 1,
+    "backend/prisma/migrations/20261011_horarios_relatorios": 1,
     "backend/prisma/migrations/20261011_turno_dia": 1,
     "backend/prisma/migrations/20261011_vendas_perdidas": 1,
     "backend/scripts": 27,
-    "backend/tests": 12,
+    "backend/tests": 13,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -192,12 +193,12 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 58,
+   "nodes": 60,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 15,
-    "backend/src/services": 11,
+    "backend/src/services": 13,
     "backend/src/utils": 25,
     "backend/src/jobs": 1
    }
@@ -215,11 +216,11 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 74,
+   "nodes": 81,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
-    "frontend/src/components": 4,
+    "frontend/src/components": 5,
     "frontend/src/components/ui": 8,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
@@ -227,12 +228,12 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages": 2,
     "frontend/src/pages/auth": 5,
     "frontend/src/pages/owner": 12,
-    "frontend/src/pages/pos": 3,
+    "frontend/src/pages/pos": 4,
     "frontend/src/ui": 1,
-    "frontend/src/utils": 13,
+    "frontend/src/utils": 15,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 11,
-    "frontend/tests": 3
+    "frontend/tests/e2e": 13,
+    "frontend/tests": 4
    }
   },
   {
@@ -283,8 +284,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 911,
-   "size": 173160,
+   "lines": 937,
+   "size": 179760,
    "externals": [
     "@prisma/client"
    ],
@@ -327,8 +328,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1352,
-   "size": 72280,
+   "lines": 1370,
+   "size": 73171,
    "externals": [
     "nodemailer"
    ],
@@ -943,6 +944,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261011_horarios_relatorios/migration.sql",
+   "path": "backend/prisma/migrations/20261011_horarios_relatorios/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261011_horarios_relatorios",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 16,
+   "size": 1013,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/migrations/20261011_turno_dia/migration.sql",
    "path": "backend/prisma/migrations/20261011_turno_dia/migration.sql",
    "label": "migration.sql",
@@ -1018,8 +1040,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 437,
-   "size": 15316,
+   "lines": 442,
+   "size": 15655,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1041,8 +1063,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 454,
-   "size": 16198,
+   "lines": 459,
+   "size": 16537,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1717,8 +1739,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1317,
-   "size": 111121,
+   "lines": 1390,
+   "size": 117805,
    "externals": [
     "dotenv",
     "crypto",
@@ -1736,11 +1758,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/expiryJob.js",
     "backend/src/services/auditRetention.js",
     "backend/src/utils/auditGroups.js",
-    "backend/src/utils/shiftLock.js"
+    "backend/src/utils/shiftLock.js",
+    "backend/src/services/reportJob.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "backend/src/index.js",
@@ -1751,12 +1774,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
-   "notes": "11/10/2026: sem /api/master_catalogs; arranca auditRetention (8.5).",
+   "notes": "11/10/2026 Fase 8.7: fuso de Maputo (TZ) no arranque; arranca reportJob (desligado por defeito).",
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 280,
-   "size": 10878,
+   "lines": 286,
+   "size": 11281,
    "externals": [
     "dotenv",
     "express",
@@ -1788,11 +1811,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/verify.js",
     "backend/src/utils/http.js",
     "backend/src/services/expiryJob.js",
-    "backend/src/services/auditRetention.js"
+    "backend/src/services/auditRetention.js",
+    "backend/src/services/reportJob.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 23
+   "outbound": 24
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -2156,12 +2180,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
-   "notes": "11/10/2026 Fase 8.5: GET /audit com periodo, tipo, cursor e detalhe. verify_system 24 (24/24).",
+   "notes": "11/10/2026: auditoria le os nomes a parte (acesso de suporte dava 500). verify_system 24.",
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 481,
-   "size": 26769,
+   "lines": 491,
+   "size": 27383,
    "externals": [
     "express",
     "crypto",
@@ -2340,12 +2364,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
-   "notes": "11/10/2026 Fase 8.5: PUT /audit-retention (2/3/6/12/24). verify_system 24.",
+   "notes": "11/10/2026 Fase 8.7: PUT /report-schedule + report_schedule no GET. verify_system 26.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 246,
-   "size": 12838,
+   "lines": 265,
+   "size": 14394,
    "externals": [
     "express",
     "bcrypt",
@@ -2357,13 +2381,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/rbac.js",
     "backend/src/utils/http.js",
     "backend/src/utils/audit.js",
-    "backend/src/utils/auditGroups.js"
+    "backend/src/utils/auditGroups.js",
+    "backend/src/services/reportJob.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 6
+   "outbound": 7
   },
   {
    "id": "backend/src/routes/shoppingLists.js",
@@ -2611,6 +2636,63 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/services/reportJob.js",
+   "path": "backend/src/services/reportJob.js",
+   "label": "reportJob.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "partial",
+   "summary": "Envio programado dos relatorios por WhatsApp; DESLIGADO sem REPORTS_WHATSAPP=true.",
+   "notes": "11/10/2026 Fase 8.7: verify_system 26 com enviador falso; WhatsApp real nao verificado (precisa de numero aprovado).",
+   "role": "Job (5 em 5 min).",
+   "security": "",
+   "planned": false,
+   "lines": 63,
+   "size": 3640,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/services/reportSchedule.js",
+    "backend/src/services/reports.js",
+    "backend/src/utils/whatsapp.js",
+    "backend/src/services/shoppingList.js"
+   ],
+   "usedBy": [
+    "backend/scripts/verify_system.js",
+    "backend/src/index.js",
+    "backend/src/routes/settings.js"
+   ],
+   "inbound": 3,
+   "outbound": 5
+  },
+  {
+   "id": "backend/src/services/reportSchedule.js",
+   "path": "backend/src/services/reportSchedule.js",
+   "label": "reportSchedule.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Puro: que relatorio toca (diario/semanal/mensal) e de que periodo, pelo calendario de Maputo; mensagem do WhatsApp.",
+   "notes": "11/10/2026 Fase 8.7: reportSchedule.test.js 8/8.",
+   "role": "Relatorios por WhatsApp.",
+   "security": "",
+   "planned": false,
+   "lines": 87,
+   "size": 4953,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [
+    "backend/src/services/reportJob.js",
+    "backend/tests/reportSchedule.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 1
+  },
+  {
    "id": "backend/src/services/reports.js",
    "path": "backend/src/services/reports.js",
    "label": "reports.js",
@@ -2635,9 +2717,10 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "backend/src/routes/owner.js",
-    "backend/src/routes/shoppingLists.js"
+    "backend/src/routes/shoppingLists.js",
+    "backend/src/services/reportJob.js"
    ],
-   "inbound": 2,
+   "inbound": 3,
    "outbound": 5
   },
   {
@@ -2683,9 +2766,10 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [
     "backend/src/routes/shoppingLists.js",
+    "backend/src/services/reportJob.js",
     "backend/tests/shoppingList.test.js"
    ],
-   "inbound": 2,
+   "inbound": 3,
    "outbound": 0
   },
   {
@@ -2884,13 +2968,14 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/scripts/verify_system.js",
     "backend/src/services/expiryJob.js",
+    "backend/src/services/reportSchedule.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/auditGroups.js",
     "backend/src/utils/shiftDay.js",
     "backend/src/utils/stockLots.js",
     "backend/tests/fefo.test.js"
    ],
-   "inbound": 7,
+   "inbound": 8,
    "outbound": 0
   },
   {
@@ -3058,6 +3143,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/verify.js",
     "backend/src/services/auditRetention.js",
     "backend/src/services/expiryJob.js",
+    "backend/src/services/reportJob.js",
     "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/audit.js",
@@ -3068,7 +3154,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 38,
+   "inbound": 39,
    "outbound": 1
   },
   {
@@ -3450,9 +3536,10 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/src/routes/auth.js",
     "backend/src/routes/owner.js",
+    "backend/src/services/reportJob.js",
     "backend/src/jobs/dailyDigest.js"
    ],
-   "inbound": 3,
+   "inbound": 4,
    "outbound": 0
   },
   {
@@ -3658,6 +3745,32 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/services/ranking.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/reportSchedule.test.js",
+   "path": "backend/tests/reportSchedule.test.js",
+   "label": "reportSchedule.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 72,
+   "size": 3975,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/services/reportSchedule.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -4069,6 +4182,33 @@ window.GENESIS_MINDMAP = {
    "outbound": 18
   },
   {
+   "id": "frontend/src/components/BarcodeScanner.jsx",
+   "path": "frontend/src/components/BarcodeScanner.jsx",
+   "label": "BarcodeScanner.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 83,
+   "size": 4678,
+   "externals": [
+    "react",
+    "@zxing/browser",
+    "@zxing/library"
+   ],
+   "dependsOn": [
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "frontend/src/components/MonthCloseDialog.jsx",
    "path": "frontend/src/components/MonthCloseDialog.jsx",
    "label": "MonthCloseDialog.jsx",
@@ -4374,6 +4514,7 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [
     "frontend/src/App.jsx",
+    "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
@@ -4396,12 +4537,13 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/pos/DevicesDialog.jsx",
     "frontend/src/pages/pos/PosDialogs.jsx",
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 27,
+   "inbound": 29,
    "outbound": 0
   },
   {
@@ -5032,12 +5174,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
-   "notes": "11/10/2026 Fase 8.5: separador Auditoria usa AuditLogPage. fase8_5.mjs + stock.mjs.",
+   "notes": "11/10/2026 Fase 8.7: cartao Relatorios por WhatsApp. fase8_7.mjs 7/7.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 342,
-   "size": 22545,
+   "lines": 392,
+   "size": 25965,
    "externals": [
     "react",
     "react-router-dom",
@@ -5148,6 +5290,33 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 1,
    "outbound": 4
+  },
+  {
+   "id": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "path": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "label": "DevicesDialog.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/pos",
+   "ext": ".jsx",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 83,
+   "size": 5646,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/devices.js",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
   },
   {
    "id": "frontend/src/pages/pos/PosDialogs.jsx",
@@ -5376,6 +5545,54 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "frontend/src/utils/devices.js",
+   "path": "frontend/src/utils/devices.js",
+   "label": "devices.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 116,
+   "size": 5577,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/utils/pdf/deliver.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/pos/DevicesDialog.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/utils/escpos.js",
+   "path": "frontend/src/utils/escpos.js",
+   "label": "escpos.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 79,
+   "size": 3496,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/tests/escpos.test.mjs"
+   ],
+   "inbound": 1,
+   "outbound": 0
+  },
+  {
    "id": "frontend/src/utils/format.js",
    "path": "frontend/src/utils/format.js",
    "label": "format.js",
@@ -5516,9 +5733,10 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
+    "frontend/src/utils/devices.js",
     "frontend/src/utils/receiptPrinter.js"
    ],
-   "inbound": 3,
+   "inbound": 4,
    "outbound": 0
   },
   {
@@ -5960,6 +6178,56 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/fase8_7.mjs",
+   "path": "frontend/tests/e2e/fase8_7.mjs",
+   "label": "fase8_7.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: horarios dos relatorios nas Definicoes.",
+   "notes": "11/10/2026: 7/7.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 74,
+   "size": 4720,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/fase8_8.mjs",
+   "path": "frontend/tests/e2e/fase8_8.mjs",
+   "label": "fase8_8.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 233,
+   "size": 15755,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/fecho_mes.mjs",
    "path": "frontend/tests/e2e/fecho_mes.mjs",
    "label": "fecho_mes.mjs",
@@ -6109,6 +6377,32 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 0
+  },
+  {
+   "id": "frontend/tests/escpos.test.mjs",
+   "path": "frontend/tests/escpos.test.mjs",
+   "label": "escpos.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 40,
+   "size": 2009,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/escpos.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -6621,6 +6915,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/shiftLock.js"
   },
   {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/services/reportJob.js"
+  },
+  {
    "source": "backend/src/index.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -6711,6 +7009,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/index.js",
    "target": "backend/src/services/auditRetention.js"
+  },
+  {
+   "source": "backend/src/index.js",
+   "target": "backend/src/services/reportJob.js"
   },
   {
    "source": "backend/src/middleware/auth.js",
@@ -7093,6 +7395,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/auditGroups.js"
   },
   {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/services/reportJob.js"
+  },
+  {
    "source": "backend/src/routes/shoppingLists.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7154,6 +7460,30 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/services/expiryJob.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
+   "source": "backend/src/services/reportJob.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/services/reportJob.js",
+   "target": "backend/src/services/reportSchedule.js"
+  },
+  {
+   "source": "backend/src/services/reportJob.js",
+   "target": "backend/src/services/reports.js"
+  },
+  {
+   "source": "backend/src/services/reportJob.js",
+   "target": "backend/src/utils/whatsapp.js"
+  },
+  {
+   "source": "backend/src/services/reportJob.js",
+   "target": "backend/src/services/shoppingList.js"
+  },
+  {
+   "source": "backend/src/services/reportSchedule.js",
    "target": "backend/src/utils/fefo.js"
   },
   {
@@ -7289,6 +7619,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/ranking.js"
   },
   {
+   "source": "backend/tests/reportSchedule.test.js",
+   "target": "backend/src/services/reportSchedule.js"
+  },
+  {
    "source": "backend/tests/restock.test.js",
    "target": "backend/src/services/restock.js"
   },
@@ -7371,6 +7705,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/App.jsx",
    "target": "frontend/src/pages/owner/Onboarding.jsx"
+  },
+  {
+   "source": "frontend/src/components/BarcodeScanner.jsx",
+   "target": "frontend/src/components/ui/index.js"
   },
   {
    "source": "frontend/src/components/MonthCloseDialog.jsx",
@@ -7817,6 +8155,14 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "target": "frontend/src/utils/devices.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
    "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -7909,6 +8255,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/format.js"
   },
   {
+   "source": "frontend/src/utils/devices.js",
+   "target": "frontend/src/utils/pdf/deliver.js"
+  },
+  {
    "source": "frontend/src/utils/offlineQueue.js",
    "target": "frontend/src/utils/syncPolicy.js"
   },
@@ -7967,6 +8317,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/useApi.js",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/tests/escpos.test.mjs",
+   "target": "frontend/src/utils/escpos.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",

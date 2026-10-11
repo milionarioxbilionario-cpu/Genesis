@@ -70,14 +70,24 @@ const auditQuery = z.object({
   cursor: z.string().max(80).optional(),
 });
 const parseAuditJson = (v) => { try { return v ? JSON.parse(v) : null; } catch { return v; } };
-async function auditRow(l, terminals) {
+function auditRow(l, terminals, users) {
   const nv = parseAuditJson(l.new_value);
   return {
     id: l.id, action: l.action, group: groupOf(l.action), entity_type: l.entity_type, entity_id: l.entity_id,
-    user_name: l.user?.name || '—', ip_address: l.ip_address, created_at: l.created_at,
+    user_name: users.get(l.user_id) || SUPPORT_NAME, ip_address: l.ip_address, created_at: l.created_at,
     old_value: parseAuditJson(l.old_value), new_value: nv,
     terminal_name: nv && nv.terminal_id ? terminals.get(nv.terminal_id) || null : null,
   };
+}
+// Nomes de quem fez cada registo, lidos A PARTE: o super admin (sessao de
+// suporte) nao pertence a loja e a RLS esconde-o — com include, o Prisma
+// recebia "utilizador obrigatorio em falta" e a auditoria inteira dava 500
+// depois de um acesso de suporte.
+const SUPPORT_NAME = 'Equipa Genesis (suporte)';
+async function userNames(tenantId, rows) {
+  const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
+  if (!ids.length) return new Map();
+  return new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
 }
 const terminalNames = async (tenantId) => new Map((await prisma.posTerminal.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } })).map((t) => [t.id, t.name]));
 
@@ -95,14 +105,14 @@ router.get('/audit', asyncHandler(async (req, res) => {
     if (!id || Number.isNaN(d.getTime())) throw httpError(400, 'Cursor inválido', 'BAD_CURSOR');
     where.AND = [{ OR: [{ created_at: { lt: d } }, { created_at: d, id: { lt: id } }] }];
   }
-  const rows = await prisma.auditLog.findMany({ where, orderBy: [{ created_at: 'desc' }, { id: 'desc' }], take: q.limit + 1, include: { user: { select: { name: true } } } });
+  const rows = await prisma.auditLog.findMany({ where, orderBy: [{ created_at: 'desc' }, { id: 'desc' }], take: q.limit + 1 });
   const page = rows.slice(0, q.limit);
   const last = page[page.length - 1];
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { audit_retention_months: true } });
   const months = tenant?.audit_retention_months || 2;
-  const terminals = await terminalNames(tenantId);
+  const [terminals, users] = await Promise.all([terminalNames(tenantId), userNames(tenantId, page)]);
   res.json({
-    items: await Promise.all(page.map((l) => auditRow(l, terminals))),
+    items: page.map((l) => auditRow(l, terminals, users)),
     next_cursor: rows.length > q.limit && last ? `${last.created_at.toISOString()}|${last.id}` : null,
     groups: GROUPS.map(({ key, label }) => ({ key, label })).concat([{ key: 'other', label: 'Outros' }]),
     retention_months: months,
@@ -113,9 +123,9 @@ router.get('/audit', asyncHandler(async (req, res) => {
 
 router.get('/audit/:id', asyncHandler(async (req, res) => {
   const tenantId = tenantOf(req);
-  const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, include: { user: { select: { name: true } } } });
+  const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId } });
   if (!l) throw httpError(404, 'Registo não encontrado', 'AUDIT_NOT_FOUND');
-  res.json(await auditRow(l, await terminalNames(tenantId)));
+  res.json(auditRow(l, await terminalNames(tenantId), await userNames(tenantId, [l])));
 }));
 
 // ---------------------------------------------------------------- equipa: caixistas

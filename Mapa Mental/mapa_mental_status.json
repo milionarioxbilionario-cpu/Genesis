@@ -7,7 +7,7 @@
       "status": "ok",
       "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
       "role": "Ponto de entrada do backend.",
-      "notes": "11/10/2026: sem /api/master_catalogs; arranca auditRetention (8.5).",
+      "notes": "11/10/2026 Fase 8.7: fuso de Maputo (TZ) no arranque; arranca reportJob (desligado por defeito).",
       "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor."
     },
     "backend/src/utils/prisma.js": {
@@ -116,7 +116,7 @@
       "status": "ok",
       "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
       "role": "API do dono.",
-      "notes": "11/10/2026 Fase 8.5: GET /audit com periodo, tipo, cursor e detalhe. verify_system 24 (24/24)."
+      "notes": "11/10/2026: auditoria le os nomes a parte (acesso de suporte dava 500). verify_system 24."
     },
     "backend/src/routes/admin.js": {
       "status": "ok",
@@ -1069,13 +1069,13 @@
       "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "11/10/2026 Fase 8.5: PUT /audit-retention (2/3/6/12/24). verify_system 24."
+      "notes": "11/10/2026 Fase 8.7: PUT /report-schedule + report_schedule no GET. verify_system 26."
     },
     "frontend/src/pages/owner/Settings.jsx": {
       "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "11/10/2026 Fase 8.5: separador Auditoria usa AuditLogPage. fase8_5.mjs + stock.mjs."
+      "notes": "11/10/2026 Fase 8.7: cartao Relatorios por WhatsApp. fase8_7.mjs 7/7."
     },
     "backend/src/routes/shoppingLists.js": {
       "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
@@ -1346,6 +1346,24 @@
       "summary": "Browser: super admin acrescenta e edita o catalogo-mestre; onboarding recebe.",
       "role": "Teste E2E.",
       "notes": "11/10/2026: 8/8."
+    },
+    "backend/src/services/reportSchedule.js": {
+      "status": "ok",
+      "summary": "Puro: que relatorio toca (diario/semanal/mensal) e de que periodo, pelo calendario de Maputo; mensagem do WhatsApp.",
+      "role": "Relatorios por WhatsApp.",
+      "notes": "11/10/2026 Fase 8.7: reportSchedule.test.js 8/8."
+    },
+    "backend/src/services/reportJob.js": {
+      "status": "partial",
+      "summary": "Envio programado dos relatorios por WhatsApp; DESLIGADO sem REPORTS_WHATSAPP=true.",
+      "role": "Job (5 em 5 min).",
+      "notes": "11/10/2026 Fase 8.7: verify_system 26 com enviador falso; WhatsApp real nao verificado (precisa de numero aprovado)."
+    },
+    "frontend/tests/e2e/fase8_7.mjs": {
+      "status": "ok",
+      "summary": "Browser: horarios dos relatorios nas Definicoes.",
+      "role": "Teste E2E.",
+      "notes": "11/10/2026: 7/7."
     }
   }
 }
