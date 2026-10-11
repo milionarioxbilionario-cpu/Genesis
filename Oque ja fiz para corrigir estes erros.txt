@@ -1834,3 +1834,17 @@ Prova: a verificação do servidor deu 25 de 25. O teste no browser passou (term
    - Antes de ligar a limpeza, contei o que ela apagaria nas lojas reais: nada (as lojas começaram a 05/10).
 
 Prova: a verificação do servidor deu 24 de 24 e o teste no browser deu 16 de 16 (PC e iPhone). Os testes do stock continuam a passar.
+
+
+==================== 11/10/2026 — Auditoria (8.5) publicada e catálogo-mestre editável (8.6) ====================
+1) A auditoria (8.5) está em genesismz.com. Testei no próprio site e passou. Vi também o registo do servidor: a limpeza automática corre sem erros (hoje não havia nada para apagar).
+
+2) Catálogo-mestre no super admin (8.6):
+   - Em «Catálogos-mestre» escolhes o tipo de negócio (vês quantos produtos tem) e procuras pelo nome.
+   - Tocas num produto e corriges o nome, a categoria, o preço de compra, o preço de venda, o código de barras e o ícone. Também podes acrescentar um produto novo.
+   - As alterações valem para as lojas novas (no início, quando escolhem o tipo de negócio). As lojas que já existem mantêm os seus preços, e a página diz isso.
+   - O caminho antigo do servidor para isto ficava fora da protecção do painel admin e recebia os preços com vírgulas. Foi retirado.
+
+3) Achei um problema que vou corrigir na próxima parte (8.7): o servidor está no horário de Londres (UTC), 2 horas atrás de Maputo. Nos relatórios, uma venda feita entre a meia-noite e as 2 da manhã conta no dia anterior. No meu computador não se via porque está no horário de Maputo.
+
+Prova: a verificação do servidor deu 17 de 17 e o teste no browser do admin passou. Os testes antigos do admin (aprovar pedidos, modo suporte, sugestões) continuam a passar.

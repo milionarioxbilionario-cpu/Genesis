@@ -257,4 +257,55 @@ router.get('/lost-requests', asyncHandler(async (req, res) => {
   res.json({ days, total_requests: rows.length, groups });
 }));
 
+// ---------------------------------------------------- catalogo-mestre (8.6)
+// O super admin ve, acrescenta e EDITA os produtos sugeridos as lojas novas no
+// onboarding (pedido do fundador 10/10: nome, custo, preco). Valores sempre em
+// centavos. Substitui o antigo /api/master_catalogs (fora de /api/admin, sem
+// verificacao de origem, recebia MZN em virgula flutuante). Apagar nao foi
+// pedido. As lojas que ja existem nao mudam: so as novas recebem a alteracao.
+const masterSchema = z.object({
+  business_type: z.enum(BUSINESS_TYPES),
+  product_name: z.string().trim().min(1, 'nome em falta').max(120),
+  category: z.string().trim().min(1, 'categoria em falta').max(60),
+  suggested_cost: z.number().int('custo em centavos').nonnegative('custo não pode ser negativo'),
+  suggested_sell: z.number().int('preço em centavos').positive('preço de venda tem de ser maior que zero'),
+  barcode: z.string().trim().regex(/^[0-9A-Za-z-]{4,32}$/, 'código de barras inválido').nullish(),
+  icon: iconSchema,
+});
+const masterOut = (m) => ({
+  id: m.id, business_type: m.business_type, product_name: m.product_name, category: m.category,
+  suggested_cost: m.suggested_cost, suggested_sell: m.suggested_sell, barcode: m.barcode, icon: m.icon, image_url: m.image_url,
+});
+async function assertUniqueName(businessType, name, exceptId) {
+  const same = await prisma.masterCatalog.findMany({ where: { business_type: businessType }, select: { id: true, product_name: true } });
+  if (same.some((m) => m.id !== exceptId && nameKey(m.product_name) === nameKey(name))) {
+    throw httpError(409, 'Esse produto já está no catálogo-mestre deste tipo de negócio', 'ALREADY_IN_CATALOG');
+  }
+}
+
+router.get('/master-catalog', asyncHandler(async (req, res) => {
+  const type = z.enum(BUSINESS_TYPES).default('bottle_store').parse(req.query.type || undefined);
+  const rows = await prisma.masterCatalog.findMany({ where: { business_type: type }, orderBy: [{ category: 'asc' }, { product_name: 'asc' }] });
+  const counts = await prisma.masterCatalog.groupBy({ by: ['business_type'], _count: { _all: true } });
+  res.json({ business_type: type, products: rows.map(masterOut), counts: Object.fromEntries(counts.map((c) => [c.business_type, c._count._all])) });
+}));
+
+router.post('/master-catalog', asyncHandler(async (req, res) => {
+  const d = masterSchema.parse(req.body);
+  await assertUniqueName(d.business_type, d.product_name);
+  const row = await prisma.masterCatalog.create({ data: { ...d, barcode: d.barcode || null, icon: d.icon || null } });
+  await writeAudit({ req, tenantId: null, action: 'MASTER_CATALOG_CREATED', entityType: 'master_catalog', entityId: row.id, oldValue: null, newValue: masterOut(row) });
+  res.status(201).json(masterOut(row));
+}));
+
+router.put('/master-catalog/:id', asyncHandler(async (req, res) => {
+  const before = await prisma.masterCatalog.findUnique({ where: { id: req.params.id } });
+  if (!before) throw httpError(404, 'Produto do catálogo-mestre não encontrado', 'MASTER_NOT_FOUND');
+  const d = masterSchema.omit({ business_type: true }).parse(req.body);
+  await assertUniqueName(before.business_type, d.product_name, before.id);
+  const row = await prisma.masterCatalog.update({ where: { id: before.id }, data: { ...d, barcode: d.barcode || null, icon: d.icon || null } });
+  await writeAudit({ req, tenantId: null, action: 'MASTER_CATALOG_UPDATED', entityType: 'master_catalog', entityId: row.id, oldValue: masterOut(before), newValue: masterOut(row) });
+  res.json(masterOut(row));
+}));
+
 module.exports = router;

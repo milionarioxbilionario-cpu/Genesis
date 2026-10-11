@@ -7,7 +7,7 @@
       "status": "ok",
       "summary": "Arranque do servidor Express: CORS, cookies, JSON, montagem de todas as rotas e guardas de arranque (JWT_SECRET, DATABASE_URL).",
       "role": "Ponto de entrada do backend.",
-      "notes": "O fecho de turno esta montado so com requireRole('owner').",
+      "notes": "11/10/2026: sem /api/master_catalogs; arranca auditRetention (8.5).",
       "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor."
     },
     "backend/src/utils/prisma.js": {
@@ -123,7 +123,7 @@
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
       "security": "requireRole('super_admin') + adminOriginCheck.",
-      "notes": "11/10/2026 Fase 8.4: GET /lost-requests (sem nomes de lojas) + overview.lost_requests_30d. verify_system 23."
+      "notes": "11/10/2026 Fase 8.6: GET/POST /master-catalog, PUT /master-catalog/:id (centavos, 409 nome repetido, auditado). verify_system 25 (17/17)."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -148,12 +148,6 @@
       "summary": "Catalogo pre-definido por tipo de negocio (GET publico) e importacao para a loja no fim do onboarding.",
       "role": "Onboarding.",
       "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). Fase 1 (2.1): fonte unica = tabela MasterCatalog (templates no codigo removidos); aceita barcode e image_url; codigo repetido -> 400 DUPLICATE_BARCODE; erro de validacao diz o produto e o campo (INVALID_CATALOG). 04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
-    },
-    "backend/src/routes/master_catalogs.js": {
-      "status": "partial",
-      "summary": "Rotas antigas do catalogo-mestre (listar/acrescentar).",
-      "role": "Catalogo-mestre.",
-      "issue": "10/10/2026: montadas em /api/master_catalogs, fora de /api/admin (sem adminOriginCheck). Rever na 8.6."
     },
     "backend/src/routes/demand_captures.js": {
       "status": "ok",
@@ -1342,6 +1336,16 @@
       "summary": "Browser: auditoria do dono (filtros, detalhe, retencao, iPhone).",
       "role": "Teste E2E.",
       "notes": "11/10/2026: 16/16."
+    },
+    "backend/scripts/e2e_admin_fixture.js": {
+      "status": "ok",
+      "notes": "11/10/2026: limpa produtos de teste do catalogo-mestre."
+    },
+    "admin-frontend/tests/fase8_6.mjs": {
+      "status": "ok",
+      "summary": "Browser: super admin acrescenta e edita o catalogo-mestre; onboarding recebe.",
+      "role": "Teste E2E.",
+      "notes": "11/10/2026: 8/8."
     }
   }
 }

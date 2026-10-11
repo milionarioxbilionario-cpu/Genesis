@@ -25,6 +25,9 @@ const prisma = require('../src/utils/prisma');
     await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
     await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     await prisma.tenant.deleteMany({ where: { id: t } });
+    // Produtos de teste do catalogo-mestre (fase8_6.mjs): o nome leva a etiqueta do admin.
+    const tag = fx.admin.email.split('@')[0];
+    await prisma.masterCatalog.deleteMany({ where: { product_name: { contains: tag } } });
     console.log('fixture admin apagada');
   } else throw new Error('uso: create|delete <ficheiro.json>');
   process.exit(0);
