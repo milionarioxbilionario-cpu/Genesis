@@ -535,8 +535,34 @@ async function test11() {
     await prisma.user.deleteMany({ where: { tenant_id: dup.id } });
     await prisma.tenant.delete({ where: { id: dup.id } });
   }
+  // Fase 9.1: email obrigatorio no pedido de conta; pedido antigo sem email nao
+  // e aprovado com um email inventado.
+  const reqBody = { businessName: ctx.tenant.name + '-PEDIDO', ownerName: 'Dono Pedido', businessType: 'bottle_store', location: 'Teste', phone: '840000004' };
+  const noEmail = await client().req('POST', '/api/auth/request-account', reqBody);
+  ok(noEmail.status === 400, 'pedido de conta sem email: 400', noEmail);
+  ok((await prisma.tenant.count({ where: { name: reqBody.businessName } })) === 0, 'pedido sem email nao foi gravado');
+  const mixed = ' Pedido.' + ctx.tenant.id.slice(0, 8) + '@Teste.Local ';
+  const withEmail = await client().req('POST', '/api/auth/request-account', { ...reqBody, email: mixed });
+  const saved = await prisma.tenant.findFirst({ where: { name: reqBody.businessName }, select: { id: true, email: true, status: true } });
+  try {
+    ok(withEmail.status === 201 && saved?.status === 'pending' && saved?.email === mixed.trim().toLowerCase(), 'pedido com email: 201, gravado sem espacos e em minusculas', { withEmail, saved });
+  } finally {
+    if (saved) await prisma.tenant.delete({ where: { id: saved.id } });
+  }
+  const legacy = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-SEMEMAIL', owner_name: 'Antigo', business_type: 'bottle_store', location: 'Teste', phone: '840000005', status: 'pending' } });
+  try {
+    const r = await admin.req('POST', '/api/admin/requests/' + legacy.id + '/approve');
+    ok(r.status === 409 && r.data?.code === 'EMAIL_REQUIRED', 'aprovar pedido antigo sem email: 409 EMAIL_REQUIRED', r);
+    const after = await prisma.tenant.findUnique({ where: { id: legacy.id }, select: { status: true } });
+    const owners = await prisma.user.count({ where: { tenant_id: legacy.id } });
+    ok(after.status === 'pending' && owners === 0, 'sem email: o pedido continua pendente e nenhuma conta @genesis.co.mz foi criada', { after, owners });
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { entity_id: legacy.id } });
+    await prisma.user.deleteMany({ where: { tenant_id: legacy.id } });
+    await prisma.tenant.delete({ where: { id: legacy.id } });
+  }
   await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { status: 'trial', trial_ends_at: new Date(Date.now() + 5 * 86400000) } });
-  const susp = await admin.req('POST', '/api/admin/tenants/' + ctx.tenant.id + '/suspend');
+  const susp =await admin.req('POST', '/api/admin/tenants/' + ctx.tenant.id + '/suspend');
   ok(susp.status === 200, 'admin suspende a loja', susp);
   ok((await ownerClient().req('GET', '/api/owner/tenant')).status === 403, 'loja suspensa: dono bloqueado logo');
   const un = await admin.req('POST', '/api/admin/tenants/' + ctx.tenant.id + '/unsuspend');
@@ -1404,7 +1430,30 @@ async function test27() {
   ok(again.status === 200, 'depois de remover A, C pode usar o codigo: 200', again.status);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27 };
+// Fase 9.2 (decisao do fundador 12/10): o limite do login conta so as
+// tentativas erradas (5 por IP + email, 20 por IP, em 15 min). Deixa este IP
+// sem login durante 15 min: corre-a em ultimo e reinicia o backend de teste
+// antes dos testes de browser.
+async function test28() {
+  section(28, 'Limite do login: so as tentativas erradas contam');
+  const login = (email, password) => client().req('POST', '/api/auth/login', { email, password });
+  const okLogins = [];
+  for (let i = 0; i < 7; i++) okLogins.push((await login(ctx.owner.email, OWNER_PW)).status);
+  ok(okLogins.every((s) => s === 200), '7 logins certos seguidos do mesmo IP: todos 200 (antes o 6.º dava 429)', okLogins);
+  const wrong = [];
+  for (let i = 0; i < 5; i++) wrong.push((await login(ctx.owner.email, 'errada-' + i)).status);
+  ok(wrong.every((s) => s === 401), '5 senhas erradas: 401', wrong);
+  const sixth = await login(ctx.owner.email, 'errada-6');
+  ok(sixth.status === 429 && sixth.data?.code === 'TOO_MANY_LOGINS', '6.ª senha errada da mesma conta: 429 TOO_MANY_LOGINS', sixth);
+  ok((await login(ctx.owner.email.toUpperCase(), OWNER_PW)).status === 429, 'conta travada mesmo com a senha certa e o email em maiusculas');
+  const other = await login('outra-conta-' + Date.now() + '@teste.local', 'x-qualquer');
+  ok(other.status === 401, 'outra conta do mesmo IP nao fica travada: 401', other.status);
+  let capAt = 0;
+  for (let i = 1; i <= 21 && !capAt; i++) if ((await login('spray-' + i + '-' + Date.now() + '@teste.local', 'x')).status === 429) capAt = i;
+  ok(capAt > 0, 'muitas contas diferentes do mesmo IP: chega ao limite de 20 erradas e da 429', capAt);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28 };
 
 (async () => {
   await prisma.ready();

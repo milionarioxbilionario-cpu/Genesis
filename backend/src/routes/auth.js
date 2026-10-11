@@ -17,11 +17,28 @@ const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessi
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' }
+// Limite do login (decisao do fundador 12/10): so contam as tentativas
+// ERRADAS (4xx). Antes contavam tambem as certas: o dono que entrava no PC, no
+// telemovel e no tablet pelo mesmo Wi-Fi ficava bloqueado sem nunca errar, e
+// lojas diferentes atras do mesmo IP da operadora bloqueavam-se umas as outras.
+//  - 5 erradas por IP + email em 15 min: trava adivinhar a senha de uma conta;
+//  - 20 erradas por IP em 15 min: trava experimentar muitas contas do mesmo IP.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const loginMessage = { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.', code: 'TOO_MANY_LOGINS' };
+const loginIpLimiter = rateLimit({
+  windowMs: LOGIN_WINDOW_MS,
+  max: 20,
+  skipSuccessfulRequests: true,
+  message: loginMessage,
 });
+const loginAccountLimiter = rateLimit({
+  windowMs: LOGIN_WINDOW_MS,
+  max: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => req.ip + '|' + String((req.body && req.body.email) || '').trim().toLowerCase().slice(0, 254),
+  message: loginMessage,
+});
+const loginLimiter = [loginIpLimiter, loginAccountLimiter];
 
 // O reset de password e publico e nao autenticado: sem limite, (a) qualquer
 // pessoa faz o servidor emitir codigos sem fim e (b) forca o codigo de 6
@@ -59,7 +76,10 @@ const requestAccountSchema = z.object({
   businessType: z.enum(['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro']),
   location: z.string().min(3),
   phone: z.string().min(8),
-  email: z.string().email().optional(),
+  // Obrigatorio (decisao do fundador 12/10): e o login do dono e o destino do
+  // codigo de recuperacao. Antes, sem email, a aprovacao inventava um
+  // <loja>@genesis.co.mz (dominio que nao e nosso) e o reset nunca chegava.
+  email: z.string().trim().toLowerCase().email().max(254),
   nuit: z.string().optional(),
   idDocument: z.string().optional()
 });
