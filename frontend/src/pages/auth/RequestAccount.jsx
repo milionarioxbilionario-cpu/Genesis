@@ -29,13 +29,14 @@ export default function RequestAccount() {
     e.preventDefault();
     setLoading(true); setError('');
     const body = { ...form };
-    for (const k of ['email', 'nuit', 'idDocument']) if (!body[k].trim()) delete body[k];
+    body.email = body.email.trim();
+    for (const k of ['nuit', 'idDocument']) if (!body[k].trim()) delete body[k];
     try {
       await api.post('/api/auth/request-account', body);
       setDone(true);
     } catch (err) {
       const raw = err?.response?.data?.error;
-      setError(Array.isArray(raw) ? 'Verifique os campos: nomes com pelo menos 3 letras, telefone com 8 ou mais dígitos.' : errorMessage(err));
+      setError(Array.isArray(raw) ? 'Verifique os campos: nomes com pelo menos 3 letras, telefone com 8 ou mais dígitos e um email válido.' : errorMessage(err));
     } finally { setLoading(false); }
   }
 
@@ -61,7 +62,7 @@ export default function RequestAccount() {
         </Select>
         <Input label="Localização" placeholder="Bairro, cidade" value={form.location} onChange={set('location')} required minLength={3} />
         <Input label="Telefone (WhatsApp)" inputMode="tel" placeholder="84 000 0000" value={form.phone} onChange={set('phone')} required minLength={8} />
-        <Input label="Email" hint="Opcional" type="email" value={form.email} onChange={set('email')} />
+        <Input label="Email" hint="Para entrar e recuperar a senha" type="email" autoComplete="email" value={form.email} onChange={set('email')} required />
         <Input label="NUIT" hint="Opcional" value={form.nuit} onChange={set('nuit')} />
         <Input label="BI ou passaporte" hint="Opcional" value={form.idDocument} onChange={set('idDocument')} className="sm:col-span-2" />
         <div className="sm:col-span-2">

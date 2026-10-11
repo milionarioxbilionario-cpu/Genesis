@@ -108,7 +108,12 @@ router.post('/requests/:tenantId/approve', asyncHandler(async (req, res) => {
   if (tenant.status !== 'pending') throw httpError(409, 'Só pedidos pendentes podem ser aprovados (estado actual: ' + tenant.status + ')', 'NOT_PENDING');
   const tempPassword = crypto.randomBytes(9).toString('base64url');
   const trialEnds = new Date(); trialEnds.setDate(trialEnds.getDate() + 30);
-  const ownerEmail = (tenant.email || `${tenant.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@genesis.co.mz`).toLowerCase();
+  // Pedido antigo sem email: ja nao se inventa <loja>@genesis.co.mz (dominio
+  // que nao e nosso; o codigo de recuperacao nunca lhe chegava).
+  if (!tenant.email || !tenant.email.trim()) {
+    throw httpError(409, 'Este pedido não tem email. Rejeite-o e peça ao dono um novo pedido com email.', 'EMAIL_REQUIRED');
+  }
+  const ownerEmail = tenant.email.trim().toLowerCase();
   // Email do pedido ja com conta: antes era inventado um <nome>.<hora>@... que
   // o dono nao conhecia (e o login Google com o email dele nunca acertava).
   // Agora o pedido fica pendente e o admin resolve com a pessoa.
