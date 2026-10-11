@@ -1820,3 +1820,17 @@ O que pediste: publicar, enviar para o GitHub e continuar com todas as fases que
    - Corrigi também um problema: se o caixista registasse uma quebra ou uma venda perdida sem internet, e a sessão dele expirasse antes de a rede voltar, o registo era recusado. Agora chega.
 
 Prova: a verificação do servidor deu 25 de 25. O teste no browser passou (terminal no iPhone, relatório do dono e página do admin). Os testes antigos do terminal, do balcão e dos relatórios continuam a passar.
+
+
+==================== 11/10/2026 — Vendas perdidas (8.4) publicadas e auditoria do dono (8.5) ====================
+1) As vendas perdidas (8.4) estão em genesismz.com. Testei no próprio site: o caixista no iPhone, tu nos Relatórios e o super admin em «Pedidos de clientes». Passou tudo.
+
+2) Auditoria (8.5), em Definições › Auditoria:
+   - Vês tudo o que acontece na loja: vendas, entradas e ajustes de stock, produtos alterados, PINs mudados, turnos, equipa, despesas…
+   - Filtras por Hoje / Semana / Mês / Tudo e por tipo (ex.: só Stock, só PINs).
+   - Tocas num registo e vês quem fez, quando, e o que estava antes e como ficou (ex.: «Preço de compra 22,00 MT → 19,00 MT», «Entraram 12»).
+   - Escolhes quanto tempo guardar: 2 meses (este mês e o anterior, o mínimo que pediste), 3, 6, 12 ou 24. O mais antigo apaga-se sozinho. Se baixares, o Genesis pede confirmação, porque o que é apagado não volta.
+   - Nunca se apagam os registos que mantêm um caixista bloqueado, as reaberturas de turno e o fecho de cada mês. Sem isto, um caixista bloqueado há meses ficava desbloqueado sozinho quando a limpeza apagasse as contagens erradas antigas.
+   - Antes de ligar a limpeza, contei o que ela apagaria nas lojas reais: nada (as lojas começaram a 05/10).
+
+Prova: a verificação do servidor deu 24 de 24 e o teste no browser deu 16 de 16 (PC e iPhone). Os testes do stock continuam a passar.

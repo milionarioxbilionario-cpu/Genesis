@@ -1172,7 +1172,93 @@ async function test23() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23 };
+// Fase 8.5: auditoria do dono (filtros, paginacao, detalhe) + retencao.
+async function test24() {
+  section(24, 'Auditoria do dono: periodo, tipo, paginas, detalhe, retencao (minimo 2 meses)');
+  const { runAuditRetention } = require('../src/services/auditRetention');
+  const { retentionCutoff } = require('../src/utils/auditGroups');
+  const owner = ownerClient();
+  const t = ctx.tenant.id;
+  const mk = (action, created_at, extra = {}) => prisma.auditLog.create({ data: { tenant_id: t, user_id: ctx.owner.id, action, entity_type: 'teste', entity_id: extra.entity_id || null, new_value: JSON.stringify(extra.new_value || { name: 'Reg ' + action }), old_value: extra.old_value ? JSON.stringify(extra.old_value) : null, ip_address: '127.0.0.1', created_at } });
+  const DAY = 86400000;
+  const now = Date.now();
+  // Entrada de stock real (rota) + mudanca de PIN real (rota) + registos datados.
+  const entry = await owner.req('POST', '/api/inventory/stock', { product_id: ctx.product.id, unit_cost: 6000, lots: [{ quantity: 7, expiry_date: null }] });
+  ok(entry.status === 201, 'entrada de stock (7 un.) feita', entry.status);
+  const pin = await owner.req('PUT', '/api/settings/authorization-pin', { owner_password: OWNER_PW, pin: '975310' });
+  ok(pin.status === 200, 'PIN de autorizacao mudado', pin);
+  await owner.req('PUT', '/api/settings/authorization-pin', { owner_password: OWNER_PW, pin: PIN });
+  const old40 = await mk('UPDATE_PRODUCT', new Date(now - 40 * DAY), { old_value: { sell_price: 10000 }, new_value: { name: 'Cerveja Teste', sell_price: 12000 } });
+  const old100 = await mk('CREATE_SALE', new Date(now - 100 * DAY));
+  const oldUnlock = await mk('CASHIER_UNLOCKED', new Date(now - 200 * DAY), { entity_id: ctx.cashier.id });
+  const oldFail = await mk('SHIFT_ATTEMPT_FAIL', new Date(now - 190 * DAY), { entity_id: ctx.cashier.id });
+  const oldPin = await mk('POS_PIN_FAIL', new Date(now - 150 * DAY));
+
+  const list = async (q) => owner.req('GET', '/api/owner/audit?' + q);
+  const today = await list('period=today&group=all&limit=50');
+  ok(today.status === 200 && Array.isArray(today.data.items) && today.data.items.length > 0 && today.data.items.every((a) => new Date(a.created_at) >= new Date(now - 2 * DAY)), 'hoje: so registos recentes', today.status);
+  const stockG = await list('period=today&group=stock');
+  const se = stockG.data.items.find((a) => a.action === 'STOCK_ENTRY');
+  ok(se && stockG.data.items.every((a) => a.group === 'stock') && se.new_value.added === 7 && se.user_name === 'Dono Teste', 'tipo Stock: entrada +7 com quem fez', se && se.new_value);
+  const sec = await list('period=today&group=security');
+  ok(sec.data.items.some((a) => a.action === 'AUTH_PIN_CHANGED') && !JSON.stringify(sec.data).includes('975310'), 'tipo PINs: mudanca de PIN aparece, sem o PIN', sec.data.items.map((a) => a.action));
+  const month = await list('period=month&group=products');
+  ok(month.status === 200 && !month.data.items.some((a) => a.id === old40.id), 'mes: registo de ha 40 dias nao aparece');
+  const all = await list('period=all&group=products');
+  const p40 = all.data.items.find((a) => a.id === old40.id);
+  ok(p40 && p40.old_value.sell_price === 10000 && p40.new_value.sell_price === 12000, 'tudo: produto alterado ha 40 dias com antes/depois', p40);
+  ok(Array.isArray(all.data.groups) && all.data.groups.some((g) => g.key === 'stock' && g.label === 'Stock') && all.data.retention_months === 2 && all.data.kept_since && all.data.cutoffs && all.data.cutoffs['6'], 'resposta traz os tipos, a retencao (2), desde quando guarda e os cortes', { r: all.data.retention_months, k: all.data.kept_since });
+
+  // Paginacao sem repetidos.
+  for (let i = 0; i < 7; i++) await mk('CREATE_EXPENSE', new Date(now - (i + 1) * 60000));
+  const seen = new Set(); let cursor = null; let pages = 0; let dup = false;
+  do {
+    const r = await list('period=all&group=settings&limit=3' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''));
+    for (const a of r.data.items) { if (seen.has(a.id)) dup = true; seen.add(a.id); }
+    cursor = r.data.next_cursor; pages++;
+  } while (cursor && pages < 10);
+  ok(!dup && seen.size >= 7 && pages >= 3, 'paginas de 3: ' + seen.size + ' registos em ' + pages + ' paginas, sem repetidos');
+
+  const det = await owner.req('GET', '/api/owner/audit/' + old40.id);
+  ok(det.status === 200 && det.data.new_value.sell_price === 12000 && det.data.group === 'products', 'detalhe de um registo: 200');
+  const other = await prisma.auditLog.findFirst({ where: { tenant_id: { not: t }, NOT: { tenant_id: null } }, select: { id: true } });
+  if (other) ok((await owner.req('GET', '/api/owner/audit/' + other.id)).status === 404, 'registo de outra loja: 404');
+  ok((await list('period=ontem')).status === 400 && (await list('group=xpto')).status === 400, 'periodo/tipo invalidos: 400');
+  const cashier = await cashierTerminal();
+  ok((await cashier.req('GET', '/api/owner/audit?period=today')).status === 403, 'caixista: 403');
+
+  // Retencao.
+  ok((await owner.req('PUT', '/api/settings/audit-retention', { months: 1 })).status === 400, 'retencao de 1 mes: 400 (minimo 2)');
+  ok((await owner.req('PUT', '/api/settings/audit-retention', { months: 5 })).status === 400, 'retencao fora das opcoes: 400');
+  const r6 = await owner.req('PUT', '/api/settings/audit-retention', { months: 6 });
+  ok(r6.status === 200 && (await prisma.tenant.findUnique({ where: { id: t } })).audit_retention_months === 6, 'retencao 6 meses guardada');
+  ok(await prisma.auditLog.count({ where: { tenant_id: t, action: 'UPDATE_AUDIT_RETENTION' } }) === 1, 'mudanca da retencao auditada');
+  ok((await cashier.req('PUT', '/api/settings/audit-retention', { months: 2 })).status === 403, 'caixista nao muda a retencao: 403');
+  // Outra loja com um registo antigo e um registo antigo do admin: intactos.
+  const otherTenant = await prisma.tenant.create({ data: { name: 'TESTE-SEGURANCA-C-' + Date.now(), owner_name: 'C', business_type: 'bottle_store', location: 'T', phone: '840000002', status: 'active', audit_retention_months: 2 } });
+  const otherOwner = await prisma.user.create({ data: { tenant_id: otherTenant.id, role: 'owner', name: 'Dono C', email: 'verif-c-' + Date.now() + '@teste.local', password_hash: 'x', is_active: true } });
+  const adminOld = await prisma.auditLog.create({ data: { tenant_id: null, user_id: ctx.admin.id, action: 'APPROVE_TENANT', entity_type: 'tenant', ip_address: '127.0.0.1', created_at: new Date(now - 400 * DAY) } });
+  try {
+    const otherOld = await prisma.auditLog.create({ data: { tenant_id: otherTenant.id, user_id: otherOwner.id, action: 'CREATE_SALE', entity_type: 'teste', ip_address: '127.0.0.1', created_at: new Date(now - 100 * DAY) } });
+    const exists = async (row) => Boolean(await prisma.auditLog.findUnique({ where: { id: row.id } }));
+    await runAuditRetention({ tenantId: t });
+    ok((await exists(old100)) && (await exists(old40)) && (await exists(oldPin)), 'retencao 6 meses: registos de 40, 100 e 150 dias ficam');
+    await owner.req('PUT', '/api/settings/audit-retention', { months: 2 });
+    const removed = await runAuditRetention({ tenantId: t });
+    ok(!(await exists(old100)) && !(await exists(oldPin)) && removed >= 2, 'retencao 2 meses: venda de ha 100 dias e PIN errado de ha 150 apagados (' + removed + ')');
+    ok((await exists(old40)) === (new Date(now - 40 * DAY) >= retentionCutoff({ months: 2 })), 'registo de ha 40 dias segue a regra do mes corrente + anterior');
+    ok((await exists(oldUnlock)) && (await exists(oldFail)), 'protegidos ficam: desbloqueio e contagem errada antigos');
+    ok((await exists(otherOld)) && (await exists(adminOld)), 'outra loja e registos do admin intactos');
+    const lock = await require('../src/utils/shiftLock').getShiftLock(prisma, t, ctx.cashier.id);
+    ok(lock && typeof lock.attempts === 'number' && lock.locked === false, 'bloqueio do turno continua a ler a auditoria (nao bloqueado)', lock);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: otherTenant.id }, { id: adminOld.id }] } });
+    await prisma.user.delete({ where: { id: otherOwner.id } });
+    await prisma.tenant.delete({ where: { id: otherTenant.id } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24 };
 
 (async () => {
   await prisma.ready();

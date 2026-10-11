@@ -31,6 +31,8 @@ const hoursSchema = z.object({
 });
 const discountSchema = z.object({ discount_free_pct: z.number().int().min(0).max(100) });
 const monthCloseSchema = z.object({ month_close_day: z.number().int().min(1, 'entre 1 e 28').max(28, 'entre 1 e 28') });
+const { RETENTION_OPTIONS } = require('../utils/auditGroups');
+const auditRetentionSchema = z.object({ months: z.number().int().refine((m) => RETENTION_OPTIONS.includes(m), 'Escolha 2, 3, 6, 12 ou 24 meses (mínimo 2).') });
 const expiryAlertSchema = z.object({ expiry_alert_days: z.number().int().min(1, 'mínimo 1 dia').max(90, 'máximo 90 dias') });
 const pinSchema = z.object({
   pin: z.string().regex(/^\d{4,6}$/, 'O PIN tem 4 a 6 dígitos'),
@@ -54,6 +56,7 @@ router.get('/', asyncHandler(async (req, res) => {
     discount_free_pct: t.discount_free_pct,
     expiry_alert_days: t.expiry_alert_days,
     month_close_day: t.month_close_day,
+    audit_retention_months: t.audit_retention_months,
     authorization_pin_configured: Boolean(t.cancel_pin_hash),
     status: t.status,
     trial_ends_at: t.trial_ends_at,
@@ -92,6 +95,16 @@ router.put('/expiry-alert', asyncHandler(async (req, res) => {
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_EXPIRY_ALERT', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true, ...data });
+}));
+
+// Quantos meses a auditoria guarda (Fase 8.5; decisao do fundador: o dono
+// escolhe, minimo 2). O mais antigo apaga-se sozinho (services/auditRetention.js).
+router.put('/audit-retention', asyncHandler(async (req, res) => {
+  const { months } = auditRetentionSchema.parse(req.body);
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { audit_retention_months: true } });
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data: { audit_retention_months: months } });
+  await writeAudit({ req, action: 'UPDATE_AUDIT_RETENTION', entityType: 'tenant', entityId: tenantId(req), oldValue: { months: before?.audit_retention_months }, newValue: { months } });
+  res.json({ ok: true, audit_retention_months: months });
 }));
 
 // Dia do mes em que o Genesis mostra o fecho do mes anterior (1-28: existe

@@ -26,6 +26,7 @@ const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { createPairingCode } = require('../utils/terminals');
 const { monthCloseStatus, monthKey } = require('../services/monthClose');
+const { GROUPS, GROUP_KEYS, groupOf, actionFilter, periodStart, retentionCutoff, RETENTION_OPTIONS } = require('../utils/auditGroups');
 
 const router = express.Router();
 router.use(auth);
@@ -59,17 +60,62 @@ router.get('/tenant', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/audit', asyncHandler(async (req, res) => {
-  const take = Math.min(Number(req.query.limit) || 100, 300);
-  const where = { tenant_id: tenantOf(req) };
-  if (typeof req.query.action === 'string' && req.query.action) where.action = req.query.action;
-  const logs = await prisma.auditLog.findMany({ where, orderBy: { created_at: 'desc' }, take, include: { user: { select: { name: true } } } });
-  const parse = (v) => { try { return v ? JSON.parse(v) : null; } catch { return v; } };
-  res.json(logs.map((l) => ({
-    id: l.id, action: l.action, entity_type: l.entity_type, entity_id: l.entity_id,
+// Auditoria do dono (Fase 8.5): periodo (hoje/semana/mes/tudo, calendario de
+// Maputo), tipo, paginas por cursor (created_at + id) e detalhe. Sempre so a
+// loja de quem pede (filtro tenant_id + RLS).
+const auditQuery = z.object({
+  period: z.enum(['today', 'week', 'month', 'all']).default('week'),
+  group: z.enum(['all', ...GROUP_KEYS]).default('all'),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  cursor: z.string().max(80).optional(),
+});
+const parseAuditJson = (v) => { try { return v ? JSON.parse(v) : null; } catch { return v; } };
+async function auditRow(l, terminals) {
+  const nv = parseAuditJson(l.new_value);
+  return {
+    id: l.id, action: l.action, group: groupOf(l.action), entity_type: l.entity_type, entity_id: l.entity_id,
     user_name: l.user?.name || '—', ip_address: l.ip_address, created_at: l.created_at,
-    old_value: parse(l.old_value), new_value: parse(l.new_value),
-  })));
+    old_value: parseAuditJson(l.old_value), new_value: nv,
+    terminal_name: nv && nv.terminal_id ? terminals.get(nv.terminal_id) || null : null,
+  };
+}
+const terminalNames = async (tenantId) => new Map((await prisma.posTerminal.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } })).map((t) => [t.id, t.name]));
+
+router.get('/audit', asyncHandler(async (req, res) => {
+  const q = auditQuery.parse(req.query);
+  const tenantId = tenantOf(req);
+  const where = { tenant_id: tenantId };
+  const from = periodStart(q.period);
+  if (from) where.created_at = { gte: from };
+  const actions = actionFilter(q.group);
+  if (actions) where.action = actions;
+  if (q.cursor) {
+    const [at, id] = q.cursor.split('|');
+    const d = new Date(at);
+    if (!id || Number.isNaN(d.getTime())) throw httpError(400, 'Cursor inválido', 'BAD_CURSOR');
+    where.AND = [{ OR: [{ created_at: { lt: d } }, { created_at: d, id: { lt: id } }] }];
+  }
+  const rows = await prisma.auditLog.findMany({ where, orderBy: [{ created_at: 'desc' }, { id: 'desc' }], take: q.limit + 1, include: { user: { select: { name: true } } } });
+  const page = rows.slice(0, q.limit);
+  const last = page[page.length - 1];
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { audit_retention_months: true } });
+  const months = tenant?.audit_retention_months || 2;
+  const terminals = await terminalNames(tenantId);
+  res.json({
+    items: await Promise.all(page.map((l) => auditRow(l, terminals))),
+    next_cursor: rows.length > q.limit && last ? `${last.created_at.toISOString()}|${last.id}` : null,
+    groups: GROUPS.map(({ key, label }) => ({ key, label })).concat([{ key: 'other', label: 'Outros' }]),
+    retention_months: months,
+    kept_since: retentionCutoff({ months }),
+    cutoffs: Object.fromEntries(RETENTION_OPTIONS.map((m) => [m, retentionCutoff({ months: m })])),
+  });
+}));
+
+router.get('/audit/:id', asyncHandler(async (req, res) => {
+  const tenantId = tenantOf(req);
+  const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId }, include: { user: { select: { name: true } } } });
+  if (!l) throw httpError(404, 'Registo não encontrado', 'AUDIT_NOT_FOUND');
+  res.json(await auditRow(l, await terminalNames(tenantId)));
 }));
 
 // ---------------------------------------------------------------- equipa: caixistas

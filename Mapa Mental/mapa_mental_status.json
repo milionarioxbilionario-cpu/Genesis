@@ -116,7 +116,7 @@
       "status": "ok",
       "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
       "role": "API do dono.",
-      "notes": "GET /api/owner/tenant alimenta o nome real da loja no shell; nunca dados de demonstracao."
+      "notes": "11/10/2026 Fase 8.5: GET /audit com periodo, tipo, cursor e detalhe. verify_system 24 (24/24)."
     },
     "backend/src/routes/admin.js": {
       "status": "ok",
@@ -141,7 +141,7 @@
       "status": "ok",
       "summary": "Fornecedores e compras de stock: POST /stock aceita varias validades (lots[]) numa transaccao, auditoria STOCK_ENTRY.",
       "role": "Stock.",
-      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
+      "notes": "11/10/2026: auditoria STOCK_ENTRY guarda tambem o preco de compra novo. verify_system 22 + fase8_5.mjs."
     },
     "backend/src/routes/catalogs.js": {
       "status": "ok",
@@ -1075,13 +1075,13 @@
       "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026 Fase 5.1: /expenses; verify_system 16 23/23."
+      "notes": "11/10/2026 Fase 8.5: PUT /audit-retention (2/3/6/12/24). verify_system 24."
     },
     "frontend/src/pages/owner/Settings.jsx": {
       "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026 Fase 5.1: despesas avulsas; fase5.mjs 9/9."
+      "notes": "11/10/2026 Fase 8.5: separador Auditoria usa AuditLogPage. fase8_5.mjs + stock.mjs."
     },
     "backend/src/routes/shoppingLists.js": {
       "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
@@ -1312,6 +1312,36 @@
       "summary": "Browser: vendas perdidas no terminal (iPhone), Relatorios do dono e Pedidos de clientes no admin.",
       "role": "Teste E2E.",
       "notes": "11/10/2026: passou."
+    },
+    "backend/src/utils/auditGroups.js": {
+      "status": "ok",
+      "summary": "Puro: tipos da auditoria, periodos de Maputo (hoje/semana/mes), corte da retencao, accoes protegidas.",
+      "role": "Auditoria do dono.",
+      "notes": "11/10/2026 Fase 8.5: auditGroups.test.js 3/3."
+    },
+    "backend/src/services/auditRetention.js": {
+      "status": "ok",
+      "summary": "Apaga a auditoria mais antiga que a retencao de cada loja (minimo 2 meses), nunca as accoes protegidas nem as do admin.",
+      "role": "Job (6 em 6 h).",
+      "notes": "11/10/2026 Fase 8.5: verify_system 24; contagem a seco nas lojas reais = 0."
+    },
+    "frontend/src/pages/owner/AuditLogPage.jsx": {
+      "status": "ok",
+      "summary": "Definicoes > Auditoria: retencao, Hoje/Semana/Mes/Tudo, tipo, lista, detalhe antes/depois.",
+      "role": "Pagina do dono.",
+      "notes": "11/10/2026 Fase 8.5: fase8_5.mjs 16/16 (PC + iPhone)."
+    },
+    "frontend/src/utils/auditLabels.js": {
+      "status": "ok",
+      "summary": "Nomes em portugues das accoes e campos da auditoria; diferencas antes/depois.",
+      "role": "Auditoria do dono.",
+      "notes": "11/10/2026 Fase 8.5: fase8_5.mjs."
+    },
+    "frontend/tests/e2e/fase8_5.mjs": {
+      "status": "ok",
+      "summary": "Browser: auditoria do dono (filtros, detalhe, retencao, iPhone).",
+      "role": "Teste E2E.",
+      "notes": "11/10/2026: 16/16."
     }
   }
 }

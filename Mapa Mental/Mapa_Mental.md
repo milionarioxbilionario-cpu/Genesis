@@ -206,7 +206,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `frontend/src/pages/owner/Products.jsx` (separador Stock) | **«Entrada de stock»** abre o formulário de **produto novo** (título «Entrada de stock», «Unidades que entram»). **«Ajuste manual»**: produto + stock actual + `Adicionar`/`Retirar`, quantidade sempre positiva. Adicionar = linhas quantidade+validade, custo unitário, fornecedor opcional, «Fica com N un.». Retirar = quantidade + motivo (não deixa passar do stock). O botão diz «Adicionar 20 un.» / «Retirar 5 un.». `?ajustar=<id>` continua | ✅ CONFIRMADO FUNCIONAL (Chromium, PC + iPhone 390 px) | 10/10 — `stock.mjs` 18/18 + capturas revistas |
 | `backend/src/routes/inventory.js` (`POST /stock`) | Aceita `lots[]` (1–20 linhas, quantidade > 0, validade AAAA-MM-DD) numa só transacção: uma entrada + um lote por linha, custo e histórico de custo uma vez, produto passa a «com validade» se alguma linha tiver data, **auditoria `STOCK_ENTRY`** (antes não havia). Formato antigo (`quantity`) continua. Com fornecedor, o custo de entrega conta uma visita por dia | ✅ CONFIRMADO FUNCIONAL | 10/10 — `verify_system 22` 18/18; `5` e `14` sem regressão |
 
-### Fase 8.4 — Vendas perdidas no terminal (do catálogo e fora dele) + «Pedidos de clientes» no admin (11/10/2026)
+### Fase 8.4 — Vendas perdidas no terminal (do catálogo e fora dele) + «Pedidos de clientes» no admin (11/10/2026) — **publicado em genesismz.com (`30bc22f`, 11/10); `fase8_4.mjs` passou contra o site público (terminal iPhone + dono + admin)**
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | Migração `20261011_vendas_perdidas` (aplicada com `db execute`) | `DemandCapture`: `product_id` passa a opcional; `product_name`, `name_key`, `quantity` (por defeito 1), `unit_price` (centavos, opcional); CHECK «produto ou nome» e «quantidade > 0, preço ≥ 0»; índice parcial dos pedidos fora do catálogo. Compatível com o código antigo (registos antigos = 1 un.) | ✅ CONFIRMADO | 11/10 — `information_schema` + `pg_constraint` |
@@ -217,6 +217,17 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | `frontend/src/pages/pos/PosScreen.jsx` (cabeçalho) | No telemóvel, «Produto em falta» e «Quebra» passam a existir (ícones; antes escondidos abaixo de 768 px); «Vendas» em ícone abaixo de 640 px para o nome da loja caber | ✅ CONFIRMADO (390 px, captura revista) | 11/10 — `fase8_4.mjs` |
 | `frontend/src/pages/owner/Reports.jsx` + `utils/pdf/reportPdf.js` | Cartão e tabela do PDF «Vendas perdidas»: nome, «fora do catálogo», unidades, pedidos, ≈ valor | ✅ CONFIRMADO no ecrã · ⚠️ tabela do PDF não revista à vista nesta mini-meta (`fase8_1.mjs` gera o PDF diário sem erro) | 11/10 — `fase8_4.mjs`, `fase8_1.mjs` |
 | `Settings.jsx` (Fecho do mês) | Corrigido `replace(/D/g…)` → `/\D/g` (deixava passar letras no dia do fecho); grep ao repositório: 0 restantes | ✅ CONFIRMADO | 11/10 — grep |
+
+### Fase 8.5 — Auditoria do dono: filtros, detalhe e retenção escolhida pelo dono (11/10/2026)
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| Migração `20261011_auditoria_retencao` (aplicada) | `Tenant.audit_retention_months` (por defeito 2; CHECK 2–24) + índice `idx_auditlog_tenant_created_at` (não existia na BD real; `add_indexes.sql` nunca tinha sido aplicado) | ✅ CONFIRMADO | 11/10 — `pg_indexes` + `information_schema` |
+| `backend/src/utils/auditGroups.js` (puro) | 9 tipos (Vendas, Stock, Produtos, Turnos, PINs e segurança, Equipa, Definições e custos, Chenecas, Listas de compras) + «Outros»; hoje/semana (desde segunda)/mês pelo calendário de Maputo; corte da retenção = mês corrente + N−1 anteriores; acções protegidas | ✅ CONFIRMADO FUNCIONAL | 11/10 — `auditGroups.test.js` 3/3 (fronteiras 00:30 e 23:59 de Maputo, viragem do ano) |
+| `routes/owner.js` `GET /api/owner/audit` (+ `/:id`) | Período, tipo, páginas por cursor (data + id, sem repetidos), quem fez, nome do terminal, antes/depois já em objecto; devolve os tipos, a retenção, desde quando guarda e o corte de cada opção. Formato novo (`{items,…}`; `smoke_tests.js` actualizado) | ✅ CONFIRMADO FUNCIONAL | 11/10 — `verify_system 24` 24/24 |
+| `routes/settings.js` `PUT /audit-retention` | 2, 3, 6, 12 ou 24 meses (abaixo de 2 ou fora das opções = 400); auditado `UPDATE_AUDIT_RETENTION`; só o dono | ✅ CONFIRMADO FUNCIONAL | 11/10 — `verify_system 24` |
+| `services/auditRetention.js` (arranca em `index.js`; `AUDIT_RETENTION_JOB=false` desliga) | 2 min depois do arranque e de 6 em 6 h: por loja, apaga em lotes o que é anterior ao corte. **Nunca** apaga `CASHIER_UNLOCKED`, `CASHIER_LOCKED`, `SHIFT_ATTEMPT_FAIL` (o bloqueio conta falhas desde o último desbloqueio sem limite de tempo: apagá-las desbloqueava sozinho um caixista bloqueado há meses — apanhado ao ler `shiftLock.js`), `SHIFT_OPENED`, `MONTH_CLOSE_SEEN`; nunca toca nas linhas do admin (`tenant_id` NULL) | ✅ CONFIRMADO FUNCIONAL | 11/10 — `verify_system 24` (apaga 100 e 150 dias com 2 meses; com 6 meses ficam; protegidos, outra loja e admin intactos); contagem a seco nas lojas reais: 0 a apagar |
+| `frontend/src/pages/owner/AuditLogPage.jsx` + `utils/auditLabels.js` (Definições › Auditoria) | «Quanto tempo guardar» (baixar pede confirmação com a data do corte); Hoje/Semana/Mês/Tudo + tipo; lista com resumo (produto, +N un., motivo, valor); tocar abre o detalhe «Campo / Antes / Depois» com nomes em português e dinheiro em MT; «Carregar mais». Ignora respostas fora de ordem. Continua dentro de Definições (barra lateral do dono fixa pelo CLAUDE.md) | ✅ CONFIRMADO FUNCIONAL (Chromium, PC + iPhone 390 px) | 11/10 — `fase8_5.mjs` 16/16 + capturas a1–a4 revistas |
+| `routes/inventory.js` (auditoria `STOCK_ENTRY`) | Passa a guardar também o preço de compra novo: o detalhe mostrava «22,00 MT → —», como se o preço tivesse sido apagado | ✅ CONFIRMADO | 11/10 — `fase8_5.mjs`; `verify_system 22` |
 
 ---
 
@@ -856,3 +867,21 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
   - Capturas l1–l4 revistas.
 - Também nesta sessão (para a 8.5): migração `20261011_auditoria_retencao` já aplicada (coluna com valor por defeito 2 + índice `idx_auditlog_tenant_created_at`, que não existia na BD real). Contagem a seco da retenção de 2 meses nas lojas reais = **0 registos a apagar** (Kleyton 71 registos, o mais antigo de 05/10; SPAR 0).
 - Segue-se: publicar a 8.4; 8.5 auditoria.
+
+### [2026-10-11] — Publicação da 8.4; Fase 8.5: auditoria do dono (filtros, detalhe, retenção)
+- **Publicação 8.4:** commit `30bc22f` (só os ficheiros da 8.4; o trabalho da 8.5 ficou de fora), `git push` `f7f2576..30bc22f`, «PUBLICADO 30bc22f». De fora: /, admin 200; `/api/auth/me` 401; `/api/admin/lost-requests` 403 sem sessão. **`fase8_4.mjs` contra genesismz.com + admin.genesismz.com: passou, 0 erros de JS** (loja e admin de teste apagados).
+- **8.5, pedido do fundador (10/10):** página de auditoria com tudo (stock, edições, PINs…), filtros hoje/semana/mês e por tipo, abrir cada registo; retenção escolhida pelo dono, mínimo 2 meses, o resto apaga-se.
+- **Ficheiros:** migração `20261011_auditoria_retencao`; `schema.prisma`/`schema.sqlite.prisma` (`Tenant.audit_retention_months`, iguais); novos `utils/auditGroups.js`, `services/auditRetention.js`, `tests/auditGroups.test.js`; `routes/owner.js`, `routes/settings.js`, `routes/inventory.js`, `index.js`, `scripts/smoke_tests.js`, `scripts/verify_system.js` (secção 24); frontend novos `pages/owner/AuditLogPage.jsx`, `utils/auditLabels.js`, `tests/e2e/fase8_5.mjs`; `pages/owner/Settings.jsx`.
+- **Decisões minhas (dentro do pedido):**
+  - a página fica em Definições › Auditoria, porque a barra lateral é fixa;
+  - «N meses» = mês corrente + N−1 anteriores;
+  - opções 2/3/6/12/24;
+  - acções protegidas (ver Parte A): ao ler `shiftLock.js` vi que apagar contagens erradas antigas desbloqueava sozinho um caixista bloqueado → `SHIFT_ATTEMPT_FAIL` e `CASHIER_LOCKED` também ficam sempre.
+- **Antes de ligar a limpeza** (BD partilhada com produção, apagar é irreversível): contagem a seco por loja = **0 registos a apagar** (Kleyton 71, o mais antigo de 05/10; SPAR 0).
+- **Erros apanhados na prova:**
+  - o detalhe da entrada de stock mostrava «Preço de compra 22,00 MT → —» e «Fornecedor — → —» → a auditoria passa a guardar o preço novo, e o detalhe só mostra os campos registados e escondendo linhas vazias;
+  - escolher 6 meses e logo 2 não pedia confirmação (as Definições ainda não tinham recarregado) → a página guarda o valor gravado;
+  - a lista podia mostrar a resposta de um filtro antigo → só conta o pedido mais recente;
+  - no teste, 2 leituras antes de a lista carregar.
+- **Prova:** `auditGroups.test.js` 3/3; `verify_system 24` **24/24** (filtros, PIN sem o valor, 40 dias fora do mês, antes/depois, 3 páginas sem repetidos, detalhe, outra loja 404, 400, caixista 403, retenção 400/200/auditada, limpeza correcta, bloqueio do turno lê a auditoria); `verify_system 22` sem regressão; `fase8_5.mjs` **16/16, 0 erros de JS** (entrada +12 → detalhe com entraram 12, custo 19,00 MT, preço de compra antes → 19,00 MT; PIN sem o valor; 6 → 2 meses com confirmação; 2 registos da mudança; iPhone 390 px); `stock.mjs` passou; build OK.
+- Segue-se: publicar a 8.5; 8.6 (catálogo-mestre no admin).

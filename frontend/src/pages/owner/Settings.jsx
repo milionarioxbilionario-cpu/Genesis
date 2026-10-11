@@ -3,6 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { Monitor, Plus } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
+import AuditLogPage from './AuditLogPage';
 import { money, date, dateTime, isoDay, errorMessage } from '../../utils/format';
 import { Alert, Badge, Button, Card, CardHeader, Dialog, Drawer, Input, MoneyInput, PageHeader, Select, Skeleton, Table, Tabs, useConfirm, useToast } from '../../components/ui';
 
@@ -36,7 +37,7 @@ export default function Settings() {
           )}
           {tab === 'discounts' && <Discounts s={settings.data} reload={settings.reload} />}
           {tab === 'terminals' && <Terminals />}
-          {tab === 'audit' && <Audit />}
+          {tab === 'audit' && <AuditLogPage settings={settings.data} reloadSettings={settings.reload} />}
         </div>
       )}
     </>
@@ -338,30 +339,3 @@ function Terminals() {
   );
 }
 
-const ACTION_LABEL = {
-  CREATE_SALE: 'Venda', CANCEL_SALE: 'Venda cancelada', CANCEL_ATTEMPT: 'PIN errado ao cancelar', DISCOUNT_AUTHORIZED: 'Desconto autorizado',
-  DISCOUNT_PIN_FAIL: 'PIN errado em desconto', STOCK_ADJUSTMENT: 'Ajuste de stock', UPDATE_PRODUCT: 'Produto alterado', DELETE_PRODUCT: 'Produto removido',
-  POS_LOGIN: 'Entrada no terminal', POS_PIN_FAIL: 'PIN errado no terminal', SHIFT_CLOSING_OK: 'Fecho de turno', SHIFT_ATTEMPT_FAIL: 'Contagem errada no fecho',
-  CASHIER_LOCKED: 'Caixista bloqueado', CASHIER_UNLOCKED: 'Caixista desbloqueado', CREATE_CASHIER: 'Caixista criado', DEACTIVATE_CASHIER: 'Caixista desactivado',
-  REACTIVATE_CASHIER: 'Caixista reactivado', RESET_CASHIER_PIN: 'PIN de caixista alterado', TERMINAL_PAIRED: 'Terminal emparelhado', TERMINAL_REVOKED: 'Terminal revogado',
-  AUTH_PIN_CHANGED: 'PIN de autorização alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', CREATE_FIXED_COST: 'Custo fixo criado',
-  UPDATE_FIXED_COST: 'Custo fixo alterado', DELETE_FIXED_COST: 'Custo fixo removido', DEBT_PAYMENT: 'Pagamento de cheneca', CREATE_DEBT: 'Cheneca criada',
-  CREATE_SHRINKAGE: 'Quebra registada', CREATE_DEMAND_CAPTURE: 'Produto em falta', SUPPORT_SESSION_OPENED: 'Acesso de suporte Genesis',
-};
-const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL']);
-
-function Audit() {
-  const { data, loading } = useApi('/api/owner/audit?limit=150');
-  return (
-    <Table
-      columns={[
-        { key: 'created_at', header: 'Quando', render: (a) => <span className="whitespace-nowrap">{dateTime(a.created_at)}</span> },
-        { key: 'action', header: 'Acção', render: (a) => <span className={ALERT_ACTIONS.has(a.action) ? 'font-medium text-danger' : 'text-ink'}>{ACTION_LABEL[a.action] || a.action}</span> },
-        { key: 'user', header: 'Quem', render: (a) => <span className="text-ink-2">{a.user_name}</span> },
-      ]}
-      rows={data || []}
-      loading={loading}
-      empty={<p className="py-10 text-center text-ink-muted">Sem registos.</p>}
-    />
-  );
-}
