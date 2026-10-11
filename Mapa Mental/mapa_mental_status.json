@@ -123,7 +123,7 @@
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
       "security": "requireRole('super_admin') + adminOriginCheck.",
-      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin).  09/10/2026 (Fase 7.3): aprovar com email ja usado -> 409 EMAIL_IN_USE (antes inventava email). Pedido sem email ainda gera @genesis.co.mz (decisao do fundador)."
+      "notes": "11/10/2026 Fase 8.4: GET /lost-requests (sem nomes de lojas) + overview.lost_requests_30d. verify_system 23."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -157,8 +157,9 @@
     },
     "backend/src/routes/demand_captures.js": {
       "status": "ok",
-      "summary": "Registo de procura nao satisfeita: transaccional, com auditoria.",
-      "role": "Inteligencia comercial."
+      "summary": "Vendas perdidas: produto da loja ou texto livre, quantidade, preco opcional (centavos); idempotente; auditado.",
+      "role": "Inteligencia comercial.",
+      "notes": "11/10/2026 Fase 8.4: verify_system 23 (25/25)."
     },
     "backend/src/routes/shrinkage_records.js": {
       "status": "ok",
@@ -427,10 +428,10 @@
       "role": "Dados."
     },
     "admin-frontend/src/App.jsx": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
       "role": "Painel da plataforma.",
-      "notes": "10/10/2026 Fase 8.2: verify_system 20 (32/32) + fase8_2.mjs no browser (dono no PC e iPhone 390 px, super admin). DEFEITOS ABERTOS: (1) o email `admin@genesis.co.mz` vem PRE-PREENCHIDO no formulario; (2) rejeitar e bloquear usam window.prompt sem validacao; (3) a UI so usa parte da API (falta auditoria, pedidos detalhados, historico); (4) sem pesquisa nem filtros; (5) sem botao de tema. 09/10/2026 (Fase 7.3): modo suporte abre o separador no proprio toque (Safari); bloqueado -> link. admin_flows 7/7 no Chromium; Safari real nao verificado."
+      "notes": "11/10/2026 Fase 8.4: pagina Pedidos de clientes + aviso na Visao geral. fase8_4.mjs."
     },
     "admin-frontend/src/main.jsx": {
       "status": "ok",
@@ -1002,7 +1003,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 04/10/2026: pos.mjs 21/21 + flows.mjs 24/24 no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.3): com catalogo em cache e rede, volta a pedir o catalogo (aviso sai sozinho). flows.mjs OK."
+      "notes": "11/10/2026 Fase 8.4: Produto em falta e Quebra no telemovel (icones); Vendas em icone < 640 px. fase8_4.mjs + pos.mjs + flows.mjs."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1042,7 +1043,7 @@
     },
     "backend/src/services/reports.js": {
       "status": "ok",
-      "notes": "10/10/2026 Fase 8.1: top_products/top_profitable por niveis (services/ranking.js); ranking.test 6/6 + fase8_1.mjs. 04/10 Fase 4: verify_system 194/194.",
+      "notes": "11/10/2026 Fase 8.4: lost_demand com fora do catalogo, unidades e valor; restock usa unidades pedidas. verify_system 23 + reports.mjs.",
       "summary": "Relatorios diario/semanal/mensal, rastreio (timeline), metas 12 meses.",
       "role": "Relatorios."
     },
@@ -1147,7 +1148,7 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. 09/10/2026 (Fase 7.2): verify_system 19 (8/8) + flows.mjs no browser (QR = /verify/<id>, comparado pixel a pixel; pagina publica abre sem sessao). 10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "11/10/2026 Fase 8.4: Produto em falta do catalogo / fora do catalogo + quantidade + preco; seller_user_id na fila (vendas perdidas e quebras). fase8_4.mjs (iPhone 13)."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
@@ -1299,6 +1300,18 @@
       "summary": "Teste de browser do separador Stock (Ajuste Adicionar/Retirar, Entrada de stock = produto novo, validades, iPhone).",
       "role": "Testes.",
       "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
+    },
+    "backend/src/utils/lostRequests.js": {
+      "status": "ok",
+      "summary": "Puro: agrupa vendas perdidas para o dono (unidades, valor estimado) e para o admin (lojas, pedidos, preco indicado; sem nomes de lojas).",
+      "role": "Relatorios / admin.",
+      "notes": "11/10/2026 Fase 8.4: lostRequests.test.js 3/3."
+    },
+    "frontend/tests/e2e/fase8_4.mjs": {
+      "status": "ok",
+      "summary": "Browser: vendas perdidas no terminal (iPhone), Relatorios do dono e Pedidos de clientes no admin.",
+      "role": "Teste E2E.",
+      "notes": "11/10/2026: passou."
     }
   }
 }

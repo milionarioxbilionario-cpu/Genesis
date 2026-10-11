@@ -233,11 +233,16 @@ model DebtPayment {
 model DemandCapture {
   id           String   @id @default(uuid())
   tenant_id    String
-  product_id   String
+  product_id   String?
+  // Fase 8.4: pedido de produto FORA do catalogo (texto livre do caixista).
+  product_name String?
+  name_key     String?
+  quantity     Int      @default(1)
+  unit_price   Int?
   recorded_by  String
   requested_at DateTime @default(now())
   recordedBy   User     @relation("DemandCapturedBy", fields: [recorded_by], references: [id])
-  product      Product  @relation(fields: [product_id], references: [id])
+  product      Product? @relation(fields: [product_id], references: [id])
   tenant       Tenant   @relation(fields: [tenant_id], references: [id])
 }
 

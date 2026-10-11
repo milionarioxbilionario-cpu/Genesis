@@ -9,6 +9,7 @@ const prisma = require('../utils/prisma');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('./monthlyDeductions');
 const { recommendRestock } = require('./restock');
 const { rankByTiers } = require('./ranking');
+const { groupLostDemand } = require('../utils/lostRequests');
 
 const SHRINK_REASON = { broken: 'Partido', expired: 'Validade expirada', internal_consumption: 'Consumo interno', other: 'Outro' };
 const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.abs(before)) * 1000) / 10 : null);
@@ -34,7 +35,7 @@ async function summarize(tenantId, start, end) {
     prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: range }, include: { items: true, cashier: { select: { name: true } } } }),
     prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'cancelled', created_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { created_at: 'desc' } }),
     prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' } }),
-    prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true } } } }),
+    prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true, sell_price: true } } }, orderBy: { requested_at: 'asc' } }),
     prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true } } }, orderBy: { recorded_at: 'desc' } }),
   ]);
 
@@ -76,11 +77,6 @@ async function summarize(tenantId, start, end) {
     }
   }
 
-  const demandByProduct = new Map();
-  for (const dc of demand) {
-    const e = demandByProduct.get(dc.product_id) || { product_id: dc.product_id, name: dc.product?.name || '—', requests: 0 };
-    e.requests += 1; demandByProduct.set(dc.product_id, e);
-  }
 
   // Perdas (quebras, validades, consumo interno) a preco de custo. Registos
   // antigos sem custo usam o custo actual do produto.
@@ -124,7 +120,8 @@ async function summarize(tenantId, start, end) {
     cancellations: cancelled.map((s) => ({ id: s.id, daily_number: s.daily_number, total_amount: s.total_amount, cashier: s.cashier?.name || '—', reason: s.cancel_reason, created_at: s.created_at })),
     cancelled_total: cancelled.reduce((sum, s) => sum + s.total_amount, 0),
     shift_closings: closings.map((c) => ({ id: c.id, cashier: c.cashier?.name || '—', counted_amount: c.counted_amount, expected_amount: c.expected_amount, difference: c.difference, closed_at: c.closed_at })),
-    lost_demand: [...demandByProduct.values()].sort((a, b) => b.requests - a.requests),
+    // Vendas perdidas (Fase 8.4): do catalogo e fora dele, com unidades e valor estimado.
+    lost_demand: groupLostDemand(demand),
   };
 }
 
@@ -140,12 +137,13 @@ async function restockFor(tenantId, end, coverDays, windowDays = 28) {
   const [products, items, demand] = await Promise.all([
     prisma.product.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, stock_qty: true, cost_price: true, created_at: true } }),
     prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: from, lte: end } } }, select: { product_id: true, quantity: true } }),
-    prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: { gte: from, lte: end } }, select: { product_id: true } }),
+    prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: { gte: from, lte: end } }, select: { product_id: true, quantity: true } }),
   ]);
   const soldByProduct = {};
   for (const it of items) soldByProduct[it.product_id] = (soldByProduct[it.product_id] || 0) + it.quantity;
   const lostByProduct = {};
-  for (const d of demand) lostByProduct[d.product_id] = (lostByProduct[d.product_id] || 0) + 1;
+  // Unidades pedidas (registos antigos = 1). Fora do catalogo nao entra: nao ha produto para comprar.
+  for (const d of demand) if (d.product_id) lostByProduct[d.product_id] = (lostByProduct[d.product_id] || 0) + (d.quantity || 1);
   return recommendRestock({ products, soldByProduct, lostByProduct, windowDays, coverDays, now: end });
 }
 
@@ -395,7 +393,7 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
   for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date });
   for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido' });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
-  for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || '—'} (em falta)`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida' });
+  for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || d.product_name || '—'}${(d.quantity || 1) > 1 ? ` ×${d.quantity}` : ''} (${d.product_id ? 'em falta' : 'fora do catálogo'})`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida', quantity: d.quantity || 1, unit_price: d.unit_price ?? null });
 
   // Despesa: sai do lucro liquido do MES (nao do lucro bruto do dia), por isso profit 0.
   // A data e o dia escolhido pelo dono (meio-dia), nao a hora em que foi escrita.

@@ -95,7 +95,7 @@ function Store({ s, reload }) {
       <Card>
         <CardHeader title="Fecho do mês" description="A partir deste dia, ao entrar, o Genesis mostra o resumo do mês anterior e a lista do que comprar, com a opção de a enviar ao fornecedor." />
         <div className="flex items-end gap-3">
-          <Input label="Dia do fecho" inputMode="numeric" value={closeDay} onChange={(e) => setCloseDay(e.target.value.replace(/D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
+          <Input label="Dia do fecho" inputMode="numeric" value={closeDay} onChange={(e) => setCloseDay(e.target.value.replace(/\D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
           <span className="pb-2 text-base text-ink-2">de cada mês (1 a 28)</span>
           <Button className="ml-auto" variant="primary" loading={busy === 'close'} disabled={!(Number(closeDay) >= 1 && Number(closeDay) <= 28)} onClick={() => save('close')}>Guardar</Button>
         </div>

@@ -8,7 +8,7 @@ import { preloadReceiptPdf, printReceipt, saleVerifyUrl } from '../../utils/rece
 import PdfReadyDialog from '../../components/PdfReadyDialog';
 import { foldText, nameMatches } from '../../utils/search';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
-import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Select, Spinner, useToast } from '../../components/ui';
+import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Segmented, Select, Spinner, useToast } from '../../components/ui';
 
 export function AuthorizationPinDialog({ title, description, error, onCancel, onSubmit }) {
   const [pin, setPin] = useState('');
@@ -260,7 +260,7 @@ function ProductPicker({ products, value, onChange }) {
 
 // Quebra / consumo interno (especificacao 6.2): guardado no terminal e
 // enviado pela fila (funciona offline).
-export function ShrinkageDialog({ products, onClose, onSaved }) {
+export function ShrinkageDialog({ products, cashier, onClose, onSaved }) {
   const toast = useToast();
   const [productId, setProductId] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -268,7 +268,9 @@ export function ShrinkageDialog({ products, onClose, onSaved }) {
   const p = products.find((x) => x.id === productId);
   const qty = Number(quantity);
   async function save() {
-    await db.shrinkage_records.add({ id: newUuid(), product_id: productId, quantity: qty, reason, recorded_at: new Date().toISOString(), sync_state: SYNC_STATE.PENDING });
+    // seller_user_id: a fila envia-o para o caso de a sessao do caixista ja ter
+    // expirado quando houver rede (caminho do cookie do terminal, posWriteAuth).
+    await db.shrinkage_records.add({ id: newUuid(), product_id: productId, quantity: qty, reason, seller_user_id: cashier?.id, recorded_at: new Date().toISOString(), sync_state: SYNC_STATE.PENDING });
     toast(`Quebra registada: ${qty} × ${p.name}.`);
     onSaved(); onClose();
   }
@@ -291,20 +293,43 @@ export function ShrinkageDialog({ products, onClose, onSaved }) {
   );
 }
 
-// "Cliente pediu produto em falta" (especificacao 6.2) — oportunidade perdida.
-export function DemandDialog({ products, onClose, onSaved }) {
+// "Cliente pediu produto em falta" (especificacao 6.2 + Fase 8.4) — venda
+// perdida. Do catalogo da loja ou escrito a mao (fora do catalogo), com
+// quantidade e, se souber, o preco unitario. Guardado no terminal e enviado
+// pela fila (funciona offline).
+export function DemandDialog({ products, cashier, onClose, onSaved }) {
   const toast = useToast();
+  const [mode, setMode] = useState('catalog');
   const [productId, setProductId] = useState('');
+  const [name, setName] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [unitPrice, setUnitPrice] = useState(null);
   const p = products.find((x) => x.id === productId);
+  const qty = Number(quantity);
+  const qtyOk = Number.isInteger(qty) && qty >= 1 && qty <= 1000;
+  const nameOk = name.trim().length >= 2 && name.trim().length <= 80;
+  const canSave = qtyOk && (mode === 'catalog' ? Boolean(p) : nameOk);
   async function save() {
-    await db.demand_captures.add({ id: newUuid(), product_id: productId, requested_at: new Date().toISOString(), sync_state: SYNC_STATE.PENDING });
-    toast(`Pedido registado: ${p.name}.`);
+    const base = { id: newUuid(), quantity: qty, seller_user_id: cashier?.id, requested_at: new Date().toISOString(), sync_state: SYNC_STATE.PENDING };
+    if (mode === 'catalog') await db.demand_captures.add({ ...base, product_id: productId });
+    else await db.demand_captures.add({ ...base, product_name: name.trim().replace(/\s+/g, ' '), unit_price: unitPrice > 0 ? unitPrice : null });
+    toast(`Pedido registado: ${qty} × ${mode === 'catalog' ? p.name : name.trim()}.`);
     onSaved(); onClose();
   }
   return (
-    <Dialog open title="Produto em falta" description="O cliente pediu um produto que não havia. Fica no relatório de oportunidades perdidas." onClose={onClose}
-      footer={<><Button onClick={onClose}>Cancelar</Button><Button variant="primary" disabled={!p} onClick={save}>Registar pedido</Button></>}>
-      <ProductPicker products={products} value={productId} onChange={setProductId} />
+    <Dialog open title="Produto em falta" description="O cliente pediu e não havia. Fica no relatório de vendas perdidas." onClose={onClose}
+      footer={<><Button onClick={onClose}>Cancelar</Button><Button variant="primary" disabled={!canSave} onClick={save}>Registar pedido</Button></>}>
+      <div className="flex flex-col gap-3">
+        <Segmented className="w-full" value={mode} onChange={setMode} options={[{ value: 'catalog', label: 'Do catálogo' }, { value: 'outside', label: 'Fora do catálogo' }]} />
+        {mode === 'catalog'
+          ? <ProductPicker products={products} value={productId} onChange={setProductId} />
+          : <Input label="O que o cliente pediu" placeholder="Ex.: cotonetes, gelo 2 kg…" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} autoFocus />}
+        <div className="grid grid-cols-2 gap-3">
+          <Input label="Quantidade" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, '').slice(0, 4))} inputClassName="num" />
+          {mode === 'outside' && <MoneyInput label="Preço unitário (opcional)" valueCents={unitPrice} onChangeCents={setUnitPrice} />}
+        </div>
+        {!qtyOk && quantity !== '' && <p className="text-sm text-danger">Quantidade entre 1 e 1000.</p>}
+      </div>
     </Dialog>
   );
 }

@@ -23,6 +23,7 @@ const { writeAudit } = require('../utils/audit');
 const { createSupportCode } = require('../utils/supportCodes');
 const { iconSchema } = require('../utils/productIcons');
 const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
+const { groupLostRequests } = require('../utils/lostRequests');
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -71,6 +72,7 @@ router.get('/overview', asyncHandler(async (req, res) => {
     trials_ending_soon: tenants.filter((t) => t.status === 'trial' && t.trial_ends_at && t.trial_ends_at < in7days).length,
     new_this_month: tenants.filter((t) => t.created_at >= monthStart).length,
     catalog_suggestions: await prisma.catalogSuggestion.count({ where: { status: 'pending' } }),
+    lost_requests_30d: await prisma.demandCapture.count({ where: { product_id: null, requested_at: { gte: new Date(Date.now() - 30 * 86400000) } } }),
     growth,
   });
 }));
@@ -235,6 +237,24 @@ router.post('/catalog-suggestions/dismiss', asyncHandler(async (req, res) => {
   if (!r.count) throw httpError(404, 'Sugestão já tratada ou inexistente', 'SUGGESTION_NOT_FOUND');
   await writeAudit({ req, tenantId: null, action: 'CATALOG_SUGGESTION_DISMISSED', entityType: 'catalog_suggestion', entityId: null, oldValue: null, newValue: parsed.data });
   res.json({ dismissed: r.count });
+}));
+
+// ------------------------------------------------- pedidos de clientes (8.4)
+// O que os clientes pediram e nao havia, escrito pelos caixistas FORA do
+// catalogo da loja. Todas as lojas juntas, por tipo de negocio + nome. Decisao
+// do fundador (10/10): sem nomes das lojas — so quantas pediram.
+router.get('/lost-requests', asyncHandler(async (req, res) => {
+  const days = [30, 90, 365].includes(Number(req.query.days)) ? Number(req.query.days) : 30;
+  const since = new Date(Date.now() - days * 86400000);
+  const rows = await prisma.demandCapture.findMany({
+    where: { product_id: null, requested_at: { gte: since } },
+    select: { tenant_id: true, product_name: true, name_key: true, quantity: true, unit_price: true, requested_at: true },
+    orderBy: { requested_at: 'asc' },
+  });
+  const ids = [...new Set(rows.map((r) => r.tenant_id))];
+  const types = new Map((ids.length ? await prisma.tenant.findMany({ where: { id: { in: ids } }, select: { id: true, business_type: true } }) : []).map((t) => [t.id, t.business_type]));
+  const groups = groupLostRequests(rows.map((r) => ({ ...r, business_type: types.get(r.tenant_id) })));
+  res.json({ days, total_requests: rows.length, groups });
 }));
 
 module.exports = router;

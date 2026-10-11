@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, Inbox, LayoutDashboard, Lightbulb, LogOut, ScrollText, Store } from 'lucide-react';
+import { BookOpen, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, ScrollText, Store } from 'lucide-react';
 import {
   Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, MoneyInput, PageHeader,
   PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
@@ -96,6 +96,7 @@ const NAV = [
   { to: '/lojas', label: 'Lojas', icon: Store },
   { to: '/catalogos', label: 'Catálogos-mestre', icon: BookOpen },
   { to: '/sugestoes', label: 'Sugestões', icon: Lightbulb },
+  { to: '/pedidos-clientes', label: 'Pedidos de clientes', icon: PackageSearch },
   { to: '/auditoria', label: 'Auditoria', icon: ScrollText },
 ];
 
@@ -148,6 +149,11 @@ function Overview() {
           {data.catalog_suggestions > 0 && (
             <Alert tone="info" className="mt-4" title={`${data.catalog_suggestions} produto(s) novo(s) nas lojas`}>
               As lojas acrescentaram produtos que não estão no catálogo-mestre. <NavLink to="/sugestoes" className="font-medium text-accent-text underline">Ver sugestões</NavLink>
+            </Alert>
+          )}
+          {data.lost_requests_30d > 0 && (
+            <Alert tone="info" className="mt-4" title={`${data.lost_requests_30d} pedido(s) de clientes fora do catálogo (30 dias)`}>
+              Produtos que os clientes pediram nas lojas e que elas não têm. <NavLink to="/pedidos-clientes" className="font-medium text-accent-text underline">Ver pedidos</NavLink>
             </Alert>
           )}
           <Card className="mt-4">
@@ -380,6 +386,40 @@ function Catalogs() {
   );
 }
 
+// --------------------------------------------------------- pedidos de clientes
+// Vendas perdidas FORA do catalogo (Fase 8.4): o que os clientes pediram nas
+// lojas e elas nao tinham. Todas as lojas juntas; sem nomes de lojas (decisao
+// do fundador, 10/10) — so quantas pediram.
+function LostRequests() {
+  const [days, setDays] = useState('30');
+  const { data, error, loading } = useLoad('/api/admin/lost-requests?days=' + days);
+  return (
+    <>
+      <PageHeader title="Pedidos de clientes" description="O que os clientes pediram nas lojas e não havia, escrito pelos caixistas fora do catálogo da loja. Ajuda a decidir o que pôr no catálogo-mestre." />
+      <Toolbar>
+        <Segmented value={days} onChange={setDays} options={[{ value: '30', label: '30 dias' }, { value: '90', label: '90 dias' }, { value: '365', label: '1 ano' }]} />
+        {data && <span className="text-sm text-ink-muted">{data.total_requests} pedido(s)</span>}
+      </Toolbar>
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <Table
+        columns={[
+          { key: 'name', header: 'Produto pedido', render: (g) => <span className="text-ink">{g.product_name}</span> },
+          { key: 'type', header: 'Tipo de negócio', render: (g) => TYPES[g.business_type] || g.business_type },
+          { key: 'stores', header: 'Lojas', align: 'right', render: (g) => g.stores },
+          { key: 'requests', header: 'Pedidos', align: 'right', render: (g) => g.requests },
+          { key: 'units', header: 'Unidades', align: 'right', render: (g) => g.units },
+          { key: 'price', header: 'Preço indicado', align: 'right', render: (g) => g.avg_price == null ? <span className="text-ink-muted">—</span> : <span>{money(g.avg_price)}{g.min_price !== g.max_price && <span className="block text-xs text-ink-muted">{money(g.min_price)} – {money(g.max_price)}</span>}</span> },
+          { key: 'when', header: 'Último', render: (g) => <span className="whitespace-nowrap text-ink-2">{date(g.last_at)}</span> },
+        ]}
+        rows={data?.groups || []}
+        rowKey={(g) => g.key}
+        loading={loading && !data}
+        empty={<p className="py-10 text-center text-ink-muted">Nenhum pedido fora do catálogo neste período.</p>}
+      />
+    </>
+  );
+}
+
 // ---------------------------------------------------------------- sugestoes
 // Produtos que as lojas criaram e que nao estao no catalogo-mestre (Fase 8.2).
 // Sem nomes de lojas: so quantas lojas e os precos que usam.
@@ -490,6 +530,7 @@ export default function App() {
               <Route path="lojas" element={<Tenants />} />
               <Route path="catalogos" element={<Catalogs />} />
               <Route path="sugestoes" element={<Suggestions />} />
+              <Route path="pedidos-clientes" element={<LostRequests />} />
               <Route path="auditoria" element={<Audit />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
