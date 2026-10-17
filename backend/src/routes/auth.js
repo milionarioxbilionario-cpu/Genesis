@@ -12,6 +12,7 @@ const {
 } = require('../services/passwordResetStore');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { sendPasswordResetEmail } = require('../utils/mailer');
+const { reqLang, pickLang, tr } = require('../utils/lang');
 const { setSessionCookies, verifyAccessToken, clearSessionCookies } = require('../utils/tokens');
 const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessionUser');
 const { consumeSupportCode } = require('../utils/supportCodes');
@@ -430,6 +431,8 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
 
     const code = generateCode();
     saveResetCode(normalizedEmail, code);
+    // 9.6: na lingua do ecra de quem pediu; sem ela, na lingua da conta.
+    const lang = req.get('x-genesis-lang') ? reqLang(req) : pickLang(user.language);
 
     // Entrega de seguranca:
     // Prioridade 1: Email (SMTP / Gmail).
@@ -438,14 +441,14 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
     const isProduction = process.env.NODE_ENV === 'production';
     let entregue = false;
     try {
-      const mailResult = await sendPasswordResetEmail(normalizedEmail, code);
+      const mailResult = await sendPasswordResetEmail(normalizedEmail, code, lang);
       if (mailResult.ok) {
         entregue = true;
         console.info('[reset] Codigo de recuperacao enviado por email para', normalizedEmail);
       } else if (user.phone) {
         const waResult = await sendWhatsAppAlert({
           to: user.phone,
-          message: `Genesis: codigo de recuperacao ${code}. Valido 15 minutos.`
+          message: tr(lang, 'Genesis: codigo de recuperacao {code}. Valido 15 minutos.', { code })
         });
         if (waResult.ok) {
           entregue = true;

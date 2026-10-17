@@ -1982,3 +1982,16 @@ Falta: publicar a 9.5 no genesismz.com e testar lá.
 ==================== 17/10/2026 — Terminal em inglês (9.5) publicado ====================
 O terminal em inglês e a correcção do botão X de «Dispositivos» já estão em genesismz.com. Testei no próprio site com lojas de teste: o terminal em inglês passou 28 de 28 e os dispositivos (câmara, impressora USB e Bluetooth, recibo em PDF) 19 de 19, sem erros. Depois apaguei as lojas de teste.
 A seguir: os PDFs dos relatórios, o WhatsApp e os emails em inglês (9.6).
+
+
+==================== 18/10/2026 — Últimas partes do idioma (9.6, 9.7 e 9.8) — testadas no meu computador ====================
+1) PDFs dos relatórios (diário, semanal e mensal): agora saem inteiros na língua de quem os gera, incluindo títulos, tabelas, rodapé e nome do ficheiro («Daily report - …»). Em português ficam iguais aos de antes.
+2) WhatsApp e emails: a encomenda ao fornecedor, os alertas de stock, a mensagem de teste e o código de recuperação da senha (por email ou WhatsApp) saem na língua de quem os pede. O relatório automático por WhatsApp sai na língua da conta do dono. Em português o texto é exactamente o mesmo de antes.
+3) Painel super admin (o teu): tem «PT | EN» no menu e na entrada, e a escolha fica na tua conta. Todas as páginas estão traduzidas.
+4) Catálogo-mestre: cada produto tem agora o campo «Nome em inglês». Propus um nome para cada um dos 209 produtos e já os gravei. Por favor revê-os em Catálogos-mestre; podes corrigir qualquer um. Os nomes de marca ficaram iguais (Coca-Cola, Heineken…) e os pratos locais mantêm o nome local (por exemplo «Xima (maize porridge, portion)»).
+5) Pesquisa nas duas línguas: no terminal e nos Produtos do dono, escrever «water» encontra «Água Namaacha», em qualquer língua do ecrã. Só vale para os produtos com o mesmo nome do catálogo-mestre; os produtos que o dono criou ou renomeou procuram-se como ele os escreveu.
+
+Prova: todos os testes automáticos passaram, tanto os novos como os antigos (painel admin em inglês 17 de 17, terminal 31 de 31, painel do dono 35 de 35, servidor 26 de 26).
+Uma coisa vista uma vez e não repetida: numa corrida, o PDF semanal saiu com «Genesis» no nome do ficheiro em vez do nome da loja (o painel não tinha carregado a loja). Na segunda corrida saiu certo. Ficou anotado.
+
+Falta: publicar no genesismz.com e testar lá.

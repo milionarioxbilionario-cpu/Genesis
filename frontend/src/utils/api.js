@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getLang } from '../i18n/core.js';
 
 // Cliente HTTP unico (Genesis 2.0). Cookies httpOnly — o token nunca passa
 // pelo JavaScript.
@@ -10,6 +11,15 @@ import axios from 'axios';
 //     certa e leva ao ecra de entrada. A fila offline (IndexedDB) NAO e tocada:
 //     as vendas pendentes sincronizam quando houver sessao/terminal de novo.
 const api = axios.create({ baseURL: '/', withCredentials: true });
+
+// 9.6: a lingua do ecra vai em cada pedido. O servidor usa-a nas mensagens que
+// escreve para fora (WhatsApp ao fornecedor, alertas, codigo de recuperacao):
+// saem na lingua de quem as gera (backend/src/utils/lang.js).
+api.interceptors.request.use((cfg) => {
+  cfg.headers = cfg.headers || {};
+  cfg.headers['X-Genesis-Lang'] = getLang();
+  return cfg;
+});
 
 export const SESSION_MESSAGES = {
   PASSWORD_CHANGED: 'A senha desta conta foi alterada. Entre de novo.',

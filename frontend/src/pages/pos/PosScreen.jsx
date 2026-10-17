@@ -9,7 +9,7 @@ import useOfflineSync from '../../hooks/useOfflineSync';
 import { newUuid, shouldQueueOffline, SYNC_STATE } from '../../utils/syncPolicy';
 import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
-import { foldText, nameMatches } from '../../utils/search';
+import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
@@ -84,7 +84,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   const visible = useMemo(() => {
     const q = foldText(query);
     return products.filter((p) => (!category || p.category === category)
-      && (nameMatches(p.name, q) || (p.barcode || '').toLowerCase() === q));
+      && (productMatches(p, q) || (p.barcode || '').toLowerCase() === q));
   }, [products, query, category]);
 
   const subtotal = cart.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);

@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const { daysUntilExpiry } = require('../utils/fefo');
+const { tr } = require('../utils/lang');
 
 // Alertas da loja: stock baixo e validades POR LOTE (Genesis 2.1).
 // Um lote entra no alerta quando faltam <= Tenant.expiry_alert_days dias.
@@ -46,19 +47,22 @@ async function getTenantAlertSnapshot(tenantId, now = new Date()) {
   };
 }
 
-function buildAlertSummary(tenant, snapshot) {
+// 9.6: na lingua de quem pede o envio (lang).
+function buildAlertSummary(tenant, snapshot, lang = 'pt') {
   const parts = [];
   if (snapshot.lowStockProducts.length) {
-    parts.push(`Stock baixo: ${snapshot.lowStockProducts.map((item) => `${item.name} (${item.stock_qty}/${item.min_stock})`).join(', ')}`);
+    parts.push(tr(lang, 'Stock baixo: {list}', { list: snapshot.lowStockProducts.map((item) => `${item.name} (${item.stock_qty}/${item.min_stock})`).join(', ') }));
   }
   if (snapshot.expiringLots.length) {
-    parts.push(`Validades: ${snapshot.expiringLots.map((l) => `${l.name} — ${l.quantity} un. ${l.days_left < 0 ? 'expiradas' : l.days_left === 0 ? 'expiram hoje' : `expiram em ${l.days_left} dia(s)`}`).join(', ')}`);
+    const state = (l) => (l.days_left < 0 ? tr(lang, 'expiradas') : l.days_left === 0 ? tr(lang, 'expiram hoje') : tr(lang, 'expiram em {n} dia(s)', { n: l.days_left }));
+    parts.push(tr(lang, 'Validades: {list}', { list: snapshot.expiringLots.map((l) => tr(lang, '{name} — {n} un. {state}', { name: l.name, n: l.quantity, state: state(l) })).join(', ') }));
   }
+  const name = tenant?.name || tr(lang, 'gestor');
   if (!parts.length) {
-    return `Olá ${tenant?.name || 'gestor'}, todos os produtos estão dentro do normal.`;
+    return tr(lang, 'Olá {name}, todos os produtos estão dentro do normal.', { name });
   }
 
-  return `Olá ${tenant?.name || 'gestor'}, Genesis reportou alertas operacionais: ${parts.join(' | ')}`;
+  return tr(lang, 'Olá {name}, Genesis reportou alertas operacionais: {list}', { name, list: parts.join(' | ') });
 }
 
 module.exports = { getTenantAlertSnapshot, buildAlertSummary };

@@ -98,6 +98,49 @@ try {
   await page.getByText('Activity trail').waitFor({ timeout: T });
   ok(await page.getByText('Everything that happened in the store').isVisible(), 'relatórios: descrição em inglês');
 
+  // 9.8: pesquisa nas duas linguas nos produtos do dono.
+  await page.goto(BASE + '/app/produtos');
+  await page.locator('tbody tr', { hasText: 'Água Namaacha' }).first().waitFor({ timeout: T });
+  await page.getByLabel('Search', { exact: true }).fill('water');
+  await page.waitForFunction(() => [...document.querySelectorAll('tbody tr')].every((r) => r.textContent.includes('Água')), null, { timeout: T });
+  ok(await page.locator('tbody tr', { hasText: 'Água Namaacha' }).count() === 1, '9.8: «water» encontra a Água nos produtos do dono');
+  await page.goto(BASE + '/app/relatorios');
+  await page.getByText('Activity trail').waitFor({ timeout: T });
+
+  // 9.6: PDFs dos relatorios em ingles (nome do ficheiro, titulos, numeros).
+  const PDF_PT = ['Resumo', 'Receita', 'Lucro bruto', 'Mais vendidos', 'Por caixista', 'Fechos de turno', 'Rastreio', 'Gerado em', 'página', 'Nada a registar', 'Do que entrou', 'Semanas do m', 'Dia a dia', 'O que comprar'];
+  for (const [tab, nameRe, mustHave] of [
+    ['Daily', /^Daily report - Bottle Store Central \(.+\)\.pdf$/, ['Summary', 'Revenue', 'Best sellers', 'By cashier', 'Activity trail', 'Generated on', 'page 1 of']],
+    ['Weekly', /^Weekly report - Bottle Store Central \(.+\)\.pdf$/, ['Day by day', 'What to buy for next week']],
+    ['Monthly', /^Monthly report - Bottle Store Central \(.+\)\.pdf$/, ['From money in to what is left', 'Weeks of the month', 'Real net profit']],
+  ]) {
+    await page.getByRole('tab', { name: tab }).click();
+    await page.waitForFunction(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('PDF / print')); return b && !b.disabled; }, null, { timeout: T });
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: T }), page.getByRole('button', { name: 'PDF / print' }).click()]);
+    const txt = fs.readFileSync(await dl.path()).toString('latin1');
+    const lacking = mustHave.filter((s) => !txt.includes(s));
+    const pt = PDF_PT.filter((s) => txt.includes(s));
+    ok(nameRe.test(dl.suggestedFilename()) && lacking.length === 0 && pt.length === 0, `9.6: PDF ${tab} em inglês (${dl.suggestedFilename()})`, { lacking, pt });
+  }
+
+  // 9.6: WhatsApp ao fornecedor sai na lingua do dono (o ecra manda X-Genesis-Lang).
+  const prods = (await api(page, 'GET', '/api/products')).data;
+  const two = prods.filter((p) => /2M 340ml|Heineken/.test(p.name)).map((p) => ({ product_id: p.id, quantity: 6, unit_cost: p.cost_price || 0 }));
+  ok((await api(page, 'POST', '/api/shopping-lists', { name: 'Weekly order', supplier_id: null, items: two })).status === 201, 'lista de compras de teste');
+  await page.goto(BASE + '/app/produtos?tab=shopping');
+  await page.locator('tbody tr', { hasText: 'Weekly order' }).click({ timeout: T });
+  // O wa.me verdadeiro redirecciona para api.whatsapp.com: o teste so precisa do endereco.
+  await ctx.route('https://wa.me/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: 'ok' }));
+  const waReq = page.waitForRequest((r) => /\/api\/shopping-lists\/[^/]+\/whatsapp/.test(r.url()), { timeout: T });
+  const popupP = ctx.waitForEvent('page', { timeout: T });
+  await page.getByRole('button', { name: 'Send by WhatsApp' }).click({ timeout: T });
+  const popup = await popupP;
+  ok((await waReq).headers()['x-genesis-lang'] === 'en', '9.6: o pedido leva a língua do ecrã (X-Genesis-Lang: en)');
+  await popup.waitForURL(/wa\.me/, { timeout: T });
+  const waText = decodeURIComponent(popup.url());
+  ok(/I would like to order:/.test(waText) && /6 × 2M 340ml/.test(waText) && /Can you confirm the price/.test(waText) && !/Gostaria|Obrigado/.test(waText), '9.6: mensagem do WhatsApp ao fornecedor em inglês', waText);
+  await popup.close();
+
   // Telemovel: menu e uma pagina larga.
   const phone = await browser.newContext({ ...devices['iPhone 13'], locale: 'pt-PT' });
   const m = await phone.newPage();
