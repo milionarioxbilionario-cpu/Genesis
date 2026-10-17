@@ -104,7 +104,7 @@
       "status": "ok",
       "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria. Turno fechado = 409 SHIFT_CLOSED; GET recusado ao caixista (lista so com PIN do dono em /api/pos/sales).",
       "role": "Nucleo do POS.",
-      "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "backend/src/routes/shift_closings.js": {
       "status": "ok",
@@ -356,7 +356,7 @@
       "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
       "role": "Recibo (impressao).",
       "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
-      "notes": "11/10/2026 Fase 8.8: PDF sempre no aparelho + impressora escolhida (USB/Bluetooth/computador). fase8_8.mjs + fase8_1.mjs."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/db/localDb.js": {
       "status": "ok",
@@ -998,7 +998,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs. | 17/10/2026 Fase 9.3 (publicada 1f1f384): botao PT/EN no cabecalho a partir de 640 px; logotipo sem encolher."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1125,7 +1125,7 @@
       "status": "ok",
       "summary": "Fecho cego: esperado = dinheiro desde o inicio do turno; turno por dia; resumo depois de aceite.",
       "role": "Turno / fecho cego.",
-      "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "backend/src/utils/authPin.js": {
       "status": "ok",
@@ -1143,7 +1143,7 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "11/10/2026 Fase 8.4: Produto em falta do catalogo / fora do catalogo + quantidade + preco; seller_user_id na fila (vendas perdidas e quebras). fase8_4.mjs (iPhone 13)."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
@@ -1198,7 +1198,7 @@
       "status": "ok",
       "summary": "Recibo em PDF no formato de talao (80 mm), com QR.",
       "role": "PDF.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/utils/pdf/reportPdf.js": {
       "status": "ok",
@@ -1370,13 +1370,13 @@
       "status": "ok",
       "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte).",
       "role": "Impressora de recibos.",
-      "notes": "11/10/2026 Fase 8.8: escpos.test.mjs 4/4; impressora real nao verificada."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/utils/devices.js": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Preferencias de dispositivos do aparelho; impressora USB (Web Serial) e Bluetooth (Web Bluetooth).",
       "role": "Dispositivos.",
-      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com impressoras simuladas; hardware real nao verificado."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/components/BarcodeScanner.jsx": {
       "status": "ok",
@@ -1388,7 +1388,7 @@
       "status": "ok",
       "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
       "role": "Terminal.",
-      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19. | 17/10/2026 Fase 9.3 (publicada 1f1f384): seccao «A sua lingua» (unico sitio no telemovel), grava logo na conta."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/tests/e2e/fase8_8.mjs": {
       "status": "ok",
@@ -1412,7 +1412,7 @@
       "status": "ok",
       "summary": "Ingles da area common.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/i18n/en/auth.js": {
       "status": "ok",
@@ -1424,13 +1424,13 @@
       "status": "ok",
       "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/i18n/en/pos.js": {
       "status": "ok",
       "summary": "Ingles da area pos (so emparelhar/perfis na 9.3; venda na 9.5).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/src/components/ui/LanguageSwitch.jsx": {
       "status": "ok",
@@ -1442,13 +1442,13 @@
       "status": "ok",
       "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "frontend/tests/e2e/idioma.mjs": {
       "status": "ok",
       "summary": "Browser: entrada, dono (2 aparelhos), terminal telemovel e computador.",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 33/33, 0 erros JS."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     },
     "backend/prisma/migrations/20261017_idioma/migration.sql": {
       "status": "ok",
@@ -1461,6 +1461,12 @@
       "summary": "Browser: dono em ingles, 19 paginas + 5 gavetas sem portugues residual; mensal no iPhone.",
       "role": "Teste E2E.",
       "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+    },
+    "frontend/tests/e2e/idioma_pos.mjs": {
+      "status": "ok",
+      "summary": "Browser: terminal em ingles (venda, dialogos, Dispositivos, recibo PDF e ESC/POS), X que nao apaga a impressora; iPhone.",
+      "role": "Teste E2E.",
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
     }
   }
 }

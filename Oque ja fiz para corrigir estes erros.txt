@@ -1966,3 +1966,14 @@ Falta: publicar a 9.4 no genesismz.com e testar lá.
 ==================== 17/10/2026 — Páginas do dono em inglês (9.4) publicadas ====================
 O painel do dono em inglês já está em genesismz.com. Testei no próprio site com lojas de teste: o painel em inglês passou 28 de 28 e os relatórios em português 16 de 16, sem erros. Depois apaguei as lojas de teste.
 A seguir: o ecrã de venda do terminal em inglês (9.5).
+
+
+==================== 17/10/2026 — Terminal de vendas em inglês (9.5) e botão X de «Dispositivos» corrigido ====================
+1) Quando o caixista escolhe EN, o terminal inteiro aparece em inglês: a venda, o cesto, os pagamentos, o desconto com o PIN do dono, o fecho de turno, as últimas vendas, cancelar uma venda, quebras, «produto em falta» e «Dispositivos». Os nomes dos produtos e as categorias ficam como tu os escreveste.
+2) O recibo (em PDF, na impressora térmica e na janela de impressão do computador) sai na língua de quem o imprime. Em português fica igual ao de antes.
+3) As mensagens de erro do servidor durante a venda (stock insuficiente, preço mudou, desconto acima do limite, contagem errada no fecho...) também aparecem em inglês, com os valores certos.
+4) Botão X de «Dispositivos», como pediste: fechar no X já não apaga a impressora. Só «Não tenho — saltar» deixa «Só PDF». Testei também com o código antigo e o teste apanhou o erro, ou seja, o teste funciona.
+
+Prova: o teste do terminal em inglês passou 28 de 28 (computador e iPhone). Os testes antigos do terminal, das vendas, dos dispositivos e da língua continuam a passar, e os testes do servidor da venda e do turno também. Nenhuma loja de teste ficou na base de dados.
+
+Falta: publicar a 9.5 no genesismz.com e testar lá.

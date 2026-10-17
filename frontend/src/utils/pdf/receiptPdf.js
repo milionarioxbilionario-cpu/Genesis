@@ -5,6 +5,10 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { money } from '../format';
 import { pdfText, safeFileName, dmy, hms } from './text';
+import { getLang, locale, t } from '../../i18n/core.js';
+
+// 9.5: na lingua de quem gera o recibo; em portugues fica igual (data pt-MZ).
+const receiptLocale = () => (getLang() === 'pt' ? 'pt-MZ' : locale());
 
 const W = 80;
 const M = 4;
@@ -26,21 +30,21 @@ function render(doc, { shopName, shopLocation, cashierName, sale, items, qrDataU
   y += 1;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
   for (const line of [
-    `N.º de venda: ${String(Number(sale.daily_number || 0)).padStart(3, '0')}`,
-    `Data: ${when.toLocaleString('pt-MZ')}`,
-    `Caixista: ${cashierName || '-'}`,
-    `Pagamento: ${sale.payment_method || 'Dinheiro'}`,
+    `${t('N.º de venda:')} ${String(Number(sale.daily_number || 0)).padStart(3, '0')}`,
+    `${t('Data:')} ${when.toLocaleString(receiptLocale())}`,
+    `${t('Caixista:')} ${cashierName || '-'}`,
+    `${t('Pagamento:')} ${sale.payment_method || t('Dinheiro')}`,
   ]) { doc.text(pdfText(line), M, y); y += 3.8; }
   doc.setDrawColor(...INK); doc.line(M, y, W - M, y); y += 1;
 
   autoTable(doc, {
     startY: y,
     margin: { left: M, right: M },
-    head: [['Produto', 'Qtd', 'Preço', 'Total'].map(pdfText)],
+    head: [[t('Produto'), t('Qtd'), t('Preço'), t('Total')].map(pdfText)],
     body: (items || []).map((i) => {
       const unit = Number(i.unit_sell_price || i.sell_price || 0);
       const q = Number(i.quantity || 1);
-      return [pdfText(i.product_name || 'Produto'), String(q), pdfText(money(unit)), pdfText(money(q * unit))];
+      return [pdfText(i.product_name || t('Produto')), String(q), pdfText(money(unit)), pdfText(money(q * unit))];
     }),
     theme: 'plain',
     styles: { fontSize: 7.5, cellPadding: 0.8, textColor: INK },
@@ -54,21 +58,21 @@ function render(doc, { shopName, shopLocation, cashierName, sale, items, qrDataU
     doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(bold ? 9.5 : 8.5);
     doc.text(pdfText(label), M, y); doc.text(pdfText(value), W - M, y, { align: 'right' }); y += bold ? 5 : 4;
   };
-  row('Subtotal', money(total + discount));
-  if (discount > 0) row('Desconto', '-' + money(discount));
-  row('Recebido', money(sale.amount_received));
-  row('Troco', money(sale.change_given));
+  row(t('Subtotal'), money(total + discount));
+  if (discount > 0) row(t('Desconto'), '-' + money(discount));
+  row(t('Recebido'), money(sale.amount_received));
+  row(t('Troco'), money(sale.change_given));
   doc.line(M, y - 2.5, W - M, y - 2.5); y += 1;
-  row('Total', money(total), true);
+  row(t('Total'), money(total), true);
 
   if (/^data:image\/png;base64,/.test(String(qrDataUrl || ''))) {
     y += 2;
     doc.addImage(qrDataUrl, 'PNG', (W - 26) / 2, y, 26, 26); y += 29;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
-    doc.text(pdfText('Leia o código para confirmar o recibo'), W / 2, y, { align: 'center' }); y += 4;
+    doc.text(pdfText(t('Leia o código para confirmar o recibo')), W / 2, y, { align: 'center' }); y += 4;
   }
   doc.setFontSize(8);
-  doc.text(pdfText(`Obrigado pela preferência! ${shopName || ''}`), W / 2, y + 2, { align: 'center', maxWidth: W - 2 * M });
+  doc.text(pdfText(`${t('Obrigado pela preferência!')} ${shopName || ''}`), W / 2, y + 2, { align: 'center', maxWidth: W - 2 * M });
   return y + 8;
 }
 
@@ -81,6 +85,6 @@ export function buildReceiptPdf(input) {
   render(doc, input);
   const when = new Date(input.sale.created_at || Date.now());
   const n = String(Number(input.sale.daily_number || 0)).padStart(3, '0');
-  const filename = `Recibo_${n} - ${safeFileName(input.shopName)} (${dmy(when)} - ${hms(when)}).pdf`;
+  const filename = `${t('Recibo')}_${n} - ${safeFileName(input.shopName)} (${dmy(when)} - ${hms(when)}).pdf`;
   return { blob: doc.output('blob'), filename };
 }

@@ -4,7 +4,6 @@ import { addTranslations } from '../core.js';
 // As paginas entram na 9.4.
 addTranslations('en', {
   'Início': 'Home',
-  'Vendas': 'Sales',
   'Produtos': 'Products',
   'Fornecedores': 'Suppliers',
   'Chenecas': 'Credit (chenecas)',
@@ -68,7 +67,6 @@ addTranslations('en', {
   'Histórico de todas as vendas, cancelamentos e fechos de turno.': 'History of all sales, cancellations and shift closes.',
   'Fechos de turno': 'Shift closes',
   'N.º': 'No.',
-  'Cancelada': 'Cancelled',
   'Concluída': 'Completed',
   'Todos os caixistas': 'All cashiers',
   'Todos os pagamentos': 'All payments',
@@ -78,11 +76,8 @@ addTranslations('en', {
   'Fecho': 'Close',
   'Esperado': 'Expected',
   'Contado': 'Counted',
-  'Diferença': 'Difference',
   'Ainda não houve fechos de turno.': 'No shift closes yet.',
   // Detalhe da venda
-  'Recibo guardado em PDF. A impressora falhou: {e}': 'Receipt saved as PDF. The printer failed: {e}',
-  'Venda n.º {n}': 'Sale no. {n}',
   'Reimprimir recibo': 'Reprint receipt',
   'Venda cancelada': 'Sale cancelled',
   'Custo dos produtos': 'Cost of goods',
@@ -183,12 +178,9 @@ addTranslations('en', {
   'Catálogo': 'Catalogue',
   'Lista de compras': 'Shopping list',
   'Histórico de custos': 'Cost history',
-  'Produto': 'Product',
-  'Preço': 'Price',
   'Custo': 'Cost',
   'Pesquisar': 'Search',
   'Pesquisar nome ou código': 'Search name or code',
-  'Nenhum produto encontrado.': 'No product found.',
   'Ainda não há produtos.': 'No products yet.',
   '{n} un. de {name} adicionadas.': '{n} units of {name} added.',
   '{n} un. de {name} retiradas. Fica na auditoria com o motivo.': '{n} units of {name} removed. Recorded in the audit log with the reason.',
@@ -223,7 +215,6 @@ addTranslations('en', {
   'Quantidade a retirar': 'Quantity to remove',
   'Saem primeiro as que expiram antes. Fica com {n} un.': 'The ones that expire first leave first. You will have {n} units.',
   'Só há {n} un. em stock.': 'There are only {n} units in stock.',
-  'Motivo': 'Reason',
   'Ex.: contagem física de fim de mês': 'E.g.: end-of-month physical count',
   'Custo anterior': 'Previous cost',
   'Custo novo': 'New cost',
@@ -232,7 +223,6 @@ addTranslations('en', {
   'Ainda não houve mudanças de custo. Cada entrada de stock com custo diferente fica aqui.': 'No cost changes yet. Every stock entry with a different cost appears here.',
 
   // Formulario do produto
-  'Quantidade': 'Quantity',
   'Quantidade {n}': 'Quantity {n}',
   'Validade': 'Expiry date',
   'Validade (opcional)': 'Expiry date (optional)',
@@ -687,7 +677,6 @@ addTranslations('en', {
   'Não': 'No',
   'foto': 'photo',
   '{n} un. até {d}': '{n} units until {d}',
-  '{n} un.': '{n} units',
   '+{n} un.': '+{n} units',
   'Venda': 'Sale',
   'PIN errado ao cancelar venda': 'Wrong PIN when cancelling a sale',
@@ -808,13 +797,8 @@ addTranslations('en', {
   'Horário de funcionamento': 'Opening hours',
   'Para que serve: à hora de fecho o Genesis prepara o relatório do dia (o que se vendeu, quem vendeu, o que faltou). Pode mudar depois em Definições.': 'What it is for: at closing time Genesis prepares the day\'s report (what was sold, who sold, what was missing). You can change it later in Settings.',
   'Resumo: {p} produto(s) · renda {r} · {e} trabalhador(es) · {s} fornecedor(es).': 'Summary: {p} product(s) · rent {r} · {e} worker(s) · {s} supplier(s).',
-  'Voltar': 'Back',
-  'Continuar': 'Continue',
   'Concluir e entrar': 'Finish and sign in',
 
   // Motivos das perdas (LOSS_REASON)
-  'Partido': 'Broken',
   'Validade expirada': 'Expiry date passed',
-  'Consumo interno': 'Own use',
-  'Outro': 'Other',
 });

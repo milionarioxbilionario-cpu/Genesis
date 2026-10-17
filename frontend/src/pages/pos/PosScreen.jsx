@@ -10,6 +10,7 @@ import { newUuid, shouldQueueOffline, SYNC_STATE } from '../../utils/syncPolicy'
 import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
 import { foldText, nameMatches } from '../../utils/search';
+import { useI18n } from '../../i18n/react';
 import { Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
 
@@ -20,6 +21,7 @@ const PAYMENTS = [
   { value: 'card', label: 'Cartão' },
 ];
 
+// Os label sao a chave em portugues: o ecra mostra t(label) (9.5).
 // Atalhos de teclado (todos com tecla de funcao ou modificador: o leitor de
 // codigo de barras so escreve digitos + Enter, logo nunca os dispara).
 const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], ['Ctrl+Enter', 'cobrar'], ['Alt+1…9', 'categoria'], ['Esc', 'pesquisa']];
@@ -32,6 +34,7 @@ const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], 
 //    regra mostra o motivo e mantem o cesto.
 export default function PosScreen({ info, cashier, onLock, askDevices = false }) {
   const toast = useToast();
+  const { t } = useI18n();
   const { isOnline, pendingCount, rejectedCount, refreshCounts, syncNow } = useOfflineSync();
   const [products, setProducts] = useState([]);
   const [catalogSource, setCatalogSource] = useState('online');
@@ -101,7 +104,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
     setCart((c) => {
       const line = c.find((l) => l.product_id === p.id);
       const inCart = line ? line.quantity : 0;
-      if (inCart + 1 > (p.stock_qty || 0)) { setError(`Sem stock suficiente de ${p.name}.`); return c; }
+      if (inCart + 1 > (p.stock_qty || 0)) { setError(t('Sem stock suficiente de {name}.', { name: p.name })); return c; }
       if (line) return c.map((l) => (l.product_id === p.id ? { ...l, quantity: l.quantity + 1 } : l));
       return [...c, { product_id: p.id, product_name: p.name, unit_sell_price: p.sell_price, quantity: 1, stock: p.stock_qty }];
     });
@@ -111,12 +114,12 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   // Codigo lido pela camara: conhecido entra logo no carrinho (pedido do fundador).
   function onCameraCode(code) {
     const p = products.find((x) => (x.barcode || '').toLowerCase() === code.toLowerCase());
-    if (!p) return { ok: false, message: `Produto não cadastrado (${code})` };
+    if (!p) return { ok: false, message: t('Produto não cadastrado ({code})', { code }) };
     const inCart = cart.find((l) => l.product_id === p.id)?.quantity || 0;
-    if (inCart + 1 > (p.stock_qty || 0)) return { ok: false, message: `Sem stock suficiente de ${p.name}.` };
+    if (inCart + 1 > (p.stock_qty || 0)) return { ok: false, message: t('Sem stock suficiente de {name}.', { name: p.name }) };
     add(p);
     setScan({ code, name: p.name, ok: true, at: Date.now() });
-    return { ok: true, message: `${p.name} adicionado (${inCart + 1} na venda)` };
+    return { ok: true, message: t('{name} adicionado ({n} na venda)', { name: p.name, n: inCart + 1 }) };
   }
 
   function onSearchKey(e) {
@@ -222,7 +225,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       const code = err?.response?.data?.code;
       if (code === 'DISCOUNT_NEEDS_PIN' || code === 'INVALID_AUTH_PIN') {
         pendingSale.current = payload;
-        setDialog({ pin: true, error: code === 'INVALID_AUTH_PIN' ? 'PIN incorrecto.' : '' });
+        setDialog({ pin: true, error: code === 'INVALID_AUTH_PIN' ? t('PIN incorrecto.') : '' });
       } else if (code === 'SHIFT_CLOSED') {
         pendingSale.current = null;
         refreshShift();
@@ -231,12 +234,12 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload });
         await decrementCached(payload.items);
         await refreshCounts();
-        toast('Sem ligação: venda guardada neste terminal. É enviada automaticamente.');
+        toast(t('Sem ligação: venda guardada neste terminal. É enviada automaticamente.'));
         resetSale();
         refreshCatalog();
       } else if (err?.response?.status !== 401) {
         pendingSale.current = null;
-        setError('Venda não registada: ' + errorMessage(err));
+        setError(t('Venda não registada: {reason}', { reason: errorMessage(err) }));
       }
     } finally { setBusy(false); }
   }
@@ -254,42 +257,42 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           </div>
         </div>
         <div className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
-          {!isOnline && <span className="hidden items-center gap-1.5 text-warning sm:flex"><WifiOff size={15} /> Offline</span>}
-          {pendingCount > 0 && <span className="hidden text-ink-muted sm:inline">{pendingCount} por enviar</span>}
-          {rejectedCount > 0 && <span className="hidden text-danger sm:inline">{rejectedCount} recusado(s)</span>}
-          <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => setDialog('recent')}>Vendas</Button>
-          <IconButton label="Vendas" icon={ReceiptText} size="sm" variant="ghost" className="sm:hidden" onClick={() => setDialog('recent')} />
-          <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('demand')}>Produto em falta</Button>
-          <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('shrink')}>Quebra</Button>
+          {!isOnline && <span className="hidden items-center gap-1.5 text-warning sm:flex"><WifiOff size={15} /> {t('Offline')}</span>}
+          {pendingCount > 0 && <span className="hidden text-ink-muted sm:inline">{t('{n} por enviar', { n: pendingCount })}</span>}
+          {rejectedCount > 0 && <span className="hidden text-danger sm:inline">{t('{n} recusado(s)', { n: rejectedCount })}</span>}
+          <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => setDialog('recent')}>{t('Vendas')}</Button>
+          <IconButton label={t('Vendas')} icon={ReceiptText} size="sm" variant="ghost" className="sm:hidden" onClick={() => setDialog('recent')} />
+          <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('demand')}>{t('Produto em falta')}</Button>
+          <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('shrink')}>{t('Quebra')}</Button>
           {/* Telemovel: os mesmos dois botoes em icone (antes nao havia forma de os abrir). */}
-          <IconButton label="Produto em falta" icon={PackageSearch} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('demand')} />
-          <IconButton label="Quebra" icon={PackageX} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('shrink')} />
+          <IconButton label={t('Produto em falta')} icon={PackageSearch} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('demand')} />
+          <IconButton label={t('Quebra')} icon={PackageX} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('shrink')} />
           {/* Lingua do caixista (9.3): guardada na conta dele, nao no aparelho. No
               telemovel nao cabe aqui: fica no dialogo Dispositivos. */}
           <LanguageSwitch compact remember={false} onChange={saveLanguage} className="hidden px-2 sm:inline-flex" />
-          <Button size="sm" onClick={() => setDialog('close')}>Fechar turno</Button>
-          <IconButton label="Bloquear terminal" icon={Lock} size="sm" variant="secondary" onClick={onLock} />
+          <Button size="sm" onClick={() => setDialog('close')}>{t('Fechar turno')}</Button>
+          <IconButton label={t('Bloquear terminal')} icon={Lock} size="sm" variant="secondary" onClick={onLock} />
         </div>
       </header>
 
       {locked && (
-        <Alert tone="danger" className="m-4 mb-0" title="Perfil bloqueado">
-          Três contagens erradas no fecho de turno. O dono tem de desbloquear este perfil no painel (Equipa).
+        <Alert tone="danger" className="m-4 mb-0" title={t('Perfil bloqueado')}>
+          {t('Três contagens erradas no fecho de turno. O dono tem de desbloquear este perfil no painel (Equipa).')}
         </Alert>
       )}
       {!locked && shiftClosed && (
-        <Alert tone="warning" className="m-4 mb-0" title="Turno de hoje fechado">
+        <Alert tone="warning" className="m-4 mb-0" title={t('Turno de hoje fechado')}>
           <span className="flex flex-wrap items-center gap-3">
-            <span>Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.</span>
-            <Button size="sm" variant="primary" onClick={() => setDialog({ openShift: true })}>Abrir turno novo</Button>
+            <span>{t('Abre sozinho amanhã. Para vender hoje, o dono abre um turno novo com o PIN dele.')}</span>
+            <Button size="sm" variant="primary" onClick={() => setDialog({ openShift: true })}>{t('Abrir turno novo')}</Button>
           </span>
         </Alert>
       )}
       {rejectedCount > 0 && (
-        <Alert tone="warning" className="m-4 mb-0">{rejectedCount} registo(s) feitos sem ligação foram recusados pelo servidor (preço ou stock mudou). O dono deve rever.</Alert>
+        <Alert tone="warning" className="m-4 mb-0">{t('{n} registo(s) feitos sem ligação foram recusados pelo servidor (preço ou stock mudou). O dono deve rever.', { n: rejectedCount })}</Alert>
       )}
       {catalogSource === 'cache' && (
-        <Alert tone="info" className="m-4 mb-0">Sem ligação: a usar o catálogo guardado neste terminal. As vendas são enviadas quando a ligação voltar.</Alert>
+        <Alert tone="info" className="m-4 mb-0">{t('Sem ligação: a usar o catálogo guardado neste terminal. As vendas são enviadas quando a ligação voltar.')}</Alert>
       )}
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -303,19 +306,19 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onSearchKey}
-              placeholder="Pesquisar ou ler código de barras"
-              aria-label="Pesquisar produto"
+              placeholder={t('Pesquisar ou ler código de barras')}
+              aria-label={t('Pesquisar produto')}
               className="h-11 w-full rounded border border-border-strong bg-surface pl-9 pr-3 text-md text-ink focus:border-accent focus:shadow-focus focus:outline-none"
             />
           </div>
-          <IconButton label="Ler com a câmara" icon={Camera} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setCamera(true)} />
-          <IconButton label="Dispositivos" icon={Settings2} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setDevicesOpen(true)} />
+          <IconButton label={t('Ler com a câmara')} icon={Camera} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setCamera(true)} />
+          <IconButton label={t('Dispositivos')} icon={Settings2} variant="secondary" className="h-11 w-11 shrink-0" onClick={() => setDevicesOpen(true)} />
           </div>
           {categories.length > 1 && (
             <div className="mt-3 flex gap-1.5 overflow-x-auto scrollbar-none">
               {['', ...categories].map((c) => (
                 <button key={c || 'todas'} type="button" onClick={() => setCategory(c)} className={cx('h-8 shrink-0 rounded-full border px-3 text-sm transition-colors', category === c ? 'border-ink bg-ink text-white' : 'border-border-strong bg-surface text-ink-2 hover:bg-subtle')}>
-                  {c || 'Todas'}
+                  {c || t('Todas')}
                 </button>
               ))}
             </div>
@@ -325,7 +328,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
               {scan.ok ? <ScanBarcode size={18} className="shrink-0 text-accent" /> : <CircleAlert size={18} className="shrink-0 text-warning" />}
               <span className="num shrink-0 rounded bg-surface px-2 py-0.5 text-sm tracking-wider text-ink">{scan.code}</span>
               <span className="min-w-0 truncate text-sm text-ink">
-                {scan.ok ? <><span className="font-medium">{scan.name}</span> adicionado</> : 'Produto não cadastrado. O dono regista-o em Produtos.'}
+                {scan.ok ? <><span className="font-medium">{scan.name}</span> {t('adicionado')}</> : t('Produto não cadastrado. O dono regista-o em Produtos.')}
               </span>
             </div>
           )}
@@ -339,14 +342,14 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
                   <span className="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-ink">{p.name}</span>
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="num text-base font-semibold text-ink">{money(p.sell_price)}</span>
-                    <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? 'Esgotado' : `${p.stock_qty} un.`}</span>
+                    <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? t('Esgotado') : t('{n} un.', { n: p.stock_qty })}</span>
                   </span>
                 </button>
               );
             })}
             {visible.length === 0 && (
               <p className="col-span-full py-10 text-center text-ink-muted">
-                {!catalogLoaded ? 'A carregar o catálogo…' : products.length ? 'Nenhum produto encontrado.' : 'Ainda não há produtos. O dono acrescenta-os em Produtos.'}
+                {!catalogLoaded ? t('A carregar o catálogo…') : products.length ? t('Nenhum produto encontrado.') : t('Ainda não há produtos. O dono acrescenta-os em Produtos.')}
               </p>
             )}
           </div>
@@ -355,22 +358,22 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         {/* Cesto */}
         <aside className="flex max-h-[55vh] w-full shrink-0 flex-col border-t border-border bg-surface lg:max-h-none lg:w-[400px] lg:border-l lg:border-t-0">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="font-semibold text-ink">Venda actual</h2>
-            {cart.length > 0 && <Button size="sm" variant="ghost" onClick={resetSale}>Limpar</Button>}
+            <h2 className="font-semibold text-ink">{t('Venda actual')}</h2>
+            {cart.length > 0 && <Button size="sm" variant="ghost" onClick={resetSale}>{t('Limpar')}</Button>}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {cart.length === 0 ? (
-              <p className="px-4 py-10 text-center text-ink-muted">Adicione produtos para começar.</p>
+              <p className="px-4 py-10 text-center text-ink-muted">{t('Adicione produtos para começar.')}</p>
             ) : cart.map((l) => (
               <div key={l.product_id} className="flex items-center gap-3 border-b border-border px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-base text-ink">{l.product_name}</p>
-                  <p className="num text-xs text-ink-muted">{money(l.unit_sell_price)} / un.</p>
+                  <p className="num text-xs text-ink-muted">{t('{price} / un.', { price: money(l.unit_sell_price) })}</p>
                 </div>
                 <div className="flex items-center rounded border border-border-strong">
-                  <button type="button" aria-label="Menos" className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle" onClick={() => setQty(l.product_id, l.quantity - 1)}>{l.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button>
+                  <button type="button" aria-label={t('Menos')} className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle" onClick={() => setQty(l.product_id, l.quantity - 1)}>{l.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button>
                   <span className="num w-8 text-center text-base">{l.quantity}</span>
-                  <button type="button" aria-label="Mais" className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle disabled:opacity-40" disabled={l.quantity >= l.stock} onClick={() => setQty(l.product_id, l.quantity + 1)}><Plus size={14} /></button>
+                  <button type="button" aria-label={t('Mais')} className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle disabled:opacity-40" disabled={l.quantity >= l.stock} onClick={() => setQty(l.product_id, l.quantity + 1)}><Plus size={14} /></button>
                 </div>
                 <span className="num w-24 text-right font-medium text-ink">{money(l.quantity * l.unit_sell_price)}</span>
               </div>
@@ -378,33 +381,33 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           </div>
 
           <div className="border-t border-border px-4 py-3">
-            <div className="flex justify-between py-1 text-base text-ink-2"><span>Subtotal</span><span className="num">{money(subtotal)}</span></div>
+            <div className="flex justify-between py-1 text-base text-ink-2"><span>{t('Subtotal')}</span><span className="num">{money(subtotal)}</span></div>
             {showDiscount ? (
               <div className="py-1">
-                <MoneyInput id="pos-discount" label="Desconto" valueCents={discount} onChangeCents={setDiscount} hint={`Até ${money(freeLimit)} sem autorização. Acima disso pede o PIN do dono.`} />
+                <MoneyInput id="pos-discount" label={t('Desconto')} valueCents={discount} onChangeCents={setDiscount} hint={t('Até {value} sem autorização. Acima disso pede o PIN do dono.', { value: money(freeLimit) })} />
               </div>
             ) : (
-              <button type="button" disabled={!cart.length} className="py-1 text-sm text-accent hover:text-accent-hover disabled:text-ink-faint" onClick={() => setShowDiscount(true)}>Aplicar desconto</button>
+              <button type="button" disabled={!cart.length} className="py-1 text-sm text-accent hover:text-accent-hover disabled:text-ink-faint" onClick={() => setShowDiscount(true)}>{t('Aplicar desconto')}</button>
             )}
-            {effectiveDiscount > 0 && <div className="flex justify-between py-1 text-base text-ink-2"><span>Desconto</span><span className="num">−{money(effectiveDiscount)}</span></div>}
-            <div className="flex items-baseline justify-between border-t border-border pt-2 mt-1"><span className="font-semibold text-ink">Total</span><span className="num text-xl font-semibold text-ink">{money(total)}</span></div>
+            {effectiveDiscount > 0 && <div className="flex justify-between py-1 text-base text-ink-2"><span>{t('Desconto')}</span><span className="num">−{money(effectiveDiscount)}</span></div>}
+            <div className="flex items-baseline justify-between border-t border-border pt-2 mt-1"><span className="font-semibold text-ink">{t('Total')}</span><span className="num text-xl font-semibold text-ink">{money(total)}</span></div>
 
-            <Segmented className="mt-3 flex w-full" size="lg" options={PAYMENTS} value={payment} onChange={(v) => { setPayment(v); setReceived(0); }} />
+            <Segmented className="mt-3 flex w-full" size="lg" options={PAYMENTS.map((p) => ({ ...p, label: t(p.label) }))} value={payment} onChange={(v) => { setPayment(v); setReceived(0); }} />
             {payment === 'cash' && (
               <div className="mt-3 grid grid-cols-2 items-end gap-3">
-                <MoneyInput id="pos-received" label="Recebido" valueCents={received} onChangeCents={setReceived} placeholder={total ? String(total / 100).replace('.', ',') : ''} />
+                <MoneyInput id="pos-received" label={t('Recebido')} valueCents={received} onChangeCents={setReceived} placeholder={total ? String(total / 100).replace('.', ',') : ''} />
                 <div className="pb-1.5 text-right">
-                  <p className="text-xs text-ink-muted">Troco</p>
-                  <p className={cx('num text-lg font-semibold', received && received < total ? 'text-danger' : 'text-ink')}>{received && received < total ? 'Falta ' + money(total - received) : money(change)}</p>
+                  <p className="text-xs text-ink-muted">{t('Troco')}</p>
+                  <p className={cx('num text-lg font-semibold', received && received < total ? 'text-danger' : 'text-ink')}>{received && received < total ? t('Falta {value}', { value: money(total - received) }) : money(change)}</p>
                 </div>
               </div>
             )}
             {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
             <Button variant="primary" size="xl" block className="mt-3" disabled={!canCharge} loading={busy} onClick={() => charge()}>
-              {total > 0 ? `Cobrar ${money(total)}` : 'Cobrar'}
+              {total > 0 ? t('Cobrar {value}', { value: money(total) }) : t('Cobrar')}
             </Button>
-            <p className="mt-2 hidden flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-ink-muted lg:flex" aria-label="Atalhos de teclado">
-              {SHORTCUTS.map(([k, label]) => <span key={k}><kbd className="rounded border border-border-strong bg-subtle px-1 font-sans text-[11px] text-ink-2">{k}</kbd> {label}</span>)}
+            <p className="mt-2 hidden flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-ink-muted lg:flex" aria-label={t('Atalhos de teclado')}>
+              {SHORTCUTS.map(([k, label]) => <span key={k}><kbd className="rounded border border-border-strong bg-subtle px-1 font-sans text-[11px] text-ink-2">{k}</kbd> {t(label)}</span>)}
             </p>
           </div>
         </aside>
@@ -413,8 +416,8 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       {dialog?.pin && (
         <AuthorizationPinDialog
           error={dialog.error}
-          title="Autorizar desconto"
-          description={`O desconto passa do limite de ${info.store.discount_free_pct ?? 10}%. Peça ao dono o PIN de autorização.`}
+          title={t('Autorizar desconto')}
+          description={t('O desconto passa do limite de {pct}%. Peça ao dono o PIN de autorização.', { pct: info.store.discount_free_pct ?? 10 })}
           onCancel={() => { pendingSale.current = null; setDialog(null); }}
           onSubmit={(pin) => { setDialog(null); charge(pin); }}
         />
@@ -423,15 +426,15 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         <AuthorizationPinDialog
           key={dialog.error || 'abrir'}
           error={dialog.error}
-          title="Abrir turno novo"
-          description="O turno deste perfil foi fechado. Só o dono abre outro: peça-lhe o PIN de autorização."
+          title={t('Abrir turno novo')}
+          description={t('O turno deste perfil foi fechado. Só o dono abre outro: peça-lhe o PIN de autorização.')}
           onCancel={() => setDialog(null)}
           onSubmit={async (pin) => {
             try {
               const res = await api.post('/api/pos/shift/open', { pin });
               setShift(res.data);
               setDialog(null);
-              toast('Turno novo aberto.');
+              toast(t('Turno novo aberto.'));
             } catch (err) { setDialog({ openShift: true, error: errorMessage(err) }); }
           }}
         />

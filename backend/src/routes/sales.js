@@ -43,10 +43,13 @@ const saleSchema = z.object({
 });
 // Erro de regra de negocio com codigo HTTP (4xx). O POS offline usa a distincao
 // 4xx (rejeitada: nao adianta reenviar) vs 5xx/rede (tentar de novo).
-function httpError(statusCode, message, code) {
+// params (9.5): as partes variaveis da mensagem, para o ecra a montar na
+// lingua de quem vende (utils/format.js errorMessage).
+function httpError(statusCode, message, code, params) {
   const e = new Error(message);
   e.statusCode = statusCode;
   if (code) e.code = code;
+  if (params) e.params = params;
   return e;
 }
 
@@ -174,15 +177,15 @@ router.post('/', async (req, res) => {
      const saleItems = data.items.map((item) => {
        const product = productMap.get(item.product_id);
        if (!product) throw httpError(400, `Produto não encontrado: ${item.product_id}`, 'PRODUCT_NOT_FOUND');
-       if (!product.is_active) throw httpError(400, `Produto inativo: ${product.name}`, 'PRODUCT_INACTIVE');
-       if (product.stock_qty < item.quantity) throw httpError(409, `Stock insuficiente para ${product.name}`, 'INSUFFICIENT_STOCK');
+       if (!product.is_active) throw httpError(400, `Produto inativo: ${product.name}`, 'PRODUCT_INACTIVE', { name: product.name });
+       if (product.stock_qty < item.quantity) throw httpError(409, `Stock insuficiente para ${product.name}`, 'INSUFFICIENT_STOCK', { name: product.name });
 
        // O preco unitario TEM de ser o do catalogo. Antes so se recusava acima do
        // catalogo: abaixo era aceite sem rasto, e um caixista registava a cerveja a
        // 1 centavo, cobrava o preco real e ficava com a diferenca. Qualquer reducao
        // legitima vai pelo campo discount_amount (gravado na venda e na auditoria).
        if (item.unit_sell_price !== product.sell_price) {
-         throw httpError(409, `${product.name}: o preço mudou ou não corresponde ao catálogo (catálogo: ${product.sell_price} centavos). Actualize a lista de produtos.`, 'PRICE_MISMATCH');
+         throw httpError(409, `${product.name}: o preço mudou ou não corresponde ao catálogo (catálogo: ${product.sell_price} centavos). Actualize a lista de produtos.`, 'PRICE_MISMATCH', { name: product.name });
        }
 
        return {
@@ -214,7 +217,7 @@ router.post('/', async (req, res) => {
      let discountAuthorized = false;
      if (discountAmount > freeLimit) {
        if (!data.authorization_pin) {
-         throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono`, 'DISCOUNT_NEEDS_PIN');
+         throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono`, 'DISCOUNT_NEEDS_PIN', { pct: tenantPolicy?.discount_free_pct ?? 10 });
        }
        if (!tenantPolicy?.cancel_pin_hash) throw httpError(400, 'PIN de autorização não configurado nesta loja', 'AUTH_PIN_NOT_SET');
        const recentFails = await tx.auditLog.count({ where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - CANCEL_TENANT_WINDOW_MS) } } });
@@ -272,11 +275,7 @@ router.post('/', async (req, res) => {
       if (sellerUser) {
         const lockState = await getShiftLock(tx, tenantId, sellerUser.id);
         if (lockState.locked) {
-          const lockErr = new Error(
-            'Perfil de ' + sellerUser.name + ' bloqueado por erros no fecho de turno. O dono tem de desbloquear com a senha dele.'
-          );
-          lockErr.statusCode = 403;
-          throw lockErr;
+          throw httpError(403, `Perfil de ${sellerUser.name} bloqueado por erros no fecho de turno. O dono tem de desbloquear com a senha dele.`, 'SELLER_LOCKED', { name: sellerUser.name });
         }
         // TURNO FECHADO: nao vende ate o dono abrir um turno novo com o PIN.
         // Excepcao: venda feita offline ANTES do fecho e sincronizada depois
@@ -329,9 +328,7 @@ router.post('/', async (req, res) => {
          data: { stock_qty: { decrement: item.quantity } }
        });
        if (stockUpdate.count !== 1) {
-         const stockError = new Error(`Stock insuficiente para ${item.product_name} (alterado por outra venda)`);
-         stockError.statusCode = 409;
-         throw stockError;
+         throw httpError(409, `Stock insuficiente para ${item.product_name} (alterado por outra venda)`, 'INSUFFICIENT_STOCK', { name: item.product_name });
        }
        // Lotes: sai primeiro o que expira primeiro (o leitor identifica o
        // produto, nao a unidade — por isso leitor e escolha manual sao iguais).
@@ -385,7 +382,7 @@ router.post('/', async (req, res) => {
      } }).catch((e) => console.error('audit DISCOUNT_PIN_FAIL', e.message));
    }
    if (err.statusCode) {
-     return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+     return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.params ? { params: err.params } : {}) });
    }
    console.error('Error in /api/sales', err);
    // Nunca devolver err.message num 500: expunha caminhos de ficheiros e
