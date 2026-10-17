@@ -1943,3 +1943,8 @@ Prova: testes do servidor 15 de 15; teste no browser 33 de 33, sem erros; os tes
 4) Uma coisa que encontrei e não mudei: no ecrã «Dispositivos», fechar no X apaga a impressora escolhida (fica «Só PDF»), mesmo quando o ecrã é aberto só para ver. Proponho corrigir isto na parte do terminal (9.5).
 
 Falta: publicar a 9.3 no genesismz.com e testar lá.
+
+
+==================== 17/10/2026 — Primeira parte do idioma (9.3) publicada ====================
+A escolha PT/EN já está em genesismz.com: nos ecrãs de entrada, no menu do dono e no terminal (no telemóvel, dentro de «Dispositivos»). Testei no próprio site com uma loja de teste: 32 de 32 verificações passaram, sem erros, e o recibo em PDF continua a funcionar (19 de 19). Depois apaguei a loja de teste.
+Lembra-te: por agora só a entrada e o menu estão em inglês. As páginas do dono vêm a seguir (9.4).
