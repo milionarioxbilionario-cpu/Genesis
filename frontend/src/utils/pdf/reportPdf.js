@@ -4,7 +4,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { money, int, date, dateTime, PAYMENT_LABEL } from '../format';
-import { timelineExtra, timelineValueText, timelineWhen } from '../timelineText';
+import { lossReason, timelineDetail, timelineExtra, timelineTitle, timelineValueText, timelineWhen, timelineWho } from '../timelineText';
 import { pdfText, safeFileName } from './text';
 
 const M = 14;
@@ -116,7 +116,7 @@ function breakdown(pdf, r) {
   }
 
   pdf.heading(`Perdas${r.losses.length ? ` · ${money(r.losses_total)} ao custo` : ''}`);
-  pdf.table(['Data', 'Produto', 'Qtd.', 'Motivo', 'Valor'], r.losses.map((l) => [dateTime(l.recorded_at), l.name, int(l.quantity), l.reason_label, '-' + money(l.value)]), { right: [2, 4], empty: 'Nenhuma perda registada.' });
+  pdf.table(['Data', 'Produto', 'Qtd.', 'Motivo', 'Valor'], r.losses.map((l) => [dateTime(l.recorded_at), l.name, int(l.quantity), lossReason(l.reason), '-' + money(l.value)]), { right: [2, 4], empty: 'Nenhuma perda registada.' });
 
   pdf.heading('Vendas perdidas (o que os clientes pediram e não havia)');
   pdf.table(['Produto', 'Unid.', 'Pedidos', 'Valor estimado'], r.lost_demand.map((x) => [x.outside ? `${x.name} (fora do catálogo)` : x.name, int(x.units ?? x.requests), int(x.requests), x.estimated_value != null ? money(x.estimated_value) : '—']), { right: [1, 2, 3], empty: 'Nenhum pedido registado.' });
@@ -142,8 +142,8 @@ function timeline(pdf, tl, sameDay) {
   pdf.note(`${money(tl.totals.gains, { sign: true })} em vendas · ${money(tl.totals.losses)} em perdas · lucro do período ${money(tl.totals.profit)}${tl.rows.length < tl.total ? ` · mostra os primeiros ${tl.rows.length} de ${tl.total} movimentos` : ''}`);
   pdf.table([sameDay ? 'Hora' : 'Data', 'Movimento', 'Quem', 'Valor'], tl.rows.map((e) => [
     timelineWhen(e, sameDay),
-    [e.title, e.detail, timelineExtra(e)].filter(Boolean).join(' · '),
-    e.who || '',
+    [timelineTitle(e), timelineDetail(e), timelineExtra(e)].filter(Boolean).join(' · '),
+    timelineWho(e) || '',
     timelineValueText(e),
   ]), { right: [3], widths: { 0: sameDay ? 18 : 34, 2: 30, 3: 28 }, empty: 'Nada aconteceu neste período.' });
 }

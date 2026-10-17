@@ -1,19 +1,19 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-17T14:47:39.712Z */
+   Gerado em: 2026-10-17T17:43:34.525Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-17T14:47:39.712Z",
+ "generatedAt": "2026-10-17T17:43:34.525Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 248,
+  "files": 249,
   "planned": 5,
-  "links": 423,
-  "lines": 33997,
+  "links": 451,
+  "lines": 35248,
   "byStatus": {
-   "ok": 165,
-   "partial": 13,
+   "ok": 167,
+   "partial": 12,
    "broken": 0,
    "planned": 5,
    "untracked": 70
@@ -25,7 +25,7 @@ window.GENESIS_MINDMAP = {
    "backend-data": 62,
    "backend": 60,
    "frontend-pub": 4,
-   "frontend": 91,
+   "frontend": 92,
    "scripts": 3
   }
  },
@@ -39,11 +39,15 @@ window.GENESIS_MINDMAP = {
    "count": 25
   },
   {
+   "pkg": "node:path",
+   "count": 21
+  },
+  {
    "pkg": "react-router-dom",
    "count": 20
   },
   {
-   "pkg": "node:path",
+   "pkg": "node:fs",
    "count": 20
   },
   {
@@ -53,10 +57,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "bcrypt",
    "count": 20
-  },
-  {
-   "pkg": "node:fs",
-   "count": 19
   },
   {
    "pkg": "express",
@@ -71,15 +71,15 @@ window.GENESIS_MINDMAP = {
    "count": 16
   },
   {
+   "pkg": "@playwright/test",
+   "count": 16
+  },
+  {
    "pkg": "crypto",
    "count": 15
   },
   {
    "pkg": "zod",
-   "count": 15
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 15
   },
   {
@@ -217,7 +217,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 91,
+   "nodes": 92,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -235,7 +235,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/ui": 1,
     "frontend/src/utils": 15,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 15,
+    "frontend/tests/e2e": 16,
     "frontend/tests": 5
    }
   },
@@ -287,8 +287,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1020,
-   "size": 204296,
+   "lines": 1033,
+   "size": 208928,
    "externals": [
     "@prisma/client"
    ],
@@ -331,8 +331,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1461,
-   "size": 77941,
+   "lines": 1467,
+   "size": 79559,
    "externals": [
     "nodemailer"
    ],
@@ -1763,8 +1763,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1523,
-   "size": 128476,
+   "lines": 1527,
+   "size": 129060,
    "externals": [
     "dotenv",
     "crypto",
@@ -2290,12 +2290,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
-   "notes": "11/10/2026 Fase 8.8: codigo de barras unico por loja (409 DUPLICATE_BARCODE). verify_system 27 7/7.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Catalogo.",
    "security": "",
    "planned": false,
    "lines": 381,
-   "size": 19053,
+   "size": 19189,
    "externals": [
     "express",
     "zod"
@@ -2727,12 +2727,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Relatorios diario/semanal/mensal, rastreio (timeline), metas 12 meses.",
-   "notes": "11/10/2026 Fase 8.4: lost_demand com fora do catalogo, unidades e valor; restock usa unidades pedidas. verify_system 23 + reports.mjs.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Relatorios.",
    "security": "",
    "planned": false,
-   "lines": 423,
-   "size": 28017,
+   "lines": 426,
+   "size": 28512,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -3017,8 +3017,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 37,
-   "size": 1644,
+   "lines": 40,
+   "size": 1887,
    "externals": [
     "zod"
    ],
@@ -4215,28 +4215,30 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/components",
    "ext": ".jsx",
-   "status": "partial",
+   "status": "ok",
    "summary": "Leitura de codigo de barras pela camara (ZXing).",
-   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com camara falsa (EAN-13); camara real nao verificada.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Camara.",
    "security": "",
    "planned": false,
-   "lines": 83,
-   "size": 4678,
+   "lines": 86,
+   "size": 4834,
    "externals": [
     "react",
     "@zxing/browser",
     "@zxing/library"
    ],
    "dependsOn": [
-    "frontend/src/components/ui/index.js"
+    "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "inbound": 2,
-   "outbound": 1
+   "outbound": 3
   },
   {
    "id": "frontend/src/components/MonthCloseDialog.jsx",
@@ -4247,12 +4249,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogo do fecho do mes (resumo + lista sugerida + WhatsApp).",
-   "notes": "04/10/2026: fecho_mes.mjs 10/10. Caminho Agora nao so provado pela API.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 141,
-   "size": 7899,
+   "lines": 144,
+   "size": 8157,
    "externals": [
     "react",
     "react-router-dom",
@@ -4261,13 +4263,15 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/layouts/AppShell.jsx"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 5
   },
   {
    "id": "frontend/src/components/PdfButton.jsx",
@@ -4278,18 +4282,19 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Botao PDF / imprimir (gera, partilha ou descarrega).",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "PDF.",
    "security": "",
    "planned": false,
-   "lines": 34,
-   "size": 1397,
+   "lines": 36,
+   "size": 1472,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/utils/pdf/deliver.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/components/ui/index.js"
    ],
@@ -4297,7 +4302,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Reports.jsx"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "frontend/src/components/PdfReadyDialog.jsx",
@@ -4308,18 +4313,19 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogo \"PDF pronto\" quando o iPhone pede um toque novo para partilhar.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "PDF.",
    "security": "",
    "planned": false,
-   "lines": 32,
-   "size": 1058,
+   "lines": 34,
+   "size": 1152,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/utils/pdf/deliver.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
@@ -4328,7 +4334,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
    "inbound": 3,
-   "outbound": 2
+   "outbound": 3
   },
   {
    "id": "frontend/src/components/SaleDrawer.jsx",
@@ -4339,12 +4345,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Recibo completo de uma venda num Drawer, com reimprimir.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 56,
-   "size": 2895,
+   "lines": 58,
+   "size": 3033,
    "externals": [
     "react",
     "lucide-react",
@@ -4354,6 +4360,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/receiptPrinter.js",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
@@ -4361,7 +4368,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Sales.jsx"
    ],
    "inbound": 2,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/components/ui/Button.jsx",
@@ -4713,17 +4720,26 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
+    "frontend/src/components/BarcodeScanner.jsx",
+    "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/i18n/en/auth.js",
     "frontend/src/i18n/en/common.js",
     "frontend/src/i18n/en/owner.js",
     "frontend/src/i18n/en/pos.js",
     "frontend/src/i18n/react.jsx",
+    "frontend/src/pages/owner/AuditLogPage.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/auditLabels.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/session.jsx",
+    "frontend/src/utils/timelineText.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 9,
+   "inbound": 18,
    "outbound": 0
   },
   {
@@ -4760,12 +4776,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area common.",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 85,
-   "size": 6112,
+   "lines": 188,
+   "size": 11841,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4784,13 +4800,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/i18n/en",
    "ext": ".js",
    "status": "ok",
-   "summary": "Ingles da area owner (so menu na 9.3; paginas na 9.4).",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado.",
+   "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 26,
-   "size": 948,
+   "lines": 821,
+   "size": 44609,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4846,6 +4862,11 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "frontend/src/App.jsx",
+    "frontend/src/components/BarcodeScanner.jsx",
+    "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/PdfButton.jsx",
+    "frontend/src/components/PdfReadyDialog.jsx",
+    "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/components/ui/Data.jsx",
     "frontend/src/components/ui/Form.jsx",
     "frontend/src/components/ui/LanguageSwitch.jsx",
@@ -4856,10 +4877,22 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
     "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/owner/AuditLogPage.jsx",
+    "frontend/src/pages/owner/Debts.jsx",
+    "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/ProductDrawer.jsx",
+    "frontend/src/pages/owner/Products.jsx",
+    "frontend/src/pages/owner/Reports.jsx",
+    "frontend/src/pages/owner/Sales.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/owner/ShoppingLists.jsx",
+    "frontend/src/pages/owner/Suppliers.jsx",
+    "frontend/src/pages/owner/Team.jsx",
     "frontend/src/pages/pos/DevicesDialog.jsx",
     "frontend/src/pages/pos/Terminal.jsx"
    ],
-   "inbound": 13,
+   "inbound": 30,
    "outbound": 2
   },
   {
@@ -5157,12 +5190,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Definicoes > Auditoria: retencao, Hoje/Semana/Mes/Tudo, tipo, lista, detalhe antes/depois.",
-   "notes": "11/10/2026 Fase 8.5: fase8_5.mjs 16/16 (PC + iPhone).",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Pagina do dono.",
    "security": "",
    "planned": false,
-   "lines": 164,
-   "size": 8711,
+   "lines": 169,
+   "size": 9241,
    "externals": [
     "react"
    ],
@@ -5170,13 +5203,15 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/auditLabels.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/pages/owner/Settings.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/Debts.jsx",
@@ -5191,8 +5226,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 108,
-   "size": 7153,
+   "lines": 111,
+   "size": 7511,
    "externals": [
     "react",
     "lucide-react"
@@ -5201,13 +5236,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/owner/Home.jsx",
@@ -5218,12 +5254,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Inicio do dono: KPIs, meta do mes e do mes passado, alertas.",
-   "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 176,
-   "size": 9961,
+   "lines": 182,
+   "size": 10514,
    "externals": [
     "react",
     "react-router-dom",
@@ -5233,13 +5269,15 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/Onboarding.jsx",
@@ -5250,12 +5288,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
-   "notes": "04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Onboarding do dono.",
    "security": "",
    "planned": false,
-   "lines": 258,
-   "size": 18155,
+   "lines": 264,
+   "size": 18910,
    "externals": [
     "react",
     "react-router-dom",
@@ -5265,6 +5303,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/session.jsx",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js",
     "frontend/src/pages/auth/RequestAccount.jsx"
    ],
@@ -5272,7 +5311,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/ProductDrawer.jsx",
@@ -5283,12 +5322,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
-   "notes": "11/10/2026 Fase 8.8: Ler codigo com a camara. fase8_8.mjs, stock.mjs, fase8_2.mjs.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 235,
-   "size": 15462,
+   "lines": 243,
+   "size": 16192,
    "externals": [
     "react",
     "react-router-dom",
@@ -5299,6 +5338,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/imageResize.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/ui/index.js"
    ],
@@ -5306,7 +5346,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Products.jsx"
    ],
    "inbound": 1,
-   "outbound": 6
+   "outbound": 7
   },
   {
    "id": "frontend/src/pages/owner/Products.jsx",
@@ -5317,12 +5357,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
-   "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px).",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 240,
-   "size": 15177,
+   "lines": 245,
+   "size": 15784,
    "externals": [
     "react",
     "react-router-dom",
@@ -5333,6 +5373,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/search.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/components/ui/index.js"
@@ -5341,7 +5382,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "frontend/src/pages/owner/Reports.jsx",
@@ -5352,12 +5393,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra dos relatorios: KPIs, ranking por niveis, rastreio com filtros, cascata mensal, botao PDF / imprimir por separador.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Grelhas com grid-cols-1 (antes 426 px num ecra de 390).",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 515,
-   "size": 34314,
+   "lines": 533,
+   "size": 36100,
    "externals": [
     "react",
     "react-router-dom",
@@ -5369,6 +5410,8 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/timelineText.js",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/components/ui/index.js",
     "frontend/src/utils/pdf/reportPdf.js"
@@ -5377,7 +5420,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 8
+   "outbound": 10
   },
   {
    "id": "frontend/src/pages/owner/Sales.jsx",
@@ -5392,8 +5435,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 78,
-   "size": 4618,
+   "lines": 82,
+   "size": 4880,
    "externals": [
     "react"
    ],
@@ -5401,13 +5444,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/owner/Settings.jsx",
@@ -5418,12 +5462,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
-   "notes": "11/10/2026 Fase 8.7: cartao Relatorios por WhatsApp. fase8_7.mjs 7/7.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 392,
-   "size": 25965,
+   "lines": 402,
+   "size": 27179,
    "externals": [
     "react",
     "react-router-dom",
@@ -5434,13 +5478,15 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 7
   },
   {
    "id": "frontend/src/pages/owner/ShoppingLists.jsx",
@@ -5451,12 +5497,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra da lista de compras (Produtos).",
-   "notes": "04/10/2026: fase5.mjs 16/16.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 193,
-   "size": 12570,
+   "lines": 197,
+   "size": 13144,
    "externals": [
     "react",
     "lucide-react"
@@ -5465,13 +5511,15 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/pages/owner/Products.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/Suppliers.jsx",
@@ -5486,8 +5534,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 76,
-   "size": 4700,
+   "lines": 78,
+   "size": 4882,
    "externals": [
     "react",
     "lucide-react"
@@ -5496,13 +5544,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/owner/Team.jsx",
@@ -5517,8 +5566,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 163,
-   "size": 10579,
+   "lines": 167,
+   "size": 11087,
    "externals": [
     "react",
     "lucide-react"
@@ -5527,13 +5576,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/pos/DevicesDialog.jsx",
@@ -5781,22 +5831,24 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/utils",
    "ext": ".js",
    "status": "ok",
-   "summary": "Nomes em portugues das accoes e campos da auditoria; diferencas antes/depois.",
-   "notes": "11/10/2026 Fase 8.5: fase8_5.mjs.",
+   "summary": "Nomes das accoes e campos da auditoria (PT/EN pelo t); diferencas antes/depois.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Auditoria do dono.",
    "security": "",
    "planned": false,
-   "lines": 73,
-   "size": 6781,
+   "lines": 75,
+   "size": 7050,
    "externals": [],
    "dependsOn": [
-    "frontend/src/utils/format.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
-    "frontend/src/pages/owner/AuditLogPage.jsx"
+    "frontend/src/pages/owner/AuditLogPage.jsx",
+    "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 1,
-   "outbound": 1
+   "inbound": 2,
+   "outbound": 2
   },
   {
    "id": "frontend/src/utils/devices.js",
@@ -5862,8 +5914,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 81,
-   "size": 3295,
+   "lines": 93,
+   "size": 3911,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -6037,12 +6089,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Relatorio diario/semanal/mensal em PDF A4 com rastreio.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "PDF.",
    "security": "",
    "planned": false,
    "lines": 213,
-   "size": 12341,
+   "size": 12430,
    "externals": [
     "jspdf",
     "jspdf-autotable"
@@ -6236,22 +6288,24 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Texto de cada movimento do rastreio, partilhado pelo ecra e pelo PDF.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Relatorios.",
    "security": "",
    "planned": false,
-   "lines": 29,
-   "size": 1271,
+   "lines": 78,
+   "size": 4283,
    "externals": [],
    "dependsOn": [
-    "frontend/src/utils/format.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
     "frontend/src/pages/owner/Reports.jsx",
-    "frontend/src/utils/pdf/reportPdf.js"
+    "frontend/src/utils/pdf/reportPdf.js",
+    "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 2,
-   "outbound": 1
+   "inbound": 3,
+   "outbound": 2
   },
   {
    "id": "frontend/src/utils/useApi.js",
@@ -6567,6 +6621,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/idioma_dono.mjs",
+   "path": "frontend/tests/e2e/idioma_dono.mjs",
+   "label": "idioma_dono.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: dono em ingles, 19 paginas + 5 gavetas sem portugues residual; mensal no iPhone.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 125,
+   "size": 7632,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/onboarding.mjs",
    "path": "frontend/tests/e2e/onboarding.mjs",
    "label": "onboarding.mjs",
@@ -6726,12 +6805,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 6/6.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 96,
-   "size": 4441,
+   "lines": 145,
+   "size": 7955,
    "externals": [
     "node:test",
     "node:assert",
@@ -6741,11 +6820,13 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/i18n/core.js",
-    "frontend/src/utils/format.js"
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/timelineText.js",
+    "frontend/src/utils/auditLabels.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 4
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -8062,6 +8143,14 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/components/BarcodeScanner.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/components/BarcodeScanner.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
    "source": "frontend/src/components/MonthCloseDialog.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -8071,11 +8160,23 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/components/MonthCloseDialog.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
    "source": "frontend/src/components/PdfButton.jsx",
    "target": "frontend/src/utils/pdf/deliver.js"
+  },
+  {
+   "source": "frontend/src/components/PdfButton.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/components/PdfButton.jsx",
@@ -8088,6 +8189,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/components/PdfReadyDialog.jsx",
    "target": "frontend/src/utils/pdf/deliver.js"
+  },
+  {
+   "source": "frontend/src/components/PdfReadyDialog.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/components/PdfReadyDialog.jsx",
@@ -8104,6 +8209,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/components/SaleDrawer.jsx",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/components/SaleDrawer.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/components/SaleDrawer.jsx",
@@ -8371,6 +8480,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/AuditLogPage.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/AuditLogPage.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/AuditLogPage.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8387,6 +8504,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Debts.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Debts.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8400,6 +8521,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Home.jsx",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Home.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Home.jsx",
@@ -8416,6 +8545,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Onboarding.jsx",
    "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Onboarding.jsx",
@@ -8443,6 +8576,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/ProductDrawer.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/ProductDrawer.jsx",
    "target": "frontend/src/components/BarcodeScanner.jsx"
   },
   {
@@ -8464,6 +8601,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Products.jsx",
    "target": "frontend/src/utils/search.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Products.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Products.jsx",
@@ -8499,6 +8640,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Reports.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Reports.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Reports.jsx",
    "target": "frontend/src/components/SaleDrawer.jsx"
   },
   {
@@ -8523,6 +8672,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Sales.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Sales.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8543,6 +8696,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8559,6 +8720,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/ShoppingLists.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8575,6 +8744,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Suppliers.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Suppliers.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8588,6 +8761,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Team.jsx",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Team.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Team.jsx",
@@ -8722,6 +8899,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/format.js"
   },
   {
+   "source": "frontend/src/utils/auditLabels.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/devices.js",
    "target": "frontend/src/utils/pdf/deliver.js"
   },
@@ -8794,6 +8975,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/format.js"
   },
   {
+   "source": "frontend/src/utils/timelineText.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/useApi.js",
    "target": "frontend/src/utils/api.js"
   },
@@ -8812,6 +8997,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/i18n.test.mjs",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/utils/timelineText.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/utils/auditLabels.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",

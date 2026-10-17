@@ -737,6 +737,9 @@ async function test15() {
   const lossEv = tl.rows.find((e) => e.type === 'loss' && e.reason === 'broken');
   ok(lossEv && lossEv.amount === -6000 && lossEv.effect === 'loss' && lossEv.unit_cost === 6000, 'rastreio: a perda com -60 MT e o custo unitario', lossEv);
   ok(tl.rows.some((e) => e.type === 'debt' && e.amount === 50000) && tl.rows.some((e) => e.type === 'debt_payment' && e.amount === 20000), 'rastreio: cheneca nova e pagamento');
+  // 9.4: dados para o ecra montar o texto na lingua de quem ve.
+  ok(lossEv?.product_name === 'Cerveja Teste' && lossEv.quantity > 0 && lossEv.auto === false, '9.4: a perda traz produto, quantidade e se foi automatica', lossEv);
+  ok(tl.rows.filter((e) => e.type === 'debt' || e.type === 'debt_payment').every((e) => typeof e.debtor === 'string' && e.debtor.length > 0), '9.4: chenecas trazem o nome do cliente');
   ok(!tl.rows.some((e) => /\d{3,} por unidade|desconto \d/.test(e.detail || '')), 'rastreio: nenhum valor em centavos no texto');
   ok(tl.rows.every((e, i, a) => i === 0 || new Date(a[i - 1].at) >= new Date(e.at)), 'rastreio: por ordem (mais recente primeiro)');
   const onlyLoss = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&types=loss`);
@@ -1404,6 +1407,7 @@ async function test27() {
   ok(a.status === 201, 'produto A com o codigo: 201', a.status);
   const b = await owner.req('POST', '/api/products', { name: 'Codigo B ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0, barcode: ' ' + code + ' ' });
   ok(b.status === 409 && b.data?.code === 'DUPLICATE_BARCODE' && /Codigo A/.test(b.data.error), 'criar outro com o mesmo codigo (com espacos): 409 com o nome do produto', b);
+  ok(b.data?.params?.barcode === code && /Codigo A/.test(b.data?.params?.name || ''), '9.4: o 409 traz params (codigo e produto) para o ecra traduzir', b.data?.params);
   const c = await owner.req('POST', '/api/products', { name: 'Codigo C ' + code, category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 0 });
   ok(c.status === 201, 'produto C sem codigo: 201');
   const ed = await owner.req('PATCH', '/api/products/' + c.data.id, { barcode: code });

@@ -1948,3 +1948,16 @@ Falta: publicar a 9.3 no genesismz.com e testar lá.
 ==================== 17/10/2026 — Primeira parte do idioma (9.3) publicada ====================
 A escolha PT/EN já está em genesismz.com: nos ecrãs de entrada, no menu do dono e no terminal (no telemóvel, dentro de «Dispositivos»). Testei no próprio site com uma loja de teste: 32 de 32 verificações passaram, sem erros, e o recibo em PDF continua a funcionar (19 de 19). Depois apaguei a loja de teste.
 Lembra-te: por agora só a entrada e o menu estão em inglês. As páginas do dono vêm a seguir (9.4).
+
+
+==================== 17/10/2026 — Páginas do dono em inglês (9.4) — testada no meu computador ====================
+1) Quando o dono escolhe EN, o painel inteiro aparece em inglês: Início, Vendas, Produtos (e a ficha de cada produto), Fornecedores, Chenecas, Equipa, Listas de compras, Relatórios, Definições, Auditoria e o assistente de início. Em PT fica tudo como antes.
+2) Aquilo que o dono escreveu (nomes dos produtos, fornecedores, notas) fica sempre como ele escreveu. Só se traduzem os textos do Genesis.
+3) O «rastreio» dos relatórios (cada venda, entrada de stock, perda, dívida...) passa a ser escrito na língua de quem o está a ver. Antes o servidor mandava as frases já escritas em português.
+4) As mensagens de erro também aparecem em inglês, incluindo as que têm valores dentro. Por exemplo: «The code 123 already belongs to the product «Coca».»
+5) Ainda em português, de propósito, até às próximas partes: os títulos dentro dos PDFs dos relatórios, as mensagens de WhatsApp e os emails (9.6), o ecrã de venda (9.5) e o painel admin (9.7).
+
+Prova: o teste do painel em inglês passou 28 de 28 (19 páginas e 5 fichas, sem palavras portuguesas esquecidas, também no iPhone). Os 12 testes antigos do painel, terminal, relatórios, stock, fecho do mês, auditoria e painel admin passaram todos em português, sem erros.
+Um contratempo: a primeira vez que corri os testes, o computador ficou sem memória e os servidores de teste foram parados a meio. Repeti os testes um de cada vez e passaram todos. As lojas de teste foram todas apagadas; na base de dados ficam só a tua loja e a tua conta de super admin.
+
+Falta: publicar a 9.4 no genesismz.com e testar lá.

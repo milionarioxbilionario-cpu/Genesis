@@ -65,7 +65,7 @@ const createProductSchema = productSchema.extend({
 async function assertBarcodeFree(tx, tenantId, barcode, exceptId) {
   if (!barcode) return;
   const other = await tx.product.findFirst({ where: { tenant_id: tenantId, barcode, is_active: true, ...(exceptId ? { NOT: { id: exceptId } } : {}) }, select: { name: true } });
-  if (other) { const e = new Error(`O código ${barcode} já é do produto «${other.name}».`); e.statusCode = 409; e.code = 'DUPLICATE_BARCODE'; throw e; }
+  if (other) { const e = new Error(`O código ${barcode} já é do produto «${other.name}».`); e.statusCode = 409; e.code = 'DUPLICATE_BARCODE'; e.params = { barcode, name: other.name }; throw e; }
 }
 
 router.post('/', auth, requireRole('owner'), async (req, res) => {
@@ -120,7 +120,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos', details: err.errors });
     }
-    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.params ? { params: err.params } : {}) });
     console.error('Create product error', err);
     return res.status(500).json({ error: 'Erro ao criar produto' });
   }
@@ -257,7 +257,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Dados inválidos', details: err.errors });
     }
-    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.params ? { params: err.params } : {}) });
     console.error('Update product error', err);
     return res.status(500).json({ error: 'Erro ao atualizar produto' });
   }

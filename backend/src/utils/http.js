@@ -9,10 +9,13 @@
 // errado no painel admin derrubava o servidor de todas as lojas.
 const { ZodError } = require('zod');
 
-function httpError(statusCode, message, code) {
+// params: valores da mensagem (ex.: o nome do produto) para o ecra a montar
+// na lingua de quem a ve (Fase 9.4); a mensagem em portugues continua igual.
+function httpError(statusCode, message, code, params) {
   const e = new Error(message);
   e.statusCode = statusCode;
   if (code) e.code = code;
+  if (params) e.params = params;
   return e;
 }
 
@@ -25,7 +28,7 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos', details: err.errors });
   }
   if (err && err.statusCode && err.statusCode < 500) {
-    return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+    return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.params ? { params: err.params } : {}) });
   }
   // Prisma "registo nao encontrado" num update/delete por id.
   if (err && err.code === 'P2025') return res.status(404).json({ error: 'Registo não encontrado' });

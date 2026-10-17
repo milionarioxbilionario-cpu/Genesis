@@ -1,7 +1,9 @@
-// Nomes em portugues da auditoria do dono (Fase 8.5). Os grupos (filtros) vem
-// do servidor (backend/src/utils/auditGroups.js); aqui so o texto de cada accao
-// e dos campos guardados em "antes / depois".
-import { money, date } from './format';
+// Nomes da auditoria do dono (Fase 8.5). Os grupos (filtros) vem do servidor
+// (backend/src/utils/auditGroups.js); aqui so o texto de cada accao e dos campos
+// guardados em "antes / depois". O texto em portugues e a chave da traducao
+// (Fase 9.4): actionLabel, fieldLabel e fieldValue saem na lingua actual.
+import { money, date } from './format.js';
+import { t } from '../i18n/core.js';
 
 export const ACTION_LABEL = {
   CREATE_SALE: 'Venda', CANCEL_SALE: 'Venda cancelada', CANCEL_ATTEMPT: 'PIN errado ao cancelar venda', DISCOUNT_AUTHORIZED: 'Desconto autorizado',
@@ -25,14 +27,14 @@ export const ACTION_LABEL = {
   CREATE_SHOPPING_LIST: 'Lista de compras criada', UPDATE_SHOPPING_LIST: 'Lista de compras alterada', SHOPPING_LIST_STATUS: 'Estado da lista de compras', DELETE_SHOPPING_LIST: 'Lista de compras apagada',
   MONTH_CLOSE_SEEN: 'Fecho do mês visto', WHATSAPP_ALERTS_SENT: 'Alertas enviados por WhatsApp', REPORT_SENT: 'Relatório enviado por WhatsApp', REPORT_SEND_FAILED: 'Relatório por WhatsApp falhou',
 };
-export const actionLabel = (a) => ACTION_LABEL[a] || a;
+export const actionLabel = (a) => (ACTION_LABEL[a] ? t(ACTION_LABEL[a]) : a);
 
 // Accoes que merecem atencao (PIN errado, bloqueio...).
 export const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'CANCEL_SALE', 'REPORT_SEND_FAILED']);
 
 // Campos guardados em centavos -> mostrados em MT.
 const MONEY = new Set(['cost_price', 'sell_price', 'unit_cost', 'unit_price', 'total_amount', 'amount', 'counted_amount', 'expected_amount', 'difference', 'discount_amount', 'monthly_salary', 'delivery_cost_per_visit', 'target_amount', 'value', 'total', 'amount_paid']);
-const FIELD_LABEL = {
+export const FIELD_LABEL = {
   name: 'Nome', product_name: 'Produto', product_id: 'Produto (id)', category: 'Categoria', cost_price: 'Preço de compra', sell_price: 'Preço de venda',
   stock_qty: 'Stock', added: 'Entraram', delta: 'Variação', quantity: 'Quantidade', reason: 'Motivo', unit_cost: 'Custo unitário', unit_price: 'Preço unitário',
   supplier_id: 'Fornecedor (id)', lots: 'Lotes', expiry_date: 'Validade', has_expiry: 'Com validade', barcode: 'Código de barras', icon: 'Ícone', min_stock: 'Stock mínimo',
@@ -42,16 +44,16 @@ const FIELD_LABEL = {
   daily_report_time: 'Hora do relatório diário', weekly_report_day: 'Dia do relatório semanal', weekly_report_time: 'Hora do relatório semanal', monthly_report_time: 'Hora do relatório mensal',
   audit_retention_months: 'Meses guardados', status: 'Estado', debtor_name: 'Cliente', due_date: 'Data limite', monthly_salary: 'Salário', cancel_reason: 'Motivo',
 };
-export const fieldLabel = (k) => FIELD_LABEL[k] || k.replace(/_/g, ' ');
+export const fieldLabel = (k) => (FIELD_LABEL[k] ? t(FIELD_LABEL[k]) : k.replace(/_/g, ' '));
 
-const WEEKDAY = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+export const WEEKDAY = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 export function fieldValue(k, v) {
   if (v === null || v === undefined || v === '') return '—';
-  if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
-  if (k === 'image_url') return 'foto';
+  if (typeof v === 'boolean') return v ? t('Sim') : t('Não');
+  if (k === 'image_url') return t('foto');
   if (MONEY.has(k) && typeof v === 'number') return money(v);
-  if (k === 'weekly_report_day' && typeof v === 'number') return WEEKDAY[v] || String(v);
-  if (k === 'lots' && Array.isArray(v)) return v.map((l) => `${l.quantity} un.${l.expiry_date ? ' até ' + date(l.expiry_date) : ''}`).join(' · ');
+  if (k === 'weekly_report_day' && typeof v === 'number') return WEEKDAY[v] ? t(WEEKDAY[v]) : String(v);
+  if (k === 'lots' && Array.isArray(v)) return v.map((l) => (l.expiry_date ? t('{n} un. até {d}', { n: l.quantity, d: date(l.expiry_date) }) : t('{n} un.', { n: l.quantity }))).join(' · ');
   if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T|$)/.test(v)) return date(v);
   if (typeof v === 'object') return JSON.stringify(v);
   return String(v);

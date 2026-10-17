@@ -136,7 +136,7 @@
       "status": "ok",
       "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
       "role": "Catalogo.",
-      "notes": "11/10/2026 Fase 8.8: codigo de barras unico por loja (409 DUPLICATE_BARCODE). verify_system 27 7/7."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "backend/src/routes/inventory.js": {
       "status": "ok",
@@ -993,7 +993,7 @@
       "status": "ok",
       "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
       "role": "Onboarding do dono.",
-      "notes": "04/10/2026: onboarding.mjs 18/18 no browser + import invalido devolve 400 com produto e campo."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
@@ -1038,7 +1038,7 @@
     },
     "backend/src/services/reports.js": {
       "status": "ok",
-      "notes": "11/10/2026 Fase 8.4: lost_demand com fora do catalogo, unidades e valor; restock usa unidades pedidas. verify_system 23 + reports.mjs.",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
       "summary": "Relatorios diario/semanal/mensal, rastreio (timeline), metas 12 meses.",
       "role": "Relatorios."
     },
@@ -1050,19 +1050,19 @@
     },
     "frontend/src/pages/owner/Reports.jsx": {
       "status": "ok",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar. Grelhas com grid-cols-1 (antes 426 px num ecra de 390).",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
       "summary": "Ecra dos relatorios: KPIs, ranking por niveis, rastreio com filtros, cascata mensal, botao PDF / imprimir por separador.",
       "role": "Painel do dono."
     },
     "frontend/src/components/SaleDrawer.jsx": {
       "status": "ok",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
       "summary": "Recibo completo de uma venda num Drawer, com reimprimir.",
       "role": "Painel do dono."
     },
     "frontend/src/pages/owner/Home.jsx": {
       "status": "ok",
-      "notes": "04/10/2026 Fase 4: verify_system 194/194; e2e reports/flows/pos/stock OK.",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
       "summary": "Inicio do dono: KPIs, meta do mes e do mes passado, alertas.",
       "role": "Painel do dono."
     },
@@ -1076,7 +1076,7 @@
       "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "11/10/2026 Fase 8.7: cartao Relatorios por WhatsApp. fase8_7.mjs 7/7."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "backend/src/routes/shoppingLists.js": {
       "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
@@ -1094,7 +1094,7 @@
       "summary": "Ecra da lista de compras (Produtos).",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: fase5.mjs 16/16."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "backend/src/services/monthClose.js": {
       "summary": "Puro: quando mostrar o fecho do mes anterior.",
@@ -1106,7 +1106,7 @@
       "summary": "Dialogo do fecho do mes (resumo + lista sugerida + WhatsApp).",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: fecho_mes.mjs 10/10. Caminho Agora nao so provado pela API."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/layouts/AppShell.jsx": {
       "summary": "Moldura do painel do dono; monta o fecho do mes.",
@@ -1204,25 +1204,25 @@
       "status": "ok",
       "summary": "Relatorio diario/semanal/mensal em PDF A4 com rastreio.",
       "role": "PDF.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/utils/timelineText.js": {
       "status": "ok",
       "summary": "Texto de cada movimento do rastreio, partilhado pelo ecra e pelo PDF.",
       "role": "Relatorios.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/components/PdfButton.jsx": {
       "status": "ok",
       "summary": "Botao PDF / imprimir (gera, partilha ou descarrega).",
       "role": "PDF.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/components/PdfReadyDialog.jsx": {
       "status": "ok",
       "summary": "Dialogo \"PDF pronto\" quando o iPhone pede um toque novo para partilhar.",
       "role": "PDF.",
-      "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/tests/e2e/fase8_1.mjs": {
       "status": "ok",
@@ -1264,7 +1264,7 @@
       "status": "ok",
       "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
       "role": "Painel do dono.",
-      "notes": "10/10/2026 Fase 8.3-B: verify_system 22 (18/18) + stock.mjs no browser (PC e iPhone 390 px)."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "backend/src/utils/shiftDay.js": {
       "status": "ok",
@@ -1288,7 +1288,7 @@
       "status": "ok",
       "summary": "Formulario do produto (novo/editar, icone, validades por lote, fornecedor, stock actual) partilhado pelo Catalogo e pela Entrada de stock; LotRows.",
       "role": "Painel do dono.",
-      "notes": "11/10/2026 Fase 8.8: Ler codigo com a camara. fase8_8.mjs, stock.mjs, fase8_2.mjs."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/tests/e2e/stock.mjs": {
       "status": "ok",
@@ -1324,13 +1324,13 @@
       "status": "ok",
       "summary": "Definicoes > Auditoria: retencao, Hoje/Semana/Mes/Tudo, tipo, lista, detalhe antes/depois.",
       "role": "Pagina do dono.",
-      "notes": "11/10/2026 Fase 8.5: fase8_5.mjs 16/16 (PC + iPhone)."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/utils/auditLabels.js": {
       "status": "ok",
-      "summary": "Nomes em portugues das accoes e campos da auditoria; diferencas antes/depois.",
+      "summary": "Nomes das accoes e campos da auditoria (PT/EN pelo t); diferencas antes/depois.",
       "role": "Auditoria do dono.",
-      "notes": "11/10/2026 Fase 8.5: fase8_5.mjs."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/tests/e2e/fase8_5.mjs": {
       "status": "ok",
@@ -1379,10 +1379,10 @@
       "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com impressoras simuladas; hardware real nao verificado."
     },
     "frontend/src/components/BarcodeScanner.jsx": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Leitura de codigo de barras pela camara (ZXing).",
       "role": "Camara.",
-      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com camara falsa (EAN-13); camara real nao verificada."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/pages/pos/DevicesDialog.jsx": {
       "status": "ok",
@@ -1412,7 +1412,7 @@
       "status": "ok",
       "summary": "Ingles da area common.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/i18n/en/auth.js": {
       "status": "ok",
@@ -1422,9 +1422,9 @@
     },
     "frontend/src/i18n/en/owner.js": {
       "status": "ok",
-      "summary": "Ingles da area owner (so menu na 9.3; paginas na 9.4).",
+      "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/i18n/en/pos.js": {
       "status": "ok",
@@ -1442,7 +1442,7 @@
       "status": "ok",
       "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 6/6."
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/tests/e2e/idioma.mjs": {
       "status": "ok",
@@ -1455,6 +1455,12 @@
       "summary": "User.language TEXT NOT NULL DEFAULT pt + CHECK pt/en (so adicao).",
       "role": "Migracao.",
       "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): aplicada com db execute; information_schema confirmado."
+    },
+    "frontend/tests/e2e/idioma_dono.mjs": {
+      "status": "ok",
+      "summary": "Browser: dono em ingles, 19 paginas + 5 gavetas sem portugues residual; mensal no iPhone.",
+      "role": "Teste E2E.",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     }
   }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FileDown } from 'lucide-react';
 import { deliverPdf } from '../utils/pdf/deliver';
+import { useI18n } from '../i18n/react';
 import PdfReadyDialog from './PdfReadyDialog';
 import { Button, useToast } from './ui';
 
@@ -8,7 +9,8 @@ import { Button, useToast } from './ui';
 // a folha de partilha (imprimir, guardar, WhatsApp); no computador descarrega.
 // preload() carrega o gerador antes do toque (o iPhone so partilha com um
 // toque "fresco").
-export default function PdfButton({ build, preload, disabled, label = 'PDF / imprimir' }) {
+export default function PdfButton({ build, preload, disabled, label }) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState(null);
   const toast = useToast();
@@ -21,12 +23,12 @@ export default function PdfButton({ build, preload, disabled, label = 'PDF / imp
       if (res.needsTap) setFile(res.file);
     } catch (err) {
       console.error('PDF falhou', err);
-      toast('Não foi possível gerar o PDF. Tente de novo.', 'danger');
+      toast(t('Não foi possível gerar o PDF. Tente de novo.'), 'danger');
     } finally { setBusy(false); }
   }
   return (
     <>
-      <Button className="no-print" size="sm" icon={FileDown} loading={busy} disabled={disabled} onClick={run}>{label}</Button>
+      <Button className="no-print" size="sm" icon={FileDown} loading={busy} disabled={disabled} onClick={run}>{label || t('PDF / imprimir')}</Button>
       <PdfReadyDialog file={file} onClose={() => setFile(null)} />
     </>
   );
