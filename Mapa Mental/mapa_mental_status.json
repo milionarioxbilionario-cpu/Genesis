@@ -63,7 +63,7 @@
       "status": "ok",
       "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
       "role": "Autenticacao.",
-      "notes": "17/10/2026 Fase 9.3: trial expirado deixa passar so PUT /api/auth/language (nao cria valor)."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): trial expirado deixa passar so PUT /api/auth/language (nao cria valor)."
     },
     "backend/src/middleware/authOrDevice.js": {
       "status": "ok",
@@ -91,7 +91,7 @@
       "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
       "role": "Autenticacao.",
       "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
-      "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production. | 17/10/2026 Fase 9.3: /me devolve language; PUT /language (pt|en) da propria conta, com tenant_id no filtro. verify_system 29 15/15.",
+      "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production. | 17/10/2026 Fase 9.3 (publicada 1f1f384): /me devolve language; PUT /language (pt|en) da propria conta, com tenant_id no filtro. verify_system 29 15/15.",
       "bugsFixed": "28/09: (a) CAUSA-RAIZ dos 500 — faltava a coluna Tenant.onboarding_completed no Postgres, e toda a query de login faz include:{tenant:true} que traz todas as colunas de Tenant; o Prisma lancava 'The column Tenant.onboarding_completed does not exist' e o catch devolvia 500 'Erro interno no servidor'. Corrigido com prisma/fix_2026-09-28_colunas.sql. (b) O pedido de conta tambem falhava pelo mesmo motivo (tenant.create escreve essa coluna) — devolvia 201 em vez de 500. (c) CLOCK_SKEW no login Google."
     },
     "backend/src/services/passwordResetStore.js": {
@@ -210,7 +210,7 @@
       "status": "partial",
       "summary": "Kit de UI: Card, Button, Modal, Tag, StatCard, ToastProvider, AmbientLayer, GlowCard, Receipt3D, SheenBar.",
       "role": "Design system.",
-      "notes": "O Receipt3D actual e apenas uma barra de 6px com gradiente: nao ha impressora desenhada. Precisa do Printer3D. | 17/10/2026 Fase 9.3: exporta LanguageSwitch; Table/Pagination/Dialog/Drawer/Confirm/PinPad traduzidos."
+      "notes": "O Receipt3D actual e apenas uma barra de 6px com gradiente: nao ha impressora desenhada. Precisa do Printer3D. | 17/10/2026 Fase 9.3 (publicada 1f1f384): exporta LanguageSwitch; Table/Pagination/Dialog/Drawer/Confirm/PinPad traduzidos."
     },
     "frontend/src/components/ProtectedRoute.jsx": {
       "status": "ok",
@@ -998,7 +998,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs. | 17/10/2026 Fase 9.3: botao PT/EN no cabecalho a partir de 640 px; logotipo sem encolher."
+      "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs. | 17/10/2026 Fase 9.3 (publicada 1f1f384): botao PT/EN no cabecalho a partir de 640 px; logotipo sem encolher."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1112,14 +1112,14 @@
       "summary": "Moldura do painel do dono; monta o fecho do mes.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3: menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra)."
+      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra)."
     },
     "backend/src/routes/pos.js": {
       "status": "ok",
       "summary": "Terminal: emparelhar, perfis (com estado do turno), PIN do caixista, fecho cego, abrir turno novo e ver vendas com o PIN do dono.",
       "role": "Balcao.",
       "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3: perfis e login do terminal devolvem a lingua do caixista."
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3 (publicada 1f1f384): perfis e login do terminal devolvem a lingua do caixista."
     },
     "backend/src/utils/shift.js": {
       "status": "ok",
@@ -1137,7 +1137,7 @@
       "status": "ok",
       "summary": "Listas fechadas de rotas por ambito (pos = terminal, support = so leitura).",
       "role": "Seguranca.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3: ambito pos aceita PUT /api/auth/language (lingua do proprio caixista); suporte nao."
+      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3 (publicada 1f1f384): ambito pos aceita PUT /api/auth/language (lingua do proprio caixista); suporte nao."
     },
     "frontend/src/pages/pos/PosDialogs.jsx": {
       "status": "ok",
@@ -1149,7 +1149,7 @@
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
-      "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN. | 17/10/2026 Fase 9.3: emparelhar/perfis na lingua do aparelho; depois do PIN a lingua do caixista; textos traduzidos."
+      "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN. | 17/10/2026 Fase 9.3 (publicada 1f1f384): emparelhar/perfis na lingua do aparelho; depois do PIN a lingua do caixista; textos traduzidos."
     },
     "backend/src/routes/verify.js": {
       "status": "ok",
@@ -1388,7 +1388,7 @@
       "status": "ok",
       "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
       "role": "Terminal.",
-      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19. | 17/10/2026 Fase 9.3: seccao «A sua lingua» (unico sitio no telemovel), grava logo na conta."
+      "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19. | 17/10/2026 Fase 9.3 (publicada 1f1f384): seccao «A sua lingua» (unico sitio no telemovel), grava logo na conta."
     },
     "frontend/tests/e2e/fase8_8.mjs": {
       "status": "ok",
@@ -1400,61 +1400,61 @@
       "status": "ok",
       "summary": "Lingua da interface: t(texto em portugues), dicionarios por area, setLang/locale, sem bibliotecas.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: tests/i18n.test.mjs 6/6 (cobertura: cada t() literal tem ingles; contraprova falha)."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): tests/i18n.test.mjs 6/6 (cobertura: cada t() literal tem ingles; contraprova falha)."
     },
     "frontend/src/i18n/react.jsx": {
       "status": "ok",
       "summary": "I18nProvider + useI18n: componentes voltam a desenhar quando a lingua muda, sem perder estado.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: idioma.mjs 33/33."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): idioma.mjs 33/33."
     },
     "frontend/src/i18n/en/common.js": {
       "status": "ok",
       "summary": "Ingles da area common.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: criado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
     },
     "frontend/src/i18n/en/auth.js": {
       "status": "ok",
       "summary": "Ingles da area auth.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: criado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
     },
     "frontend/src/i18n/en/owner.js": {
       "status": "ok",
       "summary": "Ingles da area owner (so menu na 9.3; paginas na 9.4).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: criado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
     },
     "frontend/src/i18n/en/pos.js": {
       "status": "ok",
       "summary": "Ingles da area pos (so emparelhar/perfis na 9.3; venda na 9.5).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.3: criado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
     },
     "frontend/src/components/ui/LanguageSwitch.jsx": {
       "status": "ok",
       "summary": "Seletor PT | EN (segmentado) ou botao compacto que alterna; onChange grava na conta.",
       "role": "Kit de UI.",
-      "notes": "17/10/2026 Fase 9.3: criado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado."
     },
     "frontend/tests/i18n.test.mjs": {
       "status": "ok",
       "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.3: 6/6."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 6/6."
     },
     "frontend/tests/e2e/idioma.mjs": {
       "status": "ok",
       "summary": "Browser: entrada, dono (2 aparelhos), terminal telemovel e computador.",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.3: 33/33, 0 erros JS."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 33/33, 0 erros JS."
     },
     "backend/prisma/migrations/20261017_idioma/migration.sql": {
       "status": "ok",
       "summary": "User.language TEXT NOT NULL DEFAULT pt + CHECK pt/en (so adicao).",
       "role": "Migracao.",
-      "notes": "17/10/2026 Fase 9.3: aplicada com db execute; information_schema confirmado."
+      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): aplicada com db execute; information_schema confirmado."
     }
   }
 }
