@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { Navigate, useLocation } from 'react-router-dom';
 import api from './api';
 import { Spinner } from '../components/ui';
+import { setLang } from '../i18n/core';
 
 // Sessao do painel (dono / suporte). O terminal POS tem o seu proprio estado
 // (pages/pos/Terminal.jsx) — nunca partilha a sessao do dono.
@@ -12,7 +13,11 @@ export function SessionProvider({ children }) {
   const load = useCallback(async () => {
     try {
       const res = await api.get('/api/auth/me', { silent: true });
-      setState({ loading: false, user: res.data.user });
+      const u = res.data.user;
+      // A lingua da conta manda (9.3). O modo suporte fica com a do aparelho;
+      // o caixista no terminal muda o ecra sem mudar a lingua do aparelho.
+      if (u?.language && u.scope !== 'support') setLang(u.language, { remember: u.scope !== 'pos' });
+      setState({ loading: false, user: u });
       return res.data.user;
     } catch {
       setState({ loading: false, user: null });

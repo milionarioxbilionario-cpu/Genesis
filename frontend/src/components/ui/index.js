@@ -6,3 +6,4 @@ export { Card, CardHeader, Stat, Badge, Table, Pagination, EmptyState, Skeleton,
 export { Dialog, Drawer, ConfirmProvider, useConfirm, ToastProvider, useToast } from './Overlay';
 export { ProductImage, categoryIcon } from './ProductImage';
 export { PRODUCT_ICONS, iconByKey } from './productIcons';
+export { LanguageSwitch } from './LanguageSwitch';

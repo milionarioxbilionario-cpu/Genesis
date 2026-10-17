@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Bluetooth, Cable, Camera, Printer, ScanBarcode } from 'lucide-react';
 import { capabilities, connectBluetoothPrinter, connectUsbPrinter, getDevicePrefs, markAsked, setDevicePrefs } from '../../utils/devices';
-import { Alert, Button, Dialog, Input, Segmented } from '../../components/ui';
+import { Alert, Button, Dialog, Input, LanguageSwitch, Segmented } from '../../components/ui';
+import { saveLanguage } from '../../utils/api';
+import { useI18n } from '../../i18n/react';
 
 // Leitor de codigo de barras e impressora de recibos (Fase 8.8, pedido do
 // fundador 10/10/2026): perguntado logo depois do PIN, uma vez por caixista
@@ -9,6 +11,7 @@ import { Alert, Button, Dialog, Input, Segmented } from '../../components/ui';
 // «Dispositivos» do terminal. O recibo fica SEMPRE em PDF no aparelho, haja ou
 // nao impressora (decisao 11/10).
 export default function DevicesDialog({ cashier, onClose }) {
+  const { t } = useI18n();
   const caps = capabilities();
   const start = getDevicePrefs();
   const [scanner, setScanner] = useState(start.scanner === 'camera' && !caps.camera ? 'usb' : start.scanner);
@@ -49,6 +52,11 @@ export default function DevicesDialog({ cashier, onClose }) {
       onClose={() => finish(false)}
       footer={<><Button onClick={() => finish(false)}>Não tenho — saltar</Button><Button variant="primary" onClick={() => finish(true)}>Continuar</Button></>}>
       <div className="flex flex-col gap-5">
+        {/* Lingua do caixista (9.3): grava logo na conta dele, sem esperar por «Continuar». */}
+        <section className="flex flex-col gap-2">
+          <h3 className="font-medium text-ink">{t('A sua língua')}</h3>
+          <LanguageSwitch remember={false} onChange={saveLanguage} />
+        </section>
         <section className="flex flex-col gap-2">
           <h3 className="flex items-center gap-2 font-medium text-ink"><ScanBarcode size={17} /> Leitor de código de barras</h3>
           <Segmented className="w-full" value={scanner} onChange={setScanner} options={scannerOptions} />

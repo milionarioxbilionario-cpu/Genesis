@@ -1,45 +1,49 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-11T14:59:59.983Z */
+   Gerado em: 2026-10-17T14:41:47.711Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-11T14:59:59.983Z",
+ "generatedAt": "2026-10-17T14:41:47.711Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 237,
+  "files": 248,
   "planned": 5,
-  "links": 392,
-  "lines": 32934,
+  "links": 423,
+  "lines": 33973,
   "byStatus": {
-   "ok": 155,
+   "ok": 165,
    "partial": 13,
    "broken": 0,
    "planned": 5,
-   "untracked": 69
+   "untracked": 70
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 10,
-   "backend-data": 61,
+   "backend-data": 62,
    "backend": 60,
    "frontend-pub": 4,
-   "frontend": 81,
+   "frontend": 91,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 41
+   "count": 43
   },
   {
    "pkg": "lucide-react",
-   "count": 24
+   "count": 25
   },
   {
    "pkg": "react-router-dom",
+   "count": 20
+  },
+  {
+   "pkg": "node:path",
    "count": 20
   },
   {
@@ -51,15 +55,19 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
-   "pkg": "node:path",
-   "count": 17
-  },
-  {
    "pkg": "node:fs",
-   "count": 16
+   "count": 19
   },
   {
    "pkg": "express",
+   "count": 16
+  },
+  {
+   "pkg": "node:test",
+   "count": 16
+  },
+  {
+   "pkg": "node:assert",
    "count": 16
   },
   {
@@ -71,20 +79,12 @@ window.GENESIS_MINDMAP = {
    "count": 15
   },
   {
-   "pkg": "node:test",
-   "count": 15
-  },
-  {
-   "pkg": "node:assert",
+   "pkg": "@playwright/test",
    "count": 15
   },
   {
    "pkg": "@prisma/client",
    "count": 14
-  },
-  {
-   "pkg": "@playwright/test",
-   "count": 13
   },
   {
    "pkg": "path",
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 61,
+   "nodes": 62,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -184,6 +184,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261011_horarios_relatorios": 1,
     "backend/prisma/migrations/20261011_turno_dia": 1,
     "backend/prisma/migrations/20261011_vendas_perdidas": 1,
+    "backend/prisma/migrations/20261017_idioma": 1,
     "backend/scripts": 27,
     "backend/tests": 13,
     "backend/prisma/migrations/postgres/0001_init": 1
@@ -216,14 +217,16 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 81,
+   "nodes": 91,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
     "frontend/src/components": 5,
-    "frontend/src/components/ui": 8,
+    "frontend/src/components/ui": 9,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
+    "frontend/src/i18n": 2,
+    "frontend/src/i18n/en": 4,
     "frontend/src/layouts": 1,
     "frontend/src/pages": 2,
     "frontend/src/pages/auth": 5,
@@ -232,8 +235,8 @@ window.GENESIS_MINDMAP = {
     "frontend/src/ui": 1,
     "frontend/src/utils": 15,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 13,
-    "frontend/tests": 4
+    "frontend/tests/e2e": 15,
+    "frontend/tests": 5
    }
   },
   {
@@ -284,8 +287,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 958,
-   "size": 187450,
+   "lines": 996,
+   "size": 196137,
    "externals": [
     "@prisma/client"
    ],
@@ -328,8 +331,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1400,
-   "size": 74131,
+   "lines": 1461,
+   "size": 77561,
    "externals": [
     "nodemailer"
    ],
@@ -1007,6 +1010,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261017_idioma/migration.sql",
+   "path": "backend/prisma/migrations/20261017_idioma/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261017_idioma",
+   "ext": ".sql",
+   "status": "ok",
+   "summary": "User.language TEXT NOT NULL DEFAULT pt + CHECK pt/en (so adicao).",
+   "notes": "17/10/2026 Fase 9.3: aplicada com db execute; information_schema confirmado.",
+   "role": "Migracao.",
+   "security": "",
+   "planned": false,
+   "lines": 7,
+   "size": 374,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -1040,8 +1064,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 442,
-   "size": 15655,
+   "lines": 444,
+   "size": 15795,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1063,8 +1087,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 459,
-   "size": 16537,
+   "lines": 461,
+   "size": 16677,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1739,8 +1763,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1425,
-   "size": 120880,
+   "lines": 1523,
+   "size": 128476,
    "externals": [
     "dotenv",
     "crypto",
@@ -1850,12 +1874,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
-   "notes": "",
+   "notes": "17/10/2026 Fase 9.3: trial expirado deixa passar so PUT /api/auth/language (nao cria valor).",
    "role": "Autenticacao.",
    "security": "",
    "planned": false,
-   "lines": 72,
-   "size": 3295,
+   "lines": 77,
+   "size": 3508,
    "externals": [
     "jsonwebtoken"
    ],
@@ -1868,6 +1892,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/src/index.js",
     "backend/src/middleware/posWriteAuth.js",
+    "backend/src/routes/auth.js",
     "backend/src/routes/catalogs.js",
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
@@ -1877,7 +1902,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 10,
+   "inbound": 11,
    "outbound": 4
   },
   {
@@ -1981,8 +2006,8 @@ window.GENESIS_MINDMAP = {
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 312,
-   "size": 20567,
+   "lines": 317,
+   "size": 20820,
    "externals": [
     "express",
     "bcrypt",
@@ -2015,12 +2040,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
-   "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production.",
+   "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production. | 17/10/2026 Fase 9.3: /me devolve language; PUT /language (pt|en) da propria conta, com tenant_id no filtro. verify_system 29 15/15.",
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 601,
-   "size": 23355,
+   "lines": 644,
+   "size": 25751,
    "externals": [
     "express",
     "bcrypt",
@@ -2036,14 +2061,15 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/tokens.js",
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/supportCodes.js",
-    "backend/src/utils/audit.js"
+    "backend/src/utils/audit.js",
+    "backend/src/middleware/auth.js"
    ],
    "usedBy": [
     "backend/scripts/test_google.js",
     "backend/src/index.js"
    ],
    "inbound": 2,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "backend/src/routes/catalogs.js",
@@ -2223,12 +2249,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Terminal: emparelhar, perfis (com estado do turno), PIN do caixista, fecho cego, abrir turno novo e ver vendas com o PIN do dono.",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3: perfis e login do terminal devolvem a lingua do caixista.",
    "role": "Balcao.",
    "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
    "planned": false,
    "lines": 152,
-   "size": 9201,
+   "size": 9267,
    "externals": [
     "express",
     "bcrypt",
@@ -3219,12 +3245,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Listas fechadas de rotas por ambito (pos = terminal, support = so leitura).",
-   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3: ambito pos aceita PUT /api/auth/language (lingua do proprio caixista); suporte nao.",
    "role": "Seguranca.",
    "security": "",
    "planned": false,
-   "lines": 42,
-   "size": 1831,
+   "lines": 43,
+   "size": 1910,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -4149,8 +4175,8 @@ window.GENESIS_MINDMAP = {
    "role": "Mapa de rotas.",
    "security": "Nenhuma rota de gestao esta exposta sem sessao.",
    "planned": false,
-   "lines": 96,
-   "size": 4932,
+   "lines": 99,
+   "size": 5016,
    "externals": [
     "react",
     "react-router-dom"
@@ -4158,6 +4184,7 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/components/ui/index.js",
     "frontend/src/utils/session.jsx",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
@@ -4179,7 +4206,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 18
+   "outbound": 19
   },
   {
    "id": "frontend/src/components/BarcodeScanner.jsx",
@@ -4358,9 +4385,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/ui/cx.js"
    ],
    "usedBy": [
+    "frontend/src/components/ui/LanguageSwitch.jsx",
     "frontend/src/components/ui/Overlay.jsx"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 1
   },
   {
@@ -4376,18 +4404,19 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 203,
-   "size": 9289,
+   "lines": 206,
+   "size": 9430,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
-    "frontend/src/components/ui/cx.js"
+    "frontend/src/components/ui/cx.js",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 1
+   "outbound": 2
   },
   {
    "id": "frontend/src/components/ui/Form.jsx",
@@ -4402,19 +4431,51 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 157,
-   "size": 7290,
+   "lines": 159,
+   "size": 7385,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/components/ui/cx.js",
-    "frontend/src/utils/money.js"
+    "frontend/src/utils/money.js",
+    "frontend/src/i18n/react.jsx"
+   ],
+   "usedBy": [
+    "frontend/src/components/ui/LanguageSwitch.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 3
+  },
+  {
+   "id": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "path": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "label": "LanguageSwitch.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Seletor PT | EN (segmentado) ou botao compacto que alterna; onChange grava na conta.",
+   "notes": "17/10/2026 Fase 9.3: criado.",
+   "role": "Kit de UI.",
+   "security": "",
+   "planned": false,
+   "lines": 37,
+   "size": 1603,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/components/ui/cx.js",
+    "frontend/src/components/ui/Button.jsx",
+    "frontend/src/components/ui/Form.jsx",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 4
   },
   {
    "id": "frontend/src/components/ui/Overlay.jsx",
@@ -4429,8 +4490,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 128,
-   "size": 5623,
+   "lines": 132,
+   "size": 5772,
    "externals": [
     "react",
     "react-dom",
@@ -4438,11 +4499,12 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/components/ui/cx.js",
-    "frontend/src/components/ui/Button.jsx"
+    "frontend/src/components/ui/Button.jsx",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 2
+   "outbound": 3
   },
   {
    "id": "frontend/src/components/ui/ProductImage.jsx",
@@ -4492,10 +4554,11 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/ui/Button.jsx",
     "frontend/src/components/ui/Data.jsx",
     "frontend/src/components/ui/Form.jsx",
+    "frontend/src/components/ui/LanguageSwitch.jsx",
     "frontend/src/components/ui/Overlay.jsx",
     "frontend/src/components/ui/ProductImage.jsx"
    ],
-   "inbound": 5,
+   "inbound": 6,
    "outbound": 0
   },
   {
@@ -4511,8 +4574,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 9,
-   "size": 613,
+   "lines": 10,
+   "size": 664,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -4524,6 +4587,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/VerifyReceipt.jsx",
+    "frontend/src/pages/auth/AuthLayout.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/RequestAccount.jsx",
     "frontend/src/pages/auth/ResetPassword.jsx",
@@ -4546,7 +4610,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 29,
+   "inbound": 30,
    "outbound": 0
   },
   {
@@ -4632,6 +4696,173 @@ window.GENESIS_MINDMAP = {
    "outbound": 2
   },
   {
+   "id": "frontend/src/i18n/core.js",
+   "path": "frontend/src/i18n/core.js",
+   "label": "core.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Lingua da interface: t(texto em portugues), dicionarios por area, setLang/locale, sem bibliotecas.",
+   "notes": "17/10/2026 Fase 9.3: tests/i18n.test.mjs 6/6 (cobertura: cada t() literal tem ingles; contraprova falha).",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 62,
+   "size": 2378,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/src/i18n/en/auth.js",
+    "frontend/src/i18n/en/common.js",
+    "frontend/src/i18n/en/owner.js",
+    "frontend/src/i18n/en/pos.js",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/tests/i18n.test.mjs"
+   ],
+   "inbound": 9,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/src/i18n/en/auth.js",
+   "path": "frontend/src/i18n/en/auth.js",
+   "label": "auth.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n/en",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Ingles da area auth.",
+   "notes": "17/10/2026 Fase 9.3: criado.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 67,
+   "size": 3589,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/auth/AuthLayout.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/i18n/en/common.js",
+   "path": "frontend/src/i18n/en/common.js",
+   "label": "common.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n/en",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Ingles da area common.",
+   "notes": "17/10/2026 Fase 9.3: criado.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 85,
+   "size": 6112,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [
+    "frontend/src/i18n/react.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/i18n/en/owner.js",
+   "path": "frontend/src/i18n/en/owner.js",
+   "label": "owner.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n/en",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Ingles da area owner (so menu na 9.3; paginas na 9.4).",
+   "notes": "17/10/2026 Fase 9.3: criado.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 26,
+   "size": 948,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/i18n/en/pos.js",
+   "path": "frontend/src/i18n/en/pos.js",
+   "label": "pos.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n/en",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Ingles da area pos (so emparelhar/perfis na 9.3; venda na 9.5).",
+   "notes": "17/10/2026 Fase 9.3: criado.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 30,
+   "size": 1514,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/src/i18n/react.jsx",
+   "path": "frontend/src/i18n/react.jsx",
+   "label": "react.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/i18n",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "I18nProvider + useI18n: componentes voltam a desenhar quando a lingua muda, sem perder estado.",
+   "notes": "17/10/2026 Fase 9.3: idioma.mjs 33/33.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 18,
+   "size": 821,
+   "externals": [
+    "react"
+   ],
+   "dependsOn": [
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/en/common.js"
+   ],
+   "usedBy": [
+    "frontend/src/App.jsx",
+    "frontend/src/components/ui/Data.jsx",
+    "frontend/src/components/ui/Form.jsx",
+    "frontend/src/components/ui/LanguageSwitch.jsx",
+    "frontend/src/components/ui/Overlay.jsx",
+    "frontend/src/layouts/AppShell.jsx",
+    "frontend/src/pages/auth/AuthLayout.jsx",
+    "frontend/src/pages/auth/Login.jsx",
+    "frontend/src/pages/auth/RequestAccount.jsx",
+    "frontend/src/pages/auth/ResetPassword.jsx",
+    "frontend/src/pages/auth/Support.jsx",
+    "frontend/src/pages/pos/DevicesDialog.jsx",
+    "frontend/src/pages/pos/Terminal.jsx"
+   ],
+   "inbound": 13,
+   "outbound": 2
+  },
+  {
    "id": "frontend/src/index.css",
    "path": "frontend/src/index.css",
    "label": "index.css",
@@ -4667,12 +4898,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Moldura do painel do dono; monta o fecho do mes.",
-   "notes": "04/10/2026: regressao completa OK.",
+   "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3: menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra).",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 134,
-   "size": 6657,
+   "lines": 142,
+   "size": 7132,
    "externals": [
     "react",
     "react-router-dom",
@@ -4682,13 +4913,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/session.jsx",
     "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/MonthCloseDialog.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/main.jsx",
@@ -4763,13 +4995,17 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 26,
-   "size": 1339,
+   "lines": 32,
+   "size": 1629,
    "externals": [
     "react",
     "react-router-dom"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/i18n/en/auth.js"
+   ],
    "usedBy": [
     "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
@@ -4778,7 +5014,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/auth/Support.jsx"
    ],
    "inbound": 5,
-   "outbound": 0
+   "outbound": 3
   },
   {
    "id": "frontend/src/pages/auth/Login.jsx",
@@ -4793,8 +5029,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 122,
-   "size": 5377,
+   "lines": 125,
+   "size": 5593,
    "externals": [
     "react",
     "react-router-dom"
@@ -4804,13 +5040,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js",
-    "frontend/src/pages/auth/AuthLayout.jsx"
+    "frontend/src/pages/auth/AuthLayout.jsx",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/auth/RequestAccount.jsx",
@@ -4825,8 +5062,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 74,
-   "size": 4077,
+   "lines": 78,
+   "size": 4428,
    "externals": [
     "react",
     "react-router-dom",
@@ -4836,6 +5073,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
@@ -4843,7 +5081,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Onboarding.jsx"
    ],
    "inbound": 2,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/auth/ResetPassword.jsx",
@@ -4858,8 +5096,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 65,
-   "size": 3660,
+   "lines": 67,
+   "size": 3821,
    "externals": [
     "react",
     "react-router-dom"
@@ -4868,13 +5106,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/pages/auth/Support.jsx",
@@ -4889,8 +5128,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 31,
-   "size": 1445,
+   "lines": 33,
+   "size": 1534,
    "externals": [
     "react",
     "react-router-dom"
@@ -4900,13 +5139,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/auth/AuthLayout.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/pages/owner/AuditLogPage.jsx",
@@ -5304,25 +5544,27 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
-   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19.",
+   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19. | 17/10/2026 Fase 9.3: seccao «A sua lingua» (unico sitio no telemovel), grava logo na conta.",
    "role": "Terminal.",
    "security": "",
    "planned": false,
-   "lines": 83,
-   "size": 5646,
+   "lines": 91,
+   "size": 6092,
    "externals": [
     "react",
     "lucide-react"
    ],
    "dependsOn": [
     "frontend/src/utils/devices.js",
-    "frontend/src/components/ui/index.js"
+    "frontend/src/components/ui/index.js",
+    "frontend/src/utils/api.js",
+    "frontend/src/i18n/react.jsx"
    ],
    "usedBy": [
     "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 4
   },
   {
    "id": "frontend/src/pages/pos/PosDialogs.jsx",
@@ -5369,12 +5611,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs.",
+   "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs. | 17/10/2026 Fase 9.3: botao PT/EN no cabecalho a partir de 640 px; logotipo sem encolher.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 446,
-   "size": 26779,
+   "lines": 449,
+   "size": 27096,
    "externals": [
     "react",
     "lucide-react"
@@ -5408,12 +5650,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
-   "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN.",
+   "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN. | 17/10/2026 Fase 9.3: emparelhar/perfis na lingua do aparelho; depois do PIN a lingua do caixista; textos traduzidos.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 178,
-   "size": 8541,
+   "lines": 204,
+   "size": 9831,
    "externals": [
     "react",
     "react-router-dom",
@@ -5424,13 +5666,15 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/format.js",
     "frontend/src/utils/productCache.js",
     "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/core.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 7
   },
   {
    "id": "frontend/src/registerSW.js",
@@ -5493,8 +5737,8 @@ window.GENESIS_MINDMAP = {
    "role": "Rede.",
    "security": "",
    "planned": false,
-   "lines": 60,
-   "size": 2494,
+   "lines": 66,
+   "size": 2775,
    "externals": [
     "axios"
    ],
@@ -5518,6 +5762,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
+    "frontend/src/pages/pos/DevicesDialog.jsx",
     "frontend/src/pages/pos/PosDialogs.jsx",
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
@@ -5525,7 +5770,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 24,
+   "inbound": 25,
    "outbound": 0
   },
   {
@@ -5617,10 +5862,12 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 57,
-   "size": 2309,
+   "lines": 81,
+   "size": 3295,
    "externals": [],
-   "dependsOn": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
    "usedBy": [
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -5648,10 +5895,11 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/pdf/receiptPdf.js",
     "frontend/src/utils/pdf/reportPdf.js",
     "frontend/src/utils/timelineText.js",
-    "frontend/src/utils/useApi.js"
+    "frontend/src/utils/useApi.js",
+    "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 27,
-   "outbound": 0
+   "inbound": 28,
+   "outbound": 1
   },
   {
    "id": "frontend/src/utils/imageResize.js",
@@ -5765,7 +6013,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 87,
-   "size": 4075,
+   "size": 4136,
    "externals": [
     "jspdf",
     "jspdf-autotable"
@@ -5794,7 +6042,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 213,
-   "size": 12286,
+   "size": 12341,
    "externals": [
     "jspdf",
     "jspdf-autotable"
@@ -5931,15 +6179,16 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 46,
-   "size": 1911,
+   "lines": 51,
+   "size": 2227,
    "externals": [
     "react",
     "react-router-dom"
    ],
    "dependsOn": [
     "frontend/src/utils/api.js",
-    "frontend/src/components/ui/index.js"
+    "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx",
@@ -5950,7 +6199,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Onboarding.jsx"
    ],
    "inbound": 6,
-   "outbound": 2
+   "outbound": 3
   },
   {
    "id": "frontend/src/utils/syncPolicy.js",
@@ -6293,6 +6542,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/idioma.mjs",
+   "path": "frontend/tests/e2e/idioma.mjs",
+   "label": "idioma.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: entrada, dono (2 aparelhos), terminal telemovel e computador.",
+   "notes": "17/10/2026 Fase 9.3: 33/33, 0 erros JS.",
+   "role": "Teste.",
+   "security": "",
+   "planned": false,
+   "lines": 187,
+   "size": 12552,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/onboarding.mjs",
    "path": "frontend/tests/e2e/onboarding.mjs",
    "label": "onboarding.mjs",
@@ -6307,6 +6581,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 128,
    "size": 7685,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/pedir_conta.mjs",
+   "path": "frontend/tests/e2e/pedir_conta.mjs",
+   "label": "pedir_conta.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 59,
+   "size": 3410,
    "externals": [
     "node:fs",
     "node:path",
@@ -6417,6 +6716,36 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 1
+  },
+  {
+   "id": "frontend/tests/i18n.test.mjs",
+   "path": "frontend/tests/i18n.test.mjs",
+   "label": "i18n.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
+   "notes": "17/10/2026 Fase 9.3: 6/6.",
+   "role": "Teste.",
+   "security": "",
+   "planned": false,
+   "lines": 96,
+   "size": 4441,
+   "externals": [
+    "node:test",
+    "node:assert",
+    "node:fs",
+    "node:path",
+    "node:url"
+   ],
+   "dependsOn": [
+    "frontend/src/i18n/core.js",
+    "frontend/src/utils/format.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -7145,6 +7474,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/audit.js"
   },
   {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/middleware/auth.js"
+  },
+  {
    "source": "backend/src/routes/catalogs.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7658,6 +7991,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/App.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/App.jsx",
    "target": "frontend/src/pages/auth/Login.jsx"
   },
   {
@@ -7781,6 +8118,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/cx.js"
   },
   {
+   "source": "frontend/src/components/ui/Data.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
    "source": "frontend/src/components/ui/Form.jsx",
    "target": "frontend/src/components/ui/cx.js"
   },
@@ -7789,12 +8130,36 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/money.js"
   },
   {
+   "source": "frontend/src/components/ui/Form.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "target": "frontend/src/components/ui/cx.js"
+  },
+  {
+   "source": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "target": "frontend/src/components/ui/Button.jsx"
+  },
+  {
+   "source": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "target": "frontend/src/components/ui/Form.jsx"
+  },
+  {
+   "source": "frontend/src/components/ui/LanguageSwitch.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
    "source": "frontend/src/components/ui/Overlay.jsx",
    "target": "frontend/src/components/ui/cx.js"
   },
   {
    "source": "frontend/src/components/ui/Overlay.jsx",
    "target": "frontend/src/components/ui/Button.jsx"
+  },
+  {
+   "source": "frontend/src/components/ui/Overlay.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/components/ui/ProductImage.jsx",
@@ -7813,6 +8178,30 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/offlineQueue.js"
   },
   {
+   "source": "frontend/src/i18n/en/auth.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/en/common.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/en/owner.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/en/pos.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/react.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/react.jsx",
+   "target": "frontend/src/i18n/en/common.js"
+  },
+  {
    "source": "frontend/src/index.css",
    "target": "frontend/src/ui/tokens.css"
   },
@@ -7827,6 +8216,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/layouts/AppShell.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/layouts/AppShell.jsx",
@@ -7865,6 +8258,18 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/pages/auth/AuthLayout.jsx"
   },
   {
+   "source": "frontend/src/pages/auth/AuthLayout.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/AuthLayout.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/auth/AuthLayout.jsx",
+   "target": "frontend/src/i18n/en/auth.js"
+  },
+  {
    "source": "frontend/src/pages/auth/Login.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -7885,6 +8290,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/pages/auth/AuthLayout.jsx"
   },
   {
+   "source": "frontend/src/pages/auth/Login.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
    "source": "frontend/src/pages/auth/RequestAccount.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -7895,6 +8304,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/auth/RequestAccount.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/RequestAccount.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/auth/RequestAccount.jsx",
@@ -7911,6 +8324,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/auth/ResetPassword.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/ResetPassword.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/auth/ResetPassword.jsx",
@@ -7931,6 +8348,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/auth/Support.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/pages/auth/Support.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/auth/Support.jsx",
@@ -8181,6 +8602,14 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/DevicesDialog.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
    "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -8278,6 +8707,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
    "target": "frontend/src/pages/pos/PosScreen.jsx"
   },
   {
@@ -8287,6 +8724,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/devices.js",
    "target": "frontend/src/utils/pdf/deliver.js"
+  },
+  {
+   "source": "frontend/src/utils/format.js",
+   "target": "frontend/src/i18n/core.js"
   },
   {
    "source": "frontend/src/utils/offlineQueue.js",
@@ -8345,6 +8786,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/utils/session.jsx",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/timelineText.js",
    "target": "frontend/src/utils/format.js"
   },
@@ -8359,6 +8804,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/escpos.test.mjs",
    "target": "frontend/src/utils/escpos.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/utils/format.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",

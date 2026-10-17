@@ -4,8 +4,10 @@ import { CheckCircle2 } from 'lucide-react';
 import api from '../../utils/api';
 import { errorMessage } from '../../utils/format';
 import { Alert, Button, Input, Select } from '../../components/ui';
+import { useI18n } from '../../i18n/react';
 import AuthLayout from './AuthLayout';
 
+// label em portugues = chave da traducao (quem mostra faz t(label)).
 export const BUSINESS_TYPES = [
   { value: 'bottle_store', label: 'Bottle store / Loja de bebidas' },
   { value: 'mercearia', label: 'Mercearia / Contentor' },
@@ -19,6 +21,7 @@ export const BUSINESS_TYPES = [
 
 // Especificacao 6.1, passo 1. NUIT e documento sao opcionais.
 export default function RequestAccount() {
+  const { t } = useI18n();
   const [form, setForm] = useState({ businessName: '', ownerName: '', businessType: 'bottle_store', location: '', phone: '', email: '', nuit: '', idDocument: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,37 +39,37 @@ export default function RequestAccount() {
       setDone(true);
     } catch (err) {
       const raw = err?.response?.data?.error;
-      setError(Array.isArray(raw) ? 'Verifique os campos: nomes com pelo menos 3 letras, telefone com 8 ou mais dígitos e um email válido.' : errorMessage(err));
+      setError(Array.isArray(raw) ? t('Verifique os campos: nomes com pelo menos 3 letras, telefone com 8 ou mais dígitos e um email válido.') : errorMessage(err));
     } finally { setLoading(false); }
   }
 
   if (done) {
     return (
-      <AuthLayout title="Pedido recebido" footer={<Link to="/entrar" className="font-medium text-accent">Voltar a entrar</Link>}>
+      <AuthLayout title={t('Pedido recebido')} footer={<Link to="/entrar" className="font-medium text-accent">{t('Voltar a entrar')}</Link>}>
         <div className="flex items-start gap-3 rounded-lg border border-border bg-surface p-5">
           <CheckCircle2 className="mt-0.5 shrink-0 text-positive" size={20} />
-          <p className="text-base text-ink-2">Entraremos em contacto em até 48 horas pelo telefone indicado. Depois da aprovação recebe os dados de acesso e tem 30 dias de teste gratuito.</p>
+          <p className="text-base text-ink-2">{t('Entraremos em contacto em até 48 horas pelo telefone indicado. Depois da aprovação recebe os dados de acesso e tem 30 dias de teste gratuito.')}</p>
         </div>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout wide title="Pedir uma conta" description="30 dias de teste gratuito. Sem compromisso." footer={<>Já tem conta? <Link to="/entrar" className="font-medium text-accent">Entrar</Link></>}>
+    <AuthLayout wide title={t('Pedir uma conta')} description={t('30 dias de teste gratuito. Sem compromisso.')} footer={<>{t('Já tem conta?')} <Link to="/entrar" className="font-medium text-accent">{t('Entrar')}</Link></>}>
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Input label="Nome do negócio" value={form.businessName} onChange={set('businessName')} required minLength={3} className="sm:col-span-2" />
-        <Input label="O seu nome" value={form.ownerName} onChange={set('ownerName')} required minLength={3} />
-        <Select label="Tipo de negócio" value={form.businessType} onChange={set('businessType')}>
-          {BUSINESS_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        <Input label={t('Nome do negócio')} value={form.businessName} onChange={set('businessName')} required minLength={3} className="sm:col-span-2" />
+        <Input label={t('O seu nome')} value={form.ownerName} onChange={set('ownerName')} required minLength={3} />
+        <Select label={t('Tipo de negócio')} value={form.businessType} onChange={set('businessType')}>
+          {BUSINESS_TYPES.map((b) => <option key={b.value} value={b.value}>{t(b.label)}</option>)}
         </Select>
-        <Input label="Localização" placeholder="Bairro, cidade" value={form.location} onChange={set('location')} required minLength={3} />
-        <Input label="Telefone (WhatsApp)" inputMode="tel" placeholder="84 000 0000" value={form.phone} onChange={set('phone')} required minLength={8} />
-        <Input label="Email" hint="Para entrar e recuperar a senha" type="email" autoComplete="email" value={form.email} onChange={set('email')} required />
-        <Input label="NUIT" hint="Opcional" value={form.nuit} onChange={set('nuit')} />
-        <Input label="BI ou passaporte" hint="Opcional" value={form.idDocument} onChange={set('idDocument')} className="sm:col-span-2" />
+        <Input label={t('Localização')} placeholder={t('Bairro, cidade')} value={form.location} onChange={set('location')} required minLength={3} />
+        <Input label={t('Telefone (WhatsApp)')} inputMode="tel" placeholder="84 000 0000" value={form.phone} onChange={set('phone')} required minLength={8} />
+        <Input label={t('Email')} hint={t('Para entrar e recuperar a senha')} type="email" autoComplete="email" value={form.email} onChange={set('email')} required />
+        <Input label="NUIT" hint={t('Opcional')} value={form.nuit} onChange={set('nuit')} />
+        <Input label={t('BI ou passaporte')} hint={t('Opcional')} value={form.idDocument} onChange={set('idDocument')} className="sm:col-span-2" />
         <div className="sm:col-span-2">
-          <Button type="submit" variant="primary" size="lg" block loading={loading}>Enviar pedido</Button>
+          <Button type="submit" variant="primary" size="lg" block loading={loading}>{t('Enviar pedido')}</Button>
         </div>
       </form>
     </AuthLayout>

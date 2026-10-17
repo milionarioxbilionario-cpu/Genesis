@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { money, int, date, dateTime, PAYMENT_LABEL } from '../format';
 import { timelineExtra, timelineValueText, timelineWhen } from '../timelineText';
-import { pdfText as t, safeFileName } from './text';
+import { pdfText, safeFileName } from './text';
 
 const M = 14;
 const ACCENT = [4, 120, 87];
@@ -25,13 +25,13 @@ function createDoc() {
     ensure(18);
     y += 6;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(...INK);
-    doc.text(t(text), M, y);
+    doc.text(pdfText(text), M, y);
     y += 2;
   };
 
   const note = (text) => {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MUTED);
-    const lines = doc.splitTextToSize(t(text), pageW - 2 * M);
+    const lines = doc.splitTextToSize(pdfText(text), pageW - 2 * M);
     ensure(lines.length * 4.2 + 2);
     y += 4;
     doc.text(lines, M, y);
@@ -46,8 +46,8 @@ function createDoc() {
     autoTable(doc, {
       startY: y + 2,
       margin: { left: M, right: M, bottom: 16 },
-      head: head ? [head.map(t)] : undefined,
-      body: body.length ? body.map((r) => r.map((c) => t(c))) : [[{ content: t(empty), colSpan: head ? head.length : 2, styles: { textColor: MUTED } }]],
+      head: head ? [head.map(pdfText)] : undefined,
+      body: body.length ? body.map((r) => r.map((c) => pdfText(c))) : [[{ content: pdfText(empty), colSpan: head ? head.length : 2, styles: { textColor: MUTED } }]],
       theme: 'grid',
       styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.6, textColor: INK, lineColor: [231, 229, 228], lineWidth: 0.2, overflow: 'linebreak' },
       headStyles: { fillColor: ACCENT, textColor: 255, fontStyle: 'bold' },
@@ -60,11 +60,11 @@ function createDoc() {
 
   const header = ({ shopName, title, subtitle }) => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(...INK);
-    doc.text(t(shopName || 'Genesis'), M, y + 4);
-    doc.setFontSize(12.5); doc.text(t(title), M, y + 11);
+    doc.text(pdfText(shopName || 'Genesis'), M, y + 4);
+    doc.setFontSize(12.5); doc.text(pdfText(title), M, y + 11);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...MUTED);
-    doc.text(t(subtitle), M, y + 16.5);
-    doc.text(t(`Gerado em ${new Date().toLocaleString('pt-PT')}`), pageW - M, y + 4, { align: 'right' });
+    doc.text(pdfText(subtitle), M, y + 16.5);
+    doc.text(pdfText(`Gerado em ${new Date().toLocaleString('pt-PT')}`), pageW - M, y + 4, { align: 'right' });
     doc.setDrawColor(...ACCENT); doc.setLineWidth(0.6); doc.line(M, y + 19.5, pageW - M, y + 19.5); doc.setLineWidth(0.2);
     y += 21;
   };
@@ -74,7 +74,7 @@ function createDoc() {
     for (let i = 1; i <= n; i += 1) {
       doc.setPage(i);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-      doc.text(t(`Genesis · página ${i} de ${n}`), pageW - M, pageH - 8, { align: 'right' });
+      doc.text(pdfText(`Genesis · página ${i} de ${n}`), pageW - M, pageH - 8, { align: 'right' });
     }
   };
 

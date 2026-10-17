@@ -13,6 +13,7 @@
 const SCOPES = {
   pos: [
     ['GET', /^\/api\/auth\/me\/?$/],
+    ['PUT', /^\/api\/auth\/language\/?$/], // lingua do proprio caixista (9.3)
     ['GET', /^\/api\/products\/?$/],
     ['POST', /^\/api\/sales\/?$/],
     ['GET', /^\/api\/sales\/cancel-pin-status\/?$/],

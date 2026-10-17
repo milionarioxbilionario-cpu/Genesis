@@ -4,14 +4,20 @@ import { Lock, Monitor } from 'lucide-react';
 import api from '../../utils/api';
 import { errorMessage } from '../../utils/format';
 import { clearCatalog } from '../../utils/productCache';
-import { Alert, Button, Input, PinPad, Spinner, cx } from '../../components/ui';
+import { Alert, Button, Input, LanguageSwitch, PinPad, Spinner, cx } from '../../components/ui';
+import { setLang, storedLang } from '../../i18n/core';
+import { useI18n } from '../../i18n/react';
+import '../../i18n/en/pos';
 import PosScreen from './PosScreen';
 
 // TERMINAL DE VENDAS (Genesis 2.0)
 //   nao emparelhado -> codigo de 6 digitos dado pelo dono
 //   emparelhado     -> perfis dos caixistas -> PIN pessoal -> POS
 // A conta do dono nunca fica neste dispositivo.
+// Lingua (9.3): os ecras partilhados (emparelhar, perfis) usam a lingua do
+// aparelho; depois do PIN manda a lingua do caixista, sem mudar a do aparelho.
 export default function Terminal() {
+  const { t } = useI18n();
   const [state, setState] = useState({ status: 'loading' });
 
   const load = useCallback(async () => {
@@ -28,6 +34,18 @@ export default function Terminal() {
 
   useEffect(() => { load(); }, [load]);
 
+  const sellingId = state.status === 'selling' ? state.cashier.id : null;
+  useEffect(() => {
+    if (state.status === 'loading') return;
+    if (sellingId) {
+      if (state.cashier.language) setLang(state.cashier.language, { remember: false });
+    } else {
+      setLang(storedLang() || 'pt', { remember: false });
+    }
+    // So quando entra/sai um caixista: a escolha feita no POS fica no ecra.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status, sellingId]);
+
   // Sessao do caixista terminou (expirou, desactivado, PIN mudado): volta aos perfis.
   useEffect(() => {
     const onEnded = () => setState((s) => (s.status === 'selling' ? { status: 'profiles', info: s.info, notice: 'A sessão terminou. Introduza o PIN de novo.' } : s));
@@ -39,8 +57,8 @@ export default function Terminal() {
   if (state.status === 'error') {
     return (
       <Centered>
-        <Alert tone="danger" title="Sem ligação">{state.message}</Alert>
-        <Button className="mt-4" onClick={load}>Tentar de novo</Button>
+        <Alert tone="danger" title={t('Sem ligação')}>{state.message}</Alert>
+        <Button className="mt-4" onClick={load}>{t('Tentar de novo')}</Button>
       </Centered>
     );
   }
@@ -78,6 +96,7 @@ function Brand({ store }) {
 }
 
 function PairScreen({ onPaired }) {
+  const { t } = useI18n();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -93,22 +112,26 @@ function PairScreen({ onPaired }) {
   return (
     <Centered>
       <div className="w-full max-w-sm">
-        <Brand />
+        <div className="flex items-center justify-between gap-3">
+          <Brand />
+          <LanguageSwitch />
+        </div>
         <div className="mt-10 flex h-10 w-10 items-center justify-center rounded-full bg-subtle text-ink-2"><Monitor size={18} /></div>
-        <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">Emparelhar este terminal</h1>
-        <p className="mt-1.5 text-base text-ink-muted">O dono gera o código em <span className="text-ink-2">Definições → Terminais</span>. Só é preciso fazer isto uma vez neste computador.</p>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t('Emparelhar este terminal')}</h1>
+        <p className="mt-1.5 text-base text-ink-muted">{t('O dono gera o código em Definições → Terminais. Só é preciso fazer isto uma vez neste computador.')}</p>
         {error && <Alert tone="danger" className="mt-5">{error}</Alert>}
         <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
-          <Input label="Código de emparelhamento" inputMode="numeric" maxLength={6} autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} inputClassName="h-12 text-center text-lg num tracking-[0.4em]" />
-          <Button type="submit" variant="primary" size="lg" block loading={loading} disabled={code.length !== 6}>Emparelhar</Button>
+          <Input label={t('Código de emparelhamento')} inputMode="numeric" maxLength={6} autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} inputClassName="h-12 text-center text-lg num tracking-[0.4em]" />
+          <Button type="submit" variant="primary" size="lg" block loading={loading} disabled={code.length !== 6}>{t('Emparelhar')}</Button>
         </form>
-        <p className="mt-6 text-sm text-ink-muted">É o dono? <Link to="/entrar" className="font-medium text-accent">Entrar no painel</Link></p>
+        <p className="mt-6 text-sm text-ink-muted">{t('É o dono?')} <Link to="/entrar" className="font-medium text-accent">{t('Entrar no painel')}</Link></p>
       </div>
     </Centered>
   );
 }
 
 function ProfilesScreen({ info, notice, onLoggedIn }) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -118,29 +141,32 @@ function ProfilesScreen({ info, notice, onLoggedIn }) {
     if (busy || !selected) return;
     setBusy(true); setError('');
     try {
-      await api.post('/api/pos/login', { cashier_id: selected.id, pin: value });
-      onLoggedIn(selected);
+      const res = await api.post('/api/pos/login', { cashier_id: selected.id, pin: value });
+      onLoggedIn({ ...selected, language: res.data?.cashier?.language || selected.language });
     } catch (err) {
       setPin('');
       const rem = err?.response?.data?.remaining;
-      setError(errorMessage(err, 'PIN incorrecto.') + (typeof rem === 'number' ? ` Restam ${rem} tentativa(s).` : ''));
+      setError(errorMessage(err, 'PIN incorrecto.') + (typeof rem === 'number' ? ' ' + t('Restam {n} tentativa(s).', { n: rem }) : ''));
     } finally { setBusy(false); }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
-      <header className="flex h-14 items-center justify-between border-b border-border bg-surface px-5">
+      <header className="flex h-14 items-center justify-between gap-3 border-b border-border bg-surface px-5">
         <Brand store={info.store.name} />
-        <span className="text-sm text-ink-muted">{info.terminal.name}</span>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="hidden truncate text-sm text-ink-muted sm:inline">{info.terminal.name}</span>
+          <LanguageSwitch />
+        </div>
       </header>
       <main className="flex flex-1 items-start justify-center px-4 py-10 sm:py-16">
         {!selected ? (
           <div className="w-full max-w-3xl">
-            <h1 className="text-xl font-semibold tracking-tight text-ink">Quem está a vender?</h1>
-            <p className="mt-1 text-base text-ink-muted">Escolha o seu perfil e introduza o seu PIN.</p>
-            {notice && <Alert tone="info" className="mt-5">{notice}</Alert>}
+            <h1 className="text-xl font-semibold tracking-tight text-ink">{t('Quem está a vender?')}</h1>
+            <p className="mt-1 text-base text-ink-muted">{t('Escolha o seu perfil e introduza o seu PIN.')}</p>
+            {notice && <Alert tone="info" className="mt-5">{t(notice)}</Alert>}
             {info.cashiers.length === 0 ? (
-              <Alert tone="warning" className="mt-6" title="Ainda não há caixistas">O dono cria os caixistas e os PINs em Equipa.</Alert>
+              <Alert tone="warning" className="mt-6" title={t('Ainda não há caixistas')}>{t('O dono cria os caixistas e os PINs em Equipa.')}</Alert>
             ) : (
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {info.cashiers.map((c) => (
@@ -154,7 +180,7 @@ function ProfilesScreen({ info, notice, onLoggedIn }) {
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-subtle text-md font-semibold text-ink-2">{(c.name || '?').slice(0, 1).toUpperCase()}</span>
                     <span className="mt-3 font-medium text-ink">{c.name}</span>
                     <span className={cx('mt-0.5 text-xs', c.locked ? 'text-danger' : c.shift_open === false ? 'text-warning' : 'text-ink-muted')}>
-                      {!c.has_pin ? 'Sem PIN definido' : c.locked ? 'Bloqueado no fecho' : c.shift_open === false ? 'Fechado hoje' : 'Turno aberto'}
+                      {!c.has_pin ? t('Sem PIN definido') : c.locked ? t('Bloqueado no fecho') : c.shift_open === false ? t('Fechado hoje') : t('Turno aberto')}
                     </span>
                   </button>
                 ))}
@@ -165,10 +191,10 @@ function ProfilesScreen({ info, notice, onLoggedIn }) {
           <div className="flex w-full max-w-sm flex-col items-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-subtle text-lg font-semibold text-ink-2">{selected.name.slice(0, 1).toUpperCase()}</span>
             <h1 className="mt-3 text-lg font-semibold text-ink">{selected.name}</h1>
-            <p className="mb-6 flex items-center gap-1.5 text-sm text-ink-muted"><Lock size={13} /> Introduza o seu PIN</p>
+            <p className="mb-6 flex items-center gap-1.5 text-sm text-ink-muted"><Lock size={13} /> {t('Introduza o seu PIN')}</p>
             {error && <Alert tone="danger" className="mb-5 w-full">{error}</Alert>}
             <PinPad value={pin} onChange={setPin} onComplete={login} disabled={busy} length={4} />
-            <Button variant="ghost" className="mt-6" onClick={() => setSelected(null)}>Trocar de perfil</Button>
+            <Button variant="ghost" className="mt-6" onClick={() => setSelected(null)}>{t('Trocar de perfil')}</Button>
           </div>
         )}
       </main>

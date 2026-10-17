@@ -57,3 +57,9 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// Guarda a lingua escolhida na conta de quem esta a usar (Fase 9.3). Sem rede
+// fica so no ecra (e no aparelho); a proxima escolha volta a tentar.
+export function saveLanguage(language) {
+  return api.put('/api/auth/language', { language }, { silent: true }).catch(() => {});
+}

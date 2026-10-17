@@ -15,6 +15,11 @@ const { validateSessionClaims } = require('../utils/sessionUser');
 //  5. trial expirado: so leitura                        -> 402 TRIAL_EXPIRED
 // Falha de infra-estrutura (BD em baixo) -> 503, nunca 401: um 401 mandaria
 // todos os POS para o login e a fila offline deixaria de tentar.
+//
+// Com o trial expirado so passam escritas que nao criam valor: a lingua da
+// propria conta (Fase 9.3).
+const TRIAL_EXEMPT = /^\/api\/auth\/language\/?$/;
+
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   let token = null;
@@ -54,7 +59,7 @@ const authMiddleware = async (req, res, next) => {
     if (req.user.role !== 'super_admin' && req.user.tenantId) {
       const blocked = await blockedTenantStatus(req.user.tenantId);
       if (blocked) return res.status(403).json({ error: 'Conta suspensa. Contacte o suporte.', code: 'TENANT_BLOCKED' });
-      if (req.method !== 'GET' && await isTrialExpired(req.user.tenantId)) {
+      if (req.method !== 'GET' && !TRIAL_EXEMPT.test(req.originalUrl.split('?')[0]) && await isTrialExpired(req.user.tenantId)) {
         return res.status(402).json({ error: 'O período de teste terminou. Contacte a Genesis para activar a subscrição.', code: 'TRIAL_EXPIRED' });
       }
     }
