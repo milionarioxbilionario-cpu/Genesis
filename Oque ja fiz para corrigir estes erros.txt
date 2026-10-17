@@ -1961,3 +1961,8 @@ Prova: o teste do painel em inglês passou 28 de 28 (19 páginas e 5 fichas, sem
 Um contratempo: a primeira vez que corri os testes, o computador ficou sem memória e os servidores de teste foram parados a meio. Repeti os testes um de cada vez e passaram todos. As lojas de teste foram todas apagadas; na base de dados ficam só a tua loja e a tua conta de super admin.
 
 Falta: publicar a 9.4 no genesismz.com e testar lá.
+
+
+==================== 17/10/2026 — Páginas do dono em inglês (9.4) publicadas ====================
+O painel do dono em inglês já está em genesismz.com. Testei no próprio site com lojas de teste: o painel em inglês passou 28 de 28 e os relatórios em português 16 de 16, sem erros. Depois apaguei as lojas de teste.
+A seguir: o ecrã de venda do terminal em inglês (9.5).
