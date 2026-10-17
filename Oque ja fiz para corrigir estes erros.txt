@@ -1977,3 +1977,8 @@ A seguir: o ecrã de venda do terminal em inglês (9.5).
 Prova: o teste do terminal em inglês passou 28 de 28 (computador e iPhone). Os testes antigos do terminal, das vendas, dos dispositivos e da língua continuam a passar, e os testes do servidor da venda e do turno também. Nenhuma loja de teste ficou na base de dados.
 
 Falta: publicar a 9.5 no genesismz.com e testar lá.
+
+
+==================== 17/10/2026 — Terminal em inglês (9.5) publicado ====================
+O terminal em inglês e a correcção do botão X de «Dispositivos» já estão em genesismz.com. Testei no próprio site com lojas de teste: o terminal em inglês passou 28 de 28 e os dispositivos (câmara, impressora USB e Bluetooth, recibo em PDF) 19 de 19, sem erros. Depois apaguei as lojas de teste.
+A seguir: os PDFs dos relatórios, o WhatsApp e os emails em inglês (9.6).
