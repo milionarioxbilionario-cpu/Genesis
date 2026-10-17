@@ -1923,3 +1923,23 @@ Falta: publicar a 9.1 e a 9.2 no genesismz.com (preciso da tua confirmação nes
    - 7 entradas certas seguidas com a mesma conta passaram todas (antes a 6.ª era bloqueada).
 2) Apaguei as 4 lojas de teste esquecidas («TESTE-SEGURANCA-…») e 2 contas de super admin de teste. Na base de dados ficam só as tuas lojas (Loja de Kleyton e SPAR) e a tua conta de super admin.
 3) Para mudar o email da conta da SPAR preciso que me digas qual é o email verdadeiro.
+
+
+==================== 17/10/2026 — SPAR apagada e primeira parte do idioma inglês (9.3) — ainda não publicada ====================
+1) A tua conta: o email kleytonvelichane3@gmail.com já era o dono da «Loja de Kleyton» (35 produtos, 15 vendas). Não mexi nessa loja. A loja SPAR, a que tinha o email inventado, estava completamente vazia. Como pediste, apaguei-a (a loja e a conta de dono). Na base de dados ficam só a Loja de Kleyton, os 2 caixistas dela e a tua conta de super admin.
+
+2) Idioma PT/EN, primeira parte (9.3):
+   - Cada pessoa escolhe a sua língua, e a escolha fica guardada na conta dela. Se entrares noutro telemóvel, a língua vem contigo.
+   - No ecrã de entrada (Entrar, Pedir conta, Recuperar senha) há «PT | EN» no topo. Antes de entrar, a escolha fica no aparelho.
+   - No painel do dono, «PT | EN» fica no fundo do menu.
+   - No terminal: os ecrãs partilhados (emparelhar, «Quem está a vender?») usam a língua do aparelho. Depois do PIN, cada caixista vê a sua própria língua. No computador e no tablet há um botão PT/EN no topo; no telemóvel está dentro de «Dispositivos», porque no topo não havia espaço (o nome da loja ficava quase invisível).
+   - Os valores aparecem em inglês como «1,234.50 MT» e em português como «1 234,50 MT». O dinheiro continua guardado em centavos, sem mudança.
+   - Para já só estão traduzidos os ecrãs de entrada, o menu do dono e a entrada do terminal. As páginas do dono, a venda, os recibos e o painel admin ficam em português até às próximas partes (9.4 a 9.7). Se escolheres EN agora, vais ver uma mistura de inglês e português; é normal nesta fase.
+
+Prova: testes do servidor 15 de 15; teste no browser 33 de 33, sem erros; os testes antigos do dono, do terminal, dos dispositivos, dos PDFs e do painel admin continuam a passar.
+
+3) Um erro meu, apanhado pelos testes antes de publicar: ao mexer nos PDFs, o recibo em PDF deixou de funcionar. Os testes de dispositivos encontraram-no, corrigi, e voltaram a passar.
+
+4) Uma coisa que encontrei e não mudei: no ecrã «Dispositivos», fechar no X apaga a impressora escolhida (fica «Só PDF»), mesmo quando o ecrã é aberto só para ver. Proponho corrigir isto na parte do terminal (9.5).
+
+Falta: publicar a 9.3 no genesismz.com e testar lá.

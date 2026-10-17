@@ -1453,7 +1453,56 @@ async function test28() {
   ok(capAt > 0, 'muitas contas diferentes do mesmo IP: chega ao limite de 20 erradas e da 429', capAt);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28 };
+// Fase 9.3: cada pessoa escolhe a sua lingua (PT/EN). Nao faz login por senha
+// (tokens assinados), por isso pode correr depois da 28.
+async function test29() {
+  section(29, 'Lingua da conta (PT/EN): cada pessoa escolhe a sua');
+  const owner = ownerClient();
+  const langOf = async (id) => (await prisma.user.findUnique({ where: { id }, select: { language: true } })).language;
+  const me0 = await owner.req('GET', '/api/auth/me');
+  ok(me0.status === 200 && me0.data.user.language === 'pt', 'conta nova: /me devolve pt', me0.data?.user?.language);
+  const put = await owner.req('PUT', '/api/auth/language', { language: 'en' });
+  ok(put.status === 200 && put.data.language === 'en', 'dono escolhe en: 200', put);
+  ok((await owner.req('GET', '/api/auth/me')).data.user.language === 'en', 'dono: /me passa a devolver en');
+  const bad = await owner.req('PUT', '/api/auth/language', { language: 'fr' });
+  ok(bad.status === 400 && bad.data?.code === 'INVALID_LANGUAGE', 'lingua fora de pt/en: 400 INVALID_LANGUAGE', bad);
+  ok((await owner.req('PUT', '/api/auth/language', {})).status === 400, 'sem lingua: 400');
+  ok((await client().req('PUT', '/api/auth/language', { language: 'en' })).status === 401, 'sem sessao: 401');
+  ok(await langOf(ctx.cashier.id) === 'pt', 'a escolha do dono nao muda a do caixista');
+
+  // Caixista no terminal: o perfil e o login trazem a lingua dele; muda-a com a sessao pos.
+  const term = await pairedTerminal('Balcao lingua');
+  const prof = await term.req('GET', '/api/pos/terminal');
+  ok(prof.data?.cashiers?.find((c) => c.id === ctx.cashier.id)?.language === 'pt', 'perfil do caixista no terminal traz a lingua (pt)');
+  const login = await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+  ok(login.status === 200 && login.data.cashier.language === 'pt', 'login no terminal devolve a lingua do caixista', login.data);
+  const cput = await term.req('PUT', '/api/auth/language', { language: 'en' });
+  ok(cput.status === 200 && await langOf(ctx.cashier.id) === 'en', 'caixista (sessao pos) escolhe en: 200 e gravado', cput);
+  ok(await langOf(ctx.owner.id) === 'en' && (await term.req('GET', '/api/pos/terminal')).data.cashiers.find((c) => c.id === ctx.cashier.id).language === 'en', 'perfil do terminal passa a en; o dono fica com a dele');
+  await term.req('PUT', '/api/auth/language', { language: 'pt' });
+
+  // Super admin (sem loja) e modo suporte (so leitura).
+  const admin = adminClient();
+  const aput = await admin.req('PUT', '/api/auth/language', { language: 'en' });
+  ok(aput.status === 200 && await langOf(ctx.admin.id) === 'en', 'super admin escolhe en: 200 e gravado', aput);
+  const sup = await client(signAccessToken(ctx.owner, { scope: 'support' })).req('PUT', '/api/auth/language', { language: 'pt' });
+  ok(sup.status === 403 && sup.data?.code === 'SCOPE_RESTRICTED' && await langOf(ctx.owner.id) === 'en', 'modo suporte nao muda a lingua do dono (403)', sup);
+
+  // Trial expirado: so leitura, mas a lingua da propria conta continua a mudar.
+  await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { status: 'trial', trial_ends_at: new Date(Date.now() - 86400000) } });
+  await sleep(STATUS_CACHE_MS + 500);
+  try {
+    const w = await owner.req('POST', '/api/sales', saleBody());
+    ok(w.status === 402, 'trial expirado: vender continua bloqueado (402)', w.status);
+    const tl = await owner.req('PUT', '/api/auth/language', { language: 'pt' });
+    ok(tl.status === 200 && await langOf(ctx.owner.id) === 'pt', 'trial expirado: mudar a lingua passa (200)', tl);
+  } finally {
+    await prisma.tenant.update({ where: { id: ctx.tenant.id }, data: { status: 'active', trial_ends_at: null } });
+    await sleep(STATUS_CACHE_MS + 500);
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29 };
 
 (async () => {
   await prisma.ready();

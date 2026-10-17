@@ -3,14 +3,14 @@ import { Camera, CircleAlert, Lock, Minus, PackageSearch, PackageX, Plus, Receip
 import BarcodeScanner from '../../components/BarcodeScanner';
 import DevicesDialog from './DevicesDialog';
 import { wasAsked } from '../../utils/devices';
-import api from '../../utils/api';
+import api, { saveLanguage } from '../../utils/api';
 import db from '../../db/localDb';
 import useOfflineSync from '../../hooks/useOfflineSync';
 import { newUuid, shouldQueueOffline, SYNC_STATE } from '../../utils/syncPolicy';
 import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
 import { foldText, nameMatches } from '../../utils/search';
-import { Alert, Button, IconButton, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
+import { Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
 
 const PAYMENTS = [
@@ -247,7 +247,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       {/* Barra superior */}
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-4 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
           <div className="min-w-0 leading-tight">
             <p className="truncate text-base font-semibold text-ink">{info.store.name}</p>
             <p className="truncate text-xs text-ink-muted">{cashier.name} · {info.terminal.name}</p>
@@ -264,6 +264,9 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           {/* Telemovel: os mesmos dois botoes em icone (antes nao havia forma de os abrir). */}
           <IconButton label="Produto em falta" icon={PackageSearch} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('demand')} />
           <IconButton label="Quebra" icon={PackageX} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('shrink')} />
+          {/* Lingua do caixista (9.3): guardada na conta dele, nao no aparelho. No
+              telemovel nao cabe aqui: fica no dialogo Dispositivos. */}
+          <LanguageSwitch compact remember={false} onChange={saveLanguage} className="hidden px-2 sm:inline-flex" />
           <Button size="sm" onClick={() => setDialog('close')}>Fechar turno</Button>
           <IconButton label="Bloquear terminal" icon={Lock} size="sm" variant="secondary" onClick={onLock} />
         </div>

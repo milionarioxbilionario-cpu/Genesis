@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ConfirmProvider, ToastProvider } from './components/ui';
 import { SessionProvider, RequireOwner, useSession, FullPageSpinner } from './utils/session';
+import { I18nProvider } from './i18n/react';
 // Code-splitting por area: o terminal POS nao descarrega os graficos do painel
 // (Recharts), e o painel nao descarrega o POS. Requisito: POS < 2 s em 3G.
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -49,6 +50,7 @@ function Root() {
 
 export default function App() {
   return (
+    <I18nProvider>
     <BrowserRouter>
       <ToastProvider>
         <ConfirmProvider>
@@ -91,5 +93,6 @@ export default function App() {
         </ConfirmProvider>
       </ToastProvider>
     </BrowserRouter>
+    </I18nProvider>
   );
 }

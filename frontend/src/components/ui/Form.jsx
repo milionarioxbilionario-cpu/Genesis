@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from 'react';
 import { ChevronDown, Delete } from 'lucide-react';
 import { cx } from './cx';
 import { centsToMznInput, mznToCents } from '../../utils/money';
+import { useI18n } from '../../i18n/react';
 
 // Sem largura fixa aqui: quem usa decide (w-full por omissao, ver widthOf).
 const control = 'h-9 rounded border border-border-strong bg-surface px-3 text-base text-ink transition-colors '
@@ -94,6 +95,7 @@ export function MoneyInput({ label, hint, error, valueCents, onChangeCents, clas
 
 // Teclado de PIN do terminal (alvos de 64 px: uso com o dedo no balcao).
 export function PinPad({ length = 4, value, onChange, onComplete, disabled }) {
+  const { t } = useI18n();
   const press = (d) => {
     if (disabled || value.length >= 6) return;
     const next = value + d;
@@ -112,7 +114,7 @@ export function PinPad({ length = 4, value, onChange, onComplete, disabled }) {
   const key = 'h-16 rounded-lg border border-border bg-surface text-xl font-medium text-ink num hover:bg-subtle active:bg-muted-bg transition-colors disabled:opacity-50';
   return (
     <div className="w-full max-w-[280px]">
-      <div className="mb-5 flex justify-center gap-3" aria-label={`${value.length} de ${length} dígitos`}>
+      <div className="mb-5 flex justify-center gap-3" aria-label={t('{n} de {length} dígitos', { n: value.length, length })}>
         {Array.from({ length: Math.max(length, value.length) }).map((_, i) => (
           <span key={i} className={cx('h-3 w-3 rounded-full border', i < value.length ? 'bg-ink border-ink' : 'border-border-strong')} />
         ))}
@@ -123,7 +125,7 @@ export function PinPad({ length = 4, value, onChange, onComplete, disabled }) {
         ))}
         <span />
         <button type="button" className={key} disabled={disabled} onClick={() => press('0')}>0</button>
-        <button type="button" aria-label="Apagar" className={cx(key, 'flex items-center justify-center text-ink-muted')} disabled={disabled} onClick={() => onChange(value.slice(0, -1))}>
+        <button type="button" aria-label={t('Apagar')} className={cx(key, 'flex items-center justify-center text-ink-muted')} disabled={disabled} onClick={() => onChange(value.slice(0, -1))}>
           <Delete size={20} />
         </button>
       </div>

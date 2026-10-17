@@ -16,6 +16,7 @@ const { setSessionCookies, verifyAccessToken, clearSessionCookies } = require('.
 const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessionUser');
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
+const authMiddleware = require('../middleware/auth');
 
 // Limite do login (decisao do fundador 12/10): so contam as tentativas
 // ERRADAS (4xx). Antes contavam tambem as certas: o dono que entrava no PC, no
@@ -536,7 +537,7 @@ router.get('/me', async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true }
+      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true, language: true }
     });
     if (!user || !user.is_active) return res.status(401).json({ error: 'Conta inactiva ou não encontrada' });
     if (user.tenant_id) {
@@ -559,6 +560,28 @@ router.get('/me', async (req, res) => {
     return res.json({ user: { ...user, scope: payload.scope || null } });
   } catch (err) {
     console.error('[auth:me] falha ao validar a sessao ->', err);
+    return res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Fase 9.3: cada pessoa escolhe a lingua da interface (dono, caixista no
+// terminal, super admin). E uma preferencia da propria conta: nao cria valor,
+// por isso passa com o trial expirado (middleware/auth.js); o modo suporte e so
+// leitura e fica de fora (sessionScopes).
+const LANGUAGES = ['pt', 'en'];
+router.put('/language', authMiddleware, async (req, res) => {
+  const parsed = z.object({ language: z.enum(LANGUAGES) }).safeParse(req.body || {});
+  if (!parsed.success) return res.status(400).json({ error: 'Língua inválida (pt ou en).', code: 'INVALID_LANGUAGE' });
+  try {
+    // tenant_id no filtro: a mesma regra das outras rotas (a RLS e a 2.a linha).
+    const done = await prisma.user.updateMany({
+      where: { id: req.user.userId, tenant_id: req.user.tenantId },
+      data: { language: parsed.data.language },
+    });
+    if (done.count !== 1) return res.status(404).json({ error: 'Conta não encontrada', code: 'USER_NOT_FOUND' });
+    return res.json({ language: parsed.data.language });
+  } catch (err) {
+    console.error('[auth:language] falha ->', err);
     return res.status(500).json({ error: 'Erro interno' });
   }
 });

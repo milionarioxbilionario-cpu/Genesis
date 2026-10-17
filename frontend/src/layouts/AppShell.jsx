@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
-import api from '../utils/api';
+import api, { saveLanguage } from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
-import { cx, IconButton } from '../components/ui';
+import { cx, IconButton, LanguageSwitch } from '../components/ui';
+import { useI18n } from '../i18n/react';
+import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
 // vive num so sitio (ex.: Metas no Inicio; Terminais e Auditoria nas Definicoes).
+// label em portugues = chave da traducao.
 export const NAV = [
   { to: '/app', label: 'Início', icon: House, end: true },
   { to: '/app/vendas', label: 'Vendas', icon: Receipt },
@@ -33,17 +36,19 @@ function useOnline() {
 
 function Sidebar({ tenant, onNavigate }) {
   const { user, logout } = useSession();
+  const { t } = useI18n();
   const navigate = useNavigate();
+  const support = user?.scope === 'support';
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
         <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
         <div className="min-w-0">
           <p className="truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}</p>
-          <p className="truncate text-xs text-ink-muted">{tenant?.location || 'Gestão comercial'}</p>
+          <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>
         </div>
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Navegação principal">
+      <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label={t('Navegação principal')}>
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -56,17 +61,19 @@ function Sidebar({ tenant, onNavigate }) {
             )}
           >
             <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-            {label}
+            {t(label)}
           </NavLink>
         ))}
       </nav>
       <div className="border-t border-border p-3">
+        {/* Modo suporte e so leitura: a lingua muda o ecra, nao a conta do dono. */}
+        <LanguageSwitch className="mb-2 px-2" onChange={support ? undefined : saveLanguage} />
         <div className="flex items-center justify-between gap-2 rounded px-2 py-1.5">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-ink">{user?.name}</p>
-            <p className="truncate text-xs text-ink-muted">{user?.scope === 'support' ? 'Suporte Genesis' : 'Dono'}</p>
+            <p className="truncate text-xs text-ink-muted">{support ? t('Suporte Genesis') : t('Dono')}</p>
           </div>
-          <IconButton label="Sair" icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
+          <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
         </div>
       </div>
     </div>
@@ -75,6 +82,7 @@ function Sidebar({ tenant, onNavigate }) {
 
 export default function AppShell() {
   const { user, loading } = useSession();
+  const { t } = useI18n();
   const location = useLocation();
   const online = useOnline();
   const [tenant, setTenant] = useState(null);
@@ -108,19 +116,19 @@ export default function AppShell() {
 
       <div className="lg:pl-60">
         {user?.scope === 'support' && (
-          <div className="no-print bg-info px-4 py-1.5 text-center text-sm font-medium text-white">Modo suporte Genesis — só leitura. Nenhuma alteração é possível.</div>
+          <div className="no-print bg-info px-4 py-1.5 text-center text-sm font-medium text-white">{t('Modo suporte Genesis — só leitura. Nenhuma alteração é possível.')}</div>
         )}
         <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-surface px-4 lg:px-8">
-          <IconButton label={mobileOpen ? 'Fechar menu' : 'Abrir menu'} icon={mobileOpen ? X : Menu} className="lg:hidden" onClick={() => setMobileOpen((v) => !v)} />
+          <IconButton label={mobileOpen ? t('Fechar menu') : t('Abrir menu')} icon={mobileOpen ? X : Menu} className="lg:hidden" onClick={() => setMobileOpen((v) => !v)} />
           {/* No desktop o titulo ja esta no cabecalho da pagina (sem duplicar). */}
-          <p className="text-base font-medium text-ink lg:hidden">{current?.label || 'Genesis'}</p>
+          <p className="text-base font-medium text-ink lg:hidden">{current ? t(current.label) : 'Genesis'}</p>
           <div className="ml-auto flex items-center gap-3 text-sm">
             {trialDays !== null && (
               <span className={cx('hidden sm:inline', trialDays <= 7 ? 'text-warning' : 'text-ink-muted')}>
-                {trialDays > 0 ? `Período de teste: ${trialDays} dia(s)` : 'Período de teste terminado — só leitura'}
+                {trialDays > 0 ? t('Período de teste: {n} dia(s)', { n: trialDays }) : t('Período de teste terminado — só leitura')}
               </span>
             )}
-            {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> Sem ligação</span>}
+            {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}
           </div>
         </header>
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { cx } from './cx';
 import { Button, IconButton } from './Button';
+import { useI18n } from '../../i18n/react';
 
 function useEscape(open, onClose) {
   useEffect(() => {
@@ -18,6 +19,7 @@ function useEscape(open, onClose) {
 // Dialogo centrado. footer: botoes (a accao principal a direita).
 export function Dialog({ open, onClose, title, description, children, footer, size = 'md' }) {
   useEscape(open, onClose);
+  const { t } = useI18n();
   if (!open) return null;
   const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }[size];
   return createPortal(
@@ -28,7 +30,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             <h2 className="text-md font-semibold text-ink">{title}</h2>
             {description && <p className="mt-0.5 text-sm text-ink-muted">{description}</p>}
           </div>
-          {onClose && <IconButton label="Fechar" icon={X} size="sm" onClick={onClose} />}
+          {onClose && <IconButton label={t('Fechar')} icon={X} size="sm" onClick={onClose} />}
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
         {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
@@ -41,6 +43,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
 // Painel lateral para criar/editar sem sair da lista.
 export function Drawer({ open, onClose, title, description, children, footer }) {
   useEscape(open, onClose);
+  const { t } = useI18n();
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(28,25,23,0.30)]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
@@ -50,7 +53,7 @@ export function Drawer({ open, onClose, title, description, children, footer }) 
             <h2 className="text-md font-semibold text-ink">{title}</h2>
             {description && <p className="mt-0.5 text-sm text-ink-muted">{description}</p>}
           </div>
-          <IconButton label="Fechar" icon={X} size="sm" onClick={onClose} />
+          <IconButton label={t('Fechar')} icon={X} size="sm" onClick={onClose} />
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
@@ -66,10 +69,11 @@ const ConfirmCtx = createContext(null);
 export function ConfirmProvider({ children }) {
   const [state, setState] = useState(null);
   const resolver = useRef(null);
+  const { t } = useI18n();
   const confirm = useCallback((opts) => new Promise((resolve) => {
     resolver.current = resolve;
-    setState({ title: 'Confirmar', confirmLabel: 'Confirmar', ...opts });
-  }), []);
+    setState({ title: t('Confirmar'), confirmLabel: t('Confirmar'), ...opts });
+  }), [t]);
   const close = (v) => { resolver.current?.(v); setState(null); };
   return (
     <ConfirmCtx.Provider value={confirm}>
@@ -81,7 +85,7 @@ export function ConfirmProvider({ children }) {
         size="sm"
         footer={(
           <>
-            <Button onClick={() => close(false)}>Cancelar</Button>
+            <Button onClick={() => close(false)}>{t('Cancelar')}</Button>
             <Button variant={state?.danger ? 'danger' : 'primary'} onClick={() => close(true)}>{state?.confirmLabel}</Button>
           </>
         )}

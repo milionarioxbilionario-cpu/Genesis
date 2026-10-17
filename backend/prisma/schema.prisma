@@ -75,6 +75,8 @@ model User {
   // PIN pessoal do caixista no terminal da loja (bcrypt). Null = sem acesso ao POS.
   pin_hash                   String?
   phone                      String?
+  /// Lingua da interface escolhida pela pessoa (Fase 9.3): "pt" ou "en".
+  language                   String                @default("pt")
   is_active                  Boolean               @default(true)
   created_at                 DateTime              @default(now())
   audit_logs                 AuditLog[]

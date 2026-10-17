@@ -5,6 +5,7 @@ import { useSession } from '../../utils/session';
 import { errorMessage } from '../../utils/format';
 import { Alert, Button, Input } from '../../components/ui';
 import AuthLayout from './AuthLayout';
+import { useI18n } from '../../i18n/react';
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 const googleEnabled = GOOGLE_CLIENT_ID.includes('apps.googleusercontent.com');
@@ -27,6 +28,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { reload } = useSession();
+  const { t, lang } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,18 +36,19 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const googleRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
-  const reason = SESSION_MESSAGES[params.get('motivo')];
+  const reasonPt = SESSION_MESSAGES[params.get('motivo')];
+  const reason = reasonPt && t(reasonPt);
 
   const afterLogin = useCallback(async (user) => {
     if (user.role === 'super_admin') {
-      setError('A conta de administração entra no painel de administração, não aqui.');
+      setError(t('A conta de administração entra no painel de administração, não aqui.'));
       await api.post('/api/auth/logout').catch(() => {});
       return;
     }
     await reload();
     const back = params.get('voltar');
     navigate(user.tenant && user.tenant.onboarding_completed === false ? '/onboarding' : (back && back.startsWith('/app') ? back : '/app'), { replace: true });
-  }, [navigate, params, reload]);
+  }, [navigate, params, reload, t]);
 
   const fail = (err) => {
     setErrorCode(err?.response?.data?.code || '');
@@ -76,20 +79,20 @@ export default function Login() {
           } catch (err) { fail(err); }
         },
       });
-      gsi.renderButton(googleRef.current, { theme: 'outline', size: 'large', width: 340, text: 'continue_with', locale: 'pt' });
+      gsi.renderButton(googleRef.current, { theme: 'outline', size: 'large', width: 340, text: 'continue_with', locale: lang });
       setGoogleReady(true);
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [afterLogin]);
+  }, [afterLogin, lang]);
 
   return (
     <AuthLayout
-      title="Entrar"
-      description="Painel de gestão da sua loja."
+      title={t('Entrar')}
+      description={t('Painel de gestão da sua loja.')}
       footer={(
         <div className="flex flex-col gap-2">
-          <span>Ainda não tem conta? <Link to="/pedir-conta" className="font-medium text-accent hover:text-accent-hover">Pedir uma conta</Link></span>
-          <span>No balcão? <Link to="/terminal" className="font-medium text-accent hover:text-accent-hover">Abrir o terminal de vendas</Link></span>
+          <span>{t('Ainda não tem conta?')} <Link to="/pedir-conta" className="font-medium text-accent hover:text-accent-hover">{t('Pedir uma conta')}</Link></span>
+          <span>{t('No balcão?')} <Link to="/terminal" className="font-medium text-accent hover:text-accent-hover">{t('Abrir o terminal de vendas')}</Link></span>
         </div>
       )}
     >
@@ -97,22 +100,22 @@ export default function Login() {
       {error && (
         <Alert tone="danger" className="mb-4">
           {error}
-          {errorCode === 'NOT_REGISTERED' && <> <Link className="font-medium underline" to="/pedir-conta">Pedir conta</Link></>}
-          {errorCode === 'USE_TERMINAL' && <> <Link className="font-medium underline" to="/terminal">Ir para o terminal</Link></>}
+          {errorCode === 'NOT_REGISTERED' && <> <Link className="font-medium underline" to="/pedir-conta">{t('Pedir conta')}</Link></>}
+          {errorCode === 'USE_TERMINAL' && <> <Link className="font-medium underline" to="/terminal">{t('Ir para o terminal')}</Link></>}
         </Alert>
       )}
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
-        <Input label="Senha" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Input label={t('Email')} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+        <Input label={t('Senha')} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <div className="-mt-1 text-right text-sm">
-          <Link to="/recuperar-senha" className="text-ink-muted hover:text-ink">Esqueceu a senha?</Link>
+          <Link to="/recuperar-senha" className="text-ink-muted hover:text-ink">{t('Esqueceu a senha?')}</Link>
         </div>
-        <Button type="submit" variant="primary" size="lg" block loading={loading} disabled={!email || !password}>Entrar</Button>
+        <Button type="submit" variant="primary" size="lg" block loading={loading} disabled={!email || !password}>{t('Entrar')}</Button>
       </form>
       {googleEnabled && (
         <>
           {/* O separador so aparece quando o botao do Google carregou (sem rede, nada). */}
-          {googleReady && <div className="my-5 flex items-center gap-3 text-xs text-ink-faint"><span className="h-px flex-1 bg-border" />ou<span className="h-px flex-1 bg-border" /></div>}
+          {googleReady && <div className="my-5 flex items-center gap-3 text-xs text-ink-faint"><span className="h-px flex-1 bg-border" />{t('ou')}<span className="h-px flex-1 bg-border" /></div>}
           <div ref={googleRef} className="flex justify-center" />
         </>
       )}

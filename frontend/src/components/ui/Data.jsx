@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { cx } from './cx';
+import { useI18n } from '../../i18n/react';
 
 export function Card({ className, children, padded = true, ...rest }) {
   return <div className={cx('rounded-lg border border-border bg-surface', padded && 'p-5', className)} {...rest}>{children}</div>;
@@ -52,6 +53,7 @@ export function Badge({ tone = 'neutral', children, className }) {
 
 // Tabela densa. columns: [{ key, header, align: 'right'|'left', render(row), className }]
 export function Table({ columns, rows, rowKey = 'id', empty, onRowClick, loading, footer }) {
+  const { t } = useI18n();
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-surface">
       <table className="w-full border-collapse text-base">
@@ -72,7 +74,7 @@ export function Table({ columns, rows, rowKey = 'id', empty, onRowClick, loading
               </tr>
             ))
           ) : rows.length === 0 ? (
-            <tr><td colSpan={columns.length}>{empty || <EmptyState title="Sem registos" />}</td></tr>
+            <tr><td colSpan={columns.length}>{empty || <EmptyState title={t('Sem registos')} />}</td></tr>
           ) : rows.map((row) => (
             <tr
               key={typeof rowKey === 'function' ? rowKey(row) : row[rowKey]}
@@ -97,12 +99,13 @@ export function Pagination({ page, pageSize, total, onPage }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(total, page * pageSize);
+  const { t } = useI18n();
   return (
     <div className="mt-3 flex items-center justify-between text-sm text-ink-muted">
-      <span className="num">{from}–{to} de {total}</span>
+      <span className="num">{t('{from}–{to} de {total}', { from, to, total })}</span>
       <div className="flex gap-1">
-        <button type="button" aria-label="Página anterior" disabled={page <= 1} onClick={() => onPage(page - 1)} className="flex h-8 w-8 items-center justify-center rounded border border-border-strong bg-surface hover:bg-subtle disabled:opacity-40"><ChevronLeft size={16} /></button>
-        <button type="button" aria-label="Página seguinte" disabled={page >= pages} onClick={() => onPage(page + 1)} className="flex h-8 w-8 items-center justify-center rounded border border-border-strong bg-surface hover:bg-subtle disabled:opacity-40"><ChevronRight size={16} /></button>
+        <button type="button" aria-label={t('Página anterior')} disabled={page <= 1} onClick={() => onPage(page - 1)} className="flex h-8 w-8 items-center justify-center rounded border border-border-strong bg-surface hover:bg-subtle disabled:opacity-40"><ChevronLeft size={16} /></button>
+        <button type="button" aria-label={t('Página seguinte')} disabled={page >= pages} onClick={() => onPage(page + 1)} className="flex h-8 w-8 items-center justify-center rounded border border-border-strong bg-surface hover:bg-subtle disabled:opacity-40"><ChevronRight size={16} /></button>
       </div>
     </div>
   );

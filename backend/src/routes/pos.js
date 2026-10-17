@@ -66,12 +66,12 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   const { tenantId, id } = req.terminal;
   const [tenant, cashiers] = await Promise.all([
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, discount_free_pct: true } }),
-    prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true } }),
+    prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true, language: true } }),
   ]);
   const profiles = await Promise.all(cashiers.map(async (c) => {
     const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
     // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
-    return { id: c.id, name: c.name, has_pin: Boolean(c.pin_hash), locked: lock.locked, shift_open: shift.open };
+    return { id: c.id, name: c.name, language: c.language, has_pin: Boolean(c.pin_hash), locked: lock.locked, shift_open: shift.open };
   }));
   const sessionUserId = currentPosSession(req, id);
   res.json({
@@ -99,7 +99,7 @@ router.post('/login', terminalAuth, pinLimiter, asyncHandler(async (req, res) =>
 
   setSessionCookies(res, cashier, { scope: 'pos', tid: terminalId });
   await writeAudit({ req, tenantId, userId: cashier.id, action: 'POS_LOGIN', entityType: 'user', entityId: cashier.id, newValue: { terminal: terminalId } });
-  res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name } });
+  res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name, language: cashier.language } });
 }));
 
 router.post('/lock', (req, res) => {

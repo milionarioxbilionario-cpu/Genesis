@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import { useSession, FullPageSpinner } from '../../utils/session';
 import { errorMessage } from '../../utils/format';
 import { Alert } from '../../components/ui';
+import { useI18n } from '../../i18n/react';
 import AuthLayout from './AuthLayout';
 
 // Entrada do Super Admin em MODO SUPORTE (so leitura). O codigo vem no
@@ -12,6 +13,7 @@ import AuthLayout from './AuthLayout';
 export default function Support() {
   const navigate = useNavigate();
   const { reload } = useSession();
+  const { t } = useI18n();
   const [error, setError] = useState('');
   const started = useRef(false); // o codigo e de uso unico: nunca o enviar 2x
   useEffect(() => {
@@ -19,12 +21,12 @@ export default function Support() {
     started.current = true;
     const code = window.location.hash.slice(1);
     window.history.replaceState(null, '', window.location.pathname);
-    if (!code) { setError('Link de suporte incompleto.'); return; }
+    if (!code) { setError(t('Link de suporte incompleto.')); return; }
     api.post('/api/auth/support', { code })
       .then(() => reload())
       .then(() => navigate('/app', { replace: true }))
       .catch((err) => setError(errorMessage(err, 'Link de suporte inválido ou expirado.')));
-  }, [navigate, reload]);
+  }, [navigate, reload, t]);
   if (!error) return <FullPageSpinner />;
-  return <AuthLayout title="Modo suporte"><Alert tone="danger">{error} Gere um novo link no painel de administração.</Alert></AuthLayout>;
+  return <AuthLayout title={t('Modo suporte')}><Alert tone="danger">{error} {t('Gere um novo link no painel de administração.')}</Alert></AuthLayout>;
 }
