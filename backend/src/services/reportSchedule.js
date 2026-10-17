@@ -11,6 +11,7 @@
 //  - mensal: o mes anterior (como o fecho do mes).
 // O envio em si fica DESLIGADO ate REPORTS_WHATSAPP=true (decisao 11/10).
 const { dayInMaputo } = require('../utils/fefo');
+const { tr, numberLocale } = require('../utils/lang');
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DEFAULTS = { daily_report_time: '21:00', weekly_report_day: 1, weekly_report_time: '08:00', monthly_report_time: '08:00' };
@@ -63,23 +64,25 @@ function describeDaily(time, opening = '08:00') {
   return time < opening ? `Às ${time} recebe o relatório de ontem, completo.` : `Às ${time} recebe o relatório de hoje, até essa hora.`;
 }
 
-const moneyText = (c) => (Number(c || 0) / 100).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' }) + ' MT';
+const moneyText = (c, lang = 'pt') => (Number(c || 0) / 100).toLocaleString(numberLocale(lang), { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' }) + ' MT';
 const dmy = (day) => `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`;
 
 // Mensagem curta para o WhatsApp do dono (sem dados de clientes).
-function buildReportMessage({ due, report, storeName, appUrl = 'https://genesismz.com' }) {
-  const title = due.kind === 'daily' ? `Relatório diário ${dmy(due.end)}${due.partial ? ' (até agora)' : ''}`
-    : due.kind === 'weekly' ? `Relatório semanal ${dmy(due.start)} a ${dmy(due.end)}`
-    : `Relatório mensal ${String(due.month).padStart(2, '0')}/${due.year}`;
+// 9.6: na lingua da conta do dono (lang).
+function buildReportMessage({ due, report, storeName, appUrl = 'https://genesismz.com', lang = 'pt' }) {
+  const m = (c) => moneyText(c, lang);
+  const title = due.kind === 'daily' ? tr(lang, 'Relatório diário {day}', { day: dmy(due.end) }) + (due.partial ? tr(lang, ' (até agora)') : '')
+    : due.kind === 'weekly' ? tr(lang, 'Relatório semanal {from} a {to}', { from: dmy(due.start), to: dmy(due.end) })
+    : tr(lang, 'Relatório mensal {month}', { month: `${String(due.month).padStart(2, '0')}/${due.year}` });
   const lines = [`Genesis · ${storeName}`, title, '',
-    `Receita: ${moneyText(report.gross_revenue)} (${report.sales_count || 0} venda(s))`,
-    `Lucro bruto: ${moneyText(report.gross_profit)}`];
-  if (due.kind === 'monthly' && report.net_profit != null) lines.push(`Lucro líquido real: ${moneyText(report.net_profit)}`);
-  if (report.losses_total) lines.push(`Perdas: ${moneyText(report.losses_total)}`);
-  if (report.most_sold) lines.push(`Mais vendido: ${report.most_sold.name} (${report.most_sold.quantity} un.)`);
+    tr(lang, 'Receita: {value} ({n} venda(s))', { value: m(report.gross_revenue), n: report.sales_count || 0 }),
+    tr(lang, 'Lucro bruto: {value}', { value: m(report.gross_profit) })];
+  if (due.kind === 'monthly' && report.net_profit != null) lines.push(tr(lang, 'Lucro líquido real: {value}', { value: m(report.net_profit) }));
+  if (report.losses_total) lines.push(tr(lang, 'Perdas: {value}', { value: m(report.losses_total) }));
+  if (report.most_sold) lines.push(tr(lang, 'Mais vendido: {name} ({n} un.)', { name: report.most_sold.name, n: report.most_sold.quantity }));
   const lost = (report.lost_demand || []).reduce((s, d) => s + (d.units || 0), 0);
-  if (lost) lines.push(`Vendas perdidas: ${lost} un. pedidas e sem stock`);
-  lines.push('', `Ver tudo: ${appUrl.replace(/\/$/, '')}/app/relatorios`);
+  if (lost) lines.push(tr(lang, 'Vendas perdidas: {n} un. pedidas e sem stock', { n: lost }));
+  lines.push('', tr(lang, 'Ver tudo: {url}', { url: `${appUrl.replace(/\/$/, '')}/app/relatorios` }));
   return lines.join('\n');
 }
 

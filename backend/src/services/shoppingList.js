@@ -1,6 +1,8 @@
 // Lista de compras (Genesis 2.1, Fase 5.2) — logica pura, sem Prisma.
 // Valores em centavos. A mensagem leva so produtos e quantidades: os custos
 // sao do dono e o total e combinado com o fornecedor.
+// 9.6: a mensagem sai na lingua de quem a gera (lang).
+const { tr } = require('../utils/lang');
 
 // Total do investimento + entrega do fornecedor escolhido.
 function listTotals(items = [], supplier = null) {
@@ -20,14 +22,14 @@ function waPhone(phone) {
   return null;
 }
 
-function orderMessage({ storeName, supplierName, items }) {
+function orderMessage({ storeName, supplierName, items, lang = 'pt' }) {
   const lines = items.map((it) => `- ${it.quantity} × ${it.product_name}`);
   return [
-    `Olá${supplierName ? ' ' + supplierName : ''}, daqui fala ${storeName || 'a loja'}.`,
-    'Gostaria de encomendar:',
+    tr(lang, 'Olá{name}, daqui fala {store}.', { name: supplierName ? ' ' + supplierName : '', store: storeName || tr(lang, 'a loja') }),
+    tr(lang, 'Gostaria de encomendar:'),
     ...lines,
     '',
-    'Pode confirmar o preço e quando entrega? Obrigado.',
+    tr(lang, 'Pode confirmar o preço e quando entrega? Obrigado.'),
   ].join('\n');
 }
 

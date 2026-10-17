@@ -1,29 +1,29 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-17T21:12:09.561Z */
+   Gerado em: 2026-10-17T22:52:18.941Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-17T21:12:09.561Z",
+ "generatedAt": "2026-10-17T22:52:18.941Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 250,
+  "files": 259,
   "planned": 5,
-  "links": 458,
-  "lines": 35760,
+  "links": 481,
+  "lines": 36768,
   "byStatus": {
-   "ok": 169,
-   "partial": 11,
+   "ok": 179,
+   "partial": 9,
    "broken": 0,
    "planned": 5,
-   "untracked": 70
+   "untracked": 71
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
-   "admin": 10,
-   "backend-data": 62,
-   "backend": 60,
+   "admin": 12,
+   "backend-data": 67,
+   "backend": 62,
    "frontend-pub": 4,
    "frontend": 93,
    "scripts": 3
@@ -40,10 +40,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
-   "count": 22
+   "count": 24
   },
   {
    "pkg": "node:fs",
+   "count": 23
+  },
+  {
+   "pkg": "dotenv",
    "count": 21
   },
   {
@@ -51,12 +55,16 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
-   "pkg": "dotenv",
+   "pkg": "bcrypt",
    "count": 20
   },
   {
-   "pkg": "bcrypt",
-   "count": 20
+   "pkg": "node:test",
+   "count": 18
+  },
+  {
+   "pkg": "node:assert",
+   "count": 18
   },
   {
    "pkg": "@playwright/test",
@@ -64,14 +72,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "express",
-   "count": 16
-  },
-  {
-   "pkg": "node:test",
-   "count": 16
-  },
-  {
-   "pkg": "node:assert",
    "count": 16
   },
   {
@@ -115,16 +115,16 @@ window.GENESIS_MINDMAP = {
    "count": 3
   },
   {
+   "pkg": "node:module",
+   "count": 3
+  },
+  {
    "pkg": "child_process",
    "count": 3
   },
   {
    "pkg": "jsonwebtoken",
    "count": 3
-  },
-  {
-   "pkg": "axios",
-   "count": 2
   }
  ],
  "groups": [
@@ -155,18 +155,18 @@ window.GENESIS_MINDMAP = {
    "id": "admin",
    "label": "Super Admin",
    "tone": "#a855f7",
-   "nodes": 10,
+   "nodes": 12,
    "clusters": {
     "admin-frontend": 5,
-    "admin-frontend/src": 3,
-    "admin-frontend/tests": 2
+    "admin-frontend/src": 4,
+    "admin-frontend/tests": 3
    }
   },
   {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 62,
+   "nodes": 67,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -185,8 +185,9 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261011_turno_dia": 1,
     "backend/prisma/migrations/20261011_vendas_perdidas": 1,
     "backend/prisma/migrations/20261017_idioma": 1,
-    "backend/scripts": 27,
-    "backend/tests": 13,
+    "backend/prisma/migrations/20261018_nome_ingles": 1,
+    "backend/scripts": 29,
+    "backend/tests": 15,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -194,13 +195,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 60,
+   "nodes": 62,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 15,
     "backend/src/services": 13,
-    "backend/src/utils": 25,
+    "backend/src/utils": 27,
     "backend/src/jobs": 1
    }
   },
@@ -287,8 +288,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1052,
-   "size": 214036,
+   "lines": 1074,
+   "size": 222043,
    "externals": [
     "@prisma/client"
    ],
@@ -331,8 +332,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1473,
-   "size": 81268,
+   "lines": 1524,
+   "size": 86816,
    "externals": [
     "nodemailer"
    ],
@@ -460,25 +461,55 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
-   "notes": "11/10/2026 Fase 8.4: pagina Pedidos de clientes + aviso na Visao geral. fase8_4.mjs.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 570,
-   "size": 35264,
+   "lines": 599,
+   "size": 38083,
    "externals": [
     "react",
     "react-router-dom",
     "axios",
     "lucide-react",
-    "@ui"
+    "@ui",
+    "@i18n/react.jsx",
+    "@i18n/core.js"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "frontend/src/utils/format.js",
+    "admin-frontend/src/i18n_en.js"
+   ],
    "usedBy": [
     "admin-frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 0
+   "outbound": 2
+  },
+  {
+   "id": "admin-frontend/src/i18n_en.js",
+   "path": "admin-frontend/src/i18n_en.js",
+   "label": "i18n_en.js",
+   "group": "admin",
+   "dir": "admin-frontend/src",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Ingles do painel super admin.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 175,
+   "size": 9284,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [
+    "admin-frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
   },
   {
    "id": "admin-frontend/src/index.css",
@@ -590,12 +621,37 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Browser: super admin acrescenta e edita o catalogo-mestre; onboarding recebe.",
-   "notes": "11/10/2026: 8/8.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Teste E2E.",
    "security": "",
    "planned": false,
    "lines": 106,
-   "size": 6143,
+   "size": 6177,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:module"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "admin-frontend/tests/idioma_admin.mjs",
+   "path": "admin-frontend/tests/idioma_admin.mjs",
+   "label": "idioma_admin.mjs",
+   "group": "admin",
+   "dir": "admin-frontend/tests",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: painel admin em ingles, nome em ingles no catalogo-mestre, iPhone.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 123,
+   "size": 8049,
    "externals": [
     "node:fs",
     "node:path",
@@ -615,12 +671,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Configuracao do Vite do painel, com porta propria (5175).",
-   "notes": "",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 30,
-   "size": 960,
+   "lines": 32,
+   "size": 1106,
    "externals": [
     "node:path",
     "vite",
@@ -1031,6 +1087,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261018_nome_ingles/migration.sql",
+   "path": "backend/prisma/migrations/20261018_nome_ingles/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261018_nome_ingles",
+   "ext": ".sql",
+   "status": "ok",
+   "summary": "MasterCatalog.product_name_en (opcional).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Migracao.",
+   "security": "",
+   "planned": false,
+   "lines": 6,
+   "size": 362,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -1060,12 +1137,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".prisma",
    "status": "ok",
    "summary": "Schema Prisma completo: Tenant, User, Product, Sale, SaleItem, StockEntry, Employee, Supplier, FixedCost, Debt, DebtPayment, DemandCapture, ShrinkageRecord, ShiftClosing, SaleGoal, AuditLog, DeviceKey, ProductPriceHistory.",
-   "notes": "Dinheiro em Int (centavos), IDs em String, datas em DateTime: portatil entre SQLite e Postgres.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 444,
-   "size": 15795,
+   "lines": 445,
+   "size": 15821,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1083,12 +1160,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".prisma",
    "status": "ok",
    "summary": "Variante do schema para o SQLite de desenvolvimento local.",
-   "notes": "",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 461,
-   "size": 16677,
+   "lines": 462,
+   "size": 16703,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1118,6 +1195,32 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 0
+  },
+  {
+   "id": "backend/scripts/apply_master_en.js",
+   "path": "backend/scripts/apply_master_en.js",
+   "label": "apply_master_en.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Preenche MasterCatalog.product_name_en com a proposta (a seco por defeito).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Script.",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 1855,
+   "externals": [
+    "dotenv"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/scripts/master_catalog_en.json"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
   },
   {
    "id": "backend/scripts/check_mail.js",
@@ -1401,6 +1504,29 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "backend/scripts/master_catalog_en.json",
+   "path": "backend/scripts/master_catalog_en.json",
+   "label": "master_catalog_en.json",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".json",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 148,
+   "size": 6865,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/scripts/apply_master_en.js"
+   ],
+   "inbound": 1,
    "outbound": 0
   },
   {
@@ -1763,8 +1889,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1532,
-   "size": 129689,
+   "lines": 1567,
+   "size": 132886,
    "externals": [
     "dotenv",
     "crypto",
@@ -2002,12 +2128,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
-   "notes": "11/10/2026 Fase 8.6: GET/POST /master-catalog, PUT /master-catalog/:id (centavos, 409 nome repetido, auditado). verify_system 25 (17/17).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 317,
-   "size": 20820,
+   "lines": 320,
+   "size": 21193,
    "externals": [
     "express",
     "bcrypt",
@@ -2040,12 +2166,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
-   "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production. | 17/10/2026 Fase 9.3 (publicada 1f1f384): /me devolve language; PUT /language (pt|en) da propria conta, com tenant_id no filtro. verify_system 29 15/15.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 644,
-   "size": 25751,
+   "lines": 647,
+   "size": 25995,
    "externals": [
     "express",
     "bcrypt",
@@ -2058,6 +2184,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/passwordResetStore.js",
     "backend/src/utils/whatsapp.js",
     "backend/src/utils/mailer.js",
+    "backend/src/utils/lang.js",
     "backend/src/utils/tokens.js",
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/supportCodes.js",
@@ -2069,7 +2196,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 2,
-   "outbound": 9
+   "outbound": 10
   },
   {
    "id": "backend/src/routes/catalogs.js",
@@ -2206,12 +2333,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
-   "notes": "11/10/2026: auditoria le os nomes a parte (acesso de suporte dava 500). verify_system 24.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 491,
-   "size": 27383,
+   "lines": 492,
+   "size": 27480,
    "externals": [
     "express",
     "crypto",
@@ -2224,6 +2351,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/middleware/auth.js",
     "backend/src/middleware/rbac.js",
     "backend/src/utils/whatsapp.js",
+    "backend/src/utils/lang.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/services/reports.js",
     "backend/src/utils/shiftLock.js",
@@ -2238,7 +2366,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 13
+   "outbound": 14
   },
   {
    "id": "backend/src/routes/pos.js",
@@ -2290,12 +2418,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Catalogo.",
    "security": "",
    "planned": false,
-   "lines": 381,
-   "size": 19189,
+   "lines": 384,
+   "size": 19452,
    "externals": [
     "express",
     "zod"
@@ -2307,13 +2435,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/productImage.js",
     "backend/src/utils/stockLots.js",
     "backend/src/utils/productIcons.js",
+    "backend/src/utils/masterNames.js",
     "backend/src/utils/catalogSuggestions.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "backend/src/routes/refresh.js",
@@ -2425,12 +2554,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
-   "notes": "04/10/2026 Fase 5.2: verify_system 17 25/25.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Compras.",
    "security": "",
    "planned": false,
-   "lines": 151,
-   "size": 8330,
+   "lines": 152,
+   "size": 8396,
    "externals": [
     "express",
     "zod"
@@ -2442,13 +2571,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/http.js",
     "backend/src/utils/audit.js",
     "backend/src/services/reports.js",
-    "backend/src/services/shoppingList.js"
+    "backend/src/services/shoppingList.js",
+    "backend/src/utils/lang.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "backend/src/routes/shrinkage_records.js",
@@ -2668,14 +2798,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/services",
    "ext": ".js",
-   "status": "partial",
+   "status": "ok",
    "summary": "Envio programado dos relatorios por WhatsApp; DESLIGADO sem REPORTS_WHATSAPP=true.",
-   "notes": "11/10/2026 Fase 8.7: verify_system 26 com enviador falso; WhatsApp real nao verificado (precisa de numero aprovado).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Job (5 em 5 min).",
    "security": "",
    "planned": false,
    "lines": 63,
-   "size": 3640,
+   "size": 3678,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -2701,22 +2831,24 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Puro: que relatorio toca (diario/semanal/mensal) e de que periodo, pelo calendario de Maputo; mensagem do WhatsApp.",
-   "notes": "11/10/2026 Fase 8.7: reportSchedule.test.js 8/8.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Relatorios por WhatsApp.",
    "security": "",
    "planned": false,
-   "lines": 87,
-   "size": 4953,
+   "lines": 90,
+   "size": 5384,
    "externals": [],
    "dependsOn": [
-    "backend/src/utils/fefo.js"
+    "backend/src/utils/fefo.js",
+    "backend/src/utils/lang.js"
    ],
    "usedBy": [
     "backend/src/services/reportJob.js",
-    "backend/tests/reportSchedule.test.js"
+    "backend/tests/reportSchedule.test.js",
+    "backend/tests/serverLang.test.js"
    ],
-   "inbound": 2,
-   "outbound": 1
+   "inbound": 3,
+   "outbound": 2
   },
   {
    "id": "backend/src/services/reports.js",
@@ -2782,21 +2914,24 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Puro: totais, telefone +258, mensagem e link wa.me.",
-   "notes": "04/10/2026: 5/5 testes.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Compras.",
    "security": "",
    "planned": false,
-   "lines": 41,
-   "size": 1779,
+   "lines": 43,
+   "size": 1957,
    "externals": [],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/lang.js"
+   ],
    "usedBy": [
     "backend/src/routes/shoppingLists.js",
     "backend/src/services/reportJob.js",
+    "backend/tests/serverLang.test.js",
     "backend/tests/shoppingList.test.js"
    ],
-   "inbound": 3,
-   "outbound": 0
+   "inbound": 4,
+   "outbound": 1
   },
   {
    "id": "backend/src/services/tenantAlerts.js",
@@ -2807,23 +2942,25 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Alertas: stock baixo e validades por lote (X dias configuraveis).",
-   "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Operacoes.",
    "security": "",
    "planned": false,
-   "lines": 65,
-   "size": 2787,
+   "lines": 69,
+   "size": 3117,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
-    "backend/src/utils/fefo.js"
+    "backend/src/utils/fefo.js",
+    "backend/src/utils/lang.js"
    ],
    "usedBy": [
     "backend/src/routes/owner.js",
+    "backend/tests/serverLang.test.js",
     "backend/src/jobs/dailyDigest.js"
    ],
-   "inbound": 2,
-   "outbound": 2
+   "inbound": 3,
+   "outbound": 3
   },
   {
    "id": "backend/src/utils/audit.js",
@@ -2939,9 +3076,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/demand_captures.js",
     "backend/src/routes/products.js",
     "backend/src/utils/lostRequests.js",
+    "backend/src/utils/masterNames.js",
     "backend/tests/catalogSuggestions.test.js"
    ],
-   "inbound": 6,
+   "inbound": 7,
    "outbound": 0
   },
   {
@@ -3040,6 +3178,36 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/utils/lang.js",
+   "path": "backend/src/utils/lang.js",
+   "label": "lang.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Lingua das mensagens que o servidor escreve para fora (WhatsApp, email): tr(lang, texto), X-Genesis-Lang.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Traducao PT/EN.",
+   "security": "",
+   "planned": false,
+   "lines": 66,
+   "size": 4371,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/auth.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/shoppingLists.js",
+    "backend/src/services/reportSchedule.js",
+    "backend/src/services/shoppingList.js",
+    "backend/src/services/tenantAlerts.js",
+    "backend/src/utils/mailer.js",
+    "backend/tests/serverLang.test.js"
+   ],
+   "inbound": 8,
+   "outbound": 0
+  },
+  {
    "id": "backend/src/utils/lostRequests.js",
    "path": "backend/src/utils/lostRequests.js",
    "label": "lostRequests.js",
@@ -3073,25 +3241,55 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/utils",
    "ext": ".js",
-   "status": "partial",
+   "status": "ok",
    "summary": "Envio de emails por SMTP Gmail (App Password). sendPasswordResetEmail entrega o codigo de 6 digitos. require('nodemailer') e lazy, dentro de try/catch.",
-   "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao). ESTE ERA O BLOQUEIO DO 'ESQUECI A SENHA': sem SMTP o utilizador pedia o codigo e nunca recebia. Mitigado a 28/09 com DEV_SHOW_RESET_CODE=true, que devolve o codigo no proprio ecra quando nao foi entregue a ninguem (so em desenvolvimento).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Entrega do codigo de recuperacao.",
    "security": "Nunca deita o backend abaixo se faltar o nodemailer.",
    "planned": false,
-   "lines": 133,
-   "size": 5054,
+   "lines": 143,
+   "size": 5616,
    "externals": [
     "nodemailer"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "backend/src/utils/lang.js"
+   ],
    "usedBy": [
     "backend/scripts/check_mail.js",
     "backend/src/routes/auth.js",
+    "backend/tests/serverLang.test.js",
     "backend/src/jobs/dailyDigest.js"
    ],
-   "inbound": 3,
-   "outbound": 0
+   "inbound": 4,
+   "outbound": 1
+  },
+  {
+   "id": "backend/src/utils/masterNames.js",
+   "path": "backend/src/utils/masterNames.js",
+   "label": "masterNames.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "name_en dos produtos da loja juntado na leitura pelo nome do catalogo-mestre (pesquisa bilingue).",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Catalogo.",
+   "security": "",
+   "planned": false,
+   "lines": 33,
+   "size": 1502,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/utils/catalogSuggestions.js"
+   ],
+   "usedBy": [
+    "backend/src/routes/products.js",
+    "backend/tests/masterNames.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 2
   },
   {
    "id": "backend/src/utils/paymentMethods.js",
@@ -3140,6 +3338,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/dbEngine2.js"
    ],
    "usedBy": [
+    "backend/scripts/apply_master_en.js",
     "backend/scripts/create_system_user.js",
     "backend/scripts/create_test_tenant.js",
     "backend/scripts/e2e_admin_fixture.js",
@@ -3174,13 +3373,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/audit.js",
     "backend/src/utils/authPin.js",
+    "backend/src/utils/masterNames.js",
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/shift.js",
     "backend/src/utils/tenantStatus.js",
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 39,
+   "inbound": 41,
    "outbound": 1
   },
   {
@@ -3673,6 +3873,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/tests/masterNames.test.js",
+   "path": "backend/tests/masterNames.test.js",
+   "label": "masterNames.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Teste: so produtos com o nome do catalogo-mestre recebem name_en.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Teste unitario.",
+   "security": "",
+   "planned": false,
+   "lines": 21,
+   "size": 976,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/masterNames.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "backend/tests/monthClose.test.js",
    "path": "backend/tests/monthClose.test.js",
    "label": "monthClose.test.js",
@@ -3827,6 +4053,38 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 1
+  },
+  {
+   "id": "backend/tests/serverLang.test.js",
+   "path": "backend/tests/serverLang.test.js",
+   "label": "serverLang.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Teste: mensagens do servidor em PT (iguais) e EN; cobertura de tr().",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
+   "role": "Teste unitario.",
+   "security": "",
+   "planned": false,
+   "lines": 85,
+   "size": 4959,
+   "externals": [
+    "node:test",
+    "node:assert",
+    "node:fs",
+    "node:path"
+   ],
+   "dependsOn": [
+    "backend/src/utils/lang.js",
+    "backend/src/services/shoppingList.js",
+    "backend/src/services/tenantAlerts.js",
+    "backend/src/services/reportSchedule.js",
+    "backend/src/utils/mailer.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 5
   },
   {
    "id": "backend/tests/shiftDay.test.js",
@@ -4720,6 +4978,7 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
+    "admin-frontend/src/i18n_en.js",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/i18n/en/auth.js",
@@ -4733,17 +4992,19 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Settings.jsx",
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/api.js",
     "frontend/src/utils/auditLabels.js",
     "frontend/src/utils/devices.js",
     "frontend/src/utils/escpos.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/pdf/receiptPdf.js",
+    "frontend/src/utils/pdf/reportPdf.js",
     "frontend/src/utils/receiptPrinter.js",
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/timelineText.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 22,
+   "inbound": 25,
    "outbound": 0
   },
   {
@@ -4780,12 +5041,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area common.",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 264,
-   "size": 16865,
+   "lines": 298,
+   "size": 17800,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4805,12 +5066,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 805,
-   "size": 44095,
+   "lines": 811,
+   "size": 45638,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -5363,12 +5624,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
    "lines": 245,
-   "size": 15784,
+   "size": 15785,
    "externals": [
     "react",
     "react-router-dom",
@@ -5631,12 +5892,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
    "lines": 346,
-   "size": 19468,
+   "size": 19469,
    "externals": [
     "react",
     "qrcode",
@@ -5668,12 +5929,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "",
    "security": "",
    "planned": false,
    "lines": 452,
-   "size": 27783,
+   "size": 27784,
    "externals": [
     "react",
     "lucide-react"
@@ -5791,16 +6052,18 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Cliente axios com base URL, cookies e tratamento comum de erros 401.",
-   "notes": "",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Rede.",
    "security": "",
    "planned": false,
-   "lines": 66,
-   "size": 2775,
+   "lines": 76,
+   "size": 3179,
    "externals": [
     "axios"
    ],
-   "dependsOn": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
    "usedBy": [
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/layouts/AppShell.jsx",
@@ -5829,7 +6092,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js"
    ],
    "inbound": 25,
-   "outbound": 0
+   "outbound": 1
   },
   {
    "id": "frontend/src/utils/auditLabels.js",
@@ -5933,6 +6196,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/i18n/core.js"
    ],
    "usedBy": [
+    "admin-frontend/src/App.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/pages/VerifyReceipt.jsx",
@@ -5962,7 +6226,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 28,
+   "inbound": 29,
    "outbound": 1
   },
   {
@@ -6102,12 +6366,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Relatorio diario/semanal/mensal em PDF A4 com rastreio.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "PDF.",
    "security": "",
    "planned": false,
-   "lines": 213,
-   "size": 12430,
+   "lines": 217,
+   "size": 13508,
    "externals": [
     "jspdf",
     "jspdf-autotable"
@@ -6115,13 +6379,14 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/format.js",
     "frontend/src/utils/timelineText.js",
-    "frontend/src/utils/pdf/text.js"
+    "frontend/src/utils/pdf/text.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
     "frontend/src/pages/owner/Reports.jsx"
    ],
    "inbound": 1,
-   "outbound": 3
+   "outbound": 4
   },
   {
    "id": "frontend/src/utils/pdf/text.js",
@@ -6215,12 +6480,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Pesquisa sem acentos nem maiusculas (foldText/nameMatches): acucar encontra Açúcar.",
-   "notes": "09/10/2026 (Fase 7.2): tests/search.test.mjs 4/4 + pos.mjs no browser.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Pesquisa de produtos (POS, quebra/pedido, Produtos do dono).",
    "security": "",
    "planned": false,
-   "lines": 12,
-   "size": 524,
+   "lines": 20,
+   "size": 979,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -6643,12 +6908,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Browser: dono em ingles, 19 paginas + 5 gavetas sem portugues residual; mensal no iPhone.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Teste E2E.",
    "security": "",
    "planned": false,
-   "lines": 125,
-   "size": 7632,
+   "lines": 168,
+   "size": 11381,
    "externals": [
     "node:fs",
     "node:path",
@@ -6668,12 +6933,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Browser: terminal em ingles (venda, dialogos, Dispositivos, recibo PDF e ESC/POS), X que nao apaga a impressora; iPhone.",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Teste E2E.",
    "security": "",
    "planned": false,
-   "lines": 217,
-   "size": 15232,
+   "lines": 229,
+   "size": 15957,
    "externals": [
     "node:fs",
     "node:path",
@@ -6844,12 +7109,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
-   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 182,
-   "size": 10667,
+   "lines": 200,
+   "size": 11916,
    "externals": [
     "node:test",
     "node:assert",
@@ -6934,8 +7199,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 26,
-   "size": 1090,
+   "lines": 37,
+   "size": 1822,
    "externals": [
     "node:test",
     "node:assert"
@@ -7291,6 +7556,18 @@ window.GENESIS_MINDMAP = {
  ],
  "links": [
   {
+   "source": "admin-frontend/src/App.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "admin-frontend/src/App.jsx",
+   "target": "admin-frontend/src/i18n_en.js"
+  },
+  {
+   "source": "admin-frontend/src/i18n_en.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "admin-frontend/src/main.jsx",
    "target": "admin-frontend/src/App.jsx"
   },
@@ -7301,6 +7578,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "admin-frontend/tailwind.config.cjs",
    "target": "frontend/tailwind.config.js"
+  },
+  {
+   "source": "backend/scripts/apply_master_en.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/scripts/apply_master_en.js",
+   "target": "backend/scripts/master_catalog_en.json"
   },
   {
    "source": "backend/scripts/check_mail.js",
@@ -7580,6 +7865,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
    "target": "backend/src/utils/tokens.js"
   },
   {
@@ -7685,6 +7974,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/owner.js",
    "target": "backend/src/utils/whatsapp.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/lang.js"
   },
   {
    "source": "backend/src/routes/owner.js",
@@ -7796,6 +8089,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/routes/products.js",
+   "target": "backend/src/utils/masterNames.js"
+  },
+  {
+   "source": "backend/src/routes/products.js",
    "target": "backend/src/utils/catalogSuggestions.js"
   },
   {
@@ -7895,6 +8192,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/shoppingList.js"
   },
   {
+   "source": "backend/src/routes/shoppingLists.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
    "source": "backend/src/routes/shrinkage_records.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7955,6 +8256,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/fefo.js"
   },
   {
+   "source": "backend/src/services/reportSchedule.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
    "source": "backend/src/services/reports.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7975,12 +8280,20 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/lostRequests.js"
   },
   {
+   "source": "backend/src/services/shoppingList.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
    "source": "backend/src/services/tenantAlerts.js",
    "target": "backend/src/utils/prisma.js"
   },
   {
    "source": "backend/src/services/tenantAlerts.js",
    "target": "backend/src/utils/fefo.js"
+  },
+  {
+   "source": "backend/src/services/tenantAlerts.js",
+   "target": "backend/src/utils/lang.js"
   },
   {
    "source": "backend/src/utils/audit.js",
@@ -8004,6 +8317,18 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/utils/lostRequests.js",
+   "target": "backend/src/utils/catalogSuggestions.js"
+  },
+  {
+   "source": "backend/src/utils/mailer.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
+   "source": "backend/src/utils/masterNames.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/utils/masterNames.js",
    "target": "backend/src/utils/catalogSuggestions.js"
   },
   {
@@ -8071,6 +8396,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/lostRequests.js"
   },
   {
+   "source": "backend/tests/masterNames.test.js",
+   "target": "backend/src/utils/masterNames.js"
+  },
+  {
    "source": "backend/tests/monthClose.test.js",
    "target": "backend/src/services/monthClose.js"
   },
@@ -8093,6 +8422,26 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/tests/restock.test.js",
    "target": "backend/src/services/restock.js"
+  },
+  {
+   "source": "backend/tests/serverLang.test.js",
+   "target": "backend/src/utils/lang.js"
+  },
+  {
+   "source": "backend/tests/serverLang.test.js",
+   "target": "backend/src/services/shoppingList.js"
+  },
+  {
+   "source": "backend/tests/serverLang.test.js",
+   "target": "backend/src/services/tenantAlerts.js"
+  },
+  {
+   "source": "backend/tests/serverLang.test.js",
+   "target": "backend/src/services/reportSchedule.js"
+  },
+  {
+   "source": "backend/tests/serverLang.test.js",
+   "target": "backend/src/utils/mailer.js"
   },
   {
    "source": "backend/tests/shiftDay.test.js",
@@ -8943,6 +9292,10 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/pages/pos/PosScreen.jsx"
   },
   {
+   "source": "frontend/src/utils/api.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/auditLabels.js",
    "target": "frontend/src/utils/format.js"
   },
@@ -8993,6 +9346,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/pdf/reportPdf.js",
    "target": "frontend/src/utils/pdf/text.js"
+  },
+  {
+   "source": "frontend/src/utils/pdf/reportPdf.js",
+   "target": "frontend/src/i18n/core.js"
   },
   {
    "source": "frontend/src/utils/productCache.js",

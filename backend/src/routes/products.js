@@ -7,6 +7,7 @@ const requireRole = require('../middleware/rbac');
 const { imageUrlSchema } = require('../utils/productImage');
 const { addLot, consumeLots } = require('../utils/stockLots');
 const { iconSchema } = require('../utils/productIcons');
+const { loadEnglishIndex, withEnglishNames } = require('../utils/masterNames');
 const { recordCatalogSuggestions } = require('../utils/catalogSuggestions');
 
 // "AAAA-MM-DD" que existe mesmo no calendario (31-02 nao passa).
@@ -33,10 +34,12 @@ const updateProductSchema = productSchema.partial();
 router.get('/', auth, requireRole('owner', 'cashier'), async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const products = await prisma.product.findMany({
-      where: { tenant_id: tenantId },
-      orderBy: { name: 'asc' }
-    });
+    const [rows, english] = await Promise.all([
+      prisma.product.findMany({ where: { tenant_id: tenantId }, orderBy: { name: 'asc' } }),
+      // 9.8: nome em ingles dos que vieram do catalogo-mestre (pesquisa bilingue).
+      loadEnglishIndex(),
+    ]);
+    const products = withEnglishNames(rows, english);
     // O caixista nunca ve custos nem margens (especificacao 4.3).
     if (req.user.role !== 'owner') {
       return res.json(products.map(({ cost_price, ...p }) => p));

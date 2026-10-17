@@ -15,6 +15,8 @@
 // com try/catch. Se o nodemailer faltar ou a versao instalada nao suportar
 // require, o reset continua a funcionar por WhatsApp/log em vez de o modulo
 // inteiro falhar no arranque e deitar o backend abaixo.
+const { tr } = require('./lang');
+
 function loadNodemailer() {
   try {
     // eslint-disable-next-line global-require, import/no-dynamic-require
@@ -102,26 +104,33 @@ async function sendMail({ to, subject, text, html }) {
  * Envia codigo de recuperacao de palavra-passe.
  * @param {string} to - Destinatario
  * @param {string} code - Codigo de 6 digitos
+ * @param {string} [lang] - 'pt' | 'en' (9.6: lingua de quem pediu)
  */
-async function sendPasswordResetEmail(to, code) {
-  const subject = `${code} é o seu código de recuperação Genesis`;
-  const text = `Recebeu este pedido porque solicitou a recuperação da palavra-passe no Genesis.\n\n` +
-    `O seu código de recuperação é: ${code}\n\n` +
-    `Este código é válido por 15 minutos e permite até 5 tentativas.\n\n` +
-    `Se não fez este pedido, ignore este email. A sua palavra-passe mantém-se inalterada.`;
+// Assunto + texto + HTML do codigo de recuperacao (separado para se testar sem enviar).
+function buildPasswordResetEmail(code, lang = 'pt') {
+  const subject = tr(lang, '{code} é o seu código de recuperação Genesis', { code });
+  const text = tr(lang, 'Recebeu este pedido porque solicitou a recuperação da palavra-passe no Genesis.') + '\n\n' +
+    tr(lang, 'O seu código de recuperação é: {code}', { code }) + '\n\n' +
+    tr(lang, 'Este código é válido por 15 minutos e permite até 5 tentativas.') + '\n\n' +
+    tr(lang, 'Se não fez este pedido, ignore este email. A sua palavra-passe mantém-se inalterada.');
 
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="color: #0f172a; margin-top: 0;">Recuperação de Palavra-passe</h2>
-      <p style="color: #475569; font-size: 15px;">Recebeu este pedido porque solicitou a reposição da sua palavra-passe na plataforma Genesis.</p>
+    <div lang="${lang}" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="color: #0f172a; margin-top: 0;">${tr(lang, 'Recuperação de Palavra-passe')}</h2>
+      <p style="color: #475569; font-size: 15px;">${tr(lang, 'Recebeu este pedido porque solicitou a reposição da sua palavra-passe na plataforma Genesis.')}</p>
       <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
         <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0284c7;">${code}</span>
       </div>
-      <p style="color: #64748b; font-size: 13px;">O código é válido por <strong>15 minutos</strong> e permite até 5 tentativas.</p>
-      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">Se não fez este pedido, pode ignorar esta mensagem com total segurança.</p>
+      <p style="color: #64748b; font-size: 13px;">${tr(lang, 'O código é válido por <strong>15 minutos</strong> e permite até 5 tentativas.')}</p>
+      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">${tr(lang, 'Se não fez este pedido, pode ignorar esta mensagem com total segurança.')}</p>
     </div>
   `;
 
+  return { subject, text, html };
+}
+
+async function sendPasswordResetEmail(to, code, lang = 'pt') {
+  const { subject, text, html } = buildPasswordResetEmail(code, lang);
   return sendMail({ to, subject, text, html });
 }
 
@@ -129,4 +138,5 @@ module.exports = {
   getMailerConfig,
   sendMail,
   sendPasswordResetEmail,
+  buildPasswordResetEmail,
 };

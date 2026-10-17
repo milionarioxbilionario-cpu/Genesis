@@ -45,7 +45,7 @@ try {
   ok(before > 10 && /\(\d+\)/.test(await page.getByLabel('Tipo de negócio').textContent()), 'lista do bottle store carregada (' + before + ' produtos) e contagem por tipo');
   await page.getByRole('button', { name: 'Novo produto' }).click();
   const dr = page.getByRole('dialog');
-  await dr.getByLabel('Nome').fill(NAME);
+  await dr.getByLabel('Nome', { exact: true }).fill(NAME);
   await dr.getByLabel('Categoria').fill('Sumos');
   await dr.getByLabel('Preço de compra sugerido').fill('30');
   await dr.getByLabel('Preço de venda sugerido').fill('45');
@@ -63,7 +63,7 @@ try {
   await row.click();
   await dr.getByRole('heading', { name: 'Editar produto' }).waitFor({ timeout: T });
   ok(await dr.getByLabel('Preço de venda sugerido').inputValue() === '45', 'a gaveta abre com os valores actuais (45 MT)');
-  await dr.getByLabel('Nome').fill(NAME + ' 1L');
+  await dr.getByLabel('Nome', { exact: true }).fill(NAME + ' 1L');
   await dr.getByLabel('Preço de venda sugerido').fill('52,50');
   await shot(page, 'm1-editar-catalogo');
   await dr.getByRole('button', { name: 'Guardar' }).click();

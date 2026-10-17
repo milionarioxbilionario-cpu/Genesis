@@ -4,7 +4,7 @@ import { Plus, Search } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
-import { foldText, nameMatches } from '../../utils/search';
+import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import ShoppingLists from './ShoppingLists';
 import ProductDrawer, { EMPTY_PRODUCT, LotRows, emptyLot, filledLots } from './ProductDrawer';
@@ -38,7 +38,7 @@ function Catalog({ products }) {
   const { t } = useI18n();
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState(null);
-  const list = useMemo(() => { const f = foldText(q); return (products.data || []).filter((p) => p.is_active && (nameMatches(p.name, f) || (p.barcode || '').includes(q.trim()))); }, [products.data, q]);
+  const list = useMemo(() => { const f = foldText(q); return (products.data || []).filter((p) => p.is_active && (productMatches(p, f) || (p.barcode || '').includes(q.trim()))); }, [products.data, q]);
 
   const columns = [
     { key: 'name', header: t('Produto'), render: (p) => <div className="flex items-center gap-3"><ProductImage product={p} size={36} /><div><p className="text-ink">{p.name}</p>{p.barcode && <p className="num text-xs text-ink-muted">{p.barcode}</p>}</div></div> },

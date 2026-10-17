@@ -32,10 +32,10 @@ async function runReportJob({ now = new Date(), send = sendWhatsAppAlert, tenant
       const done = await prisma.auditLog.findMany({ where: { tenant_id: t.id, action: { in: ['REPORT_SENT', 'REPORT_SEND_FAILED'] }, created_at: { gte: since } }, select: { entity_id: true } });
       const due = dueReports({ now, tenant: t, sentKeys: new Set(done.map((d) => d.entity_id)) });
       if (!due.length) continue;
-      const owner = await prisma.user.findFirst({ where: { tenant_id: t.id, role: 'owner', is_active: true }, select: { id: true } });
+      const owner = await prisma.user.findFirst({ where: { tenant_id: t.id, role: 'owner', is_active: true }, select: { id: true, language: true } });
       if (!owner) continue;
       for (const d of due) {
-        const message = buildReportMessage({ due: d, report: await buildReport(t.id, d), storeName: t.name, appUrl: process.env.APP_URL || 'https://genesismz.com' });
+        const message = buildReportMessage({ due: d, report: await buildReport(t.id, d), storeName: t.name, appUrl: process.env.APP_URL || 'https://genesismz.com', lang: owner.language });
         let action = 'REPORT_SENT'; let detail = {};
         try {
           const r = await send({ to: '+' + to, message, tenantName: t.name });

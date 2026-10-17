@@ -6,7 +6,7 @@ import db from '../../db/localDb';
 import { newUuid, SYNC_STATE } from '../../utils/syncPolicy';
 import { preloadReceiptPdf, printReceipt, saleVerifyUrl } from '../../utils/receiptPrinter';
 import PdfReadyDialog from '../../components/PdfReadyDialog';
-import { foldText, nameMatches } from '../../utils/search';
+import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
 import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Segmented, Select, Spinner, useToast } from '../../components/ui';
@@ -255,7 +255,7 @@ export function RecentSalesDialog({ onClose, onChanged }) {
 function ProductPicker({ products, value, onChange }) {
   const { t } = useI18n();
   const [q, setQ] = useState('');
-  const list = useMemo(() => { const f = foldText(q); return products.filter((p) => nameMatches(p.name, f)).slice(0, 50); }, [products, q]);
+  const list = useMemo(() => { const f = foldText(q); return products.filter((p) => productMatches(p, f)).slice(0, 50); }, [products, q]);
   return (
     <div className="flex flex-col gap-2">
       <Input label={t('Produto')} placeholder={t('Pesquisar…')} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />

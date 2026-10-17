@@ -1511,7 +1511,42 @@ async function test29() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29 };
+// Fase 9.7 + 9.8: nome em ingles do catalogo-mestre (so o super admin o edita)
+// e pesquisa bilingue: a loja ve name_en nos produtos com o mesmo nome.
+async function test30() {
+  section(30, 'Nome em ingles do catalogo-mestre e name_en nos produtos da loja');
+  const admin = adminClient();
+  const tag = 'Agua Verif ' + Date.now().toString().slice(-6);
+  const ids = [];
+  const prods = [];
+  try {
+    const add = await admin.req('POST', '/api/admin/master-catalog', { business_type: 'bottle_store', product_name: tag, product_name_en: 'Check Water', category: 'Águas', suggested_cost: 1000, suggested_sell: 2000 });
+    ok(add.status === 201 && add.data.product_name_en === 'Check Water', 'admin acrescenta com nome em ingles: 201', add);
+    if (add.data?.id) ids.push(add.data.id);
+    const same = await prisma.product.create({ data: { tenant_id: ctx.tenant.id, name: tag.toUpperCase(), category: 'Águas', sell_price: 2000, cost_price: 1000, stock_qty: 5, is_active: true } });
+    const renamed = await prisma.product.create({ data: { tenant_id: ctx.tenant.id, name: tag + ' da casa', category: 'Águas', sell_price: 2000, cost_price: 1000, stock_qty: 5, is_active: true } });
+    prods.push(same.id, renamed.id);
+    const owner = ownerClient();
+    const list = (await owner.req('GET', '/api/products')).data;
+    ok(list.find((p) => p.id === same.id)?.name_en === 'Check Water', 'produto da loja com o mesmo nome (maiusculas): name_en do catalogo');
+    ok(list.find((p) => p.id === renamed.id)?.name_en === null, 'produto com outro nome (do dono): sem name_en');
+    ok(list.find((p) => p.id === same.id)?.name === tag.toUpperCase(), 'o nome da loja fica como estava');
+    const cash = (await client(signAccessToken(ctx.cashier)).req('GET', '/api/products')).data;
+    const c = cash.find((p) => p.id === same.id);
+    ok(c?.name_en === 'Check Water' && c.cost_price === undefined, 'caixista tambem recebe name_en (e continua sem custos)');
+    const ed = await admin.req('PUT', '/api/admin/master-catalog/' + add.data.id, { product_name: tag, product_name_en: '', category: 'Águas', suggested_cost: 1000, suggested_sell: 2000 });
+    ok(ed.status === 200 && ed.data.product_name_en === null, 'apagar o nome em ingles: fica sem (null)', ed);
+    ok((await owner.req('GET', '/api/products')).data.find((p) => p.id === same.id)?.name_en === null, 'a loja deixa logo de ter name_en (junta na leitura)');
+    ok((await admin.req('PUT', '/api/admin/master-catalog/' + add.data.id, { product_name: tag, product_name_en: 'x'.repeat(121), category: 'Águas', suggested_cost: 1000, suggested_sell: 2000 })).status === 400, 'nome em ingles com mais de 120: 400');
+    ok((await ownerClient().req('PUT', '/api/admin/master-catalog/' + add.data.id, { product_name: tag, product_name_en: 'Hack', category: 'S', suggested_cost: 1, suggested_sell: 100 }, { Origin: ADMIN_ORIGIN })).status === 403, 'dono nao edita o nome em ingles: 403');
+  } finally {
+    await prisma.product.deleteMany({ where: { id: { in: prods } } });
+    await prisma.auditLog.deleteMany({ where: { entity_id: { in: ids } } });
+    await prisma.masterCatalog.deleteMany({ where: { id: { in: ids } } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30 };
 
 (async () => {
   await prisma.ready();

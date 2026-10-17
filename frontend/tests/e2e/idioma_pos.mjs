@@ -91,6 +91,18 @@ try {
   await dlg.waitFor({ state: 'detached', timeout: T });
   ok((await prefs(term)).printer === 'usb', 'X: a impressora continua USB (antes ficava «Só PDF»)', await prefs(term));
 
+  console.log('\n=== Pesquisa nas duas línguas (9.8) ===');
+  const search = term.getByLabel('Search product');
+  for (const [q, why] of [['water', 'inglês'], ['agua', 'português sem acento']]) {
+    await search.fill(q);
+    await term.locator('button[data-tile]', { hasText: 'Água Namaacha' }).first().waitFor({ timeout: T });
+    ok(await term.locator('button[data-tile]', { hasNotText: 'Água' }).count() === 0, '«' + q + '» encontra a Água (' + why + ')');
+  }
+  await search.fill('beer');
+  await term.getByText('No product found.').waitFor({ timeout: T });
+  ok(true, '«beer»: a loja de teste não tem cervejas do catálogo-mestre com o mesmo nome → nada (o nome do dono manda)');
+  await search.fill('');
+
   console.log('\n=== Ecrã de venda e recibo em inglês ===');
   await term.locator('button[data-tile]', { hasText: coca.name }).click({ timeout: T });
   const charge = term.getByRole('button', { name: /^Charge / });

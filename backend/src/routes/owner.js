@@ -18,6 +18,7 @@ const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
+const { reqLang, tr } = require('../utils/lang');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
 const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
@@ -473,7 +474,7 @@ router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {
   if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
   const snapshot = await getTenantAlertSnapshot(tenant.id);
   if (!snapshot.totalAlerts) return res.json({ ok: true, sent: 0, message: 'Sem alertas para enviar.' });
-  const summary = buildAlertSummary(tenant, snapshot);
+  const summary = buildAlertSummary(tenant, snapshot, reqLang(req));
   const result = await sendWhatsAppAlert({ to: tenant.phone, message: summary, tenantName: tenant.name });
   await writeAudit({ req, action: 'WHATSAPP_ALERTS_SENT', entityType: 'tenant', entityId: tenant.id, newValue: { alerts: snapshot.totalAlerts } });
   res.json({ ok: true, sent: snapshot.totalAlerts, ...result });
@@ -483,7 +484,7 @@ router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {
 router.post('/whatsapp/test', whatsappLimiter, asyncHandler(async (req, res) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
   if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
-  const result = await sendWhatsAppAlert({ to: tenant.phone, message: `Genesis: teste de ligação WhatsApp da loja ${tenant.name}.`, tenantName: tenant.name });
+  const result = await sendWhatsAppAlert({ to: tenant.phone, message: tr(reqLang(req), 'Genesis: teste de ligação WhatsApp da loja {name}.', { name: tenant.name }), tenantName: tenant.name });
   res.json({ ok: result.ok ?? false, ...result });
 }));
 

@@ -13,6 +13,7 @@ const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { restockFor } = require('../services/reports');
 const { listTotals, orderMessage, whatsappLink, waPhone } = require('../services/shoppingList');
+const { reqLang } = require('../utils/lang');
 
 const router = express.Router();
 router.use(auth, requireRole('owner'));
@@ -133,7 +134,7 @@ router.get('/:id/whatsapp', asyncHandler(async (req, res) => {
     prisma.tenant.findUnique({ where: { id: tid }, select: { name: true } }),
     list.supplier_id ? prisma.supplier.findFirst({ where: { id: list.supplier_id, tenant_id: tid } }) : null,
   ]);
-  const text = orderMessage({ storeName: tenant?.name, supplierName: supplier?.name, items: list.items });
+  const text = orderMessage({ storeName: tenant?.name, supplierName: supplier?.name, items: list.items, lang: reqLang(req) });
   res.json({ text, url: whatsappLink(supplier?.phone, text), has_phone: Boolean(waPhone(supplier?.phone)) });
 }));
 

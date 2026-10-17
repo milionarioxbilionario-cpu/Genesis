@@ -332,6 +332,7 @@ model MasterCatalog {
   id             String @id @default(uuid())
   business_type  String
   product_name   String
+  product_name_en String?
   category       String
   suggested_cost Int
   suggested_sell Int

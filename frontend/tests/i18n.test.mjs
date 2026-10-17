@@ -159,6 +159,24 @@ test('recibo na lingua de quem o gera (ESC/POS); em portugues fica igual', async
   setLang('pt');
 });
 
+// 9.7: o painel super admin (build separada) so carrega en/common.js + o seu
+// admin-frontend/src/i18n_en.js. Os label das listas (estados, tipos, menu,
+// icones) tambem passam por t().
+test('admin: cada texto esta no comum ou no dicionario do admin', () => {
+  const ADMIN = path.join(SRC, '..', '..', 'admin-frontend', 'src');
+  const common = dictKeys('common.js');
+  const admin = new Set([...fs.readFileSync(path.join(ADMIN, 'i18n_en.js'), 'utf8').matchAll(/^\s*'((?:[^'\\]|\\.)+)':/gm)].map((m) => unq(m[1])));
+  const src = fs.readFileSync(path.join(ADMIN, 'App.jsx'), 'utf8');
+  const keys = [
+    ...[...src.matchAll(/\btr?\(\s*'((?:[^'\\]|\\.)+)'\s*[,)]/g)].map((m) => unq(m[1])),
+    ...[...src.matchAll(/label: '((?:[^'\\]|\\.)+)'/g)].map((m) => unq(m[1])),
+    ...[...src.matchAll(/const TYPES = \{([^}]+)\}/g)].flatMap((m) => [...m[1].matchAll(/: '((?:[^'\\]|\\.)+)'/g)].map((x) => unq(x[1]))),
+    ...[...fs.readFileSync(path.join(SRC, 'components', 'ui', 'productIcons.js'), 'utf8').matchAll(/label: '((?:[^'\\]|\\.)+)'/g)].map((m) => unq(m[1])),
+  ];
+  assert.ok(keys.length > 100, 'o scanner encontrou ' + keys.length + ' textos');
+  assert.deepEqual([...new Set(keys.filter((k) => !common.has(k) && !admin.has(k)))], []);
+});
+
 test('todas as chaves usadas no codigo tem ingles', () => {
   const en = new Set(knownKeys('en'));
   const missing = [];

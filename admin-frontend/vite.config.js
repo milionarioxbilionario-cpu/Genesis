@@ -11,6 +11,8 @@ export default defineConfig({
     alias: {
       '@ui': path.resolve(__dirname, '../frontend/src/components/ui'),
       '@tokens': path.resolve(__dirname, '../frontend/src/ui/tokens.css'),
+      // 9.7: a mesma lingua PT/EN do produto (so o nucleo e o dicionario comum).
+      '@i18n': path.resolve(__dirname, '../frontend/src/i18n'),
     },
     dedupe: ['react', 'react-dom', 'lucide-react'],
   },

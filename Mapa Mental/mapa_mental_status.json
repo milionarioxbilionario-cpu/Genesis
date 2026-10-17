@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-17",
+  "updatedAt": "2026-10-18",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -36,11 +36,11 @@
       "security": "Fail-closed: aborta em vez de servir dados sem isolamento."
     },
     "backend/src/utils/mailer.js": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Envio de emails por SMTP Gmail (App Password). sendPasswordResetEmail entrega o codigo de 6 digitos. require('nodemailer') e lazy, dentro de try/catch.",
       "role": "Entrega do codigo de recuperacao.",
       "security": "Nunca deita o backend abaixo se faltar o nodemailer.",
-      "notes": "INCOMPLETO: faltam MAIL_USER/MAIL_PASS reais em backend/.env. Sem isso o codigo sai apenas no log (fora de producao). ESTE ERA O BLOQUEIO DO 'ESQUECI A SENHA': sem SMTP o utilizador pedia o codigo e nunca recebia. Mitigado a 28/09 com DEV_SHOW_RESET_CODE=true, que devolve o codigo no proprio ecra quando nao foi entregue a ninguem (so em desenvolvimento)."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/utils/shiftLock.js": {
       "status": "ok",
@@ -91,7 +91,7 @@
       "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
       "role": "Autenticacao.",
       "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
-      "notes": "Le GOOGLE_CLIENT_ID de backend/.env. CORRIGIDO 28/09 — (1) TODOS os catch que devolviam 500 engolem o erro sem log; agora cada um tem console.error com o email, o que finalmente torna um 500 diagnosticavel. (2) O login Google devolvia NOT_YET_VALID quando o token parecia estar no futuro; passou a devolver CLOCK_SKEW com a medida do desvio do relogio (o PC estava 8h19 atrasado). (3) forgot-password devolve o codigo no ecra quando nao ha SMTP, se DEV_SHOW_RESET_CODE=true e NODE_ENV != production. | 17/10/2026 Fase 9.3 (publicada 1f1f384): /me devolve language; PUT /language (pt|en) da propria conta, com tenant_id no filtro. verify_system 29 15/15.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou.",
       "bugsFixed": "28/09: (a) CAUSA-RAIZ dos 500 — faltava a coluna Tenant.onboarding_completed no Postgres, e toda a query de login faz include:{tenant:true} que traz todas as colunas de Tenant; o Prisma lancava 'The column Tenant.onboarding_completed does not exist' e o catch devolvia 500 'Erro interno no servidor'. Corrigido com prisma/fix_2026-09-28_colunas.sql. (b) O pedido de conta tambem falhava pelo mesmo motivo (tenant.create escreve essa coluna) — devolvia 201 em vez de 500. (c) CLOCK_SKEW no login Google."
     },
     "backend/src/services/passwordResetStore.js": {
@@ -117,14 +117,14 @@
       "status": "ok",
       "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
       "role": "API do dono.",
-      "notes": "11/10/2026: auditoria le os nomes a parte (acesso de suporte dava 500). verify_system 24."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/routes/admin.js": {
       "status": "ok",
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
       "security": "requireRole('super_admin') + adminOriginCheck.",
-      "notes": "11/10/2026 Fase 8.6: GET/POST /master-catalog, PUT /master-catalog/:id (centavos, 409 nome repetido, auditado). verify_system 25 (17/17)."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -136,7 +136,7 @@
       "status": "ok",
       "summary": "Produtos: lista, criar (icone, varias validades, fornecedor opcional, sugestao ao admin), editar, lotes com validade, ajuste de stock auditado.",
       "role": "Catalogo.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/routes/inventory.js": {
       "status": "ok",
@@ -186,7 +186,7 @@
       "status": "ok",
       "summary": "Alertas: stock baixo e validades por lote (X dias configuraveis).",
       "role": "Operacoes.",
-      "notes": "04/10/2026: verify_system 14 27/27; completo 160/160; e2e stock 3/3."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/App.jsx": {
       "status": "ok",
@@ -333,7 +333,8 @@
     "frontend/src/utils/api.js": {
       "status": "ok",
       "summary": "Cliente axios com base URL, cookies e tratamento comum de erros 401.",
-      "role": "Rede."
+      "role": "Rede.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/utils/auth.js": {
       "status": "ok",
@@ -426,7 +427,7 @@
       "status": "ok",
       "summary": "Painel de super admin num ficheiro so: login, dashboard de tenants por estado, aprovar/rejeitar, suspender, bloquear, recuperar, eliminar e abrir a conta do owner.",
       "role": "Painel da plataforma.",
-      "notes": "11/10/2026 Fase 8.4: pagina Pedidos de clientes + aviso na Visao geral. fase8_4.mjs."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "admin-frontend/src/main.jsx": {
       "status": "ok",
@@ -453,7 +454,8 @@
     "admin-frontend/vite.config.js": {
       "status": "ok",
       "summary": "Configuracao do Vite do painel, com porta propria (5175).",
-      "role": "Build."
+      "role": "Build.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/index.html": {
       "status": "partial",
@@ -481,12 +483,13 @@
       "status": "ok",
       "summary": "Schema Prisma completo: Tenant, User, Product, Sale, SaleItem, StockEntry, Employee, Supplier, FixedCost, Debt, DebtPayment, DemandCapture, ShrinkageRecord, ShiftClosing, SaleGoal, AuditLog, DeviceKey, ProductPriceHistory.",
       "role": "Modelo de dados.",
-      "notes": "Dinheiro em Int (centavos), IDs em String, datas em DateTime: portatil entre SQLite e Postgres."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/prisma/schema.sqlite.prisma": {
       "status": "ok",
       "summary": "Variante do schema para o SQLite de desenvolvimento local.",
-      "role": "Modelo de dados."
+      "role": "Modelo de dados.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/prisma/rls_policies.sql": {
       "status": "partial",
@@ -998,7 +1001,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1082,13 +1085,13 @@
       "summary": "Lista de compras: sugestao, CRUD, estado, link WhatsApp.",
       "role": "Compras.",
       "status": "ok",
-      "notes": "04/10/2026 Fase 5.2: verify_system 17 25/25."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/services/shoppingList.js": {
       "summary": "Puro: totais, telefone +258, mensagem e link wa.me.",
       "role": "Compras.",
       "status": "ok",
-      "notes": "04/10/2026: 5/5 testes."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/pages/owner/ShoppingLists.jsx": {
       "summary": "Ecra da lista de compras (Produtos).",
@@ -1143,7 +1146,7 @@
       "status": "ok",
       "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
       "role": "Balcao.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
@@ -1168,7 +1171,7 @@
       "status": "ok",
       "summary": "Pesquisa sem acentos nem maiusculas (foldText/nameMatches): acucar encontra Açúcar.",
       "role": "Pesquisa de produtos (POS, quebra/pedido, Produtos do dono).",
-      "notes": "09/10/2026 (Fase 7.2): tests/search.test.mjs 4/4 + pos.mjs no browser."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/services/ranking.js": {
       "status": "ok",
@@ -1204,7 +1207,7 @@
       "status": "ok",
       "summary": "Relatorio diario/semanal/mensal em PDF A4 com rastreio.",
       "role": "PDF.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/utils/timelineText.js": {
       "status": "ok",
@@ -1264,7 +1267,7 @@
       "status": "ok",
       "summary": "Produtos: Catalogo, Stock (Entrada de stock = produto novo; Ajuste manual Adicionar/Retirar com quantidade positiva), Lista de compras, Historico de custos.",
       "role": "Painel do dono.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/utils/shiftDay.js": {
       "status": "ok",
@@ -1346,19 +1349,19 @@
       "status": "ok",
       "summary": "Browser: super admin acrescenta e edita o catalogo-mestre; onboarding recebe.",
       "role": "Teste E2E.",
-      "notes": "11/10/2026: 8/8."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/services/reportSchedule.js": {
       "status": "ok",
       "summary": "Puro: que relatorio toca (diario/semanal/mensal) e de que periodo, pelo calendario de Maputo; mensagem do WhatsApp.",
       "role": "Relatorios por WhatsApp.",
-      "notes": "11/10/2026 Fase 8.7: reportSchedule.test.js 8/8."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "backend/src/services/reportJob.js": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Envio programado dos relatorios por WhatsApp; DESLIGADO sem REPORTS_WHATSAPP=true.",
       "role": "Job (5 em 5 min).",
-      "notes": "11/10/2026 Fase 8.7: verify_system 26 com enviador falso; WhatsApp real nao verificado (precisa de numero aprovado)."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/tests/e2e/fase8_7.mjs": {
       "status": "ok",
@@ -1412,7 +1415,7 @@
       "status": "ok",
       "summary": "Ingles da area common.",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/i18n/en/auth.js": {
       "status": "ok",
@@ -1424,7 +1427,7 @@
       "status": "ok",
       "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
       "role": "Traducao PT/EN.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/src/i18n/en/pos.js": {
       "status": "ok",
@@ -1442,7 +1445,7 @@
       "status": "ok",
       "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
       "role": "Teste.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/tests/e2e/idioma.mjs": {
       "status": "ok",
@@ -1460,13 +1463,61 @@
       "status": "ok",
       "summary": "Browser: dono em ingles, 19 paginas + 5 gavetas sem portugues residual; mensal no iPhone.",
       "role": "Teste E2E.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     },
     "frontend/tests/e2e/idioma_pos.mjs": {
       "status": "ok",
       "summary": "Browser: terminal em ingles (venda, dialogos, Dispositivos, recibo PDF e ESC/POS), X que nao apaga a impressora; iPhone.",
       "role": "Teste E2E.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/src/utils/lang.js": {
+      "status": "ok",
+      "summary": "Lingua das mensagens que o servidor escreve para fora (WhatsApp, email): tr(lang, texto), X-Genesis-Lang.",
+      "role": "Traducao PT/EN.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/src/utils/masterNames.js": {
+      "status": "ok",
+      "summary": "name_en dos produtos da loja juntado na leitura pelo nome do catalogo-mestre (pesquisa bilingue).",
+      "role": "Catalogo.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/tests/serverLang.test.js": {
+      "status": "ok",
+      "summary": "Teste: mensagens do servidor em PT (iguais) e EN; cobertura de tr().",
+      "role": "Teste unitario.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/tests/masterNames.test.js": {
+      "status": "ok",
+      "summary": "Teste: so produtos com o nome do catalogo-mestre recebem name_en.",
+      "role": "Teste unitario.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/scripts/apply_master_en.js": {
+      "status": "ok",
+      "summary": "Preenche MasterCatalog.product_name_en com a proposta (a seco por defeito).",
+      "role": "Script.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "backend/prisma/migrations/20261018_nome_ingles/migration.sql": {
+      "status": "ok",
+      "summary": "MasterCatalog.product_name_en (opcional).",
+      "role": "Migracao.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "admin-frontend/src/i18n_en.js": {
+      "status": "ok",
+      "summary": "Ingles do painel super admin.",
+      "role": "Traducao PT/EN.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
+    },
+    "admin-frontend/tests/idioma_admin.mjs": {
+      "status": "ok",
+      "summary": "Browser: painel admin em ingles, nome em ingles no catalogo-mestre, iPhone.",
+      "role": "Teste E2E.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou."
     }
   }
 }

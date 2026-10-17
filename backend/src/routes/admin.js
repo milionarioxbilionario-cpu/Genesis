@@ -211,6 +211,7 @@ router.get('/catalog-suggestions', asyncHandler(async (req, res) => {
 router.post('/catalog-suggestions/accept', asyncHandler(async (req, res) => {
   const parsed = groupKeySchema.extend({
     product_name: z.string().trim().min(1, 'nome em falta').max(120),
+    product_name_en: z.string().trim().max(120).nullish(),
     category: z.string().trim().min(1).max(60),
     suggested_cost: z.number().int().nonnegative(),
     suggested_sell: z.number().int().positive('preço de venda tem de ser maior que zero'),
@@ -225,7 +226,7 @@ router.post('/catalog-suggestions/accept', asyncHandler(async (req, res) => {
     const existing = await tx.masterCatalog.findMany({ where: { business_type: d.business_type }, select: { product_name: true } });
     if (existing.some((m) => nameKey(m.product_name) === nameKey(d.product_name))) throw httpError(409, 'Esse produto já está no catálogo-mestre deste tipo de negócio', 'ALREADY_IN_CATALOG');
     const row = await tx.masterCatalog.create({ data: {
-      business_type: d.business_type, product_name: d.product_name, category: d.category,
+      business_type: d.business_type, product_name: d.product_name, product_name_en: d.product_name_en || null, category: d.category,
       suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell, barcode: d.barcode || null, icon: d.icon || null,
     } });
     await tx.catalogSuggestion.updateMany({ where: { id: { in: pending.map((p) => p.id) } }, data: { status: 'added', resolved_at: new Date(), resolved_by: req.user.userId } });
@@ -271,6 +272,8 @@ router.get('/lost-requests', asyncHandler(async (req, res) => {
 const masterSchema = z.object({
   business_type: z.enum(BUSINESS_TYPES),
   product_name: z.string().trim().min(1, 'nome em falta').max(120),
+  // 9.7: nome em ingles (opcional) — so os produtos do catalogo-mestre o tem.
+  product_name_en: z.string().trim().max(120).nullish(),
   category: z.string().trim().min(1, 'categoria em falta').max(60),
   suggested_cost: z.number().int('custo em centavos').nonnegative('custo não pode ser negativo'),
   suggested_sell: z.number().int('preço em centavos').positive('preço de venda tem de ser maior que zero'),
@@ -278,7 +281,7 @@ const masterSchema = z.object({
   icon: iconSchema,
 });
 const masterOut = (m) => ({
-  id: m.id, business_type: m.business_type, product_name: m.product_name, category: m.category,
+  id: m.id, business_type: m.business_type, product_name: m.product_name, product_name_en: m.product_name_en || null, category: m.category,
   suggested_cost: m.suggested_cost, suggested_sell: m.suggested_sell, barcode: m.barcode, icon: m.icon, image_url: m.image_url,
 });
 async function assertUniqueName(businessType, name, exceptId) {
@@ -298,7 +301,7 @@ router.get('/master-catalog', asyncHandler(async (req, res) => {
 router.post('/master-catalog', asyncHandler(async (req, res) => {
   const d = masterSchema.parse(req.body);
   await assertUniqueName(d.business_type, d.product_name);
-  const row = await prisma.masterCatalog.create({ data: { ...d, barcode: d.barcode || null, icon: d.icon || null } });
+  const row = await prisma.masterCatalog.create({ data: { ...d, product_name_en: d.product_name_en || null, barcode: d.barcode || null, icon: d.icon || null } });
   await writeAudit({ req, tenantId: null, action: 'MASTER_CATALOG_CREATED', entityType: 'master_catalog', entityId: row.id, oldValue: null, newValue: masterOut(row) });
   res.status(201).json(masterOut(row));
 }));
@@ -308,7 +311,7 @@ router.put('/master-catalog/:id', asyncHandler(async (req, res) => {
   if (!before) throw httpError(404, 'Produto do catálogo-mestre não encontrado', 'MASTER_NOT_FOUND');
   const d = masterSchema.omit({ business_type: true }).parse(req.body);
   await assertUniqueName(before.business_type, d.product_name, before.id);
-  const row = await prisma.masterCatalog.update({ where: { id: before.id }, data: { ...d, barcode: d.barcode || null, icon: d.icon || null } });
+  const row = await prisma.masterCatalog.update({ where: { id: before.id }, data: { ...d, product_name_en: d.product_name_en || null, barcode: d.barcode || null, icon: d.icon || null } });
   await writeAudit({ req, tenantId: null, action: 'MASTER_CATALOG_UPDATED', entityType: 'master_catalog', entityId: row.id, oldValue: masterOut(before), newValue: masterOut(row) });
   res.json(masterOut(row));
 }));
