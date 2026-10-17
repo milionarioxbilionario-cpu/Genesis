@@ -67,14 +67,26 @@ export const PAYMENT_LABEL = new Proxy(PAYMENT_PT, {
 });
 
 // A mensagem do servidor vem em portugues; noutra lingua traduz-se pelo texto
-// exacto ou, se tiver partes variaveis (ex.: o email), pelo `code`.
+// exacto ou, se tiver partes variaveis (ex.: o email), pelo `code` com os
+// `params` que o servidor manda. Se faltar um valor, fica a mensagem dele.
 export function errorMessage(err, fallback = 'Ocorreu um erro. Tente de novo.') {
   const data = err?.response?.data;
   const raw = data?.error;
   if (typeof raw === 'string' && raw.trim()) {
-    if (data.code && hasTranslation('code:' + data.code)) return t('code:' + data.code);
+    if (data.code && hasTranslation('code:' + data.code)) {
+      const msg = t('code:' + data.code, data.params || {});
+      if (!/\{\w+\}/.test(msg)) return msg;
+    }
     return t(raw);
   }
   if (!err?.response) return t('Sem ligação ao servidor.');
   return t(fallback);
+}
+
+// Nome do mes (1-12): portugues como sempre ("Outubro"); outras linguas pelo Intl.
+const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+export function monthName(m) {
+  if (locale() === 'pt-PT') return MONTHS_PT[m - 1];
+  const s = new Date(2026, m - 1, 1).toLocaleDateString(locale(), { month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

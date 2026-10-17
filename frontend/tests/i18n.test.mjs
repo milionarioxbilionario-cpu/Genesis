@@ -10,6 +10,8 @@ import '../src/i18n/en/auth.js';
 import '../src/i18n/en/owner.js';
 import '../src/i18n/en/pos.js';
 import { money, pct, errorMessage, PAYMENT_LABEL } from '../src/utils/format.js';
+import { LOSS_REASON, lossReason, timelineTitle, timelineWho } from '../src/utils/timelineText.js';
+import { ACTION_LABEL, FIELD_LABEL, WEEKDAY, actionLabel, fieldValue } from '../src/utils/auditLabels.js';
 
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src');
 
@@ -58,6 +60,11 @@ test('erros do servidor: pelo texto exacto ou pelo code; sem rede; fallback', ()
   assert.equal(errorMessage({}), 'No connection to the server.');
   assert.equal(errorMessage({ response: { data: {} } }, 'Email ou senha incorrectos.'), 'Wrong email or password.');
   assert.equal(hasTranslation('code:NOT_REGISTERED'), true);
+  // Codigo com valores: monta com os params; sem params fica a mensagem do servidor.
+  const dup = { response: { data: { error: 'O código 123 já é do produto «Coca».', code: 'DUPLICATE_BARCODE', params: { barcode: '123', name: 'Coca' } } } };
+  assert.equal(errorMessage(dup), 'The code 123 already belongs to the product «Coca».');
+  const dupOld = { response: { data: { error: 'Produto não encontrado', code: 'DUPLICATE_BARCODE' } } };
+  assert.equal(errorMessage(dupOld), 'Product not found', 'sem params: traduz o texto do servidor');
   setLang('pt');
   assert.equal(hasTranslation('code:NOT_REGISTERED'), false, 'em portugues nunca se troca a mensagem do servidor');
   assert.equal(errorMessage({ response: { data: { error: 'Conta suspensa. Contacte o suporte.' } } }), 'Conta suspensa. Contacte o suporte.');
@@ -73,6 +80,47 @@ function walk(dir) {
   });
 }
 const unq = (s) => s.replace(/\\'/g, "'");
+const LABEL_FILES = /(layouts[\\/]AppShell|auth[\\/]RequestAccount|owner[\\/](Debts|ShoppingLists|Reports|Settings|AuditLogPage)|ui[\\/]productIcons)\.jsx?$/;
+
+// Mensagens fixas que o servidor devolve em `error` nas areas ja traduzidas:
+// o ecra mostra-as pelo texto exacto (utils/format.js errorMessage).
+const SERVER_FILES = ['routes/auth.js', 'routes/pos.js', 'routes/owner.js', 'routes/products.js', 'routes/inventory.js', 'routes/settings.js',
+  'routes/shoppingLists.js', 'routes/catalogs.js', 'routes/dashboard.js', 'middleware/auth.js', 'utils/sessionUser.js'];
+test('mensagens de erro do servidor (dono, conta, terminal) tem ingles', () => {
+  const en = new Set(knownKeys('en'));
+  const BACK = path.join(SRC, '..', '..', 'backend', 'src');
+  const missing = new Set();
+  for (const f of SERVER_FILES) {
+    const src = fs.readFileSync(path.join(BACK, f), 'utf8');
+    for (const m of src.matchAll(/(?:httpError\(\d+,\s*|error:\s*)'((?:[^'\\]|\\.)+)'/g)) if (!en.has(unq(m[1]))) missing.add(f + ': ' + unq(m[1]));
+  }
+  // Mensagens em ingles de origem (tokens do refresh) nao precisam de traducao.
+  assert.deepEqual([...missing].filter((x) => !/Refresh token|Invalid refresh token/.test(x)), []);
+});
+
+test('auditoria: cada accao, campo e dia da semana tem ingles', () => {
+  const en = new Set(knownKeys('en'));
+  const missing = [...Object.values(ACTION_LABEL), ...Object.values(FIELD_LABEL), ...WEEKDAY].filter((pt) => !en.has(pt));
+  assert.deepEqual(missing, []);
+  setLang('en');
+  assert.equal(actionLabel('CREATE_SALE'), 'Sale');
+  assert.equal(fieldValue('has_expiry', true), 'Yes');
+  assert.equal(actionLabel('ACCAO_NOVA'), 'ACCAO_NOVA', 'accao desconhecida: o codigo, sem rebentar');
+  setLang('pt');
+  assert.equal(actionLabel('CREATE_SALE'), 'Venda');
+});
+
+test('motivos das perdas e rastreio montados na lingua de quem ve', () => {
+  for (const pt of Object.values(LOSS_REASON)) assert.ok(knownKeys('en').includes(pt), 'motivo sem ingles: ' + pt);
+  setLang('en');
+  assert.equal(lossReason('expired'), 'Expiry date passed');
+  assert.equal(timelineTitle({ type: 'stock', quantity: 12, product_name: 'Coca-Cola' }), 'Stock entry: +12 × Coca-Cola');
+  assert.equal(timelineTitle({ type: 'demand', product_name: 'Gelo', quantity: 3, in_catalog: false }), 'Customer asked for: Gelo ×3 (not in catalogue)');
+  assert.equal(timelineWho({ type: 'loss', auto: true, who: 'Genesis (automático)' }), 'Genesis (automatic)');
+  assert.equal(timelineTitle({ type: 'loss', title: 'Perda: 1 × X' }), 'Perda: 1 × X', 'servidor antigo sem dados: fica o titulo dele');
+  setLang('pt');
+  assert.equal(timelineTitle({ type: 'stock', quantity: -2, product_name: 'Gelo' }), 'Ajuste de stock: -2 × Gelo');
+});
 
 test('todas as chaves usadas no codigo tem ingles', () => {
   const en = new Set(knownKeys('en'));
@@ -82,10 +130,11 @@ test('todas as chaves usadas no codigo tem ingles', () => {
     const src = fs.readFileSync(file, 'utf8');
     const keys = [];
     // So literais inteiros: t('code:' + x) e dinamico e nao conta.
-    for (const m of src.matchAll(/\bt\(\s*'((?:[^'\\]|\\.)+)'\s*[,)]/g)) keys.push(unq(m[1]));
+    // t(...) e tr(...) (o t do core importado com outro nome).
+    for (const m of src.matchAll(/\btr?\(\s*'((?:[^'\\]|\\.)+)'\s*[,)]/g)) keys.push(unq(m[1]));
     for (const m of src.matchAll(/errorMessage\([^,()]+,\s*'((?:[^'\\]|\\.)+)'/g)) keys.push(unq(m[1]));
-    // Listas cujo label e chave (t(label) no ecra).
-    if (/layouts[\\/]AppShell\.jsx$|auth[\\/]RequestAccount\.jsx$/.test(file)) {
+    // Listas constantes cujo label e a chave (o ecra faz t(label)).
+    if (LABEL_FILES.test(file)) {
       for (const m of src.matchAll(/label: '((?:[^'\\]|\\.)+)'/g)) keys.push(unq(m[1]));
     }
     for (const k of keys) { count++; if (!en.has(k)) missing.push(path.relative(SRC, file) + ': ' + k); }

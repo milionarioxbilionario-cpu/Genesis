@@ -379,6 +379,8 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
       detail: [SHRINK_REASON[l.reason] || l.reason, l.product?.barcode ? `código ${l.product.barcode}` : null].filter(Boolean).join(' · '),
       unit_cost: unit,
       reason: l.reason, barcode: l.product?.barcode || null, expiry_date: expiry || null,
+      // Dados para o ecra montar o texto na lingua de quem ve (Fase 9.4).
+      quantity: l.quantity, product_name: l.product?.name || null, auto: l.reason === 'expired',
     });
   }
   for (const e of entries) {
@@ -388,17 +390,18 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
       who: e.recordedBy?.name || '—',
       detail: e.supplier_id ? `fornecedor ${supplierName.get(e.supplier_id) || '—'}` : (e.quantity >= 0 ? 'sem fornecedor' : 'ajuste do dono'),
       unit_cost: e.unit_cost,
+      quantity: e.quantity, product_name: e.product?.name || null, supplier_name: e.supplier_id ? (supplierName.get(e.supplier_id) || '—') : null,
     });
   }
-  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date });
-  for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido' });
+  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date, debtor: d.debtor_name });
+  for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido', debtor: p.debt?.debtor_name || null });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
-  for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || d.product_name || '—'}${(d.quantity || 1) > 1 ? ` ×${d.quantity}` : ''} (${d.product_id ? 'em falta' : 'fora do catálogo'})`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida', quantity: d.quantity || 1, unit_price: d.unit_price ?? null });
+  for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || d.product_name || '—'}${(d.quantity || 1) > 1 ? ` ×${d.quantity}` : ''} (${d.product_id ? 'em falta' : 'fora do catálogo'})`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida', quantity: d.quantity || 1, unit_price: d.unit_price ?? null, product_name: d.product?.name || d.product_name || null, in_catalog: Boolean(d.product_id) });
 
   // Despesa: sai do lucro liquido do MES (nao do lucro bruto do dia), por isso profit 0.
   // A data e o dia escolhido pelo dono (meio-dia), nao a hora em que foi escrita.
   const expenseBy = expenses.length ? new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: [...new Set(expenses.map((e) => e.created_by))] } }, select: { id: true, name: true } })).map((u) => [u.id, u.name])) : new Map();
-  for (const e of expenses) events.push({ id: 'expense-' + e.id, type: 'expense', at: e.date, effect: 'expense', amount: -e.amount, profit: 0, title: `Despesa: ${e.category}`, who: expenseBy.get(e.created_by) || '—', detail: e.description || '', day_only: true });
+  for (const e of expenses) events.push({ id: 'expense-' + e.id, type: 'expense', at: e.date, effect: 'expense', amount: -e.amount, profit: 0, title: `Despesa: ${e.category}`, who: expenseBy.get(e.created_by) || '—', detail: e.description || '', day_only: true, category: e.category });
 
   events.sort((a, b) => new Date(b.at) - new Date(a.at));
   const totals = {

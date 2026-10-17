@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Dialog } from './ui';
+import { t as tr } from '../i18n/core';
+import { useI18n } from '../i18n/react';
 
 // Leitura de codigo de barras pela camara do telemovel (Fase 8.8, pedido do
 // fundador 10/10/2026). O Safari do iPhone nao tem BarcodeDetector, por isso
@@ -18,26 +20,27 @@ async function loadReader() {
 }
 
 function cameraError(err) {
-  if (!window.isSecureContext) return 'A câmara só funciona com ligação segura (https).';
-  if (err?.name === 'NotAllowedError') return 'Sem autorização para usar a câmara. Autorize a câmara nas definições do browser e tente de novo.';
-  if (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError') return 'Este aparelho não tem câmara disponível.';
-  if (err?.name === 'NotReadableError') return 'A câmara está a ser usada por outra aplicação.';
-  return 'Não foi possível abrir a câmara.';
+  if (!window.isSecureContext) return tr('A câmara só funciona com ligação segura (https).');
+  if (err?.name === 'NotAllowedError') return tr('Sem autorização para usar a câmara. Autorize a câmara nas definições do browser e tente de novo.');
+  if (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError') return tr('Este aparelho não tem câmara disponível.');
+  if (err?.name === 'NotReadableError') return tr('A câmara está a ser usada por outra aplicação.');
+  return tr('Não foi possível abrir a câmara.');
 }
 
-export default function BarcodeScanner({ open, onClose, onCode, continuous = false, title = 'Ler código de barras' }) {
+export default function BarcodeScanner({ open, onClose, onCode, continuous = false, title }) {
+  const { t } = useI18n();
   const video = useRef(null);
   const controls = useRef(null);
   const last = useRef({ code: '', at: 0 });
   const handler = useRef(onCode);
   handler.current = onCode;
-  const [status, setStatus] = useState({ text: 'A abrir a câmara…', tone: 'neutral' });
+  const [status, setStatus] = useState({ text: tr('A abrir a câmara…'), tone: 'neutral' });
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return undefined;
     let cancelled = false;
-    setError(''); setStatus({ text: 'A abrir a câmara…', tone: 'neutral' });
+    setError(''); setStatus({ text: tr('A abrir a câmara…'), tone: 'neutral' });
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error('sem camara'), { name: 'NotFoundError' });
@@ -55,7 +58,7 @@ export default function BarcodeScanner({ open, onClose, onCode, continuous = fal
           if (!continuous && res.ok) { controls.current?.stop(); onClose?.(); }
         });
         if (cancelled) { controls.current?.stop(); return; }
-        setStatus({ text: 'Aponte para o código de barras.', tone: 'neutral' });
+        setStatus({ text: tr('Aponte para o código de barras.'), tone: 'neutral' });
       } catch (err) {
         if (!cancelled) setError(cameraError(err));
       }
@@ -66,8 +69,8 @@ export default function BarcodeScanner({ open, onClose, onCode, continuous = fal
   if (!open) return null;
   const toneClass = status.tone === 'positive' ? 'text-positive' : status.tone === 'danger' ? 'text-danger' : 'text-ink-2';
   return (
-    <Dialog open title={title} description={continuous ? 'Cada produto lido entra logo na venda.' : 'O código lido fica no produto.'} onClose={onClose}
-      footer={<Button variant="primary" onClick={onClose}>{continuous ? 'Concluir' : 'Fechar'}</Button>}>
+    <Dialog open title={title || t('Ler código de barras')} description={continuous ? t('Cada produto lido entra logo na venda.') : t('O código lido fica no produto.')} onClose={onClose}
+      footer={<Button variant="primary" onClick={onClose}>{continuous ? t('Concluir') : t('Fechar')}</Button>}>
       {error ? <Alert tone="danger">{error}</Alert> : (
         <div className="flex flex-col gap-3">
           <div className="relative overflow-hidden rounded-lg bg-ink">
