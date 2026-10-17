@@ -9,6 +9,7 @@
 //  - Sem impressora: o recibo fica sempre em PDF no aparelho (decisao 11/10).
 // Nada disto vai para o servidor: e do aparelho, nao da loja.
 import { prefersShare } from './pdf/deliver';
+import { t } from '../i18n/core.js';
 
 const PREFS_KEY = 'genesis_devices';
 const ASKED_KEY = 'genesis_devices_asked';
@@ -47,7 +48,7 @@ export async function connectUsbPrinter() {
 }
 async function writeUsb(bytes) {
   const [port] = await navigator.serial.getPorts();
-  if (!port) throw new Error('A impressora USB não está ligada. Ligue-a em «Dispositivos».');
+  if (!port) throw new Error(t('A impressora USB não está ligada. Ligue-a em «Dispositivos».'));
   try { await port.open({ baudRate: 9600 }); } catch (err) { if (err?.name !== 'InvalidStateError') throw err; }
   const writer = port.writable.getWriter();
   try { await writer.write(bytes); } finally { writer.releaseLock(); await port.close().catch(() => {}); }
@@ -74,7 +75,7 @@ async function findWritable(server) {
       if (c) return c;
     } catch { /* este servico nao existe nesta impressora */ }
   }
-  throw new Error('Esta impressora Bluetooth não aceita recibos (não encontrei por onde escrever).');
+  throw new Error(t('Esta impressora Bluetooth não aceita recibos (não encontrei por onde escrever).'));
 }
 async function attach(device) {
   const server = device.gatt.connected ? device.gatt : await device.gatt.connect();
@@ -96,7 +97,7 @@ async function bluetoothReady() {
     const device = (await navigator.bluetooth.getDevices()).find((d) => d.id === saved.id);
     if (device) return attach(device);
   }
-  throw new Error('A impressora Bluetooth não está ligada. Ligue-a em «Dispositivos».');
+  throw new Error(t('A impressora Bluetooth não está ligada. Ligue-a em «Dispositivos».'));
 }
 async function writeBluetooth(bytes) {
   const { characteristic: c } = await bluetoothReady();

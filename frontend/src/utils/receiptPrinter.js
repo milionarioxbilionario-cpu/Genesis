@@ -2,10 +2,12 @@ import QRCode from 'qrcode';
 import { deliverPdf, downloadBlob, prefersShare } from './pdf/deliver';
 import { buildEscPosReceipt } from './escpos';
 import { getDevicePrefs, sendToPrinter } from './devices';
+import { getLang, locale, t } from '../i18n/core.js';
 
+// 9.5: recibo na lingua de quem o gera; em portugues fica igual.
 const formatCurrency = (value) => {
-  const numeric = Number(value || 0) / 100;
-  return `MZN ${numeric.toFixed(2).replace('.', ',')}`;
+  const s = (Number(value || 0) / 100).toFixed(2);
+  return `MZN ${getLang() === 'pt' ? s.replace('.', ',') : s}`;
 };
 
 const LS_KEY = 'genesis_pending_receipts';
@@ -51,12 +53,12 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
   const change = Number(sale.change_given || 0);
   const discount = Number(sale.discount_amount || 0);
   const dailyNumber = padDailyNumber(sale.daily_number);
-  const timestamp = new Date(sale.created_at || Date.now()).toLocaleString('pt-MZ');
+  const timestamp = new Date(sale.created_at || Date.now()).toLocaleString(getLang() === 'pt' ? 'pt-MZ' : locale());
   const subtotal = total + discount;
 
   const rows = (items || []).map((item) => `
     <tr>
-      <td style="text-align:left; padding-right:8px; max-width:55%;">${esc(item.product_name || 'Produto')}</td>
+      <td style="text-align:left; padding-right:8px; max-width:55%;">${esc(item.product_name || t('Produto'))}</td>
       <td style="text-align:center; width:8%;">${esc(item.quantity || 1)}</td>
       <td style="text-align:right; width:18%;">${formatCurrency(item.unit_sell_price || item.sell_price || 0)}</td>
       <td style="text-align:right; width:19%;">${formatCurrency((item.quantity || 1) * (item.unit_sell_price || item.sell_price || 0))}</td>
@@ -71,14 +73,14 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
     : '';
   const qrHtml = safeQr
     ? `<div class="qr-box"><img src="${safeQr}" width="70" height="70" alt="QR Code" /></div>`
-    : `<div class="qr-box qr-empty"><div style="line-height:70px; color:#999; font-size:9px;">Sem código</div></div>`;
+    : `<div class="qr-box qr-empty"><div style="line-height:70px; color:#999; font-size:9px;">${esc(t('Sem código'))}</div></div>`;
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${getLang()}">
       <head>
         <meta charset="utf-8" />
-        <title>Recibo - ${esc(shopName)}</title>
+        <title>${esc(t('Recibo'))} - ${esc(shopName)}</title>
         <style>
           @page { size: 80mm auto; margin: 10mm; }
           body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: 0 auto; padding: 8mm; color: #111c2b; font-size: 11px; line-height: 1.55; }
@@ -103,29 +105,29 @@ function buildReceiptHtml({ shopName, shopLocation, cashierName, sale, items, qr
         <h1>${esc(shopName)}</h1>
         ${shopLocation ? `<div class="shop-location">${esc(shopLocation)}</div>` : ''}
         <div class="sale-meta">
-          <div><strong>Nº de venda:</strong> ${esc(dailyNumber)}</div>
-          <div><strong>Data:</strong> ${esc(timestamp)}</div>
-          <div><strong>Caixista:</strong> ${esc(cashierName || '—')}</div>
-          <div><strong>Pagamento:</strong> ${esc(sale.payment_method || 'Dinheiro')}</div>
+          <div><strong>${esc(t('N.º de venda:'))}</strong> ${esc(dailyNumber)}</div>
+          <div><strong>${esc(t('Data:'))}</strong> ${esc(timestamp)}</div>
+          <div><strong>${esc(t('Caixista:'))}</strong> ${esc(cashierName || '—')}</div>
+          <div><strong>${esc(t('Pagamento:'))}</strong> ${esc(sale.payment_method || t('Dinheiro'))}</div>
         </div>
         <table>
           <thead>
-            <tr><th style="text-align:left;">Produto</th><th style="text-align:center; width:8%;">Qtd</th><th style="text-align:right; width:18%;">Preço</th><th style="text-align:right; width:19%;">Total</th></tr>
+            <tr><th style="text-align:left;">${esc(t('Produto'))}</th><th style="text-align:center; width:8%;">${esc(t('Qtd'))}</th><th style="text-align:right; width:18%;">${esc(t('Preço'))}</th><th style="text-align:right; width:19%;">${esc(t('Total'))}</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="summary">
-          <div><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
-          ${discount > 0 ? `<div><span>Desconto</span><span>-${formatCurrency(discount)}</span></div>` : ''}
-          <div><span>Recebido</span><span>${formatCurrency(received)}</span></div>
-          <div><span>Troco</span><span>${formatCurrency(change)}</span></div>
-          <div class="total"><span>Total</span><span>${formatCurrency(total)}</span></div>
+          <div><span>${esc(t('Subtotal'))}</span><span>${formatCurrency(subtotal)}</span></div>
+          ${discount > 0 ? `<div><span>${esc(t('Desconto'))}</span><span>-${formatCurrency(discount)}</span></div>` : ''}
+          <div><span>${esc(t('Recebido'))}</span><span>${formatCurrency(received)}</span></div>
+          <div><span>${esc(t('Troco'))}</span><span>${formatCurrency(change)}</span></div>
+          <div class="total"><span>${esc(t('Total'))}</span><span>${formatCurrency(total)}</span></div>
         </div>
         <div class="qr-section">
           ${qrHtml}
-          <div style="font-size:9px; margin-top:3px; color:#666;">Escaneie para ver detalhes</div>
+          <div style="font-size:9px; margin-top:3px; color:#666;">${esc(t('Escaneie para ver detalhes'))}</div>
         </div>
-        <div class="footer">Obrigado pela preferência! ${esc(shopName)}</div>
+        <div class="footer">${esc(t('Obrigado pela preferência!'))} ${esc(shopName)}</div>
       </body>
     </html>
   `;
@@ -206,7 +208,7 @@ export async function printReceipt({ shopName = 'Genesis', shopLocation, cashier
     }
   } catch (err) {
     console.warn('Impressora falhou; o recibo ficou em PDF', err);
-    printError = err?.message || 'A impressora não respondeu.';
+    printError = err?.message || t('A impressora não respondeu.');
   }
 
   if (!pdf.ok && !pdf.needsTap && !printed) {

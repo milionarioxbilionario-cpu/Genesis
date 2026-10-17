@@ -128,12 +128,16 @@ try {
   const putCash = saved(term);
   await dlg.getByRole('radio', { name: 'EN' }).click();
   ok((await putCash).status() === 200, 'caixista escolhe EN no diálogo: PUT (sessão pos) 200');
-  ok(await dlg.getByRole('button', { name: 'Close' }).count() === 1, 'o ecrã muda logo para EN');
+  // 9.5: o titulo tambem muda («Dispositivos» -> «Devices»).
+  ok(await term.getByRole('dialog', { name: 'Devices' }).getByRole('button', { name: 'Close' }).count() === 1, 'o ecrã muda logo para EN');
   const cme = await api(term, 'GET', '/api/auth/me');
   ok(cme.data?.user?.language === 'en' && cme.data?.user?.role === 'cashier', 'gravado na conta do caixista', cme.data?.user);
+  // 9.5: o dialogo inteiro passa a ingles (titulo, botoes).
+  const dlgEn = term.getByRole('dialog', { name: 'Devices' });
+  ok(await dlgEn.isVisible() && await dlgEn.getByRole('button', { name: 'Continue' }).isVisible(), '9.5: diálogo «Devices» em inglês (título e botões)');
   await term.screenshot({ path: path.join(SHOTS, 'i6-dispositivos-en.png') });
-  await dlg.getByRole('button', { name: /Não tenho/ }).click();
-  await dlg.waitFor({ state: 'detached', timeout: T });
+  await dlgEn.getByRole('button', { name: /I don't have one/ }).click();
+  await dlgEn.waitFor({ state: 'detached', timeout: T });
   ok(await term.getByRole('button', { name: /^(Língua|Language): / }).isHidden(), 'telemóvel: sem botão da língua no cabeçalho');
   ok(await noHScroll(term), 'POS 390 px: sem deslocamento lateral');
   const nameW = await term.locator('header p.truncate').first().evaluate((el) => Math.round(el.getBoundingClientRect().width));
@@ -142,18 +146,18 @@ try {
   await term.screenshot({ path: path.join(SHOTS, 'i7-pos-390.png') });
   ok((await api(a, 'GET', '/api/auth/me')).data?.user?.language === 'pt', 'a língua do dono não mudou');
 
-  await term.getByRole('button', { name: 'Bloquear terminal' }).click();
+  await term.getByRole('button', { name: 'Lock terminal' }).click();
   await term.getByRole('heading', { name: 'Who is selling?' }).waitFor({ timeout: T });
   ok(true, 'bloquear: perfis voltam à língua do aparelho (EN)');
   await term.getByRole('radio', { name: 'PT' }).click();
   await term.getByRole('heading', { name: 'Quem está a vender?' }).waitFor();
   await term.getByRole('button', { name: new RegExp(fx.cashier.name) }).click();
   await term.keyboard.type(fx.cashier.pin);
-  await term.getByRole('button', { name: 'Dispositivos' }).click({ timeout: T });
-  const dlg2 = term.getByRole('dialog', { name: 'Dispositivos' });
+  await term.getByRole('button', { name: 'Devices' }).click({ timeout: T });
+  const dlg2 = term.getByRole('dialog', { name: 'Devices' });
   await dlg2.waitFor({ timeout: T });
   ok(await checked(dlg2, 'EN') === 'true' && await dlg2.getByRole('button', { name: 'Close' }).count() === 1, 'aparelho em PT, caixista entra: fica em EN (a língua dele)');
-  await dlg2.getByRole('button', { name: 'Continuar' }).click();
+  await dlg2.getByRole('button', { name: 'Continue' }).click();
   await ctxT.close();
 
   console.log('\n=== Terminal (computador): botão da língua no cabeçalho ===');
@@ -166,7 +170,7 @@ try {
   await desk.getByRole('button', { name: 'Emparelhar' }).click();
   await desk.getByRole('button', { name: new RegExp(fx.cashier.name) }).click({ timeout: T });
   await desk.keyboard.type(fx.cashier.pin);
-  await desk.getByRole('dialog', { name: 'Dispositivos' }).getByRole('button', { name: /Não tenho/ }).click({ timeout: T });
+  await desk.getByRole('dialog', { name: 'Devices' }).getByRole('button', { name: /I don't have one/ }).click({ timeout: T });
   const langBtn = desk.getByRole('button', { name: /^(Língua|Language): / });
   await langBtn.waitFor({ timeout: T });
   ok((await langBtn.textContent()).trim() === 'EN', 'computador: botão no cabeçalho mostra a língua do caixista (EN)', await langBtn.textContent());

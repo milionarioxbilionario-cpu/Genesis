@@ -277,6 +277,7 @@ async function test4() {
   const cheap = await cashier.req('POST', '/api/sales', saleBody({
     items: [{ product_id: ctx.product.id, quantity: 1, unit_sell_price: 1, unit_cost_price: 6000 }], total_amount: 1, amount_received: 1 }));
   ok(cheap.status === 409 && cheap.data?.code === 'PRICE_MISMATCH', 'caixista regista cerveja a 1 centavo: recusado (409)', cheap);
+  ok(cheap.data?.params?.name === ctx.product.name, '9.5: o 409 traz o nome do produto em params (o terminal monta a frase na lingua do caixista)', cheap.data);
   const dear = await cashier.req('POST', '/api/sales', saleBody({
     items: [{ product_id: ctx.product.id, quantity: 1, unit_sell_price: 15000, unit_cost_price: 6000 }], total_amount: 15000, amount_received: 15000 }));
   ok(dear.status === 409, 'acima do catalogo: recusado (409)', dear);
@@ -392,6 +393,7 @@ async function test6() {
   const lockedSale = await cashier.req('POST', '/api/sales', saleBody());
   const { shouldQueueOffline } = await import(pathToFileURL(path.join(FE, 'src', 'utils', 'syncPolicy.js')).href);
   ok(lockedSale.status === 403, 'caixista bloqueado: servidor recusa a venda (403)', lockedSale);
+  ok(lockedSale.data?.code === 'SELLER_LOCKED' && lockedSale.data?.params?.name === ctx.cashier.name, '9.5: recusa com code SELLER_LOCKED e o nome em params', lockedSale.data);
   ok(shouldQueueOffline({ response: { status: lockedSale.status } }) === false, '... e a politica do POS NAO a guarda na fila');
   idb.close();
 }
@@ -456,6 +458,7 @@ async function test8() {
   ok(free.status === 201, 'desconto de 10% (limite): livre', free);
   const need = await caixa.req('POST', '/api/sales', withDisc(2000));
   ok(need.status === 403 && need.data?.code === 'DISCOUNT_NEEDS_PIN', 'desconto de 20% sem PIN: recusado', need);
+  ok(need.data?.params?.pct === 10, '9.5: o 403 traz o limite em params (pct: 10)', need.data);
   const before = await prisma.auditLog.count({ where: { tenant_id: ctx.tenant.id, action: 'DISCOUNT_PIN_FAIL' } });
   const wrong = await caixa.req('POST', '/api/sales', withDisc(2000, { authorization_pin: '0000' }));
   ok(wrong.status === 403 && wrong.data?.code === 'INVALID_AUTH_PIN', 'PIN errado: recusado', wrong);
@@ -1047,7 +1050,9 @@ async function test21() {
   const next = await shift();
   ok(next.open === true && next.auto === true, 'dia novo: o perfil abre sozinho', next);
   ok((await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }))).status === 201, 'dia novo: vende sem PIN (201)');
-  ok((await close(9000)).data?.code === 'COUNT_BELOW_EXPECTED', 'esperado do dia novo = so as vendas deste turno (90 < 100 recusado)');
+  const below = await close(9000);
+  ok(below.data?.code === 'COUNT_BELOW_EXPECTED', 'esperado do dia novo = so as vendas deste turno (90 < 100 recusado)');
+  ok(below.data?.params?.n === below.data?.remaining && below.data?.params?.max === below.data?.maxAttempts, '9.5: fecho recusado traz as tentativas em params', below.data);
   await prisma.auditLog.deleteMany({ where: { tenant_id: t, entity_id: cid, action: 'SHIFT_ATTEMPT_FAIL' } });
 
   // 24/24: turno que comecou ontem as 15h e fecha hoje de madrugada = fecho de ONTEM.

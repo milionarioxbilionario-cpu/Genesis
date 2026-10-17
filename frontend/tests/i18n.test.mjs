@@ -80,12 +80,14 @@ function walk(dir) {
   });
 }
 const unq = (s) => s.replace(/\\'/g, "'");
-const LABEL_FILES = /(layouts[\\/]AppShell|auth[\\/]RequestAccount|owner[\\/](Debts|ShoppingLists|Reports|Settings|AuditLogPage)|ui[\\/]productIcons)\.jsx?$/;
+const LABEL_FILES = /(layouts[\\/]AppShell|pos[\\/]PosScreen|auth[\\/]RequestAccount|owner[\\/](Debts|ShoppingLists|Reports|Settings|AuditLogPage)|ui[\\/]productIcons)\.jsx?$/;
 
 // Mensagens fixas que o servidor devolve em `error` nas areas ja traduzidas:
 // o ecra mostra-as pelo texto exacto (utils/format.js errorMessage).
 const SERVER_FILES = ['routes/auth.js', 'routes/pos.js', 'routes/owner.js', 'routes/products.js', 'routes/inventory.js', 'routes/settings.js',
-  'routes/shoppingLists.js', 'routes/catalogs.js', 'routes/dashboard.js', 'middleware/auth.js', 'utils/sessionUser.js'];
+  'routes/shoppingLists.js', 'routes/catalogs.js', 'routes/dashboard.js', 'middleware/auth.js', 'utils/sessionUser.js',
+  // 9.5: venda, turno e terminal.
+  'routes/sales.js', 'utils/shift.js', 'middleware/terminalAuth.js', 'middleware/posWriteAuth.js'];
 test('mensagens de erro do servidor (dono, conta, terminal) tem ingles', () => {
   const en = new Set(knownKeys('en'));
   const BACK = path.join(SRC, '..', '..', 'backend', 'src');
@@ -120,6 +122,41 @@ test('motivos das perdas e rastreio montados na lingua de quem ve', () => {
   assert.equal(timelineTitle({ type: 'loss', title: 'Perda: 1 × X' }), 'Perda: 1 × X', 'servidor antigo sem dados: fica o titulo dele');
   setLang('pt');
   assert.equal(timelineTitle({ type: 'stock', quantity: -2, product_name: 'Gelo' }), 'Ajuste de stock: -2 × Gelo');
+});
+
+// O terminal so carrega en/common.js + en/pos.js (nao o dicionario do dono):
+// cada texto dos ficheiros do terminal tem de estar num desses dois. O recibo
+// tambem sai do painel do dono (SaleDrawer): o dele fica em common.js.
+const dictKeys = (f) => new Set([...fs.readFileSync(path.join(SRC, 'i18n', 'en', f), 'utf8').matchAll(/^\s*'((?:[^'\\]|\\.)+)':/gm)].map((m) => unq(m[1])));
+function keysOf(rel) {
+  const src = fs.readFileSync(path.join(SRC, rel), 'utf8');
+  const keys = [...src.matchAll(/\btr?\(\s*'((?:[^'\\]|\\.)+)'\s*[,)]/g)].map((m) => unq(m[1]));
+  if (LABEL_FILES.test(rel)) keys.push(...[...src.matchAll(/label: '((?:[^'\\]|\\.)+)'/g)].map((m) => unq(m[1])));
+  return keys;
+}
+const RECEIPT_FILES = ['utils/escpos.js', 'utils/devices.js', 'utils/receiptPrinter.js', 'utils/pdf/receiptPdf.js', 'components/PdfReadyDialog.jsx'];
+const TERMINAL_FILES = ['pages/pos/Terminal.jsx', 'pages/pos/PosScreen.jsx', 'pages/pos/PosDialogs.jsx', 'pages/pos/DevicesDialog.jsx', 'components/BarcodeScanner.jsx', ...RECEIPT_FILES];
+test('terminal: os textos estao nos dicionarios que ele carrega (common + pos)', () => {
+  const common = dictKeys('common.js');
+  const pos = dictKeys('pos.js');
+  const outside = TERMINAL_FILES.flatMap((f) => keysOf(f).filter((k) => !common.has(k) && !pos.has(k)).map((k) => f + ': ' + k));
+  assert.deepEqual(outside, []);
+  const receiptNotCommon = RECEIPT_FILES.flatMap((f) => keysOf(f).filter((k) => !common.has(k)).map((k) => f + ': ' + k));
+  assert.deepEqual(receiptNotCommon, [], 'recibo/impressoras: tambem usados no painel do dono');
+});
+
+test('recibo na lingua de quem o gera (ESC/POS); em portugues fica igual', async () => {
+  const { buildEscPosReceipt } = await import('../src/utils/escpos.js');
+  const input = { shopName: 'Loja', cashierName: 'Carlos', sale: { daily_number: 7, created_at: '2026-10-11T10:00:00Z', payment_method: 'x', total_amount: 19500, amount_received: 20000, change_given: 500 }, items: [{ product_name: 'Gelo', quantity: 3, unit_sell_price: 6500 }] };
+  const txt = () => Buffer.from(buildEscPosReceipt(input)).toString('latin1');
+  setLang('pt');
+  const pt = txt();
+  assert.ok(pt.includes('Venda n.o 007') && pt.includes('Caixista: Carlos') && pt.includes('195,00') && pt.includes('Obrigado pela preferencia!'));
+  setLang('en');
+  const en = txt();
+  assert.ok(en.includes('Sale no. 007') && en.includes('Cashier: Carlos') && en.includes('195.00') && en.includes('Change') && en.includes('Thank you'), en);
+  assert.ok(!/Caixista|Troco|Obrigado/.test(en));
+  setLang('pt');
 });
 
 test('todas as chaves usadas no codigo tem ingles', () => {

@@ -100,6 +100,8 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
       body: {
         ok: false, accepted: false, code: locked ? 'CASHIER_LOCKED' : 'COUNT_BELOW_EXPECTED', locked,
         attemptNo, maxAttempts: MAX_ATTEMPTS, remaining: Math.max(0, MAX_ATTEMPTS - attemptNo),
+        // 9.5: valores da mensagem, para o terminal a mostrar na lingua do caixista.
+        params: { max: MAX_ATTEMPTS, n: Math.max(0, MAX_ATTEMPTS - attemptNo) },
         error: locked
           ? 'Valor incorrecto ' + MAX_ATTEMPTS + ' vezes. Perfil bloqueado — o dono tem de o desbloquear.'
           : 'O valor contado é menor do que o dinheiro que devia estar na gaveta. Conte de novo. Restam ' + (MAX_ATTEMPTS - attemptNo) + ' tentativa(s).',

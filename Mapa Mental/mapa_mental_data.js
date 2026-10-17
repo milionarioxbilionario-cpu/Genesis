@@ -1,19 +1,19 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-17T17:43:34.525Z */
+   Gerado em: 2026-10-17T21:12:09.561Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-17T17:43:34.525Z",
+ "generatedAt": "2026-10-17T21:12:09.561Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 249,
+  "files": 250,
   "planned": 5,
-  "links": 451,
-  "lines": 35248,
+  "links": 458,
+  "lines": 35760,
   "byStatus": {
-   "ok": 167,
-   "partial": 12,
+   "ok": 169,
+   "partial": 11,
    "broken": 0,
    "planned": 5,
    "untracked": 70
@@ -25,7 +25,7 @@ window.GENESIS_MINDMAP = {
    "backend-data": 62,
    "backend": 60,
    "frontend-pub": 4,
-   "frontend": 92,
+   "frontend": 93,
    "scripts": 3
   }
  },
@@ -40,14 +40,14 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
+   "count": 22
+  },
+  {
+   "pkg": "node:fs",
    "count": 21
   },
   {
    "pkg": "react-router-dom",
-   "count": 20
-  },
-  {
-   "pkg": "node:fs",
    "count": 20
   },
   {
@@ -59,6 +59,10 @@ window.GENESIS_MINDMAP = {
    "count": 20
   },
   {
+   "pkg": "@playwright/test",
+   "count": 17
+  },
+  {
    "pkg": "express",
    "count": 16
   },
@@ -68,10 +72,6 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:assert",
-   "count": 16
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 16
   },
   {
@@ -217,7 +217,7 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 92,
+   "nodes": 93,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
@@ -235,7 +235,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/ui": 1,
     "frontend/src/utils": 15,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 16,
+    "frontend/tests/e2e": 17,
     "frontend/tests": 5
    }
   },
@@ -287,8 +287,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1033,
-   "size": 208928,
+   "lines": 1052,
+   "size": 214036,
    "externals": [
     "@prisma/client"
    ],
@@ -331,8 +331,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1467,
-   "size": 79559,
+   "lines": 1473,
+   "size": 81268,
    "externals": [
     "nodemailer"
    ],
@@ -1763,8 +1763,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1527,
-   "size": 129060,
+   "lines": 1532,
+   "size": 129689,
    "externals": [
     "dotenv",
     "crypto",
@@ -2353,12 +2353,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria. Turno fechado = 409 SHIFT_CLOSED; GET recusado ao caixista (lista so com PIN do dono em /api/pos/sales).",
-   "notes": "getNextDailyNumber reinicia a contagem a meia-noite - e a base do nome Recibo_N. 09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Nucleo do POS.",
    "security": "",
    "planned": false,
-   "lines": 518,
-   "size": 24299,
+   "lines": 515,
+   "size": 24564,
    "externals": [
     "express",
     "zod",
@@ -3299,12 +3299,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Fecho cego: esperado = dinheiro desde o inicio do turno; turno por dia; resumo depois de aceite.",
-   "notes": "10/10/2026 Fase 8.3-A (turno por dia): shiftDay.test 8/8; verify_system 2-21 334/334; flows.mjs no browser.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Turno / fecho cego.",
    "security": "",
    "planned": false,
-   "lines": 134,
-   "size": 7240,
+   "lines": 136,
+   "size": 7407,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -4734,12 +4734,16 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/ShoppingLists.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/auditLabels.js",
+    "frontend/src/utils/devices.js",
+    "frontend/src/utils/escpos.js",
     "frontend/src/utils/format.js",
+    "frontend/src/utils/pdf/receiptPdf.js",
+    "frontend/src/utils/receiptPrinter.js",
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/timelineText.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 18,
+   "inbound": 22,
    "outbound": 0
   },
   {
@@ -4776,12 +4780,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area common.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 188,
-   "size": 11841,
+   "lines": 264,
+   "size": 16865,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4801,12 +4805,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area owner: menu e todas as paginas do dono (9.4).",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 821,
-   "size": 44609,
+   "lines": 805,
+   "size": 44095,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4824,12 +4828,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Ingles da area pos (so emparelhar/perfis na 9.3; venda na 9.5).",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): criado.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 30,
-   "size": 1514,
+   "lines": 164,
+   "size": 11447,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -4890,9 +4894,11 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx",
     "frontend/src/pages/pos/DevicesDialog.jsx",
+    "frontend/src/pages/pos/PosDialogs.jsx",
+    "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx"
    ],
-   "inbound": 30,
+   "inbound": 32,
    "outbound": 2
   },
   {
@@ -5594,12 +5600,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Pergunta dos dispositivos depois do PIN / botao Dispositivos.",
-   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs 19/19. | 17/10/2026 Fase 9.3 (publicada 1f1f384): seccao «A sua lingua» (unico sitio no telemovel), grava logo na conta.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Terminal.",
    "security": "",
    "planned": false,
-   "lines": 91,
-   "size": 6092,
+   "lines": 101,
+   "size": 6681,
    "externals": [
     "react",
     "lucide-react"
@@ -5625,12 +5631,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
-   "notes": "11/10/2026 Fase 8.4: Produto em falta do catalogo / fora do catalogo + quantidade + preco; seller_user_id na fila (vendas perdidas e quebras). fase8_4.mjs (iPhone 13).",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 338,
-   "size": 18604,
+   "lines": 346,
+   "size": 19468,
    "externals": [
     "react",
     "qrcode",
@@ -5643,6 +5649,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/receiptPrinter.js",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/utils/search.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/utils/format.js",
     "frontend/src/components/ui/index.js"
    ],
@@ -5650,7 +5657,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx"
    ],
    "inbound": 1,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "frontend/src/pages/pos/PosScreen.jsx",
@@ -5661,12 +5668,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "11/10/2026 Fase 8.8: botoes camara e Dispositivos; Produto nao cadastrado. fase8_8.mjs, pos.mjs, flows.mjs. | 17/10/2026 Fase 9.3 (publicada 1f1f384): botao PT/EN no cabecalho a partir de 640 px; logotipo sem encolher.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 449,
-   "size": 27096,
+   "lines": 452,
+   "size": 27783,
    "externals": [
     "react",
     "lucide-react"
@@ -5682,6 +5689,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/productCache.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/search.js",
+    "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js",
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
@@ -5689,7 +5697,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx"
    ],
    "inbound": 1,
-   "outbound": 12
+   "outbound": 13
   },
   {
    "id": "frontend/src/pages/pos/Terminal.jsx",
@@ -5857,17 +5865,18 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".js",
-   "status": "partial",
+   "status": "ok",
    "summary": "Preferencias de dispositivos do aparelho; impressora USB (Web Serial) e Bluetooth (Web Bluetooth).",
-   "notes": "11/10/2026 Fase 8.8: fase8_8.mjs com impressoras simuladas; hardware real nao verificado.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Dispositivos.",
    "security": "",
    "planned": false,
-   "lines": 116,
-   "size": 5577,
+   "lines": 117,
+   "size": 5623,
    "externals": [],
    "dependsOn": [
-    "frontend/src/utils/pdf/deliver.js"
+    "frontend/src/utils/pdf/deliver.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
     "frontend/src/pages/pos/DevicesDialog.jsx",
@@ -5875,7 +5884,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/receiptPrinter.js"
    ],
    "inbound": 3,
-   "outbound": 1
+   "outbound": 2
   },
   {
    "id": "frontend/src/utils/escpos.js",
@@ -5886,20 +5895,23 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte).",
-   "notes": "11/10/2026 Fase 8.8: escpos.test.mjs 4/4; impressora real nao verificada.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Impressora de recibos.",
    "security": "",
    "planned": false,
-   "lines": 79,
-   "size": 3496,
+   "lines": 82,
+   "size": 3728,
    "externals": [],
-   "dependsOn": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
    "usedBy": [
     "frontend/src/utils/receiptPrinter.js",
-    "frontend/tests/escpos.test.mjs"
+    "frontend/tests/escpos.test.mjs",
+    "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 2,
-   "outbound": 0
+   "inbound": 3,
+   "outbound": 1
   },
   {
    "id": "frontend/src/utils/format.js",
@@ -6060,25 +6072,26 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Recibo em PDF no formato de talao (80 mm), com QR.",
-   "notes": "10/10/2026 Fase 8.1: fase8_1.mjs 32/32 no Chromium (descarga no PC, partilha emulada em tablet/iPhone, 0 janelas novas); reports.mjs OK. iPhone real por confirmar.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "PDF.",
    "security": "",
    "planned": false,
-   "lines": 87,
-   "size": 4136,
+   "lines": 91,
+   "size": 4436,
    "externals": [
     "jspdf",
     "jspdf-autotable"
    ],
    "dependsOn": [
     "frontend/src/utils/format.js",
-    "frontend/src/utils/pdf/text.js"
+    "frontend/src/utils/pdf/text.js",
+    "frontend/src/i18n/core.js"
    ],
    "usedBy": [
     "frontend/src/utils/receiptPrinter.js"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 3
   },
   {
    "id": "frontend/src/utils/pdf/reportPdf.js",
@@ -6170,12 +6183,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
-   "notes": "11/10/2026 Fase 8.8: PDF sempre no aparelho + impressora escolhida (USB/Bluetooth/computador). fase8_8.mjs + fase8_1.mjs.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Recibo (impressao).",
    "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
    "planned": false,
-   "lines": 232,
-   "size": 10982,
+   "lines": 234,
+   "size": 11400,
    "externals": [
     "qrcode"
    ],
@@ -6183,6 +6196,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/pdf/deliver.js",
     "frontend/src/utils/escpos.js",
     "frontend/src/utils/devices.js",
+    "frontend/src/i18n/core.js",
     "frontend/src/utils/pdf/receiptPdf.js"
    ],
    "usedBy": [
@@ -6190,7 +6204,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosDialogs.jsx"
    ],
    "inbound": 2,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/src/utils/search.js",
@@ -6604,12 +6618,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Browser: entrada, dono (2 aparelhos), terminal telemovel e computador.",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): 33/33, 0 erros JS.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 187,
-   "size": 12552,
+   "lines": 191,
+   "size": 12940,
    "externals": [
     "node:fs",
     "node:path",
@@ -6635,6 +6649,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 125,
    "size": 7632,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/idioma_pos.mjs",
+   "path": "frontend/tests/e2e/idioma_pos.mjs",
+   "label": "idioma_pos.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Browser: terminal em ingles (venda, dialogos, Dispositivos, recibo PDF e ESC/POS), X que nao apaga a impressora; iPhone.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
+   "role": "Teste E2E.",
+   "security": "",
+   "planned": false,
+   "lines": 217,
+   "size": 15232,
    "externals": [
     "node:fs",
     "node:path",
@@ -6805,12 +6844,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".mjs",
    "status": "ok",
    "summary": "Teste unitario da lingua (t, formatos, erros do servidor, cobertura das chaves).",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou.",
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 145,
-   "size": 7955,
+   "lines": 182,
+   "size": 10667,
    "externals": [
     "node:test",
     "node:assert",
@@ -6822,11 +6861,12 @@ window.GENESIS_MINDMAP = {
     "frontend/src/i18n/core.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/timelineText.js",
-    "frontend/src/utils/auditLabels.js"
+    "frontend/src/utils/auditLabels.js",
+    "frontend/src/utils/escpos.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 4
+   "outbound": 5
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -8812,6 +8852,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/pos/PosDialogs.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosDialogs.jsx",
    "target": "frontend/src/utils/format.js"
   },
   {
@@ -8857,6 +8901,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/pos/PosScreen.jsx",
    "target": "frontend/src/utils/search.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/PosScreen.jsx",
+   "target": "frontend/src/i18n/react.jsx"
   },
   {
    "source": "frontend/src/pages/pos/PosScreen.jsx",
@@ -8907,6 +8955,14 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/utils/pdf/deliver.js"
   },
   {
+   "source": "frontend/src/utils/devices.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/utils/escpos.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/format.js",
    "target": "frontend/src/i18n/core.js"
   },
@@ -8921,6 +8977,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/pdf/receiptPdf.js",
    "target": "frontend/src/utils/pdf/text.js"
+  },
+  {
+   "source": "frontend/src/utils/pdf/receiptPdf.js",
+   "target": "frontend/src/i18n/core.js"
   },
   {
    "source": "frontend/src/utils/pdf/reportPdf.js",
@@ -8953,6 +9013,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/receiptPrinter.js",
    "target": "frontend/src/utils/devices.js"
+  },
+  {
+   "source": "frontend/src/utils/receiptPrinter.js",
+   "target": "frontend/src/i18n/core.js"
   },
   {
    "source": "frontend/src/utils/receiptPrinter.js",
@@ -9005,6 +9069,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/i18n.test.mjs",
    "target": "frontend/src/utils/auditLabels.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/utils/escpos.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",
