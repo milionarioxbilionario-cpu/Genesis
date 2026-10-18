@@ -1,8 +1,8 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-18T18:47:50.227Z */
+   Gerado em: 2026-10-18T18:50:40.768Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-18T18:47:50.227Z",
+ "generatedAt": "2026-10-18T18:50:40.768Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
@@ -10,7 +10,7 @@ window.GENESIS_MINDMAP = {
   "files": 264,
   "planned": 5,
   "links": 496,
-  "lines": 37379,
+  "lines": 37386,
   "byStatus": {
    "ok": 182,
    "partial": 9,
@@ -288,8 +288,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1101,
-   "size": 229432,
+   "lines": 1108,
+   "size": 230411,
    "externals": [
     "@prisma/client"
    ],
@@ -333,7 +333,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 1542,
-   "size": 92266,
+   "size": 92358,
    "externals": [
     "nodemailer"
    ],
@@ -2753,7 +2753,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Notificacoes do sino do dono, calculadas na leitura: stock (3 niveis), validades, chenecas 7/1/0, fecho de turno, caixista bloqueado, meta, fecho do dia.",
-   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site.",
    "role": "Operacoes.",
    "security": "",
    "planned": false,
@@ -4602,7 +4602,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Sino no cabecalho do dono com contador e gaveta de notificacoes; tocar abre a pagina certa.",
-   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
@@ -5295,7 +5295,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Moldura do painel do dono; monta o fecho do mes e o sino de notificacoes.",
-   "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
@@ -6383,7 +6383,7 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Titulo e detalhe de cada notificacao na lingua de quem ve.",
-   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,

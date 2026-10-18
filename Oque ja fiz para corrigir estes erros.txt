@@ -2017,6 +2017,12 @@ O que falta da tua parte: rever os nomes em inglês dos 209 produtos em Catálog
    - meta do mês atingida;
    - fim do dia (depois da hora de fecho), com o número de vendas e o valor.
    Tocar num alerta abre a página certa. Quando resolves a situação (repões o stock, recebes a cheneca, desbloqueias o caixista), o alerta sai sozinho. Funciona em português e em inglês.
-Prova: testes automáticos do servidor (23 de 23) e do browser (13 de 13 no computador, em inglês e no iPhone), sem erros. Os testes antigos do painel continuam a passar.
+Prova: testes automáticos do servidor (23 de 23) e do browser (12 de 12 no computador, em inglês e no iPhone), sem erros. Os testes antigos do painel continuam a passar.
 O que ainda não faz: mandar estes alertas por WhatsApp (o WhatsApp continua desligado até haver o número WhatsApp Business).
 Falta: publicar no genesismz.com e testar lá.
+
+
+==================== 18/10/2026 — Sino de alertas (10.1) publicado ====================
+O sino de alertas já está em genesismz.com. Testei no próprio site com uma loja de teste: 12 de 12 verificações, sem erros (dois alertas urgentes, tocar abre a página certa, repor o stock tira o alerta, inglês e iPhone). Depois apaguei a loja de teste.
+Nota de honestidade: antes tinha escrito «13 de 13» sem contar; o teste tem 12 verificações. Já corrigi.
+A seguir: mandar estes alertas também por WhatsApp (fica desligado até haver o número WhatsApp Business), ou o que decidires. Continua à espera da tua escolha sobre o menu (ver o PDF).
