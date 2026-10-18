@@ -1115,7 +1115,7 @@
       "summary": "Moldura do painel do dono; monta o fecho do mes e o sino de notificacoes.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
     },
     "backend/src/routes/pos.js": {
       "status": "ok",
@@ -1523,19 +1523,19 @@
       "status": "ok",
       "summary": "Notificacoes do sino do dono, calculadas na leitura: stock (3 niveis), validades, chenecas 7/1/0, fecho de turno, caixista bloqueado, meta, fecho do dia.",
       "role": "Operacoes.",
-      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
     },
     "frontend/src/components/NotificationBell.jsx": {
       "status": "ok",
       "summary": "Sino no cabecalho do dono com contador e gaveta de notificacoes; tocar abre a pagina certa.",
       "role": "Painel do dono.",
-      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
     },
     "frontend/src/utils/notificationText.js": {
       "status": "ok",
       "summary": "Titulo e detalhe de cada notificacao na lingua de quem ve.",
       "role": "Painel do dono.",
-      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
     }
   }
 }
