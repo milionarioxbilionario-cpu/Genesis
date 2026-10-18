@@ -117,7 +117,7 @@
       "status": "ok",
       "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
       "role": "API do dono.",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8."
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 18/10/2026 Fase 10.1: GET /api/owner/notifications (verify_system 31 23/23)."
     },
     "backend/src/routes/admin.js": {
       "status": "ok",
@@ -1112,10 +1112,10 @@
       "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
     },
     "frontend/src/layouts/AppShell.jsx": {
-      "summary": "Moldura do painel do dono; monta o fecho do mes.",
+      "summary": "Moldura do painel do dono; monta o fecho do mes e o sino de notificacoes.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra)."
+      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
     },
     "backend/src/routes/pos.js": {
       "status": "ok",
@@ -1518,6 +1518,24 @@
       "summary": "Browser: painel admin em ingles, nome em ingles no catalogo-mestre, iPhone.",
       "role": "Teste E2E.",
       "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8."
+    },
+    "backend/src/services/notifications.js": {
+      "status": "ok",
+      "summary": "Notificacoes do sino do dono, calculadas na leitura: stock (3 niveis), validades, chenecas 7/1/0, fecho de turno, caixista bloqueado, meta, fecho do dia.",
+      "role": "Operacoes.",
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+    },
+    "frontend/src/components/NotificationBell.jsx": {
+      "status": "ok",
+      "summary": "Sino no cabecalho do dono com contador e gaveta de notificacoes; tocar abre a pagina certa.",
+      "role": "Painel do dono.",
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
+    },
+    "frontend/src/utils/notificationText.js": {
+      "status": "ok",
+      "summary": "Titulo e detalhe de cada notificacao na lingua de quem ve.",
+      "role": "Painel do dono.",
+      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado."
     }
   }
 }

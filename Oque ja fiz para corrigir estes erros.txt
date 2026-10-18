@@ -2003,3 +2003,20 @@ Testei no próprio site, cada teste com uma loja ou um admin de teste próprios,
 Um engano meu durante os testes: usei o mesmo admin de teste em dois testes e o segundo encontrou o produto que o primeiro tinha criado. Repeti com um admin novo e passou. Não era um problema do Genesis.
 Com isto, a Fase 9 (email obrigatório, limite do login e o idioma PT/EN em todo o lado) está toda no site.
 O que falta da tua parte: rever os nomes em inglês dos 209 produtos em Catálogos-mestre, no painel admin, e testar com o equipamento real (câmara do telemóvel e impressoras USB/Bluetooth).
+
+
+==================== 18/10/2026 — Fases do Prompt Mestre, PDF do menu e o sino de alertas (10.1) — testado no meu computador ====================
+1) Respondi que fases do Prompt Mestre já estão feitas: 0-A, 1, 2 e 5 completas; 3, 4, 6, 7, 8 e 9 em parte. Escolheste avançar com os alertas e só depois as subscrições.
+2) Menu: fiz um PDF com imagens do painel verdadeiro a comparar o menu de hoje (8 itens) com o do Prompt Mestre (10 itens), no computador e no telemóvel, com 3 opções. Está no teu Ambiente de Trabalho: «Menu_do_dono_hoje_vs_Prompt_Mestre.pdf». Não mudei nada no menu: espero pela tua escolha.
+3) Sino de alertas: no painel do dono há agora um sino no canto de cima, com um número (vermelho quando há coisas urgentes). Ao tocar, mostra o que precisa da tua atenção agora:
+   - produtos com stock no mínimo ou abaixo (crítico até 10 unidades, severo até 20, baixo acima disso);
+   - lotes a expirar;
+   - chenecas vencidas, que vencem hoje, amanhã ou nos próximos 7 dias;
+   - caixista bloqueado por errar 3 vezes a contagem;
+   - dinheiro a menos ou a mais no fecho de turno (últimos 7 dias);
+   - meta do mês atingida;
+   - fim do dia (depois da hora de fecho), com o número de vendas e o valor.
+   Tocar num alerta abre a página certa. Quando resolves a situação (repões o stock, recebes a cheneca, desbloqueias o caixista), o alerta sai sozinho. Funciona em português e em inglês.
+Prova: testes automáticos do servidor (23 de 23) e do browser (13 de 13 no computador, em inglês e no iPhone), sem erros. Os testes antigos do painel continuam a passar.
+O que ainda não faz: mandar estes alertas por WhatsApp (o WhatsApp continua desligado até haver o número WhatsApp Business).
+Falta: publicar no genesismz.com e testar lá.

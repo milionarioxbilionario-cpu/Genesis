@@ -7,6 +7,7 @@ import { cx, IconButton, LanguageSwitch } from '../components/ui';
 import { useI18n } from '../i18n/react';
 import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
+import NotificationBell from '../components/NotificationBell';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
 // vive num so sitio (ex.: Metas no Inicio; Terminais e Auditoria nas Definicoes).
@@ -129,6 +130,7 @@ export default function AppShell() {
               </span>
             )}
             {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}
+            {user?.role === 'owner' && <NotificationBell />}
           </div>
         </header>
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">
