@@ -20,6 +20,7 @@ const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { reqLang, tr } = require('../utils/lang');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
+const { loadOwnerNotifications } = require('../services/notifications');
 const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
 const { invalidateSessionUser } = require('../utils/sessionUser');
@@ -467,6 +468,12 @@ router.get('/alerts', asyncHandler(async (req, res) => {
     alertDays: snapshot.alert_days,
     totalAlerts: snapshot.totalAlerts,
   });
+}));
+
+// Sino do painel (10.1): o que precisa de atencao agora.
+router.get('/notifications', asyncHandler(async (req, res) => {
+  const items = await loadOwnerNotifications(tenantOf(req));
+  res.json({ items, count: items.length });
 }));
 
 router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {

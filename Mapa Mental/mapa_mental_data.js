@@ -1,58 +1,58 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-18T16:58:15.955Z */
+   Gerado em: 2026-10-18T18:47:50.227Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-18T16:58:15.955Z",
+ "generatedAt": "2026-10-18T18:47:50.227Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 259,
+  "files": 264,
   "planned": 5,
-  "links": 481,
-  "lines": 36777,
+  "links": 496,
+  "lines": 37379,
   "byStatus": {
-   "ok": 179,
+   "ok": 182,
    "partial": 9,
    "broken": 0,
    "planned": 5,
-   "untracked": 71
+   "untracked": 73
   },
   "byGroup": {
    "infra": 12,
    "docs": 11,
    "admin": 12,
-   "backend-data": 67,
-   "backend": 62,
+   "backend-data": 68,
+   "backend": 63,
    "frontend-pub": 4,
-   "frontend": 93,
+   "frontend": 96,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 43
+   "count": 44
   },
   {
    "pkg": "lucide-react",
-   "count": 25
+   "count": 26
   },
   {
    "pkg": "node:path",
-   "count": 24
+   "count": 25
   },
   {
    "pkg": "node:fs",
-   "count": 23
+   "count": 24
+  },
+  {
+   "pkg": "react-router-dom",
+   "count": 21
   },
   {
    "pkg": "dotenv",
    "count": 21
-  },
-  {
-   "pkg": "react-router-dom",
-   "count": 20
   },
   {
    "pkg": "bcrypt",
@@ -60,15 +60,15 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:test",
-   "count": 18
+   "count": 19
   },
   {
    "pkg": "node:assert",
-   "count": 18
+   "count": 19
   },
   {
    "pkg": "@playwright/test",
-   "count": 17
+   "count": 18
   },
   {
    "pkg": "express",
@@ -166,7 +166,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 67,
+   "nodes": 68,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -187,7 +187,7 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261017_idioma": 1,
     "backend/prisma/migrations/20261018_nome_ingles": 1,
     "backend/scripts": 29,
-    "backend/tests": 15,
+    "backend/tests": 16,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -195,12 +195,12 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 62,
+   "nodes": 63,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 15,
-    "backend/src/services": 13,
+    "backend/src/services": 14,
     "backend/src/utils": 27,
     "backend/src/jobs": 1
    }
@@ -218,11 +218,11 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 93,
+   "nodes": 96,
    "clusters": {
     "frontend/scripts": 1,
     "frontend/src": 4,
-    "frontend/src/components": 5,
+    "frontend/src/components": 6,
     "frontend/src/components/ui": 9,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
@@ -234,9 +234,9 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner": 12,
     "frontend/src/pages/pos": 4,
     "frontend/src/ui": 1,
-    "frontend/src/utils": 15,
+    "frontend/src/utils": 16,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 17,
+    "frontend/tests/e2e": 18,
     "frontend/tests": 5
    }
   },
@@ -288,8 +288,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1083,
-   "size": 224054,
+   "lines": 1101,
+   "size": 229432,
    "externals": [
     "@prisma/client"
    ],
@@ -332,8 +332,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1524,
-   "size": 90726,
+   "lines": 1542,
+   "size": 92266,
    "externals": [
     "nodemailer"
    ],
@@ -1889,8 +1889,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1567,
-   "size": 132886,
+   "lines": 1637,
+   "size": 139687,
    "externals": [
     "dotenv",
     "crypto",
@@ -1909,11 +1909,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/services/auditRetention.js",
     "backend/src/utils/auditGroups.js",
     "backend/src/utils/shiftLock.js",
-    "backend/src/services/reportJob.js"
+    "backend/src/services/reportJob.js",
+    "backend/src/services/notifications.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "backend/src/index.js",
@@ -2333,12 +2334,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
-   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 18/10/2026 Fase 10.1: GET /api/owner/notifications (verify_system 31 23/23).",
    "role": "API do dono.",
    "security": "",
    "planned": false,
-   "lines": 492,
-   "size": 27480,
+   "lines": 499,
+   "size": 27786,
    "externals": [
     "express",
     "crypto",
@@ -2353,6 +2354,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/whatsapp.js",
     "backend/src/utils/lang.js",
     "backend/src/services/tenantAlerts.js",
+    "backend/src/services/notifications.js",
     "backend/src/services/reports.js",
     "backend/src/utils/shiftLock.js",
     "backend/src/utils/sessionUser.js",
@@ -2366,7 +2368,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 14
+   "outbound": 15
   },
   {
    "id": "backend/src/routes/pos.js",
@@ -2743,6 +2745,36 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/services/notifications.js",
+   "path": "backend/src/services/notifications.js",
+   "label": "notifications.js",
+   "group": "backend",
+   "dir": "backend/src/services",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Notificacoes do sino do dono, calculadas na leitura: stock (3 niveis), validades, chenecas 7/1/0, fecho de turno, caixista bloqueado, meta, fecho do dia.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "role": "Operacoes.",
+   "security": "",
+   "planned": false,
+   "lines": 110,
+   "size": 6716,
+   "externals": [],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/services/tenantAlerts.js",
+    "backend/src/utils/shiftLock.js",
+    "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [
+    "backend/scripts/verify_system.js",
+    "backend/src/routes/owner.js",
+    "backend/tests/notifications.test.js"
+   ],
+   "inbound": 3,
+   "outbound": 4
+  },
+  {
    "id": "backend/src/services/passwordResetStore.js",
    "path": "backend/src/services/passwordResetStore.js",
    "label": "passwordResetStore.js",
@@ -2956,10 +2988,11 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "backend/src/routes/owner.js",
+    "backend/src/services/notifications.js",
     "backend/tests/serverLang.test.js",
     "backend/src/jobs/dailyDigest.js"
    ],
-   "inbound": 3,
+   "inbound": 4,
    "outbound": 3
   },
   {
@@ -3132,6 +3165,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "backend/scripts/verify_system.js",
     "backend/src/services/expiryJob.js",
+    "backend/src/services/notifications.js",
     "backend/src/services/reportSchedule.js",
     "backend/src/services/tenantAlerts.js",
     "backend/src/utils/auditGroups.js",
@@ -3139,7 +3173,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/stockLots.js",
     "backend/tests/fefo.test.js"
    ],
-   "inbound": 8,
+   "inbound": 9,
    "outbound": 0
   },
   {
@@ -3368,6 +3402,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/verify.js",
     "backend/src/services/auditRetention.js",
     "backend/src/services/expiryJob.js",
+    "backend/src/services/notifications.js",
     "backend/src/services/reportJob.js",
     "backend/src/services/reports.js",
     "backend/src/services/tenantAlerts.js",
@@ -3380,7 +3415,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 41,
+   "inbound": 42,
    "outbound": 1
   },
   {
@@ -3568,9 +3603,10 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/owner.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/sales.js",
+    "backend/src/services/notifications.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 5,
+   "inbound": 6,
    "outbound": 0
   },
   {
@@ -3945,6 +3981,32 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/services/monthlyDeductions.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/notifications.test.js",
+   "path": "backend/tests/notifications.test.js",
+   "label": "notifications.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 87,
+   "size": 5221,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/services/notifications.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -4532,6 +4594,38 @@ window.GENESIS_MINDMAP = {
    "outbound": 5
   },
   {
+   "id": "frontend/src/components/NotificationBell.jsx",
+   "path": "frontend/src/components/NotificationBell.jsx",
+   "label": "NotificationBell.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Sino no cabecalho do dono com contador e gaveta de notificacoes; tocar abre a pagina certa.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "role": "Painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 87,
+   "size": 4172,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/useApi.js",
+    "frontend/src/utils/notificationText.js",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/layouts/AppShell.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
    "id": "frontend/src/components/PdfButton.jsx",
    "path": "frontend/src/components/PdfButton.jsx",
    "label": "PdfButton.jsx",
@@ -4847,6 +4941,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/NotificationBell.jsx",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -4875,7 +4970,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 30,
+   "inbound": 31,
    "outbound": 0
   },
   {
@@ -4997,6 +5092,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/devices.js",
     "frontend/src/utils/escpos.js",
     "frontend/src/utils/format.js",
+    "frontend/src/utils/notificationText.js",
     "frontend/src/utils/pdf/receiptPdf.js",
     "frontend/src/utils/pdf/reportPdf.js",
     "frontend/src/utils/receiptPrinter.js",
@@ -5004,7 +5100,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/timelineText.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 25,
+   "inbound": 26,
    "outbound": 0
   },
   {
@@ -5070,8 +5166,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 811,
-   "size": 45638,
+   "lines": 838,
+   "size": 47399,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -5129,6 +5225,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/NotificationBell.jsx",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -5159,7 +5256,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx"
    ],
-   "inbound": 32,
+   "inbound": 33,
    "outbound": 2
   },
   {
@@ -5197,13 +5294,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/layouts",
    "ext": ".jsx",
    "status": "ok",
-   "summary": "Moldura do painel do dono; monta o fecho do mes.",
-   "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra).",
+   "summary": "Moldura do painel do dono; monta o fecho do mes e o sino de notificacoes.",
+   "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 142,
-   "size": 7132,
+   "lines": 144,
+   "size": 7256,
    "externals": [
     "react",
     "react-router-dom",
@@ -5214,13 +5311,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/components/ui/index.js",
     "frontend/src/i18n/react.jsx",
-    "frontend/src/components/MonthCloseDialog.jsx"
+    "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/NotificationBell.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/src/main.jsx",
@@ -6220,13 +6318,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/auditLabels.js",
+    "frontend/src/utils/notificationText.js",
     "frontend/src/utils/pdf/receiptPdf.js",
     "frontend/src/utils/pdf/reportPdf.js",
     "frontend/src/utils/timelineText.js",
     "frontend/src/utils/useApi.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 29,
+   "inbound": 30,
    "outbound": 1
   },
   {
@@ -6274,6 +6373,33 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 1,
    "outbound": 0
+  },
+  {
+   "id": "frontend/src/utils/notificationText.js",
+   "path": "frontend/src/utils/notificationText.js",
+   "label": "notificationText.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Titulo e detalhe de cada notificacao na lingua de quem ve.",
+   "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 13/13; regressao idioma_dono 35/35 e flows 40/40. Local, ainda nao publicado.",
+   "role": "Painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 52,
+   "size": 2909,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/utils/format.js",
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [
+    "frontend/src/components/NotificationBell.jsx",
+    "frontend/tests/i18n.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 2
   },
   {
    "id": "frontend/src/utils/offlineQueue.js",
@@ -6609,6 +6735,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/format.js"
    ],
    "usedBy": [
+    "frontend/src/components/NotificationBell.jsx",
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
@@ -6620,7 +6747,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/Suppliers.jsx",
     "frontend/src/pages/owner/Team.jsx"
    ],
-   "inbound": 10,
+   "inbound": 11,
    "outbound": 2
   },
   {
@@ -7050,6 +7177,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/sino.mjs",
+   "path": "frontend/tests/e2e/sino.mjs",
+   "label": "sino.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 106,
+   "size": 6189,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/stock.mjs",
    "path": "frontend/tests/e2e/stock.mjs",
    "label": "stock.mjs",
@@ -7113,8 +7265,8 @@ window.GENESIS_MINDMAP = {
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 200,
-   "size": 11916,
+   "lines": 218,
+   "size": 13119,
    "externals": [
     "node:test",
     "node:assert",
@@ -7127,11 +7279,12 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/format.js",
     "frontend/src/utils/timelineText.js",
     "frontend/src/utils/auditLabels.js",
-    "frontend/src/utils/escpos.js"
+    "frontend/src/utils/escpos.js",
+    "frontend/src/utils/notificationText.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 5
+   "outbound": 6
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -7668,6 +7821,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/reportJob.js"
   },
   {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/services/notifications.js"
+  },
+  {
    "source": "backend/src/index.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -7985,6 +8142,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/routes/owner.js",
+   "target": "backend/src/services/notifications.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
    "target": "backend/src/services/reports.js"
   },
   {
@@ -8232,6 +8393,22 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/fefo.js"
   },
   {
+   "source": "backend/src/services/notifications.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/services/notifications.js",
+   "target": "backend/src/services/tenantAlerts.js"
+  },
+  {
+   "source": "backend/src/services/notifications.js",
+   "target": "backend/src/utils/shiftLock.js"
+  },
+  {
+   "source": "backend/src/services/notifications.js",
+   "target": "backend/src/utils/fefo.js"
+  },
+  {
    "source": "backend/src/services/reportJob.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -8408,6 +8585,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/monthlyDeductions.js"
   },
   {
+   "source": "backend/tests/notifications.test.js",
+   "target": "backend/src/services/notifications.js"
+  },
+  {
    "source": "backend/tests/paymentMethods.test.js",
    "target": "backend/src/utils/paymentMethods.js"
   },
@@ -8557,6 +8738,22 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/components/MonthCloseDialog.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/components/NotificationBell.jsx",
+   "target": "frontend/src/utils/useApi.js"
+  },
+  {
+   "source": "frontend/src/components/NotificationBell.jsx",
+   "target": "frontend/src/utils/notificationText.js"
+  },
+  {
+   "source": "frontend/src/components/NotificationBell.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/components/NotificationBell.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -8722,6 +8919,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/layouts/AppShell.jsx",
    "target": "frontend/src/components/MonthCloseDialog.jsx"
+  },
+  {
+   "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/components/NotificationBell.jsx"
   },
   {
    "source": "frontend/src/main.jsx",
@@ -9320,6 +9521,14 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/i18n/core.js"
   },
   {
+   "source": "frontend/src/utils/notificationText.js",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/utils/notificationText.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
    "source": "frontend/src/utils/offlineQueue.js",
    "target": "frontend/src/utils/syncPolicy.js"
   },
@@ -9430,6 +9639,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/i18n.test.mjs",
    "target": "frontend/src/utils/escpos.js"
+  },
+  {
+   "source": "frontend/tests/i18n.test.mjs",
+   "target": "frontend/src/utils/notificationText.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",

@@ -1546,7 +1546,77 @@ async function test30() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30 };
+// Fase 10.1: sino do dono. Calculado na leitura: cada alerta existe enquanto a
+// situacao existe. Usa tokens assinados (pode correr depois da 28).
+async function test31() {
+  section(31, 'Sino do dono: stock, validades, chenecas, fecho de turno, bloqueio, meta, fecho do dia');
+  const { loadOwnerNotifications } = require('../src/services/notifications');
+  const t = ctx.tenant.id;
+  const day = (offset) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Maputo' }).format(new Date(Date.now() + offset * 86400000));
+  const owner = ownerClient();
+  const find = (data, id) => data?.items?.find((i) => i.id === id);
+  const fails = [];
+  try {
+    const crit = await prisma.product.create({ data: { tenant_id: t, name: 'Sino Critico', category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 8, min_stock: 12, is_active: true } });
+    const sev = await prisma.product.create({ data: { tenant_id: t, name: 'Sino Severo', category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 15, min_stock: 20, is_active: true } });
+    const exp = await prisma.product.create({ data: { tenant_id: t, name: 'Sino Iogurte', category: 'Teste', sell_price: 1000, cost_price: 500, stock_qty: 30, min_stock: 2, has_expiry: true, is_active: true } });
+    const lot = await prisma.stockLot.create({ data: { tenant_id: t, product_id: exp.id, quantity_remaining: 4, expiry_date: new Date(day(0) + 'T00:00:00Z'), unit_cost: 500 } });
+    const mk = (name, offset, paid = 0) => prisma.debt.create({ data: { tenant_id: t, debtor_name: name, debtor_phone: '840000001', total_amount: 100000, amount_paid: paid, due_date: new Date(day(offset) + 'T00:00:00Z'), status: paid >= 100000 ? 'paid' : 'active', created_by: ctx.owner.id } });
+    const venc = await mk('Sino Vencida', -2);
+    const amanha = await mk('Sino Amanha', 1);
+    const dez = await mk('Sino Dez', 10);
+    const paga = await mk('Sino Paga', 0, 100000);
+    const closing = await prisma.shiftClosing.create({ data: { tenant_id: t, cashier_user_id: ctx.cashier.id, counted_amount: 10000, expected_amount: 15000, difference: -5000, shift_day: day(-1), closed_at: new Date(Date.now() - 86400000) } });
+    for (let i = 0; i < 3; i++) fails.push((await prisma.auditLog.create({ data: { tenant_id: t, user_id: ctx.cashier.id, action: 'SHIFT_ATTEMPT_FAIL', entity_type: 'user', entity_id: ctx.cashier.id, ip_address: '127.0.0.1' } })).id);
+    await prisma.saleGoal.create({ data: { tenant_id: t, month: new Date().getMonth() + 1, year: new Date().getFullYear(), target_amount: 100 } });
+    await prisma.tenant.update({ where: { id: t }, data: { closing_time: '00:00' } });
+    await newSale(owner);
+
+    const r = await owner.req('GET', '/api/owner/notifications');
+    ok(r.status === 200 && Array.isArray(r.data?.items) && r.data.count === r.data.items.length, 'dono: 200 com items e count', r.status);
+    const d = r.data || { items: [] };
+    ok(find(d, 'stock_low:' + crit.id)?.level === 'critical' && find(d, 'stock_low:' + crit.id).params.stock_level === 'critical', 'stock 8 (minimo 12): critico');
+    ok(find(d, 'stock_low:' + sev.id)?.level === 'warning' && find(d, 'stock_low:' + sev.id).params.stock_level === 'severe', 'stock 15 (minimo 20): severo = aviso');
+    ok(!find(d, 'stock_low:' + exp.id), 'produto acima do minimo: sem alerta de stock');
+    ok(find(d, 'lot_expiring:' + lot.id)?.level === 'critical' && find(d, 'lot_expiring:' + lot.id).params.days_left === 0, 'lote que expira hoje: critico');
+    ok(find(d, 'debt_due:' + venc.id)?.level === 'critical' && find(d, 'debt_due:' + venc.id).params.days_left === -2, 'cheneca vencida ha 2 dias: critica');
+    ok(find(d, 'debt_due:' + amanha.id)?.level === 'warning', 'cheneca que vence amanha: aviso');
+    ok(!find(d, 'debt_due:' + dez.id) && !find(d, 'debt_due:' + paga.id), 'cheneca a 10 dias e cheneca paga: fora do sino');
+    const sd = find(d, 'shift_difference:' + closing.id);
+    ok(sd?.level === 'warning' && sd.params.difference === -5000 && sd.params.cashier === ctx.cashier.name && sd.link.endsWith('date=' + day(-1)), 'fecho com 50 MT a menos ontem: aviso com caixista e link do dia', sd);
+    ok(find(d, 'cashier_locked:' + ctx.cashier.id)?.level === 'critical', 'caixista bloqueado (3 contagens erradas): critico');
+    ok(d.items.some((i) => i.type === 'goal_reached' && i.level === 'success'), 'meta de 1 MT com uma venda: meta atingida');
+    const dc = d.items.find((i) => i.type === 'day_closed');
+    ok(dc && dc.params.sales >= 1 && dc.params.revenue >= 10000, 'depois da hora de fecho (00:00) com vendas: dia fechado', dc);
+    const lastCrit = d.items.map((i) => i.level).lastIndexOf('critical');
+    ok(d.items.slice(0, lastCrit + 1).every((i) => i.level === 'critical'), 'criticos primeiro');
+
+    // Isolamento e papeis.
+    ok((await client(signAccessToken(ctx.cashier)).req('GET', '/api/owner/notifications')).status === 403, 'caixista: 403');
+    ok((await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('GET', '/api/owner/notifications')).status === 403, 'caixista no terminal (pos): 403');
+    ok((await client().req('GET', '/api/owner/notifications')).status === 401, 'sem sessao: 401');
+    const sup = await client(signAccessToken(ctx.owner, { scope: 'support' })).req('GET', '/api/owner/notifications');
+    ok(sup.status === 200 && sup.data.count === d.count, 'modo suporte (so leitura) ve o mesmo sino', sup.status);
+    const own = await prisma.runWithTenant(t, () => loadOwnerNotifications(t));
+    ok(own.length === d.count, 'contraprova: no contexto desta loja o mesmo calculo ve tudo', [own.length, d.count]);
+    const foreign = await prisma.runWithTenant(crypto.randomUUID(), () => loadOwnerNotifications(t));
+    ok(foreign.length === 0, 'no contexto de outra loja nao aparece nada desta (RLS)', foreign.length);
+
+    // Resolver a situacao tira o alerta.
+    await prisma.product.update({ where: { id: crit.id }, data: { stock_qty: 50 } });
+    const pay = await owner.req('POST', '/api/owner/debts/' + amanha.id + '/payment', { amount: 100000 });
+    ok(pay.status === 200, 'pagar a cheneca toda: 200', pay.status);
+    ok((await owner.req('POST', '/api/owner/cashiers/' + ctx.cashier.id + '/unlock')).status === 200, 'dono desbloqueia o caixista');
+    const after = (await owner.req('GET', '/api/owner/notifications')).data;
+    ok(!find(after, 'stock_low:' + crit.id) && !find(after, 'debt_due:' + amanha.id) && !find(after, 'cashier_locked:' + ctx.cashier.id), 'stock reposto, cheneca paga e caixista desbloqueado saem do sino');
+    ok(after.count === d.count - 3, 'o total desce 3', [d.count, after.count]);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { id: { in: fails } } });
+    await prisma.tenant.update({ where: { id: t }, data: { closing_time: null } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31 };
 
 (async () => {
   await prisma.ready();
