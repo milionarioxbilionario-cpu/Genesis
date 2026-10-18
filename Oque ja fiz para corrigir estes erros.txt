@@ -1995,3 +1995,11 @@ Prova: todos os testes automáticos passaram, tanto os novos como os antigos (pa
 Uma coisa vista uma vez e não repetida: numa corrida, o PDF semanal saiu com «Genesis» no nome do ficheiro em vez do nome da loja (o painel não tinha carregado a loja). Na segunda corrida saiu certo. Ficou anotado.
 
 Falta: publicar no genesismz.com e testar lá.
+
+
+==================== 18/10/2026 — Idioma completo (9.6, 9.7 e 9.8) publicado — fim da Fase 9 ====================
+Com a tua autorização, enviei para o GitHub e publiquei no genesismz.com e no admin.genesismz.com: os PDFs dos relatórios, o WhatsApp e os emails em inglês, o teu painel super admin em PT/EN, o campo «Nome em inglês» no catálogo-mestre e a pesquisa nas duas línguas («water» encontra «Água»).
+Testei no próprio site, cada teste com uma loja ou um admin de teste próprios, apagados no fim: terminal em inglês 31 de 31, painel do dono 35 de 35, painel admin em inglês 17 de 17, catálogo-mestre 8 de 8. Nenhum erro.
+Um engano meu durante os testes: usei o mesmo admin de teste em dois testes e o segundo encontrou o produto que o primeiro tinha criado. Repeti com um admin novo e passou. Não era um problema do Genesis.
+Com isto, a Fase 9 (email obrigatório, limite do login e o idioma PT/EN em todo o lado) está toda no site.
+O que falta da tua parte: rever os nomes em inglês dos 209 produtos em Catálogos-mestre, no painel admin, e testar com o equipamento real (câmara do telemóvel e impressoras USB/Bluetooth).
