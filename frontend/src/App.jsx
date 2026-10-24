@@ -58,7 +58,11 @@ export default function App() {
             <SessionEndedListener />
             <Suspense fallback={<FullPageSpinner />}>
             <Routes>
+              {/* A raiz do site e a landing (index.html, fora da SPA); /inicio
+                  e a entrada da app: dono -> painel, caixista -> terminal.
+                  "/" continua aqui para a app ja guardada pelo service worker. */}
               <Route path="/" element={<Root />} />
+              <Route path="/inicio" element={<Root />} />
               <Route path="/entrar" element={<Login />} />
               <Route path="/pedir-conta" element={<RequestAccount />} />
               <Route path="/recuperar-senha" element={<ResetPassword />} />

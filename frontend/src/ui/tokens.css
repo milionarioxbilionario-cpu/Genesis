@@ -34,6 +34,11 @@
   --accent-soft: #ECFDF5;
   --accent-text: #065F46;
 
+  /* Marca (logotipo e site publico). O dourado e so da marca, nunca semantico. */
+  --brand: #0B4D3B;
+  --brand-dark: #083A2C;
+  --brand-gold: #F2B300;
+
   /* Semanticas */
   --positive: #047857;
   --positive-soft: #ECFDF5;

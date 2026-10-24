@@ -1,0 +1,14 @@
+# Genesis MZ — https://genesismz.com
+# O site publico (/, /planos, /en/) e para indexar; a app (painel, terminal,
+# recibos verificados) nao.
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /terminal
+Disallow: /onboarding
+Disallow: /suporte
+Disallow: /verify/
+Disallow: /inicio
+Disallow: /api/
+
+Sitemap: https://genesismz.com/sitemap.xml

@@ -1,31 +1,31 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-18T18:50:40.768Z */
+   Gerado em: 2026-10-24T10:39:57.745Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-18T18:50:40.768Z",
+ "generatedAt": "2026-10-24T10:39:57.745Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 264,
+  "files": 273,
   "planned": 5,
-  "links": 496,
-  "lines": 37386,
+  "links": 500,
+  "lines": 37857,
   "byStatus": {
-   "ok": 182,
+   "ok": 186,
    "partial": 9,
    "broken": 0,
    "planned": 5,
-   "untracked": 73
+   "untracked": 78
   },
   "byGroup": {
-   "infra": 12,
+   "infra": 16,
    "docs": 11,
    "admin": 12,
    "backend-data": 68,
    "backend": 63,
-   "frontend-pub": 4,
-   "frontend": 96,
+   "frontend-pub": 5,
+   "frontend": 100,
    "scripts": 3
   }
  },
@@ -35,24 +35,28 @@ window.GENESIS_MINDMAP = {
    "count": 44
   },
   {
+   "pkg": "node:path",
+   "count": 27
+  },
+  {
    "pkg": "lucide-react",
    "count": 26
   },
   {
-   "pkg": "node:path",
-   "count": 25
-  },
-  {
    "pkg": "node:fs",
-   "count": 24
-  },
-  {
-   "pkg": "react-router-dom",
-   "count": 21
+   "count": 26
   },
   {
    "pkg": "dotenv",
    "count": 21
+  },
+  {
+   "pkg": "@playwright/test",
+   "count": 21
+  },
+  {
+   "pkg": "react-router-dom",
+   "count": 20
   },
   {
    "pkg": "bcrypt",
@@ -65,10 +69,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "node:assert",
    "count": 19
-  },
-  {
-   "pkg": "@playwright/test",
-   "count": 18
   },
   {
    "pkg": "express",
@@ -111,6 +111,10 @@ window.GENESIS_MINDMAP = {
    "count": 4
   },
   {
+   "pkg": "@fontsource-variable/inter",
+   "count": 3
+  },
+  {
    "pkg": "react-dom",
    "count": 3
   },
@@ -121,10 +125,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "child_process",
    "count": 3
-  },
-  {
-   "pkg": "jsonwebtoken",
-   "count": 3
   }
  ],
  "groups": [
@@ -132,12 +132,13 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 12,
+   "nodes": 16,
    "clusters": {
     ".": 7,
     "backend": 1,
     "deploy": 3,
-    "frontend": 1
+    "frontend": 3,
+    "frontend/site": 2
    }
   },
   {
@@ -209,18 +210,19 @@ window.GENESIS_MINDMAP = {
    "id": "frontend-pub",
    "label": "Frontend - Config",
    "tone": "#0ea5e9",
-   "nodes": 4,
+   "nodes": 5,
    "clusters": {
-    "frontend": 4
+    "frontend": 4,
+    "frontend/public": 1
    }
   },
   {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 96,
+   "nodes": 100,
    "clusters": {
-    "frontend/scripts": 1,
+    "frontend/scripts": 2,
     "frontend/src": 4,
     "frontend/src/components": 6,
     "frontend/src/components/ui": 9,
@@ -233,10 +235,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/auth": 5,
     "frontend/src/pages/owner": 12,
     "frontend/src/pages/pos": 4,
-    "frontend/src/ui": 1,
+    "frontend/src/ui": 2,
     "frontend/src/utils": 16,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 18,
+    "frontend/tests/e2e": 20,
     "frontend/tests": 5
    }
   },
@@ -288,8 +290,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1108,
-   "size": 230411,
+   "lines": 1133,
+   "size": 236443,
    "externals": [
     "@prisma/client"
    ],
@@ -332,8 +334,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1542,
-   "size": 92358,
+   "lines": 1570,
+   "size": 93717,
    "externals": [
     "nodemailer"
    ],
@@ -4396,6 +4398,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/app.html",
+   "path": "frontend/app.html",
+   "label": "app.html",
+   "group": "infra",
+   "dir": "frontend",
+   "ext": ".html",
+   "status": "ok",
+   "summary": "HTML da app (SPA: entrar, painel do dono, terminal), noindex.",
+   "notes": "24/10/2026 Fase 11.1 (antes index.html): flows 40/40, pos 22/22, idioma 33/33, pwa_offline 8/8.",
+   "role": "HTML da app.",
+   "security": "",
+   "planned": false,
+   "lines": 23,
+   "size": 973,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/index.html",
    "path": "frontend/index.html",
    "label": "index.html",
@@ -4403,13 +4426,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend",
    "ext": ".html",
    "status": "partial",
-   "summary": "HTML do produto: meta theme-color, fundo escuro inicial e carregamento do bundle.",
-   "notes": "Falta o script inline que aplica o tema guardado antes do primeiro pixel (evita o flash branco no modo claro).",
-   "role": "HTML.",
+   "summary": "Raiz do site publico (landing PT). Provisoria na Fase 11.1; o site completo chega na 11.3.",
+   "notes": "24/10/2026 Fase 11.1: a app passou para app.html; site.mjs 9/9.",
+   "role": "Site publico.",
    "security": "",
    "planned": false,
-   "lines": 18,
-   "size": 637,
+   "lines": 28,
+   "size": 1537,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4459,6 +4482,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/public/robots.txt",
+   "path": "frontend/public/robots.txt",
+   "label": "robots.txt",
+   "group": "frontend-pub",
+   "dir": "frontend/public",
+   "ext": ".txt",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 15,
+   "size": 340,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/scripts/fix-hex.mjs",
    "path": "frontend/scripts/fix-hex.mjs",
    "label": "fix-hex.mjs",
@@ -4483,6 +4527,84 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/scripts/gerar_icones.mjs",
+   "path": "frontend/scripts/gerar_icones.mjs",
+   "label": "gerar_icones.mjs",
+   "group": "frontend",
+   "dir": "frontend/scripts",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Gera favicon (svg/ico/png), apple-touch-icon e icones da app a partir de marca.js (Chromium do Playwright).",
+   "notes": "",
+   "role": "Script.",
+   "security": "",
+   "planned": false,
+   "lines": 59,
+   "size": 2927,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:url",
+    "@playwright/test"
+   ],
+   "dependsOn": [
+    "frontend/src/ui/marca.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/site/site.css",
+   "path": "frontend/site/site.css",
+   "label": "site.css",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".css",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 29,
+   "size": 984,
+   "externals": [
+    "@fontsource-variable/inter"
+   ],
+   "dependsOn": [
+    "frontend/src/ui/tokens.css"
+   ],
+   "usedBy": [
+    "frontend/site/site.js"
+   ],
+   "inbound": 1,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/site/site.js",
+   "path": "frontend/site/site.js",
+   "label": "site.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Unico JS do site publico: encaminha app instalada/sessoes para a app, grava a lingua, menu movel.",
+   "notes": "24/10/2026 Fase 11.1: site.mjs 9/9.",
+   "role": "Site publico.",
+   "security": "",
+   "planned": false,
+   "lines": 53,
+   "size": 2380,
+   "externals": [],
+   "dependsOn": [
+    "frontend/site/site.css"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "frontend/src/App.jsx",
    "path": "frontend/src/App.jsx",
    "label": "App.jsx",
@@ -4495,8 +4617,8 @@ window.GENESIS_MINDMAP = {
    "role": "Mapa de rotas.",
    "security": "Nenhuma rota de gestao esta exposta sem sessao.",
    "planned": false,
-   "lines": 99,
-   "size": 5016,
+   "lines": 103,
+   "size": 5314,
    "externals": [
     "react",
     "react-router-dom"
@@ -5394,10 +5516,9 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 32,
-   "size": 1629,
+   "size": 1667,
    "externals": [
-    "react",
-    "react-router-dom"
+    "react"
    ],
    "dependsOn": [
     "frontend/src/components/ui/index.js",
@@ -6119,6 +6240,29 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/src/ui/marca.js",
+   "path": "frontend/src/ui/marca.js",
+   "label": "marca.js",
+   "group": "frontend",
+   "dir": "frontend/src/ui",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Simbolo da marca (G + quadrado dourado) medido na arte original; fonte unica de icones e logotipo.",
+   "notes": "",
+   "role": "Marca.",
+   "security": "",
+   "planned": false,
+   "lines": 30,
+   "size": 1828,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/scripts/gerar_icones.mjs"
+   ],
+   "inbound": 1,
+   "outbound": 0
+  },
+  {
    "id": "frontend/src/ui/tokens.css",
    "path": "frontend/src/ui/tokens.css",
    "label": "tokens.css",
@@ -6131,14 +6275,15 @@ window.GENESIS_MINDMAP = {
    "role": "Design tokens.",
    "security": "",
    "planned": false,
-   "lines": 66,
-   "size": 2126,
+   "lines": 71,
+   "size": 2280,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
+    "frontend/site/site.css",
     "frontend/src/index.css"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
   },
   {
@@ -6764,16 +6909,42 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 47,
-   "size": 2107,
+   "size": 2105,
    "externals": [
     "tailwindcss"
    ],
    "dependsOn": [],
    "usedBy": [
-    "admin-frontend/tailwind.config.cjs"
+    "admin-frontend/tailwind.config.cjs",
+    "frontend/tailwind.site.config.js"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
+  },
+  {
+   "id": "frontend/tailwind.site.config.js",
+   "path": "frontend/tailwind.site.config.js",
+   "label": "tailwind.site.config.js",
+   "group": "infra",
+   "dir": "frontend",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 29,
+   "size": 969,
+   "externals": [
+    "tailwindcss"
+   ],
+   "dependsOn": [
+    "frontend/tailwind.config.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
   },
   {
    "id": "frontend/tests/e2e/fase5.mjs",
@@ -7152,6 +7323,29 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/tests/e2e/pwa_offline.mjs",
+   "path": "frontend/tests/e2e/pwa_offline.mjs",
+   "label": "pwa_offline.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 55,
+   "size": 2915,
+   "externals": [
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/tests/e2e/reports.mjs",
    "path": "frontend/tests/e2e/reports.mjs",
    "label": "reports.mjs",
@@ -7191,6 +7385,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 106,
    "size": 6189,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/site.mjs",
+   "path": "frontend/tests/e2e/site.mjs",
+   "label": "site.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 63,
+   "size": 3538,
    "externals": [
     "node:fs",
     "node:path",
@@ -7373,15 +7592,16 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend",
    "ext": ".js",
    "status": "ok",
-   "summary": "Configuracao do Vite: proxy para a API, PWA e build.",
-   "notes": "",
+   "summary": "Vite multi-pagina (site + app), plugin de rotas no dev/preview, proxy da API, PWA (fallback app.html, start_url /inicio).",
+   "notes": "24/10/2026 Fase 11.1: pwa_offline.mjs 8/8 + contraprova.",
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 46,
-   "size": 1285,
+   "lines": 89,
+   "size": 3613,
    "externals": [
     "vite",
+    "node:url",
     "vite-plugin-pwa"
    ],
    "dependsOn": [],
@@ -8633,6 +8853,18 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/shoppingList.js"
   },
   {
+   "source": "frontend/scripts/gerar_icones.mjs",
+   "target": "frontend/src/ui/marca.js"
+  },
+  {
+   "source": "frontend/site/site.css",
+   "target": "frontend/src/ui/tokens.css"
+  },
+  {
+   "source": "frontend/site/site.js",
+   "target": "frontend/site/site.css"
+  },
+  {
    "source": "frontend/src/App.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
@@ -9615,6 +9847,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/useApi.js",
    "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/tailwind.site.config.js",
+   "target": "frontend/tailwind.config.js"
   },
   {
    "source": "frontend/tests/escpos.test.mjs",

@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-18",
+  "updatedAt": "2026-10-24",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -459,14 +459,15 @@
     },
     "frontend/index.html": {
       "status": "partial",
-      "summary": "HTML do produto: meta theme-color, fundo escuro inicial e carregamento do bundle.",
-      "role": "HTML.",
-      "notes": "Falta o script inline que aplica o tema guardado antes do primeiro pixel (evita o flash branco no modo claro)."
+      "summary": "Raiz do site publico (landing PT). Provisoria na Fase 11.1; o site completo chega na 11.3.",
+      "role": "Site publico.",
+      "notes": "24/10/2026 Fase 11.1: a app passou para app.html; site.mjs 9/9."
     },
     "frontend/vite.config.js": {
       "status": "ok",
-      "summary": "Configuracao do Vite: proxy para a API, PWA e build.",
-      "role": "Build."
+      "summary": "Vite multi-pagina (site + app), plugin de rotas no dev/preview, proxy da API, PWA (fallback app.html, start_url /inicio).",
+      "role": "Build.",
+      "notes": "24/10/2026 Fase 11.1: pwa_offline.mjs 8/8 + contraprova."
     },
     "frontend/tailwind.config.js": {
       "status": "ok",
@@ -1536,6 +1537,33 @@
       "summary": "Titulo e detalhe de cada notificacao na lingua de quem ve.",
       "role": "Painel do dono.",
       "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
+    },
+    "frontend/app.html": {
+      "status": "ok",
+      "summary": "HTML da app (SPA: entrar, painel do dono, terminal), noindex.",
+      "role": "HTML da app.",
+      "notes": "24/10/2026 Fase 11.1 (antes index.html): flows 40/40, pos 22/22, idioma 33/33, pwa_offline 8/8."
+    },
+    "frontend/site/site.js": {
+      "status": "ok",
+      "summary": "Unico JS do site publico: encaminha app instalada/sessoes para a app, grava a lingua, menu movel.",
+      "role": "Site publico.",
+      "notes": "24/10/2026 Fase 11.1: site.mjs 9/9."
+    },
+    "frontend/src/ui/marca.js": {
+      "status": "ok",
+      "summary": "Simbolo da marca (G + quadrado dourado) medido na arte original; fonte unica de icones e logotipo.",
+      "role": "Marca."
+    },
+    "frontend/scripts/gerar_icones.mjs": {
+      "status": "ok",
+      "summary": "Gera favicon (svg/ico/png), apple-touch-icon e icones da app a partir de marca.js (Chromium do Playwright).",
+      "role": "Script."
+    },
+    "deploy/nginx.conf": {
+      "status": "partial",
+      "summary": "nginx de producao: app e admin em origens separadas; site publico na raiz, app noindex.",
+      "notes": "24/10/2026 Fase 11.1: rotas do site + @app noindex; NAO verificado (servidor na 11.4)."
     }
   }
 }

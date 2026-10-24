@@ -98,4 +98,5 @@ node-v*
 # Nota: ficheiros *.txt JA versionados antes desta regra mantem-se no
 # historico; novos deixa de ser apanhados.
 *.txt
+!frontend/public/*.txt
 

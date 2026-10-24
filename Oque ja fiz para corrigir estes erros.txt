@@ -2026,3 +2026,15 @@ Falta: publicar no genesismz.com e testar lá.
 O sino de alertas já está em genesismz.com. Testei no próprio site com uma loja de teste: 12 de 12 verificações, sem erros (dois alertas urgentes, tocar abre a página certa, repor o stock tira o alerta, inglês e iPhone). Depois apaguei a loja de teste.
 Nota de honestidade: antes tinha escrito «13 de 13» sem contar; o teste tem 12 verificações. Já corrigi.
 A seguir: mandar estes alertas também por WhatsApp (fica desligado até haver o número WhatsApp Business), ou o que decidires. Continua à espera da tua escolha sobre o menu (ver o PDF).
+
+
+==================== 24/10/2026 — Site público, parte 1 (11.1): a base — testado no meu computador ====================
+Porque o Google não te encontrava: confirmei que o genesismz.com respondia a TODOS os endereços com a mesma página vazia da app, que saltava logo para o ecrã de entrar. O Google (e as IAs) não tinham nenhum texto para ler, e nem sequer havia os ficheiros que os motores de busca procuram (robots.txt e sitemap.xml).
+O que fiz nesta parte:
+- A raiz do site (genesismz.com) passa a ser uma página própria do site público. Por agora é uma página simples provisória; a página completa, bonita e que vende o Genesis, em português e inglês, com a página de planos, vem na parte 11.3.
+- A app (entrar, painel do dono, terminal) continua igual, só mudou de "casa" por dentro.
+- Quem já tem sessão aberta não perde tempo: o dono vai directo ao painel, o caixista e os computadores do balcão vão directo ao terminal. A app instalada no telemóvel também abre directo na app. Se quiseres ver o site estando com sessão aberta, usa genesismz.com/?site
+- O terminal continua a abrir SEM internet (testei a desligar a rede: abre; e testei que o teste apanha o erro se eu estragar isso de propósito).
+- Criei os ficheiros para o Google (robots.txt e sitemap.xml) e o ícone novo (o "G" verde com o quadradinho dourado do teu logótipo, desenhado igual ao original) para o separador do browser e para a app instalada.
+Prova: os testes antigos do terminal, do painel, do idioma e do "Pedir conta" passaram todos (101 verificações, 0 erros); os testes novos do site (9 de 9) e do modo sem internet (8 de 8) também.
+Ainda NÃO está no genesismz.com: só publico depois do site completo, e antes disso peço-te confirmação porque é preciso mexer na configuração do servidor.

@@ -6,7 +6,7 @@
    ========================================================================== */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./app.html', './src/**/*.{js,jsx}'],
   theme: {
     colors: {
       transparent: 'transparent',
