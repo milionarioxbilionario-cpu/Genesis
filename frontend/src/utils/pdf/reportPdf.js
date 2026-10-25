@@ -187,7 +187,7 @@ export function buildReportPdf({ kind, shopName, data, timeline: tl, labels }) {
       ...data.trends.growing.map((x) => [x.name, int(x.previous_quantity), int(x.quantity), t('a crescer')]),
       ...data.trends.declining.map((x) => [x.name, int(x.previous_quantity), int(x.quantity), t('a cair')]),
     ], { right: [1, 2], empty: t('Sem mudanças.') });
-    pdf.heading(t('Chenecas'));
+    pdf.heading(t('Txenekas'));
     pdf.note(t('Novas {new} · recebidas {received} · em aberto {open}', { new: money(data.debts.new_total), received: money(data.debts.received_total), open: money(data.debts.outstanding_total) }));
     pdf.table([t('Devedor'), t('Em aberto'), t('Estado')], data.debts.outstanding.map((x) => [x.debtor, money(x.remaining), x.overdue ? t('vencida') : '']), { right: [1], empty: t('Nada em dívida.') });
   }

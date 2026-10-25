@@ -12,10 +12,10 @@ export function notificationTitle(n) {
   switch (n.type) {
     case 'cashier_locked': return t('Caixista bloqueado');
     case 'debt_due':
-      if (p.days_left < 0) return t('Cheneca vencida');
-      if (p.days_left === 0) return t('Cheneca vence hoje');
-      if (p.days_left === 1) return t('Cheneca vence amanhã');
-      return t('Cheneca a vencer');
+      if (p.days_left < 0) return t('Txeneka vencida');
+      if (p.days_left === 0) return t('Txeneka vence hoje');
+      if (p.days_left === 1) return t('Txeneka vence amanhã');
+      return t('Txeneka a vencer');
     case 'stock_low':
       if (p.stock_level === 'critical') return t('Stock crítico');
       if (p.stock_level === 'severe') return t('Stock severo');

@@ -302,7 +302,7 @@ router.put('/employees/:id', asyncHandler(async (req, res) => {
   res.json(e);
 }));
 
-// ---------------------------------------------------------------- chenecas
+// ---------------------------------------------------------------- txenekas
 // Estado pela DATA (nao pela hora): no proprio dia do vencimento ainda nao
 // esta vencida (antes ficava "overdue" logo as 00:00 do dia limite).
 function debtStatus(debt) {
@@ -340,7 +340,7 @@ router.post('/debts/:id/payment', asyncHandler(async (req, res) => {
   const tenantId = tenantOf(req);
   const updated = await prisma.$transaction(async (tx) => {
     const debt = await tx.debt.findFirst({ where: { id: req.params.id, tenant_id: tenantId } });
-    if (!debt) throw httpError(404, 'Cheneca não encontrada');
+    if (!debt) throw httpError(404, 'Txeneka não encontrada');
     if (debt.amount_paid + amount > debt.total_amount) throw httpError(400, 'Pagamento superior ao valor em falta.');
     const next = await tx.debt.update({ where: { id: debt.id }, data: {
       amount_paid: { increment: amount }, status: debtStatus({ ...debt, amount_paid: debt.amount_paid + amount }),

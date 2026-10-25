@@ -11,7 +11,7 @@ import AuthLayout from './AuthLayout';
 export const BUSINESS_TYPES = [
   { value: 'bottle_store', label: 'Bottle store / Loja de bebidas' },
   { value: 'mercearia', label: 'Mercearia / Contentor' },
-  { value: 'padaria', label: 'Padaria / Café' },
+  { value: 'padaria', label: 'Pastelaria / Café' },
   { value: 'talho', label: 'Talho' },
   { value: 'supermercado', label: 'Supermercado' },
   { value: 'restaurante', label: 'Restaurante / Churrasqueira' },

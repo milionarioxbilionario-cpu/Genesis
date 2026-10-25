@@ -1,5 +1,5 @@
 // Fase 10.1: sino de notificacoes do dono (Prompt Mestre 6.4; especificacao
-// 6.4/6.5). A loja de teste traz a Agua com 8 un. (minimo 12) e a cheneca do
+// 6.4/6.5). A loja de teste traz a Agua com 8 un. (minimo 12) e a txeneka do
 // Sr. Mabunda vencida ha 2 dias: o sino mostra 2 alertas criticos; tocar abre a
 // pagina certa; repor o stock tira o alerta; ingles; iPhone.
 //   BASE=http://localhost:5180 FIXTURE=f.json SHOTS=pasta node tests/e2e/sino.mjs
@@ -41,13 +41,13 @@ try {
   console.log('\n=== Sino no cabecalho ===');
   const bell = page.getByRole('button', { name: /^Notificações/ });
   await page.getByRole('button', { name: 'Notificações (2)' }).waitFor({ timeout: T });
-  ok(true, 'sino com 2 alertas (Água 8/12 e cheneca vencida)');
+  ok(true, 'sino com 2 alertas (Água 8/12 e txeneka vencida)');
   ok(/bg-danger/.test(await bell.locator('span').first().getAttribute('class')), 'contador vermelho: ha alertas criticos');
   await bell.click();
   const dr = page.getByRole('dialog', { name: 'Notificações' });
   await dr.getByText('Stock crítico').waitFor({ timeout: T });
   ok(await dr.getByText('Água Namaacha 1,5L: 8 un. (mínimo 12).').isVisible(), 'stock critico: Água 8 un. (mínimo 12)');
-  ok(await dr.getByText('Cheneca vencida').isVisible() && await dr.getByText(/^Sr\. Mabunda: falta 2[\s  ]000,00 MT, venceu há 2 dia\(s\)\.$/).isVisible(), 'cheneca vencida: Sr. Mabunda, falta 2 000,00 MT, há 2 dias');
+  ok(await dr.getByText('Txeneka vencida').isVisible() && await dr.getByText(/^Sr\. Mabunda: falta 2[\s  ]000,00 MT, venceu há 2 dia\(s\)\.$/).isVisible(), 'txeneka vencida: Sr. Mabunda, falta 2 000,00 MT, há 2 dias');
   await page.screenshot({ path: path.join(SHOTS, 's1-sino-aberto.png') });
 
   console.log('\n=== Tocar leva a pagina certa ===');
@@ -56,9 +56,9 @@ try {
   const closed = await dr.waitFor({ state: 'detached', timeout: 5000 }).then(() => true, () => false);
   ok(closed, 'tocar no stock fecha o sino e abre Produtos > Stock');
   await bell.click();
-  await dr.getByText('Cheneca vencida').click();
-  await page.waitForURL('**/app/chenecas', { timeout: T });
-  ok(true, 'tocar na cheneca abre Chenecas');
+  await dr.getByText('Txeneka vencida').click();
+  await page.waitForURL('**/app/txenekas', { timeout: T });
+  ok(true, 'tocar na txeneka abre Txenekas');
 
   console.log('\n=== Repor o stock tira o alerta ===');
   const agua = (await api(page, 'GET', '/api/products')).data.find((p) => p.name === 'Água Namaacha 1,5L');
@@ -66,7 +66,7 @@ try {
   ok(entry.status === 201 || entry.status === 200, 'entrada de 40 un. de Água', entry.status);
   await page.goto(BASE + '/app');
   await page.getByRole('button', { name: 'Notificações (1)' }).waitFor({ timeout: T });
-  ok(true, 'depois de repor: o sino fica com 1 (só a cheneca)');
+  ok(true, 'depois de repor: o sino fica com 1 (só a txeneka)');
 
   console.log('\n=== Ingles ===');
   ok((await api(page, 'PUT', '/api/auth/language', { language: 'en' })).status === 200, 'dono passa a EN');
@@ -90,7 +90,7 @@ try {
   const box = await pb.boundingBox();
   ok(box && box.x + box.width <= 390 && box.y < 56, 'sino visível no cabeçalho do iPhone', JSON.stringify(box));
   await pb.click();
-  await phone.getByRole('dialog', { name: 'Notificações' }).getByText('Cheneca vencida').waitFor({ timeout: T });
+  await phone.getByRole('dialog', { name: 'Notificações' }).getByText('Txeneka vencida').waitFor({ timeout: T });
   ok(await phone.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'sem deslocamento lateral (390 px)');
   await phone.screenshot({ path: path.join(SHOTS, 's3-sino-iphone.png') });
 } catch (e) {

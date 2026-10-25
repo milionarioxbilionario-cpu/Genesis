@@ -1,5 +1,5 @@
 // Teste de browser real dos relatorios (Genesis 2.1, Fase 4): rastreio,
-// perdas, % da meta, semanal -> diario, mensal com chenecas e restock.
+// perdas, % da meta, semanal -> diario, mensal com txenekas e restock.
 //   BASE=http://localhost:5180 FIXTURE=fixture.json SHOTS=pasta node tests/e2e/reports.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -115,7 +115,7 @@ try {
   await owner.getByRole('tab', { name: 'Mensal' }).click();
   await owner.getByText('Do que entrou ao que ficou').waitFor({ timeout: T });
   await owner.waitForLoadState('networkidle', { timeout: T });
-  ok(await owner.getByText('Sr. Mabunda').first().isVisible(), 'mensal: chenecas em aberto (Sr. Mabunda)');
+  ok(await owner.getByText('Sr. Mabunda').first().isVisible(), 'mensal: txenekas em aberto (Sr. Mabunda)');
   ok(await owner.getByText(/Perdas do mês/).isVisible(), 'mensal: perdas do mes mostradas a parte');
   ok(await owner.getByText('Metas dos últimos 12 meses').isVisible() && await owner.getByText('(este mês)').isVisible(), 'mensal: historico de metas');
   ok(await owner.getByText('O que comprar para o próximo mês').isVisible(), 'mensal: restock para o proximo mes');

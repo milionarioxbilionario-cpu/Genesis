@@ -17,8 +17,8 @@ export default {
 
   meta: {
     home: {
-      title: 'Genesis MZ — Sistema de vendas, stock e caixa para lojas em Moçambique',
-      description: 'Ponto de venda para bottle stores, mercearias, padarias, talhos, restaurantes e supermercados em Moçambique. Vende sem internet, controla stock e validades, fecho de caixa e lucro real. 1.º mês grátis.',
+      title: 'Genesis MZ — Sistema de vendas, stock e caixa para negócios em Moçambique',
+      description: 'Ponto de venda e gestão para bottle stores, mercearias, pastelarias, talhos, restaurantes, supermercados e outros negócios em Moçambique. Vende sem internet, controla stock e validades, fecho de caixa e lucro real. 1.º mês grátis.',
     },
     pricing: {
       title: 'Planos e preço — Genesis MZ',
@@ -42,9 +42,9 @@ export default {
   },
 
   hero: {
-    eyebrow: 'Ponto de venda para lojas em Moçambique',
-    title: 'Vendas, stock e caixa da sua loja — mesmo sem internet',
-    lead: 'Os caixistas vendem no terminal com o PIN deles. O dono vê no telemóvel quanto entrou, o lucro real, o stock, as validades e as chenecas — e ninguém mexe no dinheiro sem ficar registado.',
+    eyebrow: 'Gestão para quem empreende em Moçambique',
+    title: 'Vendas, stock e caixa do seu negócio — mesmo sem internet',
+    lead: 'Os caixistas vendem no terminal com o PIN deles. O dono vê no telemóvel quanto entrou, o lucro real, o stock, as validades e as txenekas — e ninguém mexe no dinheiro sem ficar registado.',
     already: 'Já tem conta?',
     counter: 'No balcão?',
     primary: 'Experimentar grátis',
@@ -56,20 +56,20 @@ export default {
   },
 
   pains: {
-    title: 'O que o Genesis resolve na sua loja',
-    lead: 'O que mais custa a uma loja pequena raramente é uma venda. É o dinheiro que falta, o stock que estraga e a cheneca que ninguém cobrou. Para cada um, o Genesis tem uma resposta.',
+    title: 'O que o Genesis resolve no seu negócio',
+    lead: 'Tenha uma loja, um restaurante ou venda por conta própria, o que mais custa raramente é uma venda. É o dinheiro que falta, o stock que estraga e a txeneka que ninguém cobrou. Para cada um, o Genesis tem uma resposta.',
     problem: 'O problema',
     solution: 'Como o Genesis resolve',
     items: [
       { icon: 'wallet', q: 'Falta dinheiro na caixa', a: 'No fecho do turno o caixista conta o dinheiro sem ver quanto devia haver (fecho às cegas). O Genesis compara com as vendas e mostra ao dono a diferença. Três contagens abaixo bloqueiam o perfil até o dono decidir.' },
       { icon: 'calendar-clock', q: 'Produtos que estragam ou passam da validade', a: 'O Genesis controla as validades: cada compra entra como um lote com a sua data, vende-se sempre primeiro o lote que expira primeiro, o alerta chega antes de expirar e o que passa do prazo fica registado como perda, com o motivo.' },
-      { icon: 'hand-coins', q: 'Chenecas esquecidas', a: 'Cada cheneca fica com nome, telefone, valor e data de pagamento. O Genesis avisa das que vencem hoje, amanhã ou já passaram, e regista cada pagamento.' },
+      { icon: 'hand-coins', q: 'Txenekas esquecidas', a: 'Cada txeneka fica com nome, telefone, valor e data de pagamento. O Genesis avisa das que vencem hoje, amanhã ou já passaram, e regista cada pagamento.' },
       { icon: 'chart-column', q: 'Não saber quanto lucra de verdade', a: 'O relatório do mês desconta ao que entrou os salários, a renda, as despesas e as entregas dos fornecedores. Vê o lucro líquido real, não só o dinheiro da caixa.' },
     ],
   },
 
   features: {
-    title: 'Tudo o que a loja precisa, num só sistema',
+    title: 'Tudo o que o seu negócio precisa, num só sistema',
     lead: 'Um resumo de cada parte. Toque em «Ver mais detalhes» para saber exactamente o que faz.',
     more: 'Ver mais detalhes',
     items: [
@@ -78,10 +78,10 @@ export default {
       { icon: 'smartphone', t: 'Dinheiro, M-Pesa, e-Mola e Cartão', d: 'Cada forma de pagamento aparece separada nos relatórios e no fecho do turno.', more: ['O troco é calculado no ecrã.', 'O fecho do turno conta só o dinheiro vivo; M-Pesa, e-Mola e cartão aparecem à parte.', 'Os relatórios mostram quanto entrou por cada forma de pagamento.'] },
       { icon: 'calendar-clock', t: 'Stock por lotes e validades', d: 'Cada compra é um lote com data de validade. O Genesis vende primeiro o que expira primeiro e avisa antes.', more: ['O dono escolhe quantos dias antes da validade quer ser avisado.', 'No dia seguinte à validade, o que não se vendeu é registado como perda automaticamente.', 'Quebras (partido, consumo interno…) ficam registadas com o motivo.', 'Ajustes de stock só pelo dono, sempre registados.'] },
       { icon: 'lock-keyhole', t: 'PIN do dono para o que é sensível', d: 'Cancelar uma venda, dar um desconto acima do limite ou abrir de novo o turno exige o PIN do dono.', more: ['Até ao limite que o dono escolhe, o caixista dá o desconto sozinho; acima, precisa do PIN.', 'Os PINs errados ficam registados; demasiados erros bloqueiam durante 15 minutos.', 'Tudo fica no histórico (auditoria) que o dono consulta.'] },
-      { icon: 'fingerprint-pattern', t: 'Painel do dono protegido', d: 'O painel pede o seu PIN (ou Face ID / impressão digital) sempre que abre a app e depois de 5 minutos parado.', more: ['Se alguém pegar no seu telemóvel, não vê os números da loja.', 'Cinco PINs errados terminam a sessão: só se volta a entrar com o email e a senha.', 'Modo privado: um toque no olho esconde do ecrã todos os valores em dinheiro.'] },
+      { icon: 'fingerprint-pattern', t: 'Painel do dono protegido', d: 'O painel pede o seu PIN (ou Face ID / impressão digital) sempre que abre a app e depois de 5 minutos parado.', more: ['Se alguém pegar no seu telemóvel, não vê os números do negócio.', 'Cinco PINs errados terminam a sessão: só se volta a entrar com o email e a senha.', 'Modo privado: um toque no olho esconde do ecrã todos os valores em dinheiro.'] },
       { icon: 'qr-code', t: 'Recibo com QR de verificação', d: 'Recibo em PDF ou impresso. O cliente lê o QR e confirma que o recibo é verdadeiro.', more: ['Impressora térmica de talões (opcional) ou PDF para partilhar.', 'O QR abre uma página do Genesis que confirma a venda.'] },
       { icon: 'shopping-cart', t: 'Lista de compras sugerida', d: 'O Genesis sugere o que comprar a partir das vendas e envia a lista ao fornecedor pelo WhatsApp.', more: ['Conta o que se vendeu, o stock que falta e o que os clientes pediram e não havia.', 'Mostra o investimento ao preço de custo e a entrega do fornecedor.', 'A mensagem segue já escrita para o WhatsApp do fornecedor.'] },
-      { icon: 'bell', t: 'Alertas num só sino', d: 'Stock no mínimo, validades, chenecas, diferenças no fecho do turno e meta do mês atingida.', more: ['Os alertas desaparecem sozinhos quando a situação se resolve.', 'Tocar num alerta abre a página certa.'] },
+      { icon: 'bell', t: 'Alertas num só sino', d: 'Stock no mínimo, validades, txenekas, diferenças no fecho do turno e meta do mês atingida.', more: ['Os alertas desaparecem sozinhos quando a situação se resolve.', 'Tocar num alerta abre a página certa.'] },
       { icon: 'users', t: 'Equipa, salários e metas', d: 'Caixistas, trabalhadores e salários. Meta de vendas do mês com o progresso dia a dia.', more: ['No Início vê quem está a trabalhar agora, quem já fechou o turno e quem ainda não abriu.', 'A meta mostra quanto falta e em que dia chega lá, ao ritmo actual.'] },
       { icon: 'languages', t: 'Português e inglês', d: 'Cada pessoa escolhe a sua língua: painel, terminal, recibos e PDFs.', more: ['A escolha fica guardada na conta de cada pessoa.'] },
     ],
@@ -99,19 +99,19 @@ export default {
 
   screens: {
     title: 'Veja como é',
-    lead: 'Imagens reais do Genesis MZ, numa loja de demonstração.',
+    lead: 'Imagens reais do Genesis MZ, num estabelecimento de demonstração.',
     items: [
       { key: 'inicio', cap: 'Início do dono: hoje, a meta e quem está a trabalhar' },
       { key: 'mensal', cap: 'Relatório mensal: do que entrou ao lucro líquido' },
-      { key: 'alertas', cap: 'Alertas: stock, validades e chenecas' },
+      { key: 'alertas', cap: 'Alertas: stock, validades e txenekas' },
     ],
   },
 
   who: {
-    title: 'Feito para o comércio moçambicano',
-    lead: 'Ao configurar a loja escolhe o tipo de negócio e recebe um catálogo pronto com os produtos mais comuns (mais de 200 no total), com preços sugeridos que pode ajustar. Em meticais, com M-Pesa e e-Mola.',
+    title: 'Feito para quem empreende em Moçambique',
+    lead: 'Ao configurar o estabelecimento escolhe o tipo de negócio e recebe um catálogo pronto com os produtos mais comuns (mais de 200 no total), com preços sugeridos que pode ajustar. Em meticais, com M-Pesa e e-Mola.',
     items: [
-      { icon: 'beer', t: 'Bottle store' }, { icon: 'shopping-basket', t: 'Mercearia' }, { icon: 'croissant', t: 'Padaria' },
+      { icon: 'beer', t: 'Bottle store' }, { icon: 'shopping-basket', t: 'Mercearia' }, { icon: 'croissant', t: 'Pastelaria' },
       { icon: 'beef', t: 'Talho' }, { icon: 'utensils', t: 'Restaurante' }, { icon: 'store', t: 'Supermercado' },
     ],
     other: 'O seu negócio não está na lista? Fale connosco.',
@@ -120,7 +120,7 @@ export default {
   how: {
     title: 'Como começar',
     items: [
-      { t: 'Peça a conta', d: 'Preencha o pedido com o nome da loja, o tipo de negócio e o seu email.' },
+      { t: 'Peça a conta', d: 'Preencha o pedido com o nome do estabelecimento, o tipo de negócio e o seu email.' },
       { t: 'Receba o acesso', d: 'Aprovamos o pedido e enviamos-lhe os dados para entrar. O mês grátis começa aqui.' },
       { t: 'Configure em 5 passos', d: 'Tipo de negócio, catálogo com preços, custos, equipa e fornecedores, e horário — com explicação em cada passo.' },
       { t: 'Ligue o balcão', d: 'Emparelhe o computador ou tablet do balcão com um código de 6 dígitos e comece a vender.' },
@@ -128,10 +128,10 @@ export default {
   },
 
   security: {
-    title: 'Os dados da sua loja são só seus',
+    title: 'Os dados do seu negócio são só seus',
     items: [
       'O painel do dono pede PIN ou Face ID ao abrir e depois de 5 minutos parado.',
-      'Cada loja está separada das outras em duas camadas independentes: no programa e na própria base de dados.',
+      'Cada estabelecimento está separado dos outros em duas camadas independentes: no programa e na própria base de dados.',
       'Os caixistas não veem custos, margens, relatórios nem as vendas dos colegas.',
       'Cancelamentos, descontos e ajustes de stock ficam no histórico que o dono consulta.',
       'Mudar a senha ou o PIN termina logo as sessões antigas.',
@@ -140,7 +140,7 @@ export default {
 
   priceBlock: {
     title: 'Um só plano, com tudo incluído',
-    lead: 'Todas as funcionalidades desta página, para a sua loja.',
+    lead: 'Todas as funcionalidades desta página, para o seu negócio.',
     free: 'Clientes novos: o 1.º mês é grátis.',
     cta: 'Ver o plano',
   },
@@ -152,7 +152,7 @@ export default {
       { q: 'E se alguém pegar no meu telemóvel?', a: 'O painel do dono pede o seu PIN (ou Face ID / impressão digital) sempre que abre a app e depois de 5 minutos sem mexer. Há também o modo privado, que esconde do ecrã os valores em dinheiro.' },
       { q: 'Que equipamento preciso?', a: 'Um computador, tablet ou telemóvel com um browser actual (Chrome, Edge ou Safari). O leitor de código de barras e a impressora de talões são opcionais: sem impressora, o recibo sai em PDF.' },
       { q: 'Funciona no telemóvel?', a: 'Sim. O painel do dono e o terminal funcionam no telemóvel e podem ser instalados no ecrã principal, como uma app.' },
-      { q: 'Os caixistas veem o lucro da loja?', a: 'Não. O caixista só vê o terminal: vende, imprime o recibo e regista quebras e pedidos de clientes. Custos, margens e relatórios são só do dono.' },
+      { q: 'Os caixistas veem o lucro do negócio?', a: 'Não. O caixista só vê o terminal: vende, imprime o recibo e regista quebras e pedidos de clientes. Custos, margens e relatórios são só do dono.' },
       { q: 'Quanto custa?', a: '{price} por mês, com tudo incluído. Clientes novos não pagam o 1.º mês.' },
       { q: 'Como pago e como cancelo?', a: 'Por agora, a forma de pagamento e o cancelamento combinam-se connosco pelo WhatsApp.' },
       { q: 'Posso usar o Genesis em inglês?', a: 'Sim. Cada pessoa escolhe português ou inglês, e a escolha fica guardada na conta.' },
@@ -165,7 +165,7 @@ export default {
   },
 
   footer: {
-    tagline: 'Vendas, stock e caixa para lojas em Moçambique.',
+    tagline: 'Vendas, stock e caixa para negócios em Moçambique.',
     product: 'Produto', access: 'Acesso', contact: 'Contacto', request: 'Pedir conta',
     whatsapp: 'WhatsApp',
     rights: '© 2026 Genesis MZ',
@@ -173,10 +173,10 @@ export default {
 
   pricing: {
     eyebrow: 'Planos',
-    title: 'Um preço simples para a sua loja',
+    title: 'Um preço simples para o seu negócio',
     lead: 'Um só plano, com todas as funcionalidades. Sem surpresas.',
     planName: 'Genesis MZ',
-    planDesc: 'Para uma loja, com o dono, os caixistas e o balcão.',
+    planDesc: 'Para um estabelecimento, com o dono, os caixistas e o balcão.',
     free: 'Clientes novos: o 1.º mês é grátis — só começa a pagar no 2.º mês.',
     join: 'Aderir ao plano',
     start: 'Começar o mês grátis',
@@ -188,7 +188,7 @@ export default {
       'Stock por lotes, validades e alertas',
       'Fecho de turno às cegas',
       'Painel do dono com PIN, Face ID e modo privado',
-      'Chenecas, fornecedores e lista de compras',
+      'Txenekas, fornecedores e lista de compras',
       'Relatórios diário, semanal e mensal com lucro líquido',
       'Recibos em PDF ou impressos, com QR',
       'Equipa, salários e metas',

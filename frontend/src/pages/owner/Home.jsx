@@ -16,7 +16,7 @@ import { Alert, Button, Card, CardHeader, CountUpInt, CountUpMoney, Dialog, Empt
 //   2. como vai a meta do mes;
 //   3. quem esta a trabalhar agora (turno de cada caixista);
 //   4. as ultimas vendas.
-// Stock baixo, validades e chenecas estao no sino e nas suas paginas.
+// Stock baixo, validades e txenekas estao no sino e nas suas paginas.
 // Um so pedido: GET /api/owner/overview. Os numeros sobem ao aparecer (CountUp)
 // e respeitam prefers-reduced-motion.
 const REDUCED = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

@@ -37,7 +37,7 @@ addTranslations('en', {
   'Verifique os campos: nomes com pelo menos 3 letras, telefone com 8 ou mais dígitos e um email válido.': 'Check the fields: names with at least 3 letters, a phone with 8 or more digits and a valid email.',
   'Bottle store / Loja de bebidas': 'Bottle store / Drinks shop',
   'Mercearia / Contentor': 'Grocery / Container shop',
-  'Padaria / Café': 'Bakery / Café',
+  'Pastelaria / Café': 'Pastry shop / Café',
   'Talho': 'Butcher',
   'Supermercado': 'Supermarket',
   'Restaurante / Churrasqueira': 'Restaurant / Grill',

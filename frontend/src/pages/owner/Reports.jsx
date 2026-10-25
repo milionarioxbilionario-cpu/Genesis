@@ -190,7 +190,7 @@ const TYPE_FILTERS = [
   { value: 'loss', label: 'Perdas' },
   { value: 'cancelled', label: 'Cancelamentos' },
   { value: 'stock', label: 'Entradas de stock' },
-  { value: 'debt,debt_payment', label: 'Chenecas' },
+  { value: 'debt,debt_payment', label: 'Txenekas' },
   { value: 'shift', label: 'Fechos de turno' },
   { value: 'demand', label: 'Pedidos em falta' },
   { value: 'expense', label: 'Despesas' },
@@ -504,7 +504,7 @@ function Monthly() {
               {data.trends.declining.length === 0 ? <p className="text-ink-muted">{t('Nada a cair.')}</p> : data.trends.declining.map((x) => <KeyValue key={x.product_id} label={x.name} value={`${int(x.previous_quantity)} → ${int(x.quantity)}${x.change_pct != null ? ` (${Math.round(x.change_pct)}%)` : ''}`} tone="danger" />)}
             </Card>
             <Card className="lg:col-span-2">
-              <CardHeader title={t('Chenecas')} description={t('Novas {a} · recebidas {b} · em aberto {c}', { a: money(data.debts.new_total), b: money(data.debts.received_total), c: money(data.debts.outstanding_total) })} />
+              <CardHeader title={t('Txenekas')} description={t('Novas {a} · recebidas {b} · em aberto {c}', { a: money(data.debts.new_total), b: money(data.debts.received_total), c: money(data.debts.outstanding_total) })} />
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <h3 className="mb-1 text-sm font-medium text-ink-muted">{t('Novas no mês')}</h3>

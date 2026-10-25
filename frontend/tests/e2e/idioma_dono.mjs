@@ -52,7 +52,7 @@ try {
     ['/app/produtos?tab=shopping', 'Generate from recommendation', 'd06-shopping'],
     ['/app/produtos?tab=prices', 'Cost history', 'd07-prices'],
     ['/app/fornecedores', 'New supplier', 'd08-suppliers'],
-    ['/app/chenecas', 'Total owed', 'd09-credit'],
+    ['/app/txenekas', 'Total owed', 'd09-credit'],
     ['/app/equipa', 'New cashier', 'd10-team'],
     ['/app/equipa', 'Monthly payroll', 'd11-workers', 'tab:Workers'],
     ['/app/relatorios', 'By payment method', 'd12-daily'],
@@ -78,7 +78,7 @@ try {
   const drawers = [
     ['/app/produtos', 'New product', 'Purchase price', 'd20-new-product'],
     ['/app/produtos?tab=stock', 'Manual adjustment', 'Quantity', 'd21-adjust'],
-    ['/app/chenecas', 'New credit', 'Customer name', 'd22-new-credit'],
+    ['/app/txenekas', 'New credit', 'Customer name', 'd22-new-credit'],
     ['/app/equipa', 'New cashier', '4-digit PIN', 'd23-new-cashier'],
     ['/app/fornecedores', 'New supplier', 'Delivery cost per visit', 'd24-new-supplier'],
   ];

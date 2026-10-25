@@ -39,8 +39,8 @@ try {
   ok(await page.getByRole('heading', { name: /^(Bom dia|Boa tarde|Boa noite), Ana$/ }).isVisible(), 'Início saúda pelo nome e pela hora («Boa tarde, Ana»)');
   for (const title of ['Hoje até agora', 'Caixistas agora', 'Últimas vendas']) ok(await page.getByText(title, { exact: true }).first().isVisible(), `Início tem «${title}»`);
   ok(await page.getByText(/^Meta de /).first().isVisible(), 'Início tem a meta do mês');
-  // Nada repetido de outras paginas: stock baixo, chenecas e validades vivem no sino.
-  for (const gone of ['Stock baixo', 'Chenecas a cobrar', 'Últimos 7 dias']) ok(!(await page.getByText(gone, { exact: true }).count()), `sem «${gone}» no Início (sem repetir informação)`);
+  // Nada repetido de outras paginas: stock baixo, txenekas e validades vivem no sino.
+  for (const gone of ['Stock baixo', 'Txenekas a cobrar', 'Últimos 7 dias']) ok(!(await page.getByText(gone, { exact: true }).count()), `sem «${gone}» no Início (sem repetir informação)`);
   // Contador: comeca em baixo e termina no valor certo.
   const hero = page.locator('section[aria-label="Hoje até agora"] [data-value]').first();
   await page.waitForTimeout(1500);

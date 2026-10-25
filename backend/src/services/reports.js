@@ -208,7 +208,7 @@ async function weeklyReport(tenantId, startStr, endStr) {
   };
 }
 
-// Chenecas do periodo: novas, pagamentos recebidos e o que esta em aberto agora.
+// Txenekas do periodo: novas, pagamentos recebidos e o que esta em aberto agora.
 async function debtsSummary(tenantId, start, end) {
   const [created, payments, open] = await Promise.all([
     prisma.debt.findMany({ where: { tenant_id: tenantId, created_at: { gte: start, lte: end } }, orderBy: { created_at: 'asc' } }),
@@ -328,7 +328,7 @@ async function monthlyReport(tenantId, year, month) {
 
 // RASTREIO: tudo o que aconteceu no periodo, por ordem, com o efeito no
 // resultado. effect: 'gain' (entra no lucro), 'loss' (sai do lucro), 'info'
-// (movimento sem efeito directo no lucro: compra de stock, cheneca, fecho...).
+// (movimento sem efeito directo no lucro: compra de stock, txeneka, fecho...).
 // Vendas trazem os itens e o caixista, para abrir o recibo.
 const TIMELINE_TYPES = ['sale', 'cancelled', 'loss', 'stock', 'debt', 'debt_payment', 'shift', 'demand', 'expense'];
 
@@ -393,8 +393,8 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
       quantity: e.quantity, product_name: e.product?.name || null, supplier_name: e.supplier_id ? (supplierName.get(e.supplier_id) || '—') : null,
     });
   }
-  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Cheneca nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date, debtor: d.debtor_name });
-  for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Cheneca paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido', debtor: p.debt?.debtor_name || null });
+  for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Txeneka nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date, debtor: d.debtor_name });
+  for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Txeneka paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido', debtor: p.debt?.debtor_name || null });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
   for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || d.product_name || '—'}${(d.quantity || 1) > 1 ? ` ×${d.quantity}` : ''} (${d.product_id ? 'em falta' : 'fora do catálogo'})`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida', quantity: d.quantity || 1, unit_price: d.unit_price ?? null, product_name: d.product?.name || d.product_name || null, in_catalog: Boolean(d.product_id) });
 

@@ -75,7 +75,9 @@ export default function App() {
                 <Route path="vendas" element={<Sales />} />
                 <Route path="produtos" element={<Products />} />
                 <Route path="fornecedores" element={<Suppliers />} />
-                <Route path="chenecas" element={<Debts />} />
+                <Route path="txenekas" element={<Debts />} />
+                {/* Nome antigo (antes de 25/10/2026): favoritos e alertas antigos continuam a abrir. */}
+                <Route path="chenecas" element={<Navigate to="/app/txenekas" replace />} />
                 <Route path="equipa" element={<Team />} />
                 <Route path="relatorios" element={<Reports />} />
                 <Route path="definicoes" element={<Settings />} />

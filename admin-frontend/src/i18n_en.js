@@ -30,7 +30,7 @@ addTranslations('en', {
   'Eliminada': 'Deleted',
   'Bottle store': 'Bottle store',
   'Mercearia': 'Grocery',
-  'Padaria': 'Bakery',
+  'Pastelaria': 'Pastry shop',
   'Talho': 'Butcher',
   'Supermercado': 'Supermarket',
   'Restaurante': 'Restaurant',

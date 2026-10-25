@@ -18,7 +18,7 @@ export const NAV = [
   { to: '/app/vendas', label: 'Vendas', icon: Receipt },
   { to: '/app/produtos', label: 'Produtos', icon: Package },
   { to: '/app/fornecedores', label: 'Fornecedores', icon: Truck },
-  { to: '/app/chenecas', label: 'Chenecas', icon: HandCoins },
+  { to: '/app/txenekas', label: 'Txenekas', icon: HandCoins },
   { to: '/app/equipa', label: 'Equipa', icon: Users },
   { to: '/app/relatorios', label: 'Relatórios', icon: BarChart3 },
   { to: '/app/definicoes', label: 'Definições', icon: Settings },

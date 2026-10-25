@@ -39,6 +39,9 @@ model Tenant {
   phone                 String
   email                 String?
   nuit                  String?
+  /// Fase 15.1: logotipo do estabelecimento (data URL, <= 300 KB) e mensagem no fim do recibo.
+  logo_data             String?
+  receipt_footer        String?
   id_document           String?
   status                String                @default("pending")
   trial_ends_at         DateTime?

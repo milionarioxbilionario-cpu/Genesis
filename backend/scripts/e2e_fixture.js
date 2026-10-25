@@ -59,7 +59,7 @@ async function create(file, mode) {
 
 // Modo "demo" (Fase 11.3): loja com aspecto real para as capturas do site
 // publico (frontend/scripts/capturas_site.mjs) — mais produtos, lotes com
-// validade, vendas do mes ate agora, meta, fornecedor e chenecas. Apagada no fim
+// validade, vendas do mes ate agora, meta, fornecedor e txenekas. Apagada no fim
 // como qualquer outra loja de teste. Aleatorio com semente: sempre igual.
 async function addDemoData(tenantId, ownerId, cashierId) {
   let seed = 20261024;

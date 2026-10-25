@@ -132,7 +132,7 @@ addTranslations('en', {
   'A data da despesa não pode ser no futuro': 'The expense date cannot be in the future',
   'A loja não tem telefone configurado.': 'The store has no phone set up.',
   'Caixista não encontrado nesta loja': 'Cashier not found in this store',
-  'Cheneca não encontrada': 'Credit not found',
+  'Txeneka não encontrada': 'Credit not found',
   'Cursor inválido': 'Invalid cursor',
   'Custo fixo não encontrado': 'Fixed cost not found',
   'Dados inválidos': 'Invalid data',

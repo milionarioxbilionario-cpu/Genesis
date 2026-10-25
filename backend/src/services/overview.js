@@ -1,7 +1,7 @@
 // Visao geral do dono (Fase 13, pedido do fundador 25/10/2026): "uma visao
 // rapida e curta do que importa" — quanto temos hoje, como vai a meta, quem
 // esta a trabalhar e as ultimas vendas. Tudo num pedido, sem repetir o que
-// ja vive noutras paginas (stock, chenecas e alertas estao no sino e nas suas
+// ja vive noutras paginas (stock, txenekas e alertas estao no sino e nas suas
 // paginas). Dia = dia de Maputo (o servidor corre com TZ=Africa/Maputo).
 //
 // Estado do turno de cada caixista (cores decididas pelo fundador):

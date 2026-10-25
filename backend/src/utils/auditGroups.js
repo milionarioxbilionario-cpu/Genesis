@@ -12,7 +12,7 @@ const GROUPS = [
   { key: 'security', label: 'PINs e segurança', actions: ['AUTH_PIN_CHANGED', 'AUTH_PIN_CHANGE_FAIL', 'RESET_CASHIER_PIN', 'POS_PIN_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'TERMINAL_PAIRED', 'TERMINAL_PAIRING_CODE', 'TERMINAL_REVOKED', 'SUPPORT_SESSION_OPENED'] },
   { key: 'team', label: 'Equipa', actions: ['CREATE_CASHIER', 'UPDATE_CASHIER', 'DEACTIVATE_CASHIER', 'REACTIVATE_CASHIER', 'CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE'] },
   { key: 'settings', label: 'Definições e custos', actions: ['UPDATE_STORE', 'UPDATE_HOURS', 'UPDATE_DISCOUNT_POLICY', 'UPDATE_EXPIRY_ALERT', 'UPDATE_MONTH_CLOSE_DAY', 'UPDATE_AUDIT_RETENTION', 'UPDATE_REPORT_SCHEDULE', 'CREATE_FIXED_COST', 'UPDATE_FIXED_COST', 'DELETE_FIXED_COST', 'CREATE_EXPENSE', 'UPDATE_EXPENSE', 'DELETE_EXPENSE', 'SET_GOAL'] },
-  { key: 'debts', label: 'Chenecas', actions: ['CREATE_DEBT', 'DEBT_PAYMENT'] },
+  { key: 'debts', label: 'Txenekas', actions: ['CREATE_DEBT', 'DEBT_PAYMENT'] },
   { key: 'shopping', label: 'Listas de compras', actions: ['CREATE_SHOPPING_LIST', 'UPDATE_SHOPPING_LIST', 'SHOPPING_LIST_STATUS', 'DELETE_SHOPPING_LIST'] },
 ];
 const BY_ACTION = new Map(GROUPS.flatMap((g) => g.actions.map((a) => [a, g.key])));

@@ -704,7 +704,7 @@ async function test14() {
 
 // ---------------------------------------------------------------------------
 async function test15() {
-  section(15, 'Relatorios com rastreio, perdas, metas e chenecas (Genesis 2.1)');
+  section(15, 'Relatorios com rastreio, perdas, metas e txenekas (Genesis 2.1)');
   const owner = ownerClient();
   const today = new Date(); const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   const day = iso(today);
@@ -721,7 +721,7 @@ async function test15() {
   const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: ctx.product.id, quantity: 1, reason: 'broken' });
   ok(sh.status < 300, 'quebra de 1 (custo 60 MT)', sh);
   const debt = await owner.req('POST', '/api/owner/debts', { debtor_name: 'Cliente Relatorio', debtor_phone: '841234000', total_amount: 50000, due_date: iso(new Date(Date.now() + 10 * 86400000)) });
-  ok(debt.status === 201, 'cheneca de 500 MT', debt);
+  ok(debt.status === 201, 'txeneka de 500 MT', debt);
   ok((await owner.req('POST', '/api/owner/debts/' + debt.data.id + '/payment', { amount: 20000 })).status < 300, 'pagamento de 200 MT');
 
   const d1 = await get('/api/owner/reports/daily?date=' + day);
@@ -739,10 +739,10 @@ async function test15() {
   ok(/2 × Cerveja Teste/.test(saleEv?.detail || ''), 'rastreio: produto e quantidade descritos');
   const lossEv = tl.rows.find((e) => e.type === 'loss' && e.reason === 'broken');
   ok(lossEv && lossEv.amount === -6000 && lossEv.effect === 'loss' && lossEv.unit_cost === 6000, 'rastreio: a perda com -60 MT e o custo unitario', lossEv);
-  ok(tl.rows.some((e) => e.type === 'debt' && e.amount === 50000) && tl.rows.some((e) => e.type === 'debt_payment' && e.amount === 20000), 'rastreio: cheneca nova e pagamento');
+  ok(tl.rows.some((e) => e.type === 'debt' && e.amount === 50000) && tl.rows.some((e) => e.type === 'debt_payment' && e.amount === 20000), 'rastreio: txeneka nova e pagamento');
   // 9.4: dados para o ecra montar o texto na lingua de quem ve.
   ok(lossEv?.product_name === 'Cerveja Teste' && lossEv.quantity > 0 && lossEv.auto === false, '9.4: a perda traz produto, quantidade e se foi automatica', lossEv);
-  ok(tl.rows.filter((e) => e.type === 'debt' || e.type === 'debt_payment').every((e) => typeof e.debtor === 'string' && e.debtor.length > 0), '9.4: chenecas trazem o nome do cliente');
+  ok(tl.rows.filter((e) => e.type === 'debt' || e.type === 'debt_payment').every((e) => typeof e.debtor === 'string' && e.debtor.length > 0), '9.4: txenekas trazem o nome do cliente');
   ok(!tl.rows.some((e) => /\d{3,} por unidade|desconto \d/.test(e.detail || '')), 'rastreio: nenhum valor em centavos no texto');
   ok(tl.rows.every((e, i, a) => i === 0 || new Date(a[i - 1].at) >= new Date(e.at)), 'rastreio: por ordem (mais recente primeiro)');
   const onlyLoss = await get(`/api/owner/reports/timeline?from=${day}&to=${day}&types=loss`);
@@ -760,7 +760,7 @@ async function test15() {
   ok(w.best_day && w.worst_day !== undefined && w.compare && w.restock && Array.isArray(w.restock.items), 'semanal: melhor/pior dia, comparacao e recomendacao de restock');
 
   const m1 = await get('/api/owner/reports/monthly?' + ym);
-  ok(m1.debts.new_total - m0.debts.new_total === 50000 && m1.debts.received_total - m0.debts.received_total === 20000, 'mensal: chenecas novas +500 MT e recebidas +200 MT');
+  ok(m1.debts.new_total - m0.debts.new_total === 50000 && m1.debts.received_total - m0.debts.received_total === 20000, 'mensal: txenekas novas +500 MT e recebidas +200 MT');
   ok(m1.debts.outstanding.some((x) => x.debtor === 'Cliente Relatorio' && x.remaining === 30000), 'mensal: em aberto 300 MT do cliente');
   ok(m1.losses_total - m0.losses_total === 6000, 'mensal: perdas +60 MT');
   ok(m1.goal && m1.goal.target === 1000000 && Array.isArray(m1.weeks) && m1.weeks.length >= 4, 'mensal: meta e semanas do mes');
@@ -1549,7 +1549,7 @@ async function test30() {
 // Fase 10.1: sino do dono. Calculado na leitura: cada alerta existe enquanto a
 // situacao existe. Usa tokens assinados (pode correr depois da 28).
 async function test31() {
-  section(31, 'Sino do dono: stock, validades, chenecas, fecho de turno, bloqueio, meta, fecho do dia');
+  section(31, 'Sino do dono: stock, validades, txenekas, fecho de turno, bloqueio, meta, fecho do dia');
   const { loadOwnerNotifications } = require('../src/services/notifications');
   const t = ctx.tenant.id;
   const day = (offset) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Maputo' }).format(new Date(Date.now() + offset * 86400000));
@@ -1579,9 +1579,9 @@ async function test31() {
     ok(find(d, 'stock_low:' + sev.id)?.level === 'warning' && find(d, 'stock_low:' + sev.id).params.stock_level === 'severe', 'stock 15 (minimo 20): severo = aviso');
     ok(!find(d, 'stock_low:' + exp.id), 'produto acima do minimo: sem alerta de stock');
     ok(find(d, 'lot_expiring:' + lot.id)?.level === 'critical' && find(d, 'lot_expiring:' + lot.id).params.days_left === 0, 'lote que expira hoje: critico');
-    ok(find(d, 'debt_due:' + venc.id)?.level === 'critical' && find(d, 'debt_due:' + venc.id).params.days_left === -2, 'cheneca vencida ha 2 dias: critica');
-    ok(find(d, 'debt_due:' + amanha.id)?.level === 'warning', 'cheneca que vence amanha: aviso');
-    ok(!find(d, 'debt_due:' + dez.id) && !find(d, 'debt_due:' + paga.id), 'cheneca a 10 dias e cheneca paga: fora do sino');
+    ok(find(d, 'debt_due:' + venc.id)?.level === 'critical' && find(d, 'debt_due:' + venc.id).params.days_left === -2, 'txeneka vencida ha 2 dias: critica');
+    ok(find(d, 'debt_due:' + amanha.id)?.level === 'warning', 'txeneka que vence amanha: aviso');
+    ok(!find(d, 'debt_due:' + dez.id) && !find(d, 'debt_due:' + paga.id), 'txeneka a 10 dias e txeneka paga: fora do sino');
     const sd = find(d, 'shift_difference:' + closing.id);
     ok(sd?.level === 'warning' && sd.params.difference === -5000 && sd.params.cashier === ctx.cashier.name && sd.link.endsWith('date=' + day(-1)), 'fecho com 50 MT a menos ontem: aviso com caixista e link do dia', sd);
     ok(find(d, 'cashier_locked:' + ctx.cashier.id)?.level === 'critical', 'caixista bloqueado (3 contagens erradas): critico');
@@ -1605,10 +1605,10 @@ async function test31() {
     // Resolver a situacao tira o alerta.
     await prisma.product.update({ where: { id: crit.id }, data: { stock_qty: 50 } });
     const pay = await owner.req('POST', '/api/owner/debts/' + amanha.id + '/payment', { amount: 100000 });
-    ok(pay.status === 200, 'pagar a cheneca toda: 200', pay.status);
+    ok(pay.status === 200, 'pagar a txeneka toda: 200', pay.status);
     ok((await owner.req('POST', '/api/owner/cashiers/' + ctx.cashier.id + '/unlock')).status === 200, 'dono desbloqueia o caixista');
     const after = (await owner.req('GET', '/api/owner/notifications')).data;
-    ok(!find(after, 'stock_low:' + crit.id) && !find(after, 'debt_due:' + amanha.id) && !find(after, 'cashier_locked:' + ctx.cashier.id), 'stock reposto, cheneca paga e caixista desbloqueado saem do sino');
+    ok(!find(after, 'stock_low:' + crit.id) && !find(after, 'debt_due:' + amanha.id) && !find(after, 'cashier_locked:' + ctx.cashier.id), 'stock reposto, txeneka paga e caixista desbloqueado saem do sino');
     ok(after.count === d.count - 3, 'o total desce 3', [d.count, after.count]);
   } finally {
     await prisma.auditLog.deleteMany({ where: { id: { in: fails } } });

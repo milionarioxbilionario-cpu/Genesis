@@ -21,7 +21,7 @@ test('stock: 3 niveis da especificacao (critica <= 10, severa <= 20, normal acim
   assert.strictEqual(m['stock_low:a'].link, '/app/produtos?tab=stock');
 });
 
-test('chenecas: vencida e hoje criticas, amanha aviso, ate 7 dias info, depois nada; pagas nao contam', () => {
+test('txenekas: vencida e hoje criticas, amanha aviso, ate 7 dias info, depois nada; pagas nao contam', () => {
   const items = buildNotifications({ now: NOW, debts: [
     debt('venc', '2026-10-16'), debt('hoje', '2026-10-18'), debt('amanha', '2026-10-19'),
     debt('sete', '2026-10-25'), debt('oito', '2026-10-26'), debt('paga', '2026-10-18', 50000, 50000),
@@ -36,7 +36,7 @@ test('chenecas: vencida e hoje criticas, amanha aviso, ate 7 dias info, depois n
   assert.strictEqual(m['debt_due:venc'].params.remaining, 100000);
 });
 
-test('cheneca com vencimento 00:30 de Maputo conta pelo dia de Maputo', () => {
+test('txeneka com vencimento 00:30 de Maputo conta pelo dia de Maputo', () => {
   // 18/10 22:30 UTC = 19/10 00:30 em Maputo: vence amanha, nao hoje.
   const m = byId(buildNotifications({ now: NOW, debts: [{ id: 'x', debtor_name: 'X', total_amount: 1000, amount_paid: 0, due_date: new Date('2026-10-18T22:30:00Z') }] }));
   assert.strictEqual(m['debt_due:x'].params.days_left, 1);

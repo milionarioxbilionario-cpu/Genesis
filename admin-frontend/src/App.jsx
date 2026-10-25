@@ -31,7 +31,7 @@ const STATUS = {
   rejected: { label: 'Rejeitada', tone: 'neutral' },
   deleted: { label: 'Eliminada', tone: 'neutral' },
 };
-const TYPES = { bottle_store: 'Bottle store', mercearia: 'Mercearia', padaria: 'Padaria', talho: 'Talho', supermercado: 'Supermercado', restaurante: 'Restaurante', boutique: 'Boutique', outro: 'Outro' };
+const TYPES = { bottle_store: 'Bottle store', mercearia: 'Mercearia', padaria: 'Pastelaria', talho: 'Talho', supermercado: 'Supermercado', restaurante: 'Restaurante', boutique: 'Boutique', outro: 'Outro' };
 
 function useLoad(url) {
   const [state, setState] = useState({ data: null, loading: true, error: '' });

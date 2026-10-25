@@ -54,7 +54,7 @@ try {
     ['/app/produtos', 'Laurentina Preta 550ml', '04-produtos'],
     ['/app/produtos?tab=stock', 'A repor', '05-stock'],
     ['/app/fornecedores', 'Fornecedores', '06-fornecedores'],
-    ['/app/chenecas', 'Sr. Mabunda', '07-chenecas'],
+    ['/app/txenekas', 'Sr. Mabunda', '07-txenekas'],
     ['/app/equipa', 'Carlos', '08-equipa'],
     ['/app/relatorios', 'Por forma de pagamento', '09-relatorio-diario'],
     ['/app/definicoes?tab=costs', 'Renda do contentor', '11-custos-fixos'],

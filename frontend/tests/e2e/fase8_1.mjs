@@ -124,7 +124,7 @@ try {
   for (const [tab, label, nameRe, mustHave] of [
     ['Diário', 'diário', new RegExp(`^Relatório diário - Bottle Store Central \\(${dmy}\\)\\.pdf$`), ['Mais vendidos', 'Rastreio', '2M 340ml', 'Fechos de turno']],
     ['Semanal', 'semanal', /^Relatório semanal - Bottle Store Central \(\d{2}-\d{2}-\d{4} a \d{2}-\d{2}-\d{4}\)\.pdf$/, ['Dia a dia', 'O que comprar para a', 'Rastreio']],
-    ['Mensal', 'mensal', /^Relatório mensal - Bottle Store Central \([A-Za-zçÇ]+ \d{4}\)\.pdf$/, ['Do que entrou ao que ficou', 'Semanas do m', 'Chenecas']],
+    ['Mensal', 'mensal', /^Relatório mensal - Bottle Store Central \([A-Za-zçÇ]+ \d{4}\)\.pdf$/, ['Do que entrou ao que ficou', 'Semanas do m', 'Txenekas']],
   ]) {
     await owner.getByRole('tab', { name: tab }).click();
     const btn = owner.getByRole('button', { name: 'PDF / imprimir' });

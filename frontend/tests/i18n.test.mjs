@@ -207,7 +207,7 @@ test('sino (10.1): titulo e detalhe na lingua de quem ve', async () => {
   const stock = { type: 'stock_low', params: { name: 'Água', qty: 8, min: 12, stock_level: 'critical' } };
   const shift = { type: 'shift_difference', params: { cashier: 'Carlos', difference: -5000, day: '2026-10-17' } };
   setLang('pt');
-  assert.equal(notificationTitle(debt), 'Cheneca vencida');
+  assert.equal(notificationTitle(debt), 'Txeneka vencida');
   assert.equal(notificationDetail(debt), 'Sr. Mabunda: falta ' + money(200000) + ', venceu há 2 dia(s).');
   assert.equal(notificationTitle(stock), 'Stock crítico');
   assert.match(notificationDetail(shift), /^Carlos, .*: faltaram 50,00 MT na caixa\.$/);

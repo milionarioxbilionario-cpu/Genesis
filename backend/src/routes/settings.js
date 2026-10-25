@@ -24,7 +24,15 @@ const storeSchema = z.object({
   location: z.string().trim().min(2).max(160).optional(),
   phone: z.string().trim().min(8).max(20).optional(),
   email: z.string().trim().email().optional().nullable(),
+  // Fase 15.1: aparecem no recibo. NUIT de Mocambique = 9 digitos.
+  nuit: z.string().trim().regex(/^\d{9}$/, 'O NUIT tem 9 dígitos').optional().nullable().or(z.literal('').transform(() => null)),
+  receipt_footer: z.string().trim().max(160, 'No máximo 160 caracteres').optional().nullable(),
 });
+
+// Logotipo do estabelecimento (Fase 15.1): data URL de imagem, no maximo 300 KB.
+// O ecra reduz a imagem antes de enviar; aqui so se aceita imagem e o tamanho.
+const LOGO_MAX = 300 * 1024;
+const LOGO_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
 const hoursSchema = z.object({
   opening_time: z.string().regex(HHMM, 'Hora no formato HH:MM'),
   closing_time: z.string().regex(HHMM, 'Hora no formato HH:MM'),
@@ -58,7 +66,7 @@ router.get('/', asyncHandler(async (req, res) => {
   if (!t) throw httpError(404, 'Loja não encontrada');
   const fixed = await prisma.fixedCost.findMany({ where: { tenant_id: t.id }, orderBy: { description: 'asc' } });
   res.json({
-    store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type },
+    store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type, nuit: t.nuit || null, receipt_footer: t.receipt_footer || null, has_logo: Boolean(t.logo_data) },
     hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00' },
     discount_free_pct: t.discount_free_pct,
     expiry_alert_days: t.expiry_alert_days,
@@ -77,10 +85,28 @@ router.get('/', asyncHandler(async (req, res) => {
 
 router.put('/store', asyncHandler(async (req, res) => {
   const data = storeSchema.parse(req.body);
-  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, email: true } });
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, email: true, nuit: true, receipt_footer: true } });
   const t = await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_STORE', entityType: 'tenant', entityId: t.id, oldValue: before, newValue: data });
   res.json({ ok: true });
+}));
+
+// Dados do recibo para reimprimir no painel (logotipo incluido; nao vai no GET / para nao pesar).
+router.get('/receipt', asyncHandler(async (req, res) => {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true } });
+  if (!t) throw httpError(404, 'Loja não encontrada');
+  res.json({ name: t.name, location: t.location, phone: t.phone, nuit: t.nuit, receipt_footer: t.receipt_footer, logo: t.logo_data });
+}));
+
+router.put('/logo', asyncHandler(async (req, res) => {
+  const { logo } = z.object({ logo: z.string().nullable() }).parse(req.body || {});
+  if (logo !== null) {
+    if (!LOGO_RE.test(logo)) throw httpError(400, 'O logótipo tem de ser uma imagem PNG, JPEG ou WebP.', 'INVALID_LOGO');
+    if (logo.length > LOGO_MAX * 1.37) throw httpError(413, 'O logótipo é demasiado grande (máximo 300 KB).', 'LOGO_TOO_LARGE');
+  }
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data: { logo_data: logo } });
+  await writeAudit({ req, action: logo ? 'UPDATE_LOGO' : 'REMOVE_LOGO', entityType: 'tenant', entityId: tenantId(req) });
+  res.json({ ok: true, has_logo: Boolean(logo) });
 }));
 
 router.put('/hours', asyncHandler(async (req, res) => {

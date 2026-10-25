@@ -1,7 +1,7 @@
 // Fase 10.1: notificacoes do sino do dono (Prompt Mestre 4.3, 6.4, 7.1;
 // especificacao 6.2, 6.4, 6.5, 6.8). Calculadas na leitura, sem tabela nem
 // «lido»: cada uma existe enquanto a situacao existe (repor o stock, receber a
-// cheneca ou desbloquear o caixista tira-a do sino).
+// txeneka ou desbloquear o caixista tira-a do sino).
 const prisma = require('../utils/prisma');
 const { getTenantAlertSnapshot } = require('./tenantAlerts');
 const { getShiftLock } = require('../utils/shiftLock');
@@ -9,7 +9,7 @@ const { dayInMaputo } = require('../utils/fefo');
 
 const LEVELS = ['critical', 'warning', 'info', 'success'];
 const TYPES = ['cashier_locked', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed'];
-const DEBT_DAYS = 7; // chenecas: 7 dias antes, 1 dia antes e no dia (especificacao 6.5)
+const DEBT_DAYS = 7; // txenekas: 7 dias antes, 1 dia antes e no dia (especificacao 6.5)
 const SHIFT_DAYS = 7; // diferencas de caixa dos ultimos 7 dias
 
 // Niveis do stock da especificacao 6.4: critica <= 10, severa <= 20, normal acima.
@@ -36,7 +36,7 @@ function buildNotifications({
     const daysLeft = daysBetween(today, dayInMaputo(d.due_date));
     if (daysLeft > DEBT_DAYS) continue;
     const level = daysLeft <= 0 ? 'critical' : daysLeft === 1 ? 'warning' : 'info';
-    items.push({ id: `debt_due:${d.id}`, type: 'debt_due', level, link: '/app/chenecas', params: { debtor: d.debtor_name, remaining, days_left: daysLeft } });
+    items.push({ id: `debt_due:${d.id}`, type: 'debt_due', level, link: '/app/txenekas', params: { debtor: d.debtor_name, remaining, days_left: daysLeft } });
   }
 
   for (const p of lowStock) {

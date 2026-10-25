@@ -14,7 +14,7 @@ const STATUS = {
   overdue: { label: 'Vencida', tone: 'danger' },
 };
 
-// Especificacao 6.5 — chenecas (fiados).
+// Especificacao 6.5 — txenekas (fiados).
 export default function Debts() {
   const toast = useToast();
   const { t } = useI18n();
@@ -36,7 +36,7 @@ export default function Debts() {
     setBusy(true); setError('');
     try {
       await api.post('/api/owner/debts', { ...creating, debtor_name: creating.debtor_name.trim(), debtor_phone: creating.debtor_phone.trim() });
-      toast(t('Cheneca registada.'));
+      toast(t('Txeneka registada.'));
       setCreating(null); debts.reload();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
   }
@@ -51,7 +51,7 @@ export default function Debts() {
 
   return (
     <>
-      <PageHeader title={t('Chenecas')} description={t('Vendas a crédito e pagamentos.')} actions={<Button variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ debtor_name: '', debtor_phone: '', total_amount: 0, due_date: isoDay(new Date(Date.now() + 14 * 86400000)) }); }}>{t('Nova cheneca')}</Button>} />
+      <PageHeader title={t('Txenekas')} description={t('Vendas a crédito e pagamentos.')} actions={<Button variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ debtor_name: '', debtor_phone: '', total_amount: 0, due_date: isoDay(new Date(Date.now() + 14 * 86400000)) }); }}>{t('Nova txeneka')}</Button>} />
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label={t('Total em dívida')} value={money(open.reduce((s, d) => s + d.remaining, 0))} hint={t('{n} cliente(s)', { n: open.length })} />
         <Stat label={t('Vencidas')} value={String(all.filter((d) => d.status === 'overdue').length)} tone={all.some((d) => d.status === 'overdue') ? 'danger' : undefined} hint={money(all.filter((d) => d.status === 'overdue').reduce((s, d) => s + d.remaining, 0))} />
@@ -75,7 +75,7 @@ export default function Debts() {
         empty={<p className="py-10 text-center text-ink-muted">{t('Nada aqui.')}</p>}
       />
 
-      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={t('Nova cheneca')}
+      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={t('Nova txeneka')}
         footer={<><Button onClick={() => setCreating(null)}>{t('Cancelar')}</Button><Button variant="primary" loading={busy} disabled={!creating || creating.debtor_name.trim().length < 2 || creating.debtor_phone.trim().length < 8 || creating.total_amount <= 0} onClick={create}>{t('Registar')}</Button></>}>
         {creating && (
           <div className="flex flex-col gap-4">

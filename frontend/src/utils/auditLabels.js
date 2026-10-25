@@ -25,7 +25,7 @@ export const ACTION_LABEL = {
   UPDATE_MONTH_CLOSE_DAY: 'Dia do fecho do mês alterado', UPDATE_AUDIT_RETENTION: 'Tempo da auditoria alterado', UPDATE_REPORT_SCHEDULE: 'Horário dos relatórios alterado',
   CREATE_FIXED_COST: 'Custo fixo criado', UPDATE_FIXED_COST: 'Custo fixo alterado', DELETE_FIXED_COST: 'Custo fixo removido',
   CREATE_EXPENSE: 'Despesa registada', UPDATE_EXPENSE: 'Despesa alterada', DELETE_EXPENSE: 'Despesa removida', SET_GOAL: 'Meta definida',
-  CREATE_DEBT: 'Cheneca criada', DEBT_PAYMENT: 'Pagamento de cheneca',
+  CREATE_DEBT: 'Txeneka criada', DEBT_PAYMENT: 'Pagamento de txeneka',
   CREATE_SHOPPING_LIST: 'Lista de compras criada', UPDATE_SHOPPING_LIST: 'Lista de compras alterada', SHOPPING_LIST_STATUS: 'Estado da lista de compras', DELETE_SHOPPING_LIST: 'Lista de compras apagada',
   MONTH_CLOSE_SEEN: 'Fecho do mês visto', WHATSAPP_ALERTS_SENT: 'Alertas enviados por WhatsApp', REPORT_SENT: 'Relatório enviado por WhatsApp', REPORT_SEND_FAILED: 'Relatório por WhatsApp falhou',
 };

@@ -19,8 +19,8 @@ export function timelineTitle(e) {
     case 'stock':
       if (e.product_name == null) return e.title;
       return t(e.quantity >= 0 ? 'Entrada de stock: {q} × {name}' : 'Ajuste de stock: {q} × {name}', { q: (e.quantity > 0 ? '+' : '') + e.quantity, name: e.product_name });
-    case 'debt': return e.debtor != null ? t('Cheneca nova: {name}', { name: e.debtor }) : e.title;
-    case 'debt_payment': return e.debtor != null ? t('Cheneca paga: {name}', { name: e.debtor }) : e.title;
+    case 'debt': return e.debtor != null ? t('Txeneka nova: {name}', { name: e.debtor }) : e.title;
+    case 'debt_payment': return e.debtor != null ? t('Txeneka paga: {name}', { name: e.debtor }) : e.title;
     case 'shift': return t('Fecho de turno');
     case 'demand':
       if (e.product_name == null) return e.title;
