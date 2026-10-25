@@ -63,7 +63,7 @@
       "status": "ok",
       "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
       "role": "Autenticacao.",
-      "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): trial expirado deixa passar so PUT /api/auth/language (nao cria valor)."
+      "notes": "25/10/2026 Fase 12: passo 3b — painel do dono bloqueado sem o cookie de desbloqueio (423)."
     },
     "backend/src/middleware/authOrDevice.js": {
       "status": "ok",
@@ -1002,7 +1002,7 @@
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
       "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8."
+      "notes": "25/10/2026 Fase 12: telemovel = barra do cesto em baixo + cesto por cima; tablet 2 colunas; 100dvh. Falta teste no iPhone real."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1153,7 +1153,7 @@
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
-      "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN. | 17/10/2026 Fase 9.3 (publicada 1f1f384): emparelhar/perfis na lingua do aparelho; depois do PIN a lingua do caixista; textos traduzidos."
+      "notes": "25/10/2026 Fase 12: arranca sem rede com perfis guardados e PIN confirmado no aparelho (fase12.mjs)."
     },
     "backend/src/routes/verify.js": {
       "status": "ok",
@@ -1596,6 +1596,54 @@
       "status": "ok",
       "summary": "Capturas reais PT/EN em WebP numa loja demo.",
       "role": "Ferramenta do site."
+    },
+    "backend/src/utils/panelLock.js": {
+      "status": "ok",
+      "summary": "Bloqueio do painel do dono: cookie de sessao genesis_unlock (JWT 5 min deslizante, pv + versao do PIN); 423 PANEL_LOCKED.",
+      "role": "Seguranca do painel do dono.",
+      "notes": "25/10/2026 Fase 12: verify_system 32 28/28."
+    },
+    "backend/src/routes/panelLock.js": {
+      "status": "ok",
+      "summary": "/api/lock/*: estado, criar/mudar PIN (mudar pede a senha), desbloquear, bloquear, Face ID (WebAuthn/passkeys, @simplewebauthn/server).",
+      "role": "API do bloqueio do painel.",
+      "notes": "25/10/2026 Fase 12: 5 erros em 15 min terminam a sessao; origens do Face ID em WEBAUTHN_ORIGINS."
+    },
+    "backend/scripts/backup_db.js": {
+      "status": "ok",
+      "summary": "Copia JSON.gz de todas as tabelas antes de migrar (sem pg_dump).",
+      "role": "Copias de seguranca."
+    },
+    "backend/scripts/apply_sql.js": {
+      "status": "ok",
+      "summary": "Aplica migracoes aditivas instrucao a instrucao (o prisma db execute prende no pooler).",
+      "role": "Migracoes."
+    },
+    "frontend/src/components/PanelLock.jsx": {
+      "status": "ok",
+      "summary": "Ecras de criar PIN, painel bloqueado (PIN/Face ID) e bloqueio ao reabrir e apos 5 min parado.",
+      "role": "Bloqueio do painel (cliente).",
+      "notes": "25/10/2026 Fase 12: fase12.mjs Chromium e WebKit (parte do bloqueio)."
+    },
+    "frontend/src/utils/offlinePin.js": {
+      "status": "ok",
+      "summary": "Verificador PBKDF2 do PIN aceite pelo servidor e copias de ecra (Dexie) para abrir sem rede.",
+      "role": "Terminal e painel sem rede.",
+      "notes": "25/10/2026 Fase 12: offline_pin.test.mjs 7/7."
+    },
+    "frontend/src/utils/session.jsx": {
+      "status": "ok",
+      "notes": "25/10/2026 Fase 12: sem rede usa o ultimo utilizador; apaga a cache genesis-api ao sair/trocar de conta; RequireOwner com PanelLockGate."
+    },
+    "frontend/src/pages/auth/Login.jsx": {
+      "status": "ok",
+      "summary": "Entrada do dono (email/senha e Google).",
+      "notes": "25/10/2026 Fase 12: botao Google sem piscar ao trocar de lingua."
+    },
+    "frontend/tests/e2e/fase12.mjs": {
+      "status": "ok",
+      "summary": "Teste de browser da Fase 12 (Google, bloqueio, Face ID, terminal e painel sem rede, telemovel/tablet).",
+      "notes": "25/10: 29/29 no build local e em genesismz.com."
     }
   }
 }

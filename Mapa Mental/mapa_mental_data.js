@@ -1,97 +1,101 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-25T12:04:11.275Z */
+   Gerado em: 2026-10-25T17:41:51.583Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-25T12:04:11.275Z",
+ "generatedAt": "2026-10-25T17:41:51.583Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 288,
+  "files": 318,
   "planned": 5,
-  "links": 511,
-  "lines": 40400,
+  "links": 541,
+  "lines": 44711,
   "byStatus": {
-   "ok": 193,
+   "ok": 202,
    "partial": 8,
    "broken": 0,
    "planned": 5,
-   "untracked": 87
+   "untracked": 108
   },
   "byGroup": {
-   "infra": 25,
+   "infra": 44,
    "docs": 11,
    "admin": 12,
-   "backend-data": 68,
-   "backend": 63,
+   "backend-data": 71,
+   "backend": 65,
    "frontend-pub": 7,
-   "frontend": 104,
-   "scripts": 3
+   "frontend": 109,
+   "scripts": 4
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 45
+   "count": 47
   },
   {
    "pkg": "node:path",
-   "count": 31
+   "count": 34
   },
   {
    "pkg": "node:fs",
-   "count": 30
+   "count": 33
   },
   {
    "pkg": "lucide-react",
-   "count": 26
-  },
-  {
-   "pkg": "@playwright/test",
-   "count": 22
+   "count": 27
   },
   {
    "pkg": "dotenv",
-   "count": 21
+   "count": 23
+  },
+  {
+   "pkg": "@playwright/test",
+   "count": 23
   },
   {
    "pkg": "react-router-dom",
-   "count": 20
+   "count": 21
   },
   {
    "pkg": "bcrypt",
-   "count": 20
+   "count": 21
   },
   {
    "pkg": "node:test",
-   "count": 20
+   "count": 21
   },
   {
    "pkg": "node:assert",
-   "count": 20
-  },
-  {
-   "pkg": "express",
-   "count": 16
-  },
-  {
-   "pkg": "crypto",
-   "count": 15
-  },
-  {
-   "pkg": "zod",
-   "count": 15
+   "count": 21
   },
   {
    "pkg": "@prisma/client",
-   "count": 14
+   "count": 17
+  },
+  {
+   "pkg": "express",
+   "count": 17
+  },
+  {
+   "pkg": "crypto",
+   "count": 16
+  },
+  {
+   "pkg": "zod",
+   "count": 16
   },
   {
    "pkg": "path",
-   "count": 8
+   "count": 10
   },
   {
    "pkg": "fs",
+   "count": 9
+  },
+  {
+   "pkg": "node:url",
    "count": 7
   },
   {
@@ -99,19 +103,19 @@ window.GENESIS_MINDMAP = {
    "count": 5
   },
   {
+   "pkg": "qrcode",
+   "count": 5
+  },
+  {
    "pkg": "express-rate-limit",
    "count": 5
   },
   {
-   "pkg": "node:url",
-   "count": 5
-  },
-  {
-   "pkg": "qrcode",
+   "pkg": "node-fetch",
    "count": 4
   },
   {
-   "pkg": "node-fetch",
+   "pkg": "jsonwebtoken",
    "count": 4
   },
   {
@@ -121,10 +125,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "react-dom",
    "count": 3
-  },
-  {
-   "pkg": "node:module",
-   "count": 3
   }
  ],
  "groups": [
@@ -132,9 +132,15 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 25,
+   "nodes": 44,
    "clusters": {
     ".": 8,
+    "Para o Claude": 3,
+    "Para o Claude/memoria": 8,
+    "Para o Claude/planos": 5,
+    "Para o Claude/skills/genesis-guia-tecnico": 1,
+    "Para o Claude/skills/genesis-historico-auditoria": 1,
+    "Para o Claude/skills/genesis-spec": 1,
     "backend": 1,
     "deploy": 3,
     "frontend": 4,
@@ -168,7 +174,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 68,
+   "nodes": 71,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -188,7 +194,8 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261011_vendas_perdidas": 1,
     "backend/prisma/migrations/20261017_idioma": 1,
     "backend/prisma/migrations/20261018_nome_ingles": 1,
-    "backend/scripts": 29,
+    "backend/prisma/migrations/20261025_bloqueio_painel": 1,
+    "backend/scripts": 31,
     "backend/tests": 16,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
@@ -197,13 +204,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 63,
+   "nodes": 65,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
-    "backend/src/routes": 15,
+    "backend/src/routes": 16,
     "backend/src/services": 14,
-    "backend/src/utils": 27,
+    "backend/src/utils": 28,
     "backend/src/jobs": 1
    }
   },
@@ -222,36 +229,36 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 104,
+   "nodes": 109,
    "clusters": {
     "frontend/scripts": 4,
     "frontend/src": 4,
-    "frontend/src/components": 6,
+    "frontend/src/components": 7,
     "frontend/src/components/ui": 10,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
     "frontend/src/i18n": 2,
-    "frontend/src/i18n/en": 4,
+    "frontend/src/i18n/en": 5,
     "frontend/src/layouts": 1,
     "frontend/src/pages": 2,
     "frontend/src/pages/auth": 5,
     "frontend/src/pages/owner": 12,
     "frontend/src/pages/pos": 4,
     "frontend/src/ui": 2,
-    "frontend/src/utils": 16,
+    "frontend/src/utils": 17,
     "frontend/src/utils/pdf": 4,
-    "frontend/tests/e2e": 20,
-    "frontend/tests": 6
+    "frontend/tests/e2e": 21,
+    "frontend/tests": 7
    }
   },
   {
    "id": "scripts",
    "label": "Automatismos / Scripts",
    "tone": "#22c55e",
-   "nodes": 3,
+   "nodes": 4,
    "clusters": {
     ".": 1,
-    "scripts": 2
+    "scripts": 3
    }
   }
  ],
@@ -269,8 +276,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 121,
-   "size": 16328,
+   "lines": 127,
+   "size": 19052,
    "externals": [
     "@prisma/client"
    ],
@@ -313,8 +320,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1187,
-   "size": 250636,
+   "lines": 1209,
+   "size": 258440,
    "externals": [
     "@prisma/client"
    ],
@@ -357,11 +364,422 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1602,
-   "size": 95383,
+   "lines": 1650,
+   "size": 97451,
    "externals": [
     "nodemailer"
    ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/CLAUDE.md",
+   "path": "Para o Claude/CLAUDE.md",
+   "label": "CLAUDE.md",
+   "group": "infra",
+   "dir": "Para o Claude",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 127,
+   "size": 19052,
+   "externals": [
+    "@prisma/client"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/COMO MUDAR DE PC.txt",
+   "path": "Para o Claude/COMO MUDAR DE PC.txt",
+   "label": "COMO MUDAR DE PC.txt",
+   "group": "infra",
+   "dir": "Para o Claude",
+   "ext": ".txt",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 1941,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/MEMORY.md",
+   "path": "Para o Claude/memoria/MEMORY.md",
+   "label": "MEMORY.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 8,
+   "size": 1069,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/autonomous-phase-runs.md",
+   "path": "Para o Claude/memoria/autonomous-phase-runs.md",
+   "label": "autonomous-phase-runs.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 20,
+   "size": 1487,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/commits-on-main.md",
+   "path": "Para o Claude/memoria/commits-on-main.md",
+   "label": "commits-on-main.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 16,
+   "size": 705,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/git-authorship.md",
+   "path": "Para o Claude/memoria/git-authorship.md",
+   "label": "git-authorship.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 19,
+   "size": 1379,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/plan-fases-12-20-decisoes.md",
+   "path": "Para o Claude/memoria/plan-fases-12-20-decisoes.md",
+   "label": "plan-fases-12-20-decisoes.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 2807,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/site-contact-number.md",
+   "path": "Para o Claude/memoria/site-contact-number.md",
+   "label": "site-contact-number.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 17,
+   "size": 978,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/subscription-payment-plans.md",
+   "path": "Para o Claude/memoria/subscription-payment-plans.md",
+   "label": "subscription-payment-plans.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 23,
+   "size": 1811,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/whatsapp-business-number.md",
+   "path": "Para o Claude/memoria/whatsapp-business-number.md",
+   "label": "whatsapp-business-number.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 17,
+   "size": 1144,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/a-malha-entrou-dentro-effervescent-honey.md",
+   "path": "Para o Claude/planos/a-malha-entrou-dentro-effervescent-honey.md",
+   "label": "a-malha-entrou-dentro-effervescent-honey.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 220,
+   "size": 13115,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/joyful-wibbling-lighthouse.md",
+   "path": "Para o Claude/planos/joyful-wibbling-lighthouse.md",
+   "label": "joyful-wibbling-lighthouse.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 289,
+   "size": 21945,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/o-meu-site-n-o-gleaming-clock.md",
+   "path": "Para o Claude/planos/o-meu-site-n-o-gleaming-clock.md",
+   "label": "o-meu-site-n-o-gleaming-clock.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 138,
+   "size": 10741,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/piped-prancing-sloth.md",
+   "path": "Para o Claude/planos/piped-prancing-sloth.md",
+   "label": "piped-prancing-sloth.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 197,
+   "size": 16767,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/publica-no-genesismz-com-noble-trinket.md",
+   "path": "Para o Claude/planos/publica-no-genesismz-com-noble-trinket.md",
+   "label": "publica-no-genesismz-com-noble-trinket.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 391,
+   "size": 22479,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/restaurar.mjs",
+   "path": "Para o Claude/restaurar.mjs",
+   "label": "restaurar.mjs",
+   "group": "infra",
+   "dir": "Para o Claude",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 39,
+   "size": 1853,
+   "externals": [
+    "node:fs",
+    "node:os",
+    "node:path",
+    "node:url"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/skills/genesis-guia-tecnico/SKILL.md",
+   "path": "Para o Claude/skills/genesis-guia-tecnico/SKILL.md",
+   "label": "SKILL.md",
+   "group": "infra",
+   "dir": "Para o Claude/skills/genesis-guia-tecnico",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 429,
+   "size": 18336,
+   "externals": [
+    "react",
+    "react-router-dom",
+    "qrcode",
+    "twilio"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/skills/genesis-historico-auditoria/SKILL.md",
+   "path": "Para o Claude/skills/genesis-historico-auditoria/SKILL.md",
+   "label": "SKILL.md",
+   "group": "infra",
+   "dir": "Para o Claude/skills/genesis-historico-auditoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 325,
+   "size": 19220,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/skills/genesis-spec/SKILL.md",
+   "path": "Para o Claude/skills/genesis-spec/SKILL.md",
+   "label": "SKILL.md",
+   "group": "infra",
+   "dir": "Para o Claude/skills/genesis-spec",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 249,
+   "size": 12918,
+   "externals": [],
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
@@ -381,7 +799,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 246,
-   "size": 16578,
+   "size": 16559,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -746,8 +1164,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 36,
-   "size": 1092,
+   "lines": 37,
+   "size": 1132,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1133,6 +1551,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261025_bloqueio_painel/migration.sql",
+   "path": "backend/prisma/migrations/20261025_bloqueio_painel/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261025_bloqueio_painel",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 27,
+   "size": 1427,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -1146,7 +1585,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 91,
-   "size": 5137,
+   "size": 5158,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1166,8 +1605,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 445,
-   "size": 15821,
+   "lines": 464,
+   "size": 16431,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1189,8 +1628,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 462,
-   "size": 16703,
+   "lines": 481,
+   "size": 17313,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1246,6 +1685,60 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 2
+  },
+  {
+   "id": "backend/scripts/apply_sql.js",
+   "path": "backend/scripts/apply_sql.js",
+   "label": "apply_sql.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Aplica migracoes aditivas instrucao a instrucao (o prisma db execute prende no pooler).",
+   "notes": "",
+   "role": "Migracoes.",
+   "security": "",
+   "planned": false,
+   "lines": 44,
+   "size": 1916,
+   "externals": [
+    "dotenv",
+    "path",
+    "fs",
+    "@prisma/client"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "backend/scripts/backup_db.js",
+   "path": "backend/scripts/backup_db.js",
+   "label": "backup_db.js",
+   "group": "backend-data",
+   "dir": "backend/scripts",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Copia JSON.gz de todas as tabelas antes de migrar (sem pg_dump).",
+   "notes": "",
+   "role": "Copias de seguranca.",
+   "security": "",
+   "planned": false,
+   "lines": 42,
+   "size": 2242,
+   "externals": [
+    "dotenv",
+    "path",
+    "fs",
+    "os",
+    "zlib",
+    "@prisma/client"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
   },
   {
    "id": "backend/scripts/check_mail.js",
@@ -1413,8 +1906,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 150,
-   "size": 11125,
+   "lines": 152,
+   "size": 11423,
    "externals": [
     "dotenv",
     "fs",
@@ -1545,7 +2038,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 148,
-   "size": 6865,
+   "size": 6853,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1914,8 +2407,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 1637,
-   "size": 139687,
+   "lines": 1727,
+   "size": 147393,
    "externals": [
     "dotenv",
     "crypto",
@@ -1935,11 +2428,12 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/auditGroups.js",
     "backend/src/utils/shiftLock.js",
     "backend/src/services/reportJob.js",
-    "backend/src/services/notifications.js"
+    "backend/src/services/notifications.js",
+    "backend/src/utils/sessionUser.js"
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 9
+   "outbound": 10
   },
   {
    "id": "backend/src/index.js",
@@ -1954,8 +2448,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 286,
-   "size": 11281,
+   "lines": 290,
+   "size": 11442,
    "externals": [
     "dotenv",
     "express",
@@ -1983,6 +2477,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
     "backend/src/routes/pos.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/verify.js",
     "backend/src/utils/http.js",
@@ -1992,7 +2487,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 24
+   "outbound": 25
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -2026,12 +2521,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
-   "notes": "17/10/2026 Fase 9.3 (publicada 1f1f384): trial expirado deixa passar so PUT /api/auth/language (nao cria valor).",
+   "notes": "25/10/2026 Fase 12: passo 3b — painel do dono bloqueado sem o cookie de desbloqueio (423).",
    "role": "Autenticacao.",
    "security": "",
    "planned": false,
-   "lines": 77,
-   "size": 3508,
+   "lines": 83,
+   "size": 3847,
    "externals": [
     "jsonwebtoken"
    ],
@@ -2039,7 +2534,8 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/prisma.js",
     "backend/src/utils/tenantStatus.js",
     "backend/src/utils/sessionScopes.js",
-    "backend/src/utils/sessionUser.js"
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/panelLock.js"
    ],
    "usedBy": [
     "backend/src/index.js",
@@ -2049,13 +2545,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 11,
-   "outbound": 4
+   "inbound": 12,
+   "outbound": 5
   },
   {
    "id": "backend/src/middleware/posWriteAuth.js",
@@ -2109,12 +2606,13 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/dashboard.js",
     "backend/src/routes/inventory.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js"
    ],
-   "inbound": 9,
+   "inbound": 10,
    "outbound": 0
   },
   {
@@ -2196,8 +2694,8 @@ window.GENESIS_MINDMAP = {
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 652,
-   "size": 26260,
+   "lines": 665,
+   "size": 27058,
    "externals": [
     "express",
     "bcrypt",
@@ -2212,6 +2710,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/mailer.js",
     "backend/src/utils/lang.js",
     "backend/src/utils/tokens.js",
+    "backend/src/utils/panelLock.js",
     "backend/src/utils/sessionUser.js",
     "backend/src/utils/supportCodes.js",
     "backend/src/utils/audit.js",
@@ -2222,7 +2721,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 2,
-   "outbound": 10
+   "outbound": 11
   },
   {
    "id": "backend/src/routes/catalogs.js",
@@ -2396,6 +2895,43 @@ window.GENESIS_MINDMAP = {
    "outbound": 15
   },
   {
+   "id": "backend/src/routes/panelLock.js",
+   "path": "backend/src/routes/panelLock.js",
+   "label": "panelLock.js",
+   "group": "backend",
+   "dir": "backend/src/routes",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "/api/lock/*: estado, criar/mudar PIN (mudar pede a senha), desbloquear, bloquear, Face ID (WebAuthn/passkeys, @simplewebauthn/server).",
+   "notes": "25/10/2026 Fase 12: 5 erros em 15 min terminam a sessao; origens do Face ID em WEBAUTHN_ORIGINS.",
+   "role": "API do bloqueio do painel.",
+   "security": "",
+   "planned": false,
+   "lines": 220,
+   "size": 12655,
+   "externals": [
+    "express",
+    "bcrypt",
+    "zod",
+    "@simplewebauthn/server"
+   ],
+   "dependsOn": [
+    "backend/src/utils/prisma.js",
+    "backend/src/middleware/auth.js",
+    "backend/src/middleware/rbac.js",
+    "backend/src/utils/http.js",
+    "backend/src/utils/audit.js",
+    "backend/src/utils/tokens.js",
+    "backend/src/utils/sessionUser.js",
+    "backend/src/utils/panelLock.js"
+   ],
+   "usedBy": [
+    "backend/src/index.js"
+   ],
+   "inbound": 1,
+   "outbound": 8
+  },
+  {
    "id": "backend/src/routes/pos.js",
    "path": "backend/src/routes/pos.js",
    "label": "pos.js",
@@ -2408,8 +2944,8 @@ window.GENESIS_MINDMAP = {
    "role": "Balcao.",
    "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
    "planned": false,
-   "lines": 152,
-   "size": 9267,
+   "lines": 153,
+   "size": 9441,
    "externals": [
     "express",
     "bcrypt",
@@ -3043,13 +3579,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/admin.js",
     "backend/src/routes/auth.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
     "backend/src/utils/authPin.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 8,
+   "inbound": 9,
    "outbound": 1
   },
   {
@@ -3226,6 +3763,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/catalogs.js",
     "backend/src/routes/demand_captures.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/settings.js",
     "backend/src/routes/shoppingLists.js",
@@ -3233,7 +3771,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/authPin.js",
     "backend/src/utils/shift.js"
    ],
-   "inbound": 11,
+   "inbound": 12,
    "outbound": 0
   },
   {
@@ -3351,6 +3889,36 @@ window.GENESIS_MINDMAP = {
    "outbound": 2
   },
   {
+   "id": "backend/src/utils/panelLock.js",
+   "path": "backend/src/utils/panelLock.js",
+   "label": "panelLock.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Bloqueio do painel do dono: cookie de sessao genesis_unlock (JWT 5 min deslizante, pv + versao do PIN); 423 PANEL_LOCKED.",
+   "notes": "25/10/2026 Fase 12: verify_system 32 28/28.",
+   "role": "Seguranca do painel do dono.",
+   "security": "",
+   "planned": false,
+   "lines": 62,
+   "size": 2800,
+   "externals": [
+    "crypto",
+    "jsonwebtoken"
+   ],
+   "dependsOn": [
+    "backend/src/utils/tokens.js"
+   ],
+   "usedBy": [
+    "backend/src/middleware/auth.js",
+    "backend/src/routes/auth.js",
+    "backend/src/routes/panelLock.js"
+   ],
+   "inbound": 3,
+   "outbound": 1
+  },
+  {
    "id": "backend/src/utils/paymentMethods.js",
    "path": "backend/src/utils/paymentMethods.js",
    "label": "paymentMethods.js",
@@ -3418,6 +3986,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/demand_captures.js",
     "backend/src/routes/inventory.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/products.js",
     "backend/src/routes/sales.js",
@@ -3440,7 +4009,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/report.service.js"
    ],
-   "inbound": 42,
+   "inbound": 43,
    "outbound": 1
   },
   {
@@ -3533,21 +4102,23 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 55,
-   "size": 2417,
+   "size": 2438,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
     "backend/src/utils/tokens.js"
    ],
    "usedBy": [
+    "backend/scripts/verify_system.js",
     "backend/src/middleware/auth.js",
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/admin.js",
     "backend/src/routes/auth.js",
     "backend/src/routes/owner.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/refresh.js"
    ],
-   "inbound": 6,
+   "inbound": 8,
    "outbound": 2
   },
   {
@@ -3796,11 +4367,13 @@ window.GENESIS_MINDMAP = {
     "backend/scripts/verify_system.js",
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/auth.js",
+    "backend/src/routes/panelLock.js",
     "backend/src/routes/pos.js",
     "backend/src/routes/refresh.js",
+    "backend/src/utils/panelLock.js",
     "backend/src/utils/sessionUser.js"
    ],
-   "inbound": 6,
+   "inbound": 8,
    "outbound": 0
   },
   {
@@ -4434,7 +5007,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 23,
-   "size": 973,
+   "size": 993,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4517,8 +5090,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 37,
-   "size": 876,
+   "lines": 38,
+   "size": 917,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -5058,6 +5631,42 @@ window.GENESIS_MINDMAP = {
    "outbound": 4
   },
   {
+   "id": "frontend/src/components/PanelLock.jsx",
+   "path": "frontend/src/components/PanelLock.jsx",
+   "label": "PanelLock.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Ecras de criar PIN, painel bloqueado (PIN/Face ID) e bloqueio ao reabrir e apos 5 min parado.",
+   "notes": "25/10/2026 Fase 12: fase12.mjs Chromium e WebKit (parte do bloqueio).",
+   "role": "Bloqueio do painel (cliente).",
+   "security": "",
+   "planned": false,
+   "lines": 227,
+   "size": 11758,
+   "externals": [
+    "react",
+    "lucide-react",
+    "@simplewebauthn/browser"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/session.jsx",
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/offlinePin.js",
+    "frontend/src/components/ui/index.js",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/i18n/en/lock.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/utils/session.jsx"
+   ],
+   "inbound": 2,
+   "outbound": 7
+  },
+  {
    "id": "frontend/src/components/PdfButton.jsx",
    "path": "frontend/src/components/PdfButton.jsx",
    "label": "PdfButton.jsx",
@@ -5248,7 +5857,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 159,
-   "size": 7385,
+   "size": 7394,
    "externals": [
     "react",
     "lucide-react"
@@ -5399,6 +6008,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/NotificationBell.jsx",
+    "frontend/src/components/PanelLock.jsx",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -5427,7 +6037,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 31,
+   "inbound": 32,
    "outbound": 0
   },
   {
@@ -5468,8 +6078,8 @@ window.GENESIS_MINDMAP = {
    "role": "Offline.",
    "security": "",
    "planned": false,
-   "lines": 72,
-   "size": 3470,
+   "lines": 82,
+   "size": 3923,
    "externals": [
     "dexie"
    ],
@@ -5478,10 +6088,12 @@ window.GENESIS_MINDMAP = {
     "frontend/src/hooks/useOfflineSync.js",
     "frontend/src/pages/pos/PosDialogs.jsx",
     "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/utils/offlinePin.js",
     "frontend/src/utils/productCache.js",
+    "frontend/tests/offline_pin.test.mjs",
     "frontend/tests/offline_queue.test.mjs"
    ],
-   "inbound": 5,
+   "inbound": 7,
    "outbound": 0
   },
   {
@@ -5535,6 +6147,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/i18n/en/auth.js",
     "frontend/src/i18n/en/common.js",
+    "frontend/src/i18n/en/lock.js",
     "frontend/src/i18n/en/owner.js",
     "frontend/src/i18n/en/pos.js",
     "frontend/src/i18n/react.jsx",
@@ -5557,7 +6170,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/timelineText.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 26,
+   "inbound": 27,
    "outbound": 0
   },
   {
@@ -5611,6 +6224,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "frontend/src/i18n/en/lock.js",
+   "path": "frontend/src/i18n/en/lock.js",
+   "label": "lock.js",
+   "group": "frontend",
+   "dir": "frontend/src/i18n/en",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 42,
+   "size": 3470,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/i18n/core.js"
+   ],
+   "usedBy": [
+    "frontend/src/components/PanelLock.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
+  },
+  {
    "id": "frontend/src/i18n/en/owner.js",
    "path": "frontend/src/i18n/en/owner.js",
    "label": "owner.js",
@@ -5623,8 +6261,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 838,
-   "size": 47399,
+   "lines": 857,
+   "size": 48963,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -5646,8 +6284,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 164,
-   "size": 11447,
+   "lines": 173,
+   "size": 12345,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -5683,6 +6321,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/NotificationBell.jsx",
+    "frontend/src/components/PanelLock.jsx",
     "frontend/src/components/PdfButton.jsx",
     "frontend/src/components/PdfReadyDialog.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -5713,7 +6352,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx"
    ],
-   "inbound": 33,
+   "inbound": 34,
    "outbound": 2
   },
   {
@@ -5729,8 +6368,8 @@ window.GENESIS_MINDMAP = {
    "role": "Estilo.",
    "security": "",
    "planned": false,
-   "lines": 49,
-   "size": 1862,
+   "lines": 55,
+   "size": 2211,
    "externals": [
     "@fontsource-variable/inter"
    ],
@@ -5756,8 +6395,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 144,
-   "size": 7165,
+   "lines": 149,
+   "size": 7506,
    "externals": [
     "react",
     "react-router-dom",
@@ -5877,14 +6516,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/auth",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
+   "status": "ok",
+   "summary": "Entrada do dono (email/senha e Google).",
+   "notes": "25/10/2026 Fase 12: botao Google sem piscar ao trocar de lingua.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 125,
-   "size": 5593,
+   "lines": 164,
+   "size": 7221,
    "externals": [
     "react",
     "react-router-dom"
@@ -6287,14 +6926,18 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 402,
-   "size": 27179,
+   "lines": 470,
+   "size": 31352,
    "externals": [
     "react",
     "react-router-dom",
-    "lucide-react"
+    "lucide-react",
+    "@simplewebauthn/browser"
    ],
    "dependsOn": [
+    "frontend/src/utils/session.jsx",
+    "frontend/src/components/PanelLock.jsx",
+    "frontend/src/utils/offlinePin.js",
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/pages/owner/AuditLogPage.jsx",
@@ -6307,7 +6950,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 10
   },
   {
    "id": "frontend/src/pages/owner/ShoppingLists.jsx",
@@ -6483,12 +7126,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8.",
+   "notes": "25/10/2026 Fase 12: telemovel = barra do cesto em baixo + cesto por cima; tablet 2 colunas; 100dvh. Falta teste no iPhone real.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 452,
-   "size": 27684,
+   "lines": 483,
+   "size": 29918,
    "externals": [
     "react",
     "lucide-react"
@@ -6523,12 +7166,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
-   "notes": "11/10/2026 Fase 8.8: pergunta dos dispositivos so depois do PIN. | 17/10/2026 Fase 9.3 (publicada 1f1f384): emparelhar/perfis na lingua do aparelho; depois do PIN a lingua do caixista; textos traduzidos.",
+   "notes": "25/10/2026 Fase 12: arranca sem rede com perfis guardados e PIN confirmado no aparelho (fase12.mjs).",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 204,
-   "size": 9740,
+   "lines": 254,
+   "size": 12957,
    "externals": [
     "react",
     "react-router-dom",
@@ -6538,6 +7181,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/format.js",
     "frontend/src/utils/productCache.js",
+    "frontend/src/utils/offlinePin.js",
     "frontend/src/components/ui/index.js",
     "frontend/src/i18n/core.js",
     "frontend/src/i18n/react.jsx",
@@ -6547,7 +7191,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "frontend/src/registerSW.js",
@@ -6636,8 +7280,8 @@ window.GENESIS_MINDMAP = {
    "role": "Rede.",
    "security": "",
    "planned": false,
-   "lines": 76,
-   "size": 3179,
+   "lines": 80,
+   "size": 3472,
    "externals": [
     "axios"
    ],
@@ -6646,6 +7290,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/PanelLock.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
@@ -6671,7 +7316,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 25,
+   "inbound": 26,
    "outbound": 1
   },
   {
@@ -6687,8 +7332,8 @@ window.GENESIS_MINDMAP = {
    "role": "Auditoria do dono.",
    "security": "",
    "planned": false,
-   "lines": 75,
-   "size": 7050,
+   "lines": 77,
+   "size": 7420,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js",
@@ -6778,6 +7423,7 @@ window.GENESIS_MINDMAP = {
    "usedBy": [
     "admin-frontend/src/App.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
+    "frontend/src/components/PanelLock.jsx",
     "frontend/src/components/SaleDrawer.jsx",
     "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
@@ -6807,7 +7453,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 30,
+   "inbound": 31,
    "outbound": 1
   },
   {
@@ -6882,6 +7528,35 @@ window.GENESIS_MINDMAP = {
    ],
    "inbound": 2,
    "outbound": 2
+  },
+  {
+   "id": "frontend/src/utils/offlinePin.js",
+   "path": "frontend/src/utils/offlinePin.js",
+   "label": "offlinePin.js",
+   "group": "frontend",
+   "dir": "frontend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Verificador PBKDF2 do PIN aceite pelo servidor e copias de ecra (Dexie) para abrir sem rede.",
+   "notes": "25/10/2026 Fase 12: offline_pin.test.mjs 7/7.",
+   "role": "Terminal e painel sem rede.",
+   "security": "",
+   "planned": false,
+   "lines": 97,
+   "size": 4376,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/db/localDb.js"
+   ],
+   "usedBy": [
+    "frontend/src/components/PanelLock.jsx",
+    "frontend/src/pages/owner/Settings.jsx",
+    "frontend/src/pages/pos/Terminal.jsx",
+    "frontend/src/utils/session.jsx",
+    "frontend/tests/offline_pin.test.mjs"
+   ],
+   "inbound": 5,
+   "outbound": 1
   },
   {
    "id": "frontend/src/utils/offlineQueue.js",
@@ -7112,14 +7787,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/utils",
    "ext": ".jsx",
-   "status": "untracked",
+   "status": "ok",
    "summary": "",
-   "notes": "",
+   "notes": "25/10/2026 Fase 12: sem rede usa o ultimo utilizador; apaga a cache genesis-api ao sair/trocar de conta; RequireOwner com PanelLockGate.",
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 51,
-   "size": 2227,
+   "lines": 87,
+   "size": 4164,
    "externals": [
     "react",
     "react-router-dom"
@@ -7127,18 +7802,22 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [
     "frontend/src/utils/api.js",
     "frontend/src/components/ui/index.js",
-    "frontend/src/i18n/core.js"
+    "frontend/src/components/PanelLock.jsx",
+    "frontend/src/i18n/core.js",
+    "frontend/src/utils/offlinePin.js"
    ],
    "usedBy": [
     "frontend/src/App.jsx",
+    "frontend/src/components/PanelLock.jsx",
     "frontend/src/layouts/AppShell.jsx",
     "frontend/src/pages/VerifyReceipt.jsx",
     "frontend/src/pages/auth/Login.jsx",
     "frontend/src/pages/auth/Support.jsx",
-    "frontend/src/pages/owner/Onboarding.jsx"
+    "frontend/src/pages/owner/Onboarding.jsx",
+    "frontend/src/pages/owner/Settings.jsx"
    ],
-   "inbound": 6,
-   "outbound": 3
+   "inbound": 8,
+   "outbound": 5
   },
   {
    "id": "frontend/src/utils/syncPolicy.js",
@@ -7282,6 +7961,31 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 1
+  },
+  {
+   "id": "frontend/tests/e2e/fase12.mjs",
+   "path": "frontend/tests/e2e/fase12.mjs",
+   "label": "fase12.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Teste de browser da Fase 12 (Google, bloqueio, Face ID, terminal e painel sem rede, telemovel/tablet).",
+   "notes": "25/10: 29/29 no build local e em genesismz.com.",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 295,
+   "size": 16868,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
   },
   {
    "id": "frontend/tests/e2e/fase5.mjs",
@@ -7496,8 +8200,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 296,
-   "size": 17826,
+   "lines": 301,
+   "size": 18267,
    "externals": [
     "node:fs",
     "node:path",
@@ -7821,8 +8525,8 @@ window.GENESIS_MINDMAP = {
    "role": "Teste.",
    "security": "",
    "planned": false,
-   "lines": 218,
-   "size": 13119,
+   "lines": 221,
+   "size": 13216,
    "externals": [
     "node:test",
     "node:assert",
@@ -7841,6 +8545,33 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 6
+  },
+  {
+   "id": "frontend/tests/offline_pin.test.mjs",
+   "path": "frontend/tests/offline_pin.test.mjs",
+   "label": "offline_pin.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 77,
+   "size": 3765,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "frontend/src/db/localDb.js",
+    "frontend/src/utils/offlinePin.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 2
   },
   {
    "id": "frontend/tests/offline_queue.test.mjs",
@@ -7965,8 +8696,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 92,
-   "size": 3851,
+   "lines": 108,
+   "size": 4854,
    "externals": [
     "vite",
     "node:url",
@@ -8123,6 +8854,32 @@ window.GENESIS_MINDMAP = {
    "lines": 17,
    "size": 467,
    "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "scripts/backup_claude.mjs",
+   "path": "scripts/backup_claude.mjs",
+   "label": "backup_claude.mjs",
+   "group": "scripts",
+   "dir": "scripts",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 51,
+   "size": 2207,
+   "externals": [
+    "node:fs",
+    "node:os",
+    "node:path",
+    "node:url"
+   ],
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
@@ -8413,6 +9170,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/services/notifications.js"
   },
   {
+   "source": "backend/scripts/verify_system.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
    "source": "backend/src/index.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -8486,6 +9247,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
+   "target": "backend/src/routes/panelLock.js"
+  },
+  {
+   "source": "backend/src/index.js",
    "target": "backend/src/middleware/posWriteAuth.js"
   },
   {
@@ -8523,6 +9288,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/middleware/auth.js",
    "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/middleware/auth.js",
+   "target": "backend/src/utils/panelLock.js"
   },
   {
    "source": "backend/src/middleware/posWriteAuth.js",
@@ -8615,6 +9384,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/auth.js",
    "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/routes/auth.js",
+   "target": "backend/src/utils/panelLock.js"
   },
   {
    "source": "backend/src/routes/auth.js",
@@ -8763,6 +9536,38 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/owner.js",
    "target": "backend/src/utils/auditGroups.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/prisma.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/middleware/auth.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/middleware/rbac.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/audit.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/sessionUser.js"
+  },
+  {
+   "source": "backend/src/routes/panelLock.js",
+   "target": "backend/src/utils/panelLock.js"
   },
   {
    "source": "backend/src/routes/pos.js",
@@ -9097,6 +9902,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/catalogSuggestions.js"
   },
   {
+   "source": "backend/src/utils/panelLock.js",
+   "target": "backend/src/utils/tokens.js"
+  },
+  {
    "source": "backend/src/utils/prisma.js",
    "target": "backend/src/utils/dbEngine2.js"
   },
@@ -9381,6 +10190,34 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/utils/offlinePin.js"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/components/PanelLock.jsx",
+   "target": "frontend/src/i18n/en/lock.js"
+  },
+  {
    "source": "frontend/src/components/PdfButton.jsx",
    "target": "frontend/src/utils/pdf/deliver.js"
   },
@@ -9506,6 +10343,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/i18n/en/common.js",
+   "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/i18n/en/lock.js",
    "target": "frontend/src/i18n/core.js"
   },
   {
@@ -9898,6 +10739,18 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/utils/session.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/components/PanelLock.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/utils/offlinePin.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
    "target": "frontend/src/utils/api.js"
   },
   {
@@ -10106,6 +10959,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/utils/offlinePin.js"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -10155,6 +11012,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/utils/notificationText.js",
    "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/utils/offlinePin.js",
+   "target": "frontend/src/db/localDb.js"
   },
   {
    "source": "frontend/src/utils/offlineQueue.js",
@@ -10226,7 +11087,15 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/utils/session.jsx",
+   "target": "frontend/src/components/PanelLock.jsx"
+  },
+  {
+   "source": "frontend/src/utils/session.jsx",
    "target": "frontend/src/i18n/core.js"
+  },
+  {
+   "source": "frontend/src/utils/session.jsx",
+   "target": "frontend/src/utils/offlinePin.js"
   },
   {
    "source": "frontend/src/utils/timelineText.js",
@@ -10275,6 +11144,14 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/i18n.test.mjs",
    "target": "frontend/src/utils/notificationText.js"
+  },
+  {
+   "source": "frontend/tests/offline_pin.test.mjs",
+   "target": "frontend/src/db/localDb.js"
+  },
+  {
+   "source": "frontend/tests/offline_pin.test.mjs",
+   "target": "frontend/src/utils/offlinePin.js"
   },
   {
    "source": "frontend/tests/offline_queue.test.mjs",

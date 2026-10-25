@@ -2096,3 +2096,15 @@ O Google costuma demorar de alguns dias a algumas semanas a mostrar as páginas 
 - Antes de mexer guardei uma cópia completa do projecto em C:\Users\CMM\Documents\Genesis-copias\ (se algo correr mal, volta-se atrás).
 - Criei a pasta "Para o Claude" no projecto, com as instruções do assistente, a memória dele, os planos e o ficheiro "COMO MUDAR DE PC.txt". Se mudares de computador, segues esse ficheiro e eu continuo de onde parámos.
 - Passar o projecto a PRIVADO: já cliquei em tudo no GitHub, mas no fim o GitHub pede para confirmares que és tu (no telemóvel, na app GitHub Mobile, ou com um código no e-mail). Deixei essa página aberta no teu Chrome. Só tu podes fazer esse último passo.
+
+
+==================== 25/10/2026 — Os defeitos que viste no iPhone (Fase 12) — já no genesismz.com ====================
+1) Botão "Continuar com a Google" a piscar ao mudar de língua: corrigido. Agora o botão novo prepara-se escondido e só troca quando está pronto. Testei 5 trocas seguidas: nunca aparecem dois botões.
+2) Sem internet, o terminal não abria: corrigido. O terminal guarda os perfis dos caixistas e uma "impressão" do PIN de cada um (o PIN em si nunca fica guardado). Sem internet abre, o caixista põe o PIN e vende; as vendas ficam no aparelho e vão para o servidor quando a internet volta. Atenção: o caixista tem de ter entrado UMA vez com internet nesse aparelho.
+3) Sem internet, o teu painel ia para "Entrar": agora abre (depois do teu PIN) com o que já tinhas visto, com uma faixa a dizer "Sem ligação — só consulta". Nada se altera sem internet.
+4) Quem pegasse no teu telemóvel entrava logo no painel: corrigido. Na primeira entrada o Genesis pede-te para criares um PIN de 4 dígitos (só teu, diferente do PIN de autorização dos caixistas). Depois pede-o sempre que abres a app e quando ficas 5 minutos sem mexer. Se o telemóvel tiver Face ID ou impressão digital, podes usá-los em vez do PIN. Com 5 PINs errados, a sessão termina e só se entra com o email e a senha. Para mudar o PIN: Definições > Descontos e PIN (pede a tua senha).
+5) Terminal no telemóvel cortado: corrigido. No telemóvel os produtos ocupam o ecrã e em baixo há uma barra com "N artigo(s)" e o total; tocas nela e abre a venda com o botão "Cobrar" sempre à vista. No tablet ficam produtos e venda lado a lado.
+   Sobre o "modo computador" do Safari: no iPhone isso não muda a largura do ecrã, por isso a app continua a mostrar a versão de telemóvel. É normal e não é um defeito.
+Testes: tudo testado no computador e depois no próprio genesismz.com (painel e terminal 41 de 41; esta parte nova 29 de 29). As lojas de teste foram todas apagadas; a tua "Loja de Kleyton" está intacta.
+O que preciso que testes no teu iPhone: desligar os dados com o terminal aberto e recarregar; entrar no painel e ver se pede o PIN; activar o Face ID.
+Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Documents\Genesis-copias).

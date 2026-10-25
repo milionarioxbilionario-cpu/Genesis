@@ -53,6 +53,8 @@ async function skipDevices(p) {
   await b.waitFor({ timeout: 5000 }).catch(() => {});
   if (await b.count()) await b.click();
 }
+// No WebKit do Playwright (Windows) o reload sem rede da erro interno; navegar para o mesmo endereco e equivalente.
+const reopen = (p) => (IS_WEBKIT ? p.goto(p.url()) : p.reload());
 const typePin = async (page, pin) => { for (const d of pin) await page.getByRole('button', { name: d, exact: true }).click(); };
 
 const browser = await ENGINE.launch();
@@ -172,6 +174,8 @@ try {
   await idleCtx.close();
 
   // ------------------------------------------------------- 12.2 terminal
+  // Passaram minutos desde o login: o painel pode ter voltado a bloquear (e o que se quer).
+  await ownerCtx.request.post(BASE + '/api/lock/unlock', { data: { pin: fx.lockPin } });
   const code = await ownerCtx.request.post(BASE + '/api/owner/terminals/pairing-code', { data: { name: 'Balcão Fase 12' } });
   ok(code.status() === 201, 'dono gera o código de emparelhamento', code.status());
   const termCtx = await browser.newContext({ locale: 'pt-PT', viewport: { width: 390, height: 844 }, isMobile: !IS_WEBKIT, hasTouch: true });
@@ -213,7 +217,7 @@ try {
 
   // Sem rede, a frio: recarregar a pagina.
   await termCtx.setOffline(true);
-  await term.reload();
+  await reopen(term);
   await term.getByText('Sem ligação à internet').waitFor({ timeout: T });
   ok(await term.getByRole('button', { name: new RegExp(fx.cashier.name) }).isVisible(), 'sem rede e a frio: o terminal abre com os perfis guardados');
   await shot(term, '12-2-offline-perfis');
@@ -262,11 +266,13 @@ try {
 
   // ------------------------------------------------------- 12.3 dono sem rede
   await owner.goto(BASE + '/app');
+  await owner.getByRole('heading', { name: /^(Início|Painel bloqueado)$/ }).first().waitFor({ timeout: T });
+  if (await owner.getByRole('heading', { name: 'Painel bloqueado' }).isVisible()) await typePin(owner, fx.lockPin);
   await owner.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
   await owner.goto(BASE + '/app/produtos');
   await owner.getByText('2M 340ml').first().waitFor({ timeout: T });
   await ownerCtx.setOffline(true);
-  await owner.reload();
+  await reopen(owner);
   await owner.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
   ok(await owner.getByText('depois de desbloquear vê os dados guardados').isVisible(), 'dono sem rede: pede o PIN e avisa que é só consulta');
   await typePin(owner, fx.lockPin);
@@ -275,6 +281,11 @@ try {
   await shot(owner, '12-3-dono-offline');
   await ownerCtx.setOffline(false);
   await ownerCtx.close();
+} catch (e) {
+  failures++;
+  console.log('ERRO: ' + String(e.message).split(/\r?\n/)[0]);
+  let i = 0;
+  for (const c of browser.contexts()) for (const pg of c.pages()) { await shot(pg, 'erro-' + (++i)); console.log('  pagina ' + i + ': ' + pg.url()); }
 } finally {
   await browser.close();
 }
