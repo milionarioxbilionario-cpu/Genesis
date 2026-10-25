@@ -1,0 +1,44 @@
+GUIA — COMO O GENESIS MZ VAI APARECER NO GOOGLE, NO BING E NAS IAs
+(escrito a 25/10/2026, em linguagem simples)
+
+==================== O QUE JÁ ESTÁ FEITO ====================
+1) O site genesismz.com tem agora páginas a sério, que o Google consegue ler:
+   - genesismz.com              (página principal, português)
+   - genesismz.com/planos       (preço e como aderir)
+   - genesismz.com/en/          (página principal, inglês)
+   - genesismz.com/en/pricing   (preço, inglês)
+2) Google Search Console (com a tua conta milionarioxbilionario@gmail.com):
+   - enviei o "mapa do site" (sitemap.xml). O Google leu-o e encontrou as 4 páginas;
+   - pedi ao Google para ler as 4 páginas com prioridade ("Indexação solicitada").
+     A página principal já estava no Google, mas era a versão antiga e vazia.
+3) Bing Webmaster Tools (o Bing alimenta o ChatGPT e o Copilot):
+   - enviei o mesmo mapa do site (estado: "a processar");
+   - avisei o Bing pelo IndexNow, um aviso rápido de que há páginas novas.
+4) Cloudflare: confirmei que os robôs das IAs NÃO estão bloqueados. Os de pesquisa, os que
+   respondem a perguntas e os de treino estão todos em "Allow". Não mudei nada.
+5) O teste oficial do Google à página principal deu "2 itens válidos" (a empresa e a app).
+   Ficou um aviso opcional, a "avaliação dos clientes": só se põe quando houver avaliações
+   verdadeiras. Inventá-las é proibido pelo Google e por nós.
+
+==================== O QUE ESPERAR (honestamente) ====================
+- O Google demora normalmente de alguns dias a algumas semanas a mostrar as páginas novas.
+  Pedir outra vez a indexação não acelera nada.
+- Pesquisas por "Genesis MZ" ou "genesismz" devem ser as primeiras a mostrar o site.
+- Só "Genesis" é muito difícil: é uma palavra usada por milhares de coisas (Bíblia, carros, banda...).
+- As IAs que pesquisam na internet (ChatGPT, Copilot, Perplexity, Gemini) passam a encontrar o site
+  quando o Bing e o Google o tiverem lido. O que a IA "sabe de cor" só muda quando a treinarem de novo.
+
+==================== O QUE PODES FAZER TU (opcional, ajuda muito) ====================
+1) Daqui a 5 a 7 dias: abre o Search Console > "Páginas" e vê se aparecem as 4 páginas como indexadas.
+   Se alguma disser "não indexada", diz-me qual e o motivo que aparece.
+2) Põe o link https://genesismz.com nas redes sociais do Genesis (Facebook, Instagram, WhatsApp
+   Business, LinkedIn). Os links de outros sites são o que mais ajuda o Google a confiar no site.
+3) Perfil de Empresa no Google (Google Maps): só se tiveres um endereço ou zona de atendimento real.
+4) Quando tiveres clientes contentes, pede-lhes uma avaliação no Google (no Perfil de Empresa).
+
+==================== PARA MUDAR ALGUMA COISA NO SITE ====================
+Diz-me o que queres e eu troco num só sítio e volto a publicar:
+- o número de WhatsApp (hoje +258 87 015 0055, provisório);
+- o preço (hoje 3 000 MT/mês) ou o plano anual (hoje "fale connosco", sem preço);
+- os números de e-Mola/M-Pesa e as contas de banco para pagar. A secção já existe mas está
+  escondida até me dares os números e os nomes verdadeiros dos titulares.

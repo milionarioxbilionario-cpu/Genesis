@@ -82,8 +82,9 @@ function jsonLd(t, page) {
     operatingSystem: 'Web', url: SITE_URL + t.paths.home, inLanguage: ['pt', 'en'], description: fill(t, t.meta.home.description),
     publisher: { '@id': SITE_URL + '/#org' },
     offers: {
+      // Sem priceSpecification: o teste de resultados do Google nao o aceita
+      // aqui (25/10/2026). O "por mes" esta no texto da pagina.
       '@type': 'Offer', price: String(PLAN_PRICE_CENTS / 100), priceCurrency: 'MZN', url: SITE_URL + t.paths.pricing,
-      priceSpecification: { '@type': 'UnitPriceSpecification', price: String(PLAN_PRICE_CENTS / 100), priceCurrency: 'MZN', unitCode: 'MON', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
       eligibleRegion: { '@type': 'Country', name: 'Mozambique' },
     },
   };
