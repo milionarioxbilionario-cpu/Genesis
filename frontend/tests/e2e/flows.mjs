@@ -8,6 +8,13 @@ import { chromium } from '@playwright/test';
 import QRCode from 'qrcode';
 
 // Fase 8.8: depois do PIN o terminal pergunta pelos dispositivos; aqui salta-se.
+// Fase 12.4: um separador do dono parado mais de 5 min volta a pedir o PIN (correcto). Desbloqueia se preciso.
+async function unlockIfNeeded(p) {
+  const h = p.getByRole('heading', { name: 'Painel bloqueado' });
+  await h.waitFor({ timeout: 4000 }).catch(() => {});
+  if (await h.isVisible().catch(() => false)) { await p.keyboard.type(fx.lockPin); await h.waitFor({ state: 'detached', timeout: 60000 }); }
+}
+
 async function skipDevices(p) {
   await p.getByText('Venda actual').waitFor({ timeout: 120000 });
   const b = p.getByRole('button', { name: 'Não tenho — saltar' });
@@ -284,6 +291,7 @@ try {
 
   console.log('\n=== Vendas no painel do dono ===');
   await owner.goto(BASE + '/app/vendas');
+  await unlockIfNeeded(owner);
   await owner.locator('tbody tr', { hasText: 'Carlos' }).first().waitFor({ timeout: T });
   const rows = await owner.locator('tbody tr').count();
   ok(rows >= 3, 'dono ve as vendas do terminal no historico (' + rows + ')');
@@ -291,6 +299,14 @@ try {
 } catch (e) {
   failures++;
   console.log('ERRO: ' + (e.stack || e.message).split('\n').slice(0, 4).join(' | '));
+  // O que estava no ecra de cada separador quando falhou.
+  let i = 0;
+  for (const c of browser.contexts()) {
+    for (const pg of c.pages()) {
+      await shot(pg, 'erro-' + (++i)).catch(() => {});
+      console.log('  pagina ' + i + ': ' + pg.url() + ' | ' + (await pg.locator('body').innerText().catch(() => '')).slice(0, 240).replace(/\s+/g, ' '));
+    }
+  }
 } finally {
   await browser.close();
 }

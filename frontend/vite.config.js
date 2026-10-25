@@ -48,7 +48,8 @@ export default defineConfig({
           handler: 'NetworkFirst',
           options: {
             cacheName: 'genesis-api',
-            networkTimeoutSeconds: 10,
+            // SEM networkTimeoutSeconds: com rede lenta (Mocambique) o SW mostrava a copia antiga
+            // sem avisar (a lista de vendas aparecia vazia). A copia so serve quando a rede falha.
             expiration: { maxEntries: 300, maxAgeSeconds: 14 * 24 * 60 * 60 },
             cacheableResponse: { statuses: [200] },
           },
