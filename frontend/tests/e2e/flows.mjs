@@ -43,7 +43,7 @@ try {
   await owner.getByLabel('Senha').fill(fx.owner.password);
   await owner.getByRole('button', { name: 'Entrar' }).click();
   await owner.waitForURL('**/app', { timeout: T });
-  await owner.getByText('Receita de hoje').waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').waitFor({ timeout: T });
   await owner.getByText('Bottle Store Central').first().waitFor({ timeout: T });
   await owner.waitForLoadState('networkidle', { timeout: T });
   ok(true, 'login do dono -> Inicio');
@@ -266,9 +266,9 @@ try {
   await m.goto(BASE + '/app');
   // Fase 12.4: outro aparelho com os mesmos cookies = painel bloqueado ate ao PIN.
   await m.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
-  ok(!(await m.getByText('Receita de hoje').isVisible()), 'telemovel com os cookies do dono: painel bloqueado, sem numeros');
+  ok(!(await m.getByText('Hoje até agora').isVisible()), 'telemovel com os cookies do dono: painel bloqueado, sem numeros');
   await m.keyboard.type(fx.lockPin);
-  await m.getByText('Receita de hoje').waitFor({ timeout: T });
+  await m.getByText('Hoje até agora').waitFor({ timeout: T });
   await m.waitForLoadState('networkidle', { timeout: T });
   await shot(m, '30-mobile-inicio');
   await m.getByRole('button', { name: 'Abrir menu' }).click();

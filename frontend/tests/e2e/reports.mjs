@@ -122,7 +122,7 @@ try {
   await shot(owner, 'r4-mensal');
 
   await owner.goto(BASE + '/app');
-  await owner.getByText('Meta do mês').waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').waitFor({ timeout: T });
   await shot(owner, 'r5-inicio');
 } catch (e) {
   failures++;

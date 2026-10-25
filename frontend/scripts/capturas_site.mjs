@@ -67,7 +67,7 @@ try {
 
     // Painel do dono (computador).
     const { ctx, page } = await ownerContext(lang, { viewport: { width: 1440, height: 900 } });
-    await page.getByText(L('Meta do mês', 'Monthly goal')).first().waitFor({ timeout: T });
+    await page.getByText(L('Hoje até agora', 'Today so far')).first().waitFor({ timeout: T });
     await page.waitForTimeout(800); // o grafico desenha-se depois dos dados
     await save(await page.screenshot(), `inicio-${lang}`);
 
@@ -96,7 +96,7 @@ try {
 
     // Telemovel: inicio do dono.
     const phone = await ownerContext(lang, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-    await phone.page.getByText(L('Meta do mês', 'Monthly goal')).first().waitFor({ timeout: T });
+    await phone.page.getByText(L('Hoje até agora', 'Today so far')).first().waitFor({ timeout: T });
     await phone.page.waitForTimeout(800);
     await save(await phone.page.screenshot(), `telemovel-${lang}`);
     await phone.ctx.close();

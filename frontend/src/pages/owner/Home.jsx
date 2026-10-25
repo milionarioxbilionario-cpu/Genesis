@@ -121,9 +121,9 @@ function TodayCard({ today }) {
         </span>
       </div>
       <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-[#2B6A57] pt-4">
-        <div><dt className="text-xs text-[#CFE3DB]">{t('Vendas')}</dt><dd className="mt-0.5 text-lg font-semibold"><CountUpInt value={today.sales_count} /></dd></div>
-        <div><dt className="text-xs text-[#CFE3DB]">{t('Ticket médio')}</dt><dd className="mt-0.5 text-lg font-semibold"><CountUpMoney cents={today.average_ticket} /></dd></div>
-        <div><dt className="text-xs text-[#CFE3DB]">{t('Lucro bruto')}</dt><dd className="mt-0.5 text-lg font-semibold"><CountUpMoney cents={today.gross_profit} /></dd></div>
+        <div><dt className="text-xs text-[#CFE3DB]">{t('Vendas')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpInt value={today.sales_count} /></dd></div>
+        <div><dt className="text-xs text-[#CFE3DB]">{t('Ticket médio')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpMoney cents={today.average_ticket} /></dd></div>
+        <div><dt className="text-xs text-[#CFE3DB]">{t('Lucro bruto')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpMoney cents={today.gross_profit} /></dd></div>
       </dl>
       {today.sales_count > 0 && (
         <div className="-mx-2 mt-3 h-20" aria-hidden="true">
@@ -140,7 +140,10 @@ function TodayCard({ today }) {
                 cursor={{ stroke: '#CFE3DB', strokeDasharray: '3 3' }}
                 formatter={(v) => [money(v), t('Receita')]}
                 labelFormatter={(h) => t('{h}h', { h })}
-                contentStyle={{ border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, color: 'var(--text)' }}
+                // O cartao tem texto branco: a caixa do grafico usa as cores normais.
+                contentStyle={{ border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, background: 'var(--surface)' }}
+                itemStyle={{ color: 'var(--text)' }}
+                labelStyle={{ color: 'var(--text-muted)' }}
               />
               <Area type="monotone" dataKey="revenue" stroke="#FFFFFF" strokeWidth={2} fill="url(#hojeFill)" isAnimationActive={!REDUCED} animationDuration={900} />
             </AreaChart>

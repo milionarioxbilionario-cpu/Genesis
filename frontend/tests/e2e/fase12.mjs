@@ -151,7 +151,7 @@ try {
   watch(again);
   await again.goto(BASE + '/app');
   await again.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
-  ok(!(await again.getByText('Receita de hoje').isVisible().catch(() => false)), 'app reaberta com os mesmos cookies: painel bloqueado, nenhum número à vista');
+  ok(!(await again.getByText('Hoje até agora').isVisible().catch(() => false)), 'app reaberta com os mesmos cookies: painel bloqueado, nenhum número à vista');
   await shot(again, '12-4-bloqueado');
   await typePin(again, '0000');
   await again.getByText(/Restam 4 tentativa/).waitFor({ timeout: T });

@@ -1066,8 +1066,8 @@
     },
     "frontend/src/pages/owner/Home.jsx": {
       "status": "ok",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
-      "summary": "Inicio do dono: KPIs, meta do mes e do mes passado, alertas.",
+      "notes": "25/10 Fase 13: fase13.mjs 19/19 em producao.",
+      "summary": "Inicio curto: hoje, meta, caixistas agora, ultimas vendas (sem repetir outras paginas).",
       "role": "Painel do dono."
     },
     "backend/src/routes/settings.js": {
@@ -1644,6 +1644,26 @@
       "status": "ok",
       "summary": "Teste de browser da Fase 12 (Google, bloqueio, Face ID, terminal e painel sem rede, telemovel/tablet).",
       "notes": "25/10: 29/29 no build local e em genesismz.com."
+    },
+    "backend/src/services/overview.js": {
+      "status": "ok",
+      "summary": "Visao geral do dono num pedido: hoje vs ontem a mesma hora, meta, turno de cada caixista, ultimas vendas.",
+      "role": "Inicio do dono.",
+      "notes": "25/10 Fase 13: verify_system 33 21/21; overview.test 5/5."
+    },
+    "frontend/src/components/ui/CountUp.jsx": {
+      "status": "ok",
+      "summary": "Numeros que sobem ao aparecer (reduced-motion respeitado).",
+      "role": "UI."
+    },
+    "frontend/src/utils/privacy.jsx": {
+      "status": "ok",
+      "summary": "Modo privado do painel: esconde os valores em dinheiro (estado no AppShell).",
+      "role": "Privacidade do dono."
+    },
+    "frontend/tests/e2e/fase13.mjs": {
+      "status": "ok",
+      "summary": "Teste de browser da Fase 13 (Inicio, animacao, modo privado, telemovel)."
     }
   }
 }

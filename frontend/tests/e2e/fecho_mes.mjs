@@ -52,7 +52,7 @@ try {
   // Fechar no X adia so esta sessao: recarregar nao volta a abrir.
   await dialog.getByRole('button', { name: 'Fechar' }).click();
   await owner.reload();
-  await owner.getByText('Meta do mês').waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').waitFor({ timeout: T });
   await owner.waitForLoadState('networkidle', { timeout: T });
   ok(await dialog.count() === 0, 'fechar no X: nao volta a abrir nesta sessao');
 
@@ -83,7 +83,7 @@ try {
   await ctx2.close();
   const ctx3 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'pt-PT' });
   owner = await login(ctx3);
-  await owner.getByText('Meta do mês').waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').waitFor({ timeout: T });
   await owner.waitForLoadState('networkidle', { timeout: T });
   ok(await owner.getByRole('dialog', { name: title }).count() === 0, 'depois de decidir, nao volta a aparecer');
   await owner.goto(BASE + `/app/relatorios?tab=monthly&y=${prev.getFullYear()}&m=${prev.getMonth() + 1}`);
