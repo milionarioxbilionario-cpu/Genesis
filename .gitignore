@@ -100,3 +100,7 @@ node-v*
 *.txt
 !frontend/public/*.txt
 
+
+# Instrucoes do assistente: vivem no PC; a copia versionada esta em "Para o Claude/"
+/CLAUDE.md
+/.claude/

@@ -1,0 +1,33 @@
+COMO LEVAR O GENESIS E O "RACIOCÍNIO" DO CLAUDE PARA UM PC NOVO
+(escrito a 25/10/2026, em linguagem simples)
+
+O QUE ESTÁ NESTA PASTA
+- CLAUDE.md ........ as regras do projecto que o Claude lê sempre que abre (como trabalhar, o que nunca fazer).
+- skills/ .......... os 3 guias grandes (especificação, guia técnico, histórico da auditoria).
+- memoria/ ......... o que o Claude aprendeu contigo (decisões, números, preferências).
+- planos/ .......... os planos de trabalho aprovados.
+- restaurar.mjs .... o programa que põe tudo isto no sítio certo do PC novo.
+
+O Mapa Mental (pasta "Mapa Mental") e o "Oque ja fiz para corrigir estes erros.txt" já estão no
+GitHub. São eles que dizem ao Claude onde parámos.
+
+PASSOS NO PC NOVO
+1) Instalar o Node.js (versão 20 ou mais nova): https://nodejs.org
+2) Instalar o Git: https://git-scm.com
+3) Instalar o Claude Code (no terminal):   npm install -g @anthropic-ai/claude-code
+4) Descarregar o projecto (o repositório é privado: entra com a tua conta do GitHub quando pedir):
+      git clone https://github.com/milionarioxbilionario-cpu/Genesis.git
+5) Entrar na pasta e repor o Claude:
+      cd Genesis
+      node "Para o Claude/restaurar.mjs"
+6) Abrir o Claude Code nessa pasta:   claude
+   e escrever:   continua de onde paramos
+
+NOTAS
+- As conversas completas com o Claude NÃO vêm para aqui. São muito grandes e têm tudo o que se viu
+  (endereços do servidor, e-mails, capturas de ecrã). O que importa para continuar está na memória,
+  nos planos e no Mapa Mental.
+- Os ficheiros .env (senhas da base de dados e do servidor) também NÃO estão no GitHub, de propósito.
+  Copia-os à mão do PC antigo (backend/.env) ou pede-os ao Claude para os voltar a criar a partir do servidor.
+- A chave para entrar no servidor (~/.ssh/genesis_do) também tem de ser copiada à mão, com cuidado.
+- Esta pasta é actualizada sozinha em cada commit (node scripts/backup_claude.mjs).

@@ -1,0 +1,7 @@
+- [Commits on main](commits-on-main.md) — user wants work merged straight into main (solo repo)
+- [Git authorship](git-authorship.md) — commits só como Mente-MiIionaria, NUNCA linhas Claude/Copilot; repo privado; backup_claude.mjs antes de cada commit
+- [Autonomous phase runs](autonomous-phase-runs.md) — 25/10: perguntar tudo antes; depois cada etapa = testes+commit+push+publicar+aviso curto e seguir sem esperar
+- [Plano Fases 12-20](plan-fases-12-20-decisoes.md) — decisões: bloqueio PIN+FaceID 5 min, cores turno, servente, gerente, descontos 0/10/15%, premium+aniversário, revenda
+- [WhatsApp Business number](whatsapp-business-number.md) — +258849461056 given 2026-10-19; Twilio sender + templates still missing
+- [Site contact number](site-contact-number.md) — +258 87 015 0055 on the public landing, temporary; one constant to swap
+- [Subscription payment plans](subscription-payment-plans.md) — 25/10: Aderir via WhatsApp, annual on request (no price), premium 8.000 MT later, payment numbers not given yet; auto-confirmation = future phase
