@@ -2129,3 +2129,14 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Os blocos aparecem suavemente quando se desce a página (o "scroll animado"), de forma discreta. Quem não tem JavaScript ou pediu "menos movimento" vê tudo normalmente.
 - O que NÃO pus de propósito: a calculadora de vários estabelecimentos e o plano Premium. Só os ponho quando existirem de verdade (fases 16 e 17).
 - Avisei o Bing/IndexNow de que as páginas mudaram. Testes no site real: 54 de 54.
+
+
+==================== 25/10/2026 — As tuas rectificações (txeneka, pastelaria, site para todos) — já no genesismz.com ====================
+- "Cheneca" passou a "Txeneka" em todo o lado: menu, páginas, alertas, relatórios, PDFs, mensagens e site. O endereço antigo (/app/chenecas) continua a funcionar e leva ao novo.
+- "Padaria" passou a "Pastelaria" (no pedido de conta, no painel de administração e no site).
+- O site deixou de falar só de "lojas": agora fala do "seu negócio", do "estabelecimento" e de "quem empreende em Moçambique". O texto dos problemas fala de quem tem loja, restaurante ou vende por conta própria.
+- Pelo caminho encontrei e corrigi 2 defeitos:
+  1) Com a internet lenta, o painel podia mostrar a lista antiga de vendas sem avisar (erro meu, da parte "sem internet"). Corrigido.
+  2) A lista de Vendas usava a data do aparelho. Se o relógio do telemóvel/PC estiver atrasado, as vendas de agora não apareciam. Corrigido.
+- IMPORTANTE: o relógio deste computador está 63 minutos atrasado. Acerta-o: Definições do Windows > Hora e idioma > Data e hora > "Sincronizar agora".
+- Testes no site real: painel e terminal 41 de 41, site 54 de 54.

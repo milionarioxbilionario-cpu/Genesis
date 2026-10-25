@@ -1234,3 +1234,11 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Corrigido pelo caminho:** texto dos atalhos do terminal (dizia «limpar o cesto», que não existe; ficou «cobrar, desconto, valor recebido, forma de pagamento e categorias»); ícone `fingerprint` não existe no lucide do site (`fingerprint-pattern`).
 - **Decisão (honestidade):** calculadora de estabelecimentos e plano Premium ficam para quando existirem (Fases 16 e 17).
 - Segue-se: Fase 15 (recibo profissional com logótipo, IVA/ISPC, INSS, multas, pagamento misto, venda ao peso, gaveta).
+
+### [2026-10-25] — Rectificações do fundador: «txeneka», «Pastelaria», site para todos os negócios; 2 defeitos — publicadas
+- **Pedido:** trocar «cheneca» por «txeneka» em todo o lado; site escrito para estabelecimentos/empreendedores (restaurantes, importação, quem vende «na bolada»), não só para lojas; «Padaria» → «Pastelaria».
+- **Feito:** 89 trocas em 28 ficheiros (app, site, servidor, testes); `/app/chenecas` reencaminha para `/app/txenekas` (favoritos e alertas antigos); rótulo do tipo de negócio «Pastelaria / Café» (o valor interno `padaria` fica igual: nada muda nos dados); site PT/EN: «negócio», «estabelecimento», «quem empreende»; o texto dos problemas fala de loja, restaurante e de quem vende por conta própria. Sem anunciar funções que ainda não existem (revenda/encomendas = Fase 19).
+- **Defeito 1 (meu, da Fase 12.3):** a cache da API tinha `networkTimeoutSeconds: 10`; com a rede lenta, o service worker mostrava a resposta antiga sem avisar. Retirado: a cópia só serve quando a rede falha.
+- **Defeito 2:** a lista de Vendas com «até hoje» filtrava pelo dia do aparelho. Este PC está 63 min atrasado (o servidor já estava a 26/10, o PC a 25/10) e as vendas de agora não apareciam. «Até hoje» passa a ir sem limite no fim do dia.
+- **Prova:** unitários do frontend 50/50 (+ `code128`), backend 12/12; `site.mjs` 54/54 e `flows.mjs` 41/41 em genesismz.com (`39d1412`); `curl` à página inicial: «txeneka(s)» e «pastelaria» presentes, 0 «cheneca».
+- **Por fazer pelo fundador:** acertar o relógio deste PC (Definições do Windows › Hora › «Sincronizar agora»; está 63 min atrasado). Alterar definições do sistema não é coisa que eu faça.
