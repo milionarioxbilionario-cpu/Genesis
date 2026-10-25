@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-24",
+  "updatedAt": "2026-10-25",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -91,7 +91,7 @@
       "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
       "role": "Autenticacao.",
       "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8.",
+      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 25/10/2026: normalizedEmail passou para fora do try em /login, /forgot-password e /reset-password (o catch lancava ReferenceError e o pedido ficava sem resposta com a BD em baixo). Provado: BD simulada em baixo -> 500 imediato (antes: sem resposta em 4 s). Por publicar.",
       "bugsFixed": "28/09: (a) CAUSA-RAIZ dos 500 — faltava a coluna Tenant.onboarding_completed no Postgres, e toda a query de login faz include:{tenant:true} que traz todas as colunas de Tenant; o Prisma lancava 'The column Tenant.onboarding_completed does not exist' e o catch devolvia 500 'Erro interno no servidor'. Corrigido com prisma/fix_2026-09-28_colunas.sql. (b) O pedido de conta tambem falhava pelo mesmo motivo (tenant.create escreve essa coluna) — devolvia 201 em vez de 500. (c) CLOCK_SKEW no login Google."
     },
     "backend/src/services/passwordResetStore.js": {
@@ -393,9 +393,9 @@
     },
     "frontend/src/ui/tokens.css": {
       "status": "partial",
-      "summary": "Fonte unica de verdade visual: paleta escura vermelho/preto, tipografia, espacamento, raios, sombras e movimento.",
+      "summary": "Fonte unica de verdade visual: tema claro unico, neutros stone, acento = verde do logotipo #0B4D3B (Fase 11.2), positivo = esmeralda #047857, dourado #F2B300 so da marca.",
       "role": "Design tokens.",
-      "notes": "SO TEM TEMA ESCURO. O tema claro precisa do bloco [data-theme=\"light\"] (azul ciano de piscina) num ficheiro proprio."
+      "notes": "25/10/2026: build frontend + admin OK; capturas no browser por fazer (testes interrompidos por falta de memoria)."
     },
     "frontend/src/ui/primitives.css": {
       "status": "ok",
@@ -1564,6 +1564,12 @@
       "status": "partial",
       "summary": "nginx de producao: app e admin em origens separadas; site publico na raiz, app noindex.",
       "notes": "24/10/2026 Fase 11.1: rotas do site + @app noindex; NAO verificado (servidor na 11.4)."
+    },
+    "frontend/src/components/ui/BrandMark.jsx": {
+      "status": "partial",
+      "summary": "Simbolo da marca (G + quadrado dourado, de ui/marca.js) num quadrado verde; substitui o antigo G de texto no AuthLayout, AppShell, Onboarding, Terminal, PosScreen e admin.",
+      "role": "UI kit (marca).",
+      "notes": "25/10/2026: build OK; NAO VERIFICADO no browser."
     }
   }
 }

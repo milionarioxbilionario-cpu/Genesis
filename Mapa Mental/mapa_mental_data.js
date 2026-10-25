@@ -1,19 +1,19 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-24T10:39:57.745Z */
+   Gerado em: 2026-10-25T07:08:50.229Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-24T10:39:57.745Z",
+ "generatedAt": "2026-10-25T07:08:50.229Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 273,
+  "files": 274,
   "planned": 5,
-  "links": 500,
-  "lines": 37857,
+  "links": 501,
+  "lines": 37984,
   "byStatus": {
    "ok": 186,
-   "partial": 9,
+   "partial": 10,
    "broken": 0,
    "planned": 5,
    "untracked": 78
@@ -25,14 +25,14 @@ window.GENESIS_MINDMAP = {
    "backend-data": 68,
    "backend": 63,
    "frontend-pub": 5,
-   "frontend": 100,
+   "frontend": 101,
    "scripts": 3
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 44
+   "count": 45
   },
   {
    "pkg": "node:path",
@@ -220,12 +220,12 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 100,
+   "nodes": 101,
    "clusters": {
     "frontend/scripts": 2,
     "frontend/src": 4,
     "frontend/src/components": 6,
-    "frontend/src/components/ui": 9,
+    "frontend/src/components/ui": 10,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
     "frontend/src/i18n": 2,
@@ -267,8 +267,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 120,
-   "size": 15158,
+   "lines": 121,
+   "size": 15871,
    "externals": [
     "@prisma/client"
    ],
@@ -334,8 +334,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1570,
-   "size": 93717,
+   "lines": 1576,
+   "size": 94417,
    "externals": [
     "nodemailer"
    ],
@@ -467,8 +467,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 599,
-   "size": 38083,
+   "lines": 600,
+   "size": 37892,
    "externals": [
     "react",
     "react-router-dom",
@@ -1390,8 +1390,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 87,
-   "size": 6369,
+   "lines": 150,
+   "size": 11086,
    "externals": [
     "dotenv",
     "fs",
@@ -2169,12 +2169,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
-   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8.",
+   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 25/10/2026: normalizedEmail passou para fora do try em /login, /forgot-password e /reset-password (o catch lancava ReferenceError e o pedido ficava sem resposta com a BD em baixo). Provado: BD simulada em baixo -> 500 imediato (antes: sem resposta em 4 s). Por publicar.",
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 647,
-   "size": 25995,
+   "lines": 652,
+   "size": 26260,
    "externals": [
     "express",
     "bcrypt",
@@ -4539,8 +4539,8 @@ window.GENESIS_MINDMAP = {
    "role": "Script.",
    "security": "",
    "planned": false,
-   "lines": 59,
-   "size": 2927,
+   "lines": 88,
+   "size": 4989,
    "externals": [
     "node:fs",
     "node:path",
@@ -4845,6 +4845,31 @@ window.GENESIS_MINDMAP = {
    "outbound": 5
   },
   {
+   "id": "frontend/src/components/ui/BrandMark.jsx",
+   "path": "frontend/src/components/ui/BrandMark.jsx",
+   "label": "BrandMark.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components/ui",
+   "ext": ".jsx",
+   "status": "partial",
+   "summary": "Simbolo da marca (G + quadrado dourado, de ui/marca.js) num quadrado verde; substitui o antigo G de texto no AuthLayout, AppShell, Onboarding, Terminal, PosScreen e admin.",
+   "notes": "25/10/2026: build OK; NAO VERIFICADO no browser.",
+   "role": "UI kit (marca).",
+   "security": "",
+   "planned": false,
+   "lines": 20,
+   "size": 837,
+   "externals": [
+    "react"
+   ],
+   "dependsOn": [
+    "frontend/src/ui/marca.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "frontend/src/components/ui/Button.jsx",
    "path": "frontend/src/components/ui/Button.jsx",
    "label": "Button.jsx",
@@ -5055,8 +5080,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 10,
-   "size": 664,
+   "lines": 11,
+   "size": 705,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -5422,7 +5447,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 144,
-   "size": 7256,
+   "size": 7165,
    "externals": [
     "react",
     "react-router-dom",
@@ -5516,7 +5541,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 32,
-   "size": 1667,
+   "size": 1576,
    "externals": [
     "react"
    ],
@@ -5779,7 +5804,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 264,
-   "size": 18910,
+   "size": 18810,
    "externals": [
     "react",
     "react-router-dom",
@@ -6153,7 +6178,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 452,
-   "size": 27784,
+   "size": 27684,
    "externals": [
     "react",
     "lucide-react"
@@ -6193,7 +6218,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 204,
-   "size": 9831,
+   "size": 9740,
    "externals": [
     "react",
     "react-router-dom",
@@ -6257,9 +6282,10 @@ window.GENESIS_MINDMAP = {
    "externals": [],
    "dependsOn": [],
    "usedBy": [
-    "frontend/scripts/gerar_icones.mjs"
+    "frontend/scripts/gerar_icones.mjs",
+    "frontend/src/components/ui/BrandMark.jsx"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 0
   },
   {
@@ -6270,13 +6296,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/src/ui",
    "ext": ".css",
    "status": "partial",
-   "summary": "Fonte unica de verdade visual: paleta escura vermelho/preto, tipografia, espacamento, raios, sombras e movimento.",
-   "notes": "SO TEM TEMA ESCURO. O tema claro precisa do bloco [data-theme=\"light\"] (azul ciano de piscina) num ficheiro proprio.",
+   "summary": "Fonte unica de verdade visual: tema claro unico, neutros stone, acento = verde do logotipo #0B4D3B (Fase 11.2), positivo = esmeralda #047857, dourado #F2B300 so da marca.",
+   "notes": "25/10/2026: build frontend + admin OK; capturas no browser por fazer (testes interrompidos por falta de memoria).",
    "role": "Design tokens.",
    "security": "",
    "planned": false,
-   "lines": 71,
-   "size": 2280,
+   "lines": 72,
+   "size": 2365,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -6642,7 +6668,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 217,
-   "size": 13508,
+   "size": 13547,
    "externals": [
     "jspdf",
     "jspdf-autotable"
@@ -9035,6 +9061,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/components/SaleDrawer.jsx",
    "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/components/ui/BrandMark.jsx",
+   "target": "frontend/src/ui/marca.js"
   },
   {
    "source": "frontend/src/components/ui/Button.jsx",

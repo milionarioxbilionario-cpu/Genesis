@@ -261,9 +261,12 @@ const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
 // Emissao de tokens/cookies: ver utils/tokens.js (fonte unica).
 
 router.post('/login', loginLimiter, async (req, res) => {
+  // Fora do try: o catch usa-a no log (dentro, o catch lancava ReferenceError
+  // e o pedido ficava sem resposta quando a BD falhava).
+  let normalizedEmail = '';
   try {
     const { email, password } = loginSchema.parse(req.body);
-    const normalizedEmail = normalizeEmail(email);
+    normalizedEmail = normalizeEmail(email);
 
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -413,9 +416,10 @@ router.post('/google', googleLimiter, async (req, res) => {
 });
 
 router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
+  let normalizedEmail = ''; // fora do try: usada no catch
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
-    const normalizedEmail = normalizeEmail(email);
+    normalizedEmail = normalizeEmail(email);
 
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
@@ -486,9 +490,10 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
 });
 
 router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
+  let normalizedEmail = ''; // fora do try: usada no catch
   try {
     const { email, code, password } = resetPasswordSchema.parse(req.body);
-    const normalizedEmail = normalizeEmail(email);
+    normalizedEmail = normalizeEmail(email);
 
     // verifyResetCode conta as tentativas falhadas, destroi o codigo ao fim de
     // MAX_ATTEMPTS e compara o hash em tempo constante.

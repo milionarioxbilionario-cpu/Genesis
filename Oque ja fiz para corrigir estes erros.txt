@@ -2038,3 +2038,11 @@ O que fiz nesta parte:
 - Criei os ficheiros para o Google (robots.txt e sitemap.xml) e o ícone novo (o "G" verde com o quadradinho dourado do teu logótipo, desenhado igual ao original) para o separador do browser e para a app instalada.
 Prova: os testes antigos do terminal, do painel, do idioma e do "Pedir conta" passaram todos (101 verificações, 0 erros); os testes novos do site (9 de 9) e do modo sem internet (8 de 8) também.
 Ainda NÃO está no genesismz.com: só publico depois do site completo, e antes disso peço-te confirmação porque é preciso mexer na configuração do servidor.
+
+
+==================== 25/10/2026 — Marca na app (11.2) por testar no browser + um defeito do login corrigido ====================
+O que já estava feito da 11.2 (do dia anterior): o «G» preto que aparecia no canto da app, do terminal e do painel admin passa a ser o símbolo verdadeiro do teu logótipo (o G branco com o quadradinho dourado em fundo verde), e o verde dos botões da app passa a ser o verde do logótipo. Também ficou pronta a imagem que aparece quando alguém partilha o link genesismz.com no WhatsApp ou Facebook.
+O que testei hoje: a app e o painel admin compilam sem erros, e confirmei que não sobra nenhum «G» antigo nem o verde antigo.
+O que NÃO consegui testar: os testes no browser pararam a meio. A ligação à base de dados falhou várias vezes e depois o computador ficou com pouca memória e os servidores de teste foram desligados. Apaguei as lojas de teste. Por isso a 11.2 ainda está «feita mas não verificada».
+Um defeito verdadeiro que encontrei por causa disto: quando a base de dados falha no momento em que alguém tenta entrar (ou pede «Esqueci a senha»), o servidor nunca respondia. A pessoa ficava a olhar para o botão a rodar sem nenhuma mensagem. Corrigi: agora responde logo com um erro. Provei com um teste que simula a base de dados em baixo: antes ficava sem resposta, agora responde na hora. Procurei o mesmo erro em todo o código e não há mais nenhum caso.
+Falta: voltar a correr os testes no browser quando o computador tiver memória livre, e publicar no genesismz.com (ainda não publiquei nada disto).
