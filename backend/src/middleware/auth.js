@@ -3,6 +3,7 @@ const prisma = require('../utils/prisma');
 const { blockedTenantStatus, isTrialExpired } = require('../utils/tenantStatus');
 const { isScopeAllowed } = require('../utils/sessionScopes');
 const { validateSessionClaims } = require('../utils/sessionUser');
+const { checkPanelLock } = require('../utils/panelLock');
 
 // Autenticacao por sessao (cookie httpOnly `token` ou Authorization: Bearer).
 // Define req.user = { userId, tenantId, role, name, scope, tid }.
@@ -11,6 +12,7 @@ const { validateSessionClaims } = require('../utils/sessionUser');
 //  1. assinatura/expiracao do JWT                       -> 401
 //  2. conta activa + emitido com a senha actual (pv)    -> 401 (utils/sessionUser.js)
 //  3. ambito restrito ('pos', 'support')                -> 403 SCOPE_RESTRICTED
+//  3b. painel do dono bloqueado (PIN pessoal, Fase 12.4) -> 423 PANEL_LOCKED (utils/panelLock.js)
 //  4. loja suspensa/bloqueada/eliminada                 -> 403
 //  5. trial expirado: so leitura                        -> 402 TRIAL_EXPIRED
 // Falha de infra-estrutura (BD em baixo) -> 503, nunca 401: um 401 mandaria
@@ -54,6 +56,10 @@ const authMiddleware = async (req, res, next) => {
         error: req.user.scope === 'support' ? 'Modo suporte: só leitura.' : 'Esta acção não está disponível no terminal.',
         code: 'SCOPE_RESTRICTED',
       });
+    }
+
+    if (!checkPanelLock(req, res, check.user, req.user.scope)) {
+      return res.status(423).json({ error: 'Painel bloqueado. Introduza o seu PIN.', code: 'PANEL_LOCKED' });
     }
 
     if (req.user.role !== 'super_admin' && req.user.tenantId) {

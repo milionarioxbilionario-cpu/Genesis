@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
-import { Monitor, Plus } from 'lucide-react';
+import { Fingerprint, Monitor, Plus, Trash2 } from 'lucide-react';
+import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
+import { useSession } from '../../utils/session';
+import { passkeyFlag } from '../../components/PanelLock';
+import { rememberPin } from '../../utils/offlinePin';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import AuditLogPage from './AuditLogPage';
@@ -325,7 +329,71 @@ function Discounts({ s, reload }) {
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'pin'} disabled={!/^\d{4,6}$/.test(pin) || !password} onClick={savePin}>{t('Guardar PIN')}</Button></div>
       </Card>
+      <PanelLockCard />
     </div>
+  );
+}
+
+// Fase 12.4: PIN pessoal do painel (diferente do PIN de autorizacao) e Face ID.
+function PanelLockCard() {
+  const toast = useToast();
+  const confirm = useConfirm();
+  const { t } = useI18n();
+  const { user } = useSession();
+  const status = useApi('/api/lock/status');
+  const [pin, setPin] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  async function savePin() {
+    setBusy('pin'); setError('');
+    try {
+      await api.put('/api/lock/pin', { pin, password });
+      rememberPin('owner:' + user.id, pin);
+      toast(t('PIN do painel alterado.')); setPin(''); setPassword(''); status.reload();
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(''); }
+  }
+  async function addPasskey() {
+    setBusy('passkey'); setError('');
+    try {
+      const { data: options } = await api.post('/api/lock/passkey/register-options');
+      const response = await startRegistration({ optionsJSON: options });
+      await api.post('/api/lock/passkey/register', { response, name: navigator.platform || null });
+      try { localStorage.setItem(passkeyFlag(user.id), '1'); } catch { /* modo privado */ }
+      toast(t('Face ID / impressão digital activado neste aparelho.')); status.reload();
+    } catch (err) {
+      if (err?.name !== 'NotAllowedError') setError(err?.response ? errorMessage(err) : t('Não foi possível activar o Face ID neste aparelho. Pode usar só o PIN.'));
+    } finally { setBusy(''); }
+  }
+  async function remove(k) {
+    if (!(await confirm({ title: t('Remover este Face ID?'), message: t('Esse aparelho volta a pedir o PIN.'), confirmLabel: t('Remover'), danger: true }))) return;
+    try { await api.delete('/api/lock/passkey/' + encodeURIComponent(k.id)); status.reload(); } catch (err) { setError(errorMessage(err)); }
+  }
+  const keys = status.data?.passkeys || [];
+  return (
+    <Card>
+      <CardHeader title={t('PIN do painel e Face ID')} description={t('Pedido sempre que abre o Genesis e depois de 5 minutos sem mexer. É só seu: não é o PIN de autorização dos caixistas.')} />
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <div className="grid max-w-md gap-4 sm:grid-cols-2">
+        <Input label={t('Novo PIN do painel (4 dígitos)')} type="password" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} inputClassName="num tracking-[0.3em]" />
+        <Input label={t('A sua senha')} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </div>
+      <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'pin'} disabled={!/^\d{4}$/.test(pin) || !password} onClick={savePin}>{t('Mudar o PIN')}</Button></div>
+      <div className="mt-5 border-t border-border pt-4">
+        <p className="text-sm font-medium text-ink-2">{t('Face ID / impressão digital')}</p>
+        {keys.length === 0 ? <p className="mt-1 text-sm text-ink-muted">{t('Ainda não activou em nenhum aparelho.')}</p> : (
+          <ul className="mt-2 divide-y divide-border">
+            {keys.map((k) => (
+              <li key={k.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <span className="min-w-0 truncate text-ink">{k.name || t('Aparelho')} <span className="text-ink-muted">· {t('activado a {date}', { date: date(k.created_at) })}</span></span>
+                <Button size="sm" variant="ghost" icon={Trash2} onClick={() => remove(k)}>{t('Remover')}</Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {browserSupportsWebAuthn() && <Button className="mt-3" icon={Fingerprint} loading={busy === 'passkey'} onClick={addPasskey}>{t('Activar neste aparelho')}</Button>}
+      </div>
+    </Card>
   );
 }
 

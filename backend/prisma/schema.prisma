@@ -74,6 +74,8 @@ model User {
   password_hash              String
   // PIN pessoal do caixista no terminal da loja (bcrypt). Null = sem acesso ao POS.
   pin_hash                   String?
+  /// PIN pessoal do DONO para desbloquear o painel (Fase 12.4, bcrypt). Null = ainda nao criado.
+  lock_pin_hash              String?
   phone                      String?
   /// Lingua da interface escolhida pela pessoa (Fase 9.3): "pt" ou "en".
   language                   String                @default("pt")
@@ -441,4 +443,21 @@ model CatalogSuggestion {
 
   @@unique([tenant_id, product_id])
   @@index([status, business_type, name_key])
+}
+
+// Fase 12.4: chaves de acesso (Face ID / impressao digital) do dono para
+// desbloquear o painel. id = credential id (base64url); public_key em base64url.
+model WebAuthnCredential {
+  id           String    @id
+  user_id      String
+  tenant_id    String
+  public_key   String
+  counter      Int       @default(0)
+  transports   String?
+  name         String?
+  created_at   DateTime  @default(now())
+  last_used_at DateTime?
+
+  @@index([user_id])
+  @@index([tenant_id])
 }

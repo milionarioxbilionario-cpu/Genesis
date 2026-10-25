@@ -18,7 +18,7 @@ const requireRole = require('../middleware/rbac');
 const terminalAuth = require('../middleware/terminalAuth');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
-const { setSessionCookies, clearSessionCookies, verifyAccessToken } = require('../utils/tokens');
+const { setSessionCookies, clearSessionCookies, verifyAccessToken, passwordVersion } = require('../utils/tokens');
 const { TERMINAL_COOKIE, consumePairingCode, createTerminal, terminalCookieOptions } = require('../utils/terminals');
 const { getShiftLock } = require('../utils/shiftLock');
 const { getShiftState, closeShiftBlind, shiftStatus } = require('../utils/shift');
@@ -71,7 +71,8 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   const profiles = await Promise.all(cashiers.map(async (c) => {
     const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
     // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
-    return { id: c.id, name: c.name, language: c.language, has_pin: Boolean(c.pin_hash), locked: lock.locked, shift_open: shift.open };
+    // pin_v: muda quando o PIN muda — o terminal apaga o verificador do PIN sem rede (Fase 12.2).
+    return { id: c.id, name: c.name, language: c.language, has_pin: Boolean(c.pin_hash), pin_v: c.pin_hash ? passwordVersion(c.pin_hash) : null, locked: lock.locked, shift_open: shift.open };
   }));
   const sessionUserId = currentPosSession(req, id);
   res.json({

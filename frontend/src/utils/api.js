@@ -28,6 +28,7 @@ export const SESSION_MESSAGES = {
   NO_SESSION: 'Entre para continuar.',
   TENANT_BLOCKED: 'A conta da loja está suspensa. Contacte o suporte Genesis.',
   SESSION_INVALID: 'A sessão deixou de ser válida. Entre de novo.',
+  LOCK_TOO_MANY: 'Demasiados PINs errados. Entre de novo com o email e a senha.',
 };
 
 const NO_REFRESH = ['/api/auth/login', '/api/auth/google', '/api/refresh', '/api/auth/support', '/api/pos/login', '/api/pos/pair'];
@@ -59,6 +60,9 @@ api.interceptors.response.use(
         if (result === true) return api(cfg);
       }
       if (!cfg.silent) window.dispatchEvent(new CustomEvent('genesis:session-ended', { detail: { code: code || 'SESSION_EXPIRED' } }));
+    } else if (status === 423 && code === 'PANEL_LOCKED') {
+      // 12.4: painel do dono bloqueado (5 min sem mexer). O ecra do PIN aparece.
+      window.dispatchEvent(new CustomEvent('genesis:panel-locked'));
     } else if (status === 403 && code === 'TENANT_BLOCKED' && !cfg.silent) {
       window.dispatchEvent(new CustomEvent('genesis:session-ended', { detail: { code } }));
     }

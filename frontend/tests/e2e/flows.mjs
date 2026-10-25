@@ -264,6 +264,10 @@ try {
   const m = await mobile.newPage();
   watch(m, 'telemovel');
   await m.goto(BASE + '/app');
+  // Fase 12.4: outro aparelho com os mesmos cookies = painel bloqueado ate ao PIN.
+  await m.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
+  ok(!(await m.getByText('Receita de hoje').isVisible()), 'telemovel com os cookies do dono: painel bloqueado, sem numeros');
+  await m.keyboard.type(fx.lockPin);
   await m.getByText('Receita de hoje').waitFor({ timeout: T });
   await m.waitForLoadState('networkidle', { timeout: T });
   await shot(m, '30-mobile-inicio');
@@ -274,7 +278,8 @@ try {
   const mt = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'pt-PT', storageState: await termCtx.storageState() });
   const mp = await mt.newPage();
   await mp.goto(BASE + '/terminal');
-  await mp.getByText('Venda actual').waitFor({ timeout: T });
+  // 12.5: no telemovel o cesto e uma barra em baixo; a pesquisa fica no topo.
+  await mp.getByPlaceholder('Pesquisar ou ler código de barras').waitFor({ timeout: T });
   await shot(mp, '32-mobile-pos');
 
   console.log('\n=== Vendas no painel do dono ===');

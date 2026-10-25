@@ -9,6 +9,7 @@ import '../src/i18n/en/common.js';
 import '../src/i18n/en/auth.js';
 import '../src/i18n/en/owner.js';
 import '../src/i18n/en/pos.js';
+import '../src/i18n/en/lock.js';
 import { money, pct, errorMessage, PAYMENT_LABEL } from '../src/utils/format.js';
 import { LOSS_REASON, lossReason, timelineTitle, timelineWho } from '../src/utils/timelineText.js';
 import { ACTION_LABEL, FIELD_LABEL, WEEKDAY, actionLabel, fieldValue } from '../src/utils/auditLabels.js';
@@ -87,7 +88,9 @@ const LABEL_FILES = /(layouts[\\/]AppShell|pos[\\/]PosScreen|auth[\\/]RequestAcc
 const SERVER_FILES = ['routes/auth.js', 'routes/pos.js', 'routes/owner.js', 'routes/products.js', 'routes/inventory.js', 'routes/settings.js',
   'routes/shoppingLists.js', 'routes/catalogs.js', 'routes/dashboard.js', 'middleware/auth.js', 'utils/sessionUser.js',
   // 9.5: venda, turno e terminal.
-  'routes/sales.js', 'utils/shift.js', 'middleware/terminalAuth.js', 'middleware/posWriteAuth.js'];
+  'routes/sales.js', 'utils/shift.js', 'middleware/terminalAuth.js', 'middleware/posWriteAuth.js',
+  // 12.4: bloqueio do painel do dono.
+  'routes/panelLock.js'];
 test('mensagens de erro do servidor (dono, conta, terminal) tem ingles', () => {
   const en = new Set(knownKeys('en'));
   const BACK = path.join(SRC, '..', '..', 'backend', 'src');

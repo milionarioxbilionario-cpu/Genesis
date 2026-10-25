@@ -37,6 +37,22 @@ export default defineConfig({
       // offline (~380 KB a menos na instalacao).
       workbox: {
         globIgnores: ['**/html2canvas*', '**/purify*', '**/index.es-*', '**/site/shots/**'],
+        // 12.3: a letra (Inter), os icones e imagens pequenas tambem ficam guardados.
+        globPatterns: ['**/*.{js,css,html,woff2,svg,png,ico,webp}'],
+        // 12.3: o painel do dono sem rede mostra o que ja tinha visto (so leitura).
+        // NetworkFirst: com rede manda sempre o servidor; sem rede, a ultima resposta.
+        // A cache 'genesis-api' e apagada ao sair e ao entrar outra conta (utils/session.jsx).
+        // Fora: sessao (/api/auth), terminal (/api/pos), bloqueio (/api/lock), admin.
+        runtimeCaching: [{
+          urlPattern: ({ url, request }) => request.method === 'GET' && /^\/api\/(owner|dashboard|products|inventory|settings|sales|shopping-lists)(\/|$)/.test(url.pathname),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'genesis-api',
+            networkTimeoutSeconds: 10,
+            expiration: { maxEntries: 300, maxAgeSeconds: 14 * 24 * 60 * 60 },
+            cacheableResponse: { statuses: [200] },
+          },
+        }],
         // Offline, qualquer rota da app abre a app (terminal incluido). As
         // paginas do site estao pre-guardadas e respondem por si.
         navigateFallback: 'app.html',

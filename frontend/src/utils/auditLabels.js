@@ -17,6 +17,8 @@ export const ACTION_LABEL = {
   POS_PIN_FAIL: 'PIN errado no terminal', SHIFT_OPEN_PIN_FAIL: 'PIN errado ao reabrir turno', SALES_VIEW_PIN_FAIL: 'PIN errado ao ver vendas',
   TERMINAL_PAIRED: 'Terminal emparelhado', TERMINAL_PAIRING_CODE: 'Código de emparelhamento gerado', TERMINAL_REVOKED: 'Terminal revogado',
   SUPPORT_SESSION_OPENED: 'Acesso de suporte Genesis',
+  PANEL_PIN_CREATED: 'PIN do painel criado', PANEL_PIN_CHANGED: 'PIN do painel alterado', PANEL_UNLOCK_FAIL: 'PIN errado ao desbloquear o painel',
+  PANEL_LOCK_SIGNED_OUT: 'Sessão terminada por PINs errados', PASSKEY_ADDED: 'Face ID / impressão digital activado', PASSKEY_REMOVED: 'Face ID / impressão digital removido',
   CREATE_CASHIER: 'Caixista criado', UPDATE_CASHIER: 'Caixista alterado', DEACTIVATE_CASHIER: 'Caixista desactivado', REACTIVATE_CASHIER: 'Caixista reactivado',
   CREATE_EMPLOYEE: 'Trabalhador criado', UPDATE_EMPLOYEE: 'Trabalhador alterado',
   UPDATE_STORE: 'Dados da loja alterados', UPDATE_HOURS: 'Horário alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', UPDATE_EXPIRY_ALERT: 'Aviso de validade alterado',
@@ -30,7 +32,7 @@ export const ACTION_LABEL = {
 export const actionLabel = (a) => (ACTION_LABEL[a] ? t(ACTION_LABEL[a]) : a);
 
 // Accoes que merecem atencao (PIN errado, bloqueio...).
-export const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'CANCEL_SALE', 'REPORT_SEND_FAILED']);
+export const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'CANCEL_SALE', 'REPORT_SEND_FAILED', 'PANEL_UNLOCK_FAIL', 'PANEL_LOCK_SIGNED_OUT']);
 
 // Campos guardados em centavos -> mostrados em MT.
 const MONEY = new Set(['cost_price', 'sell_price', 'unit_cost', 'unit_price', 'total_amount', 'amount', 'counted_amount', 'expected_amount', 'difference', 'discount_amount', 'monthly_salary', 'delivery_cost_per_visit', 'target_amount', 'value', 'total', 'amount_paid']);

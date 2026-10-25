@@ -61,6 +61,16 @@ db.version(6).stores({
   }
 });
 
+// Versao 7 (2026-10-25, Fase 12) — abrir sem rede:
+//  - pin_verifiers: verificador PBKDF2 do PIN aceite pelo servidor (utils/offlinePin.js);
+//    chave 'cashier:<terminal>:<caixista>' ou 'owner:<utilizador>';
+//  - snapshots: ultima resposta boa de um ecra (ex.: 'terminal:info'), para o
+//    terminal e o painel abrirem com o que ja tinham. Chaves sempre com dono/terminal.
+db.version(7).stores({
+  pin_verifiers: 'key',
+  snapshots: 'key',
+});
+
 // Example shape notes:
 // sales: { id, tenant_id, cashier_user_id, items: [...], total_amount, payment_method, amount_received, change_given, status, sync, created_at, payload? }
 // sale_items: { id, sale_id, product_id, quantity, unit_price, sync }

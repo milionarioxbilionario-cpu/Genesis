@@ -23,7 +23,7 @@ async function loadSessionUser(userId) {
   if (hit && Date.now() - hit.at < TTL_MS) return hit.user;
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, tenant_id: true, role: true, name: true, is_active: true, password_hash: true },
+    select: { id: true, tenant_id: true, role: true, name: true, is_active: true, password_hash: true, lock_pin_hash: true },
   });
   cache.set(userId, { user, at: Date.now() });
   return user;

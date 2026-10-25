@@ -26,6 +26,7 @@ const refreshRoute = require('./routes/refresh');
 const settingsRoutes = require('./routes/settings');
 const shoppingListRoutes = require('./routes/shoppingLists');
 const posRoutes = require('./routes/pos');
+const panelLockRoutes = require('./routes/panelLock');
 const posWriteAuth = require('./middleware/posWriteAuth');
 const verifyRoutes = require('./routes/verify');
 const helmet = require('helmet');
@@ -251,6 +252,9 @@ app.use('/api/sales', posWriteAuth, requireRole('owner', 'cashier'), salesRoutes
 
 // Terminal POS: emparelhamento, PIN do caixista, turno e fecho cego.
 app.use('/api/pos', posRoutes);
+
+// Bloqueio do painel do dono: PIN pessoal + Face ID (Fase 12.4).
+app.use('/api/lock', panelLockRoutes);
 
 // Verificacao publica do QR dos recibos (sem sessao, so leitura).
 app.use('/api/verify', verifyRoutes);

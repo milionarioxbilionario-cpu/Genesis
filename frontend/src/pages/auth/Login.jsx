@@ -45,6 +45,8 @@ export default function Login() {
       await api.post('/api/auth/logout').catch(() => {});
       return;
     }
+    // Acabou de entrar com a senha/Google: o painel abre sem pedir o PIN (12.4).
+    try { sessionStorage.setItem('genesis.unlocked', '1'); } catch { /* modo privado */ }
     await reload();
     const back = params.get('voltar');
     navigate(user.tenant && user.tenant.onboarding_completed === false ? '/onboarding' : (back && back.startsWith('/app') ? back : '/app'), { replace: true });
@@ -64,26 +66,62 @@ export default function Login() {
     } catch (err) { fail(err); } finally { setLoading(false); }
   }
 
+  // O callback do Google usa sempre a versao mais recente de afterLogin (muda com a lingua).
+  const afterLoginRef = useRef(afterLogin);
+  afterLoginRef.current = afterLogin;
+
+  // initialize corre UMA vez; so o botao e redesenhado quando a lingua muda.
+  const [gsi, setGsi] = useState(null);
   useEffect(() => {
     if (!googleEnabled) return undefined;
     let cancelled = false;
-    loadGsi().then((gsi) => {
-      if (cancelled || !gsi || !googleRef.current) return;
-      gsi.initialize({
+    loadGsi().then((id) => {
+      if (cancelled || !id) return;
+      id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: async ({ credential }) => {
           setError(''); setErrorCode('');
           try {
             const res = await api.post('/api/auth/google', { credential });
-            await afterLogin(res.data.user);
+            await afterLoginRef.current(res.data.user);
           } catch (err) { fail(err); }
         },
       });
-      gsi.renderButton(googleRef.current, { theme: 'outline', size: 'large', width: 340, text: 'continue_with', locale: lang });
-      setGoogleReady(true);
+      setGsi(id);
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [afterLogin, lang]);
+  }, []);
+
+  // Troca de lingua sem piscar: o botao novo e desenhado por cima, invisivel, e so
+  // substitui o antigo quando o iframe do Google acabou de carregar (ou ao fim de 2 s).
+  useEffect(() => {
+    const host = googleRef.current;
+    if (!gsi || !host) return undefined;
+    const next = document.createElement('div');
+    next.className = 'absolute inset-0 flex justify-center';
+    next.style.visibility = 'hidden';
+    host.appendChild(next);
+    let done = false;
+    const show = () => {
+      if (done) return;
+      done = true;
+      [...host.children].forEach((c) => { if (c !== next) c.remove(); });
+      next.style.visibility = '';
+      setGoogleReady(true);
+    };
+    const timer = setTimeout(show, 2000);
+    const watch = new MutationObserver(() => {
+      const frame = next.querySelector('iframe');
+      if (frame) { watch.disconnect(); frame.addEventListener('load', show, { once: true }); }
+    });
+    watch.observe(next, { childList: true, subtree: true });
+    gsi.renderButton(next, { theme: 'outline', size: 'large', width: 340, text: 'continue_with', locale: lang });
+    return () => {
+      clearTimeout(timer);
+      watch.disconnect();
+      if (!done) next.remove();
+    };
+  }, [gsi, lang]);
 
   return (
     <AuthLayout
@@ -116,7 +154,8 @@ export default function Login() {
         <>
           {/* O separador so aparece quando o botao do Google carregou (sem rede, nada). */}
           {googleReady && <div className="my-5 flex items-center gap-3 text-xs text-ink-faint"><span className="h-px flex-1 bg-border" />{t('ou')}<span className="h-px flex-1 bg-border" /></div>}
-          <div ref={googleRef} className="flex justify-center" />
+          {/* Altura fixa: a troca do botao nao mexe no resto da pagina. */}
+          <div ref={googleRef} className={googleReady ? 'relative h-11' : 'relative h-0'} />
         </>
       )}
     </AuthLayout>

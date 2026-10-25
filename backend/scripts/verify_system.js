@@ -93,7 +93,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -1616,7 +1616,97 @@ async function test31() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31 };
+// ---------------------------------------------------------------------------
+async function test32() {
+  section(32, 'Bloqueio do painel do dono: PIN pessoal, 423 sem desbloqueio, 5 erros = sessao terminada (Fase 12.4)');
+  const jwt = require('jsonwebtoken');
+  const t = ctx.tenant.id;
+  const LOCK_PIN = '1357';
+  const withUnlock = (c) => c.jar.has('genesis_unlock');
+  // Terminal emparelhado ANTES do PIN: com o painel bloqueado nem o codigo se gera.
+  const term = await cashierTerminal();
+  try {
+    const before = ownerClient();
+    ok((await before.req('GET', '/api/owner/notifications')).status === 200, 'sem PIN criado: o painel nao bloqueia (contas antigas continuam a funcionar)');
+    const me0 = await before.req('GET', '/api/auth/me');
+    ok(me0.data?.user?.lock?.has_pin === false && me0.data.user.lock.unlocked === true, '/me diz has_pin=false', me0.data?.user?.lock);
+    ok(!JSON.stringify(me0.data).includes('lock_pin_hash') && !JSON.stringify(me0.data).includes('password_hash'), '/me nao devolve hashes');
+
+    const set = await before.req('PUT', '/api/lock/pin', { pin: LOCK_PIN });
+    ok(set.status === 200 && withUnlock(before), 'criar o PIN: 200 e o painel fica desbloqueado neste browser', set);
+    ok((await before.req('GET', '/api/owner/notifications')).status === 200, 'com o cookie de desbloqueio: 200');
+    const raw = await fetch(BASE + '/api/lock/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'token=' + signAccessToken(ctx.owner) }, body: JSON.stringify({ pin: LOCK_PIN }) });
+    const sc = (raw.headers.getSetCookie ? raw.headers.getSetCookie() : []).find((c) => c.startsWith('genesis_unlock='));
+    ok(raw.status === 200 && sc && /HttpOnly/i.test(sc) && !/Max-Age|Expires/i.test(sc), 'cookie de desbloqueio: httpOnly e de SESSAO (morre ao fechar a app)', sc);
+
+    const other = ownerClient();
+    const locked = await other.req('GET', '/api/owner/notifications');
+    ok(locked.status === 423 && locked.data?.code === 'PANEL_LOCKED', 'outro browser com a sessao (cookie roubado/telemovel reaberto): 423 PANEL_LOCKED', locked);
+    ok((await other.req('GET', '/api/products')).status === 423, 'produtos tambem bloqueados');
+    ok((await other.req('GET', '/api/sales')).status === 423, 'vendas tambem bloqueadas');
+    const me1 = await other.req('GET', '/api/auth/me');
+    ok(me1.status === 200 && me1.data.user.lock.has_pin === true && me1.data.user.lock.unlocked === false, '/me (sempre aberto) diz que esta bloqueado', me1.data?.user?.lock);
+    const wrong = await other.req('POST', '/api/lock/unlock', { pin: '0000' });
+    ok(wrong.status === 403 && wrong.data?.code === 'INVALID_LOCK_PIN' && wrong.data.remaining === 4, 'PIN errado: 403 com 4 tentativas restantes', wrong);
+    const right = await other.req('POST', '/api/lock/unlock', { pin: LOCK_PIN });
+    ok(right.status === 200 && (await other.req('GET', '/api/owner/notifications')).status === 200, 'PIN certo: desbloqueia');
+
+    // 5 minutos sem pedidos: o token expira. Cookie forjado: recusado.
+    const { passwordVersion } = require('../src/utils/tokens');
+    const expired = jwt.sign({ u: ctx.owner.id, pv: passwordVersion(ctx.owner.password_hash), lk: 'x', exp: Math.floor(Date.now() / 1000) - 5 }, process.env.JWT_SECRET + ':unlock');
+    const exp = client(signAccessToken(ctx.owner)); exp.jar.set('genesis_unlock', expired);
+    ok((await exp.req('GET', '/api/owner/notifications')).status === 423, 'desbloqueio expirado (5 min parado): 423');
+    const forged = client(signAccessToken(ctx.owner)); forged.jar.set('genesis_unlock', jwt.sign({ u: ctx.owner.id }, 'outro-segredo'));
+    ok((await forged.req('GET', '/api/owner/notifications')).status === 423, 'cookie de desbloqueio forjado: 423');
+
+    // Mudar o PIN pede a senha e invalida os desbloqueios antigos.
+    ok((await other.req('PUT', '/api/lock/pin', { pin: '2468' })).data?.code === 'INVALID_PASSWORD', 'mudar o PIN sem a senha: recusado');
+    const change = await other.req('PUT', '/api/lock/pin', { pin: '2468', password: OWNER_PW });
+    ok(change.status === 200, 'mudar o PIN com a senha: 200', change);
+    ok((await before.req('GET', '/api/owner/notifications')).status === 423, 'o desbloqueio do PIN antigo deixa de valer');
+
+    // Caixista e modo suporte nao sao afectados.
+    ok((await term.req('GET', '/api/pos/shift')).status === 200, 'caixista no terminal: nao afectado');
+    ok((await client(signAccessToken(ctx.owner, { scope: 'support' })).req('GET', '/api/owner/notifications')).status === 200, 'modo suporte (so leitura): nao afectado');
+
+    // Entrar com a senha desbloqueia logo.
+    const login = client();
+    const li = await login.req('POST', '/api/auth/login', { email: ctx.owner.email, password: OWNER_PW });
+    ok(li.status === 200 && withUnlock(login) && (await login.req('GET', '/api/owner/notifications')).status === 200, 'login com email e senha: painel aberto sem pedir o PIN', li.status);
+
+    // Face ID: so de origens da lista; sem chave registada, 404.
+    const fid = await login.req('POST', '/api/lock/passkey/options', undefined, { Origin: 'http://localhost:5180' });
+    ok(fid.status === 404 && fid.data?.code === 'NO_PASSKEY', 'Face ID sem chave registada: 404 NO_PASSKEY', fid);
+    const reg = await login.req('POST', '/api/lock/passkey/register-options', undefined, { Origin: 'http://localhost:5180' });
+    ok(reg.status === 200 && reg.data?.rp?.id === 'localhost' && reg.data.challenge, 'registar Face ID (desbloqueado): opcoes com rp.id = dominio', reg.data?.rp);
+    const bad = await login.req('POST', '/api/lock/passkey/register-options', undefined, { Origin: 'https://site-falso.example' });
+    ok(bad.status === 400 && bad.data?.code === 'WEBAUTHN_ORIGIN', 'origem fora da lista: 400', bad);
+    ok((await before.req('POST', '/api/lock/passkey/register-options', undefined, { Origin: 'http://localhost:5180' })).status === 423, 'registar Face ID com o painel bloqueado: 423');
+
+    // RLS da tabela nova.
+    await prisma.webAuthnCredential.create({ data: { id: 'teste-' + crypto.randomUUID(), user_id: ctx.owner.id, tenant_id: t, public_key: 'x' } });
+    const mine = await prisma.runWithTenant(t, () => prisma.webAuthnCredential.count({ where: { user_id: ctx.owner.id } }));
+    const theirs = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.webAuthnCredential.count({ where: { user_id: ctx.owner.id } }));
+    ok(mine === 1 && theirs === 0, 'RLS: a chave so se ve no contexto desta loja', [mine, theirs]);
+
+    // 5 erros terminam a sessao.
+    const att = ownerClient();
+    let last;
+    // Ja houve 1 erro acima: o 5.o erro na janela de 15 min termina a sessao.
+    for (let i = 0; i < 5; i++) { last = await att.req('POST', '/api/lock/unlock', { pin: '9999' }); if (last.status === 401) break; }
+    ok(last.status === 401 && last.data?.code === 'LOCK_TOO_MANY' && !att.jar.has('token') && !att.jar.has('refreshToken'), '5 PINs errados: 401 LOCK_TOO_MANY e os cookies da sessao sao apagados', last);
+    const again = await ownerClient().req('POST', '/api/lock/unlock', { pin: '2468' });
+    ok(again.status === 401 && again.data?.code === 'LOCK_TOO_MANY', 'durante 15 min nem o PIN certo desbloqueia (so email e senha)', again);
+    const audits = await prisma.auditLog.count({ where: { tenant_id: t, action: 'PANEL_UNLOCK_FAIL' } });
+    ok(audits === 5, 'as 5 falhas ficam gravadas na auditoria', audits);
+  } finally {
+    await prisma.user.update({ where: { id: ctx.owner.id }, data: { lock_pin_hash: null } });
+    await prisma.webAuthnCredential.deleteMany({ where: { tenant_id: t } });
+    require('../src/utils/sessionUser').invalidateSessionUser();
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32 };
 
 (async () => {
   await prisma.ready();

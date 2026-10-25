@@ -14,6 +14,7 @@ const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { sendPasswordResetEmail } = require('../utils/mailer');
 const { reqLang, pickLang, tr } = require('../utils/lang');
 const { setSessionCookies, verifyAccessToken, clearSessionCookies } = require('../utils/tokens');
+const { readUnlocked, clearUnlocked, needsUnlock, setUnlocked } = require('../utils/panelLock');
 const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessionUser');
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
@@ -302,6 +303,8 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
 
     const token = setSessionCookies(res, user);
+    // Acabou de provar quem e (senha/Google): o painel abre ja, sem pedir o PIN (12.4).
+    if (needsUnlock(user)) setUnlocked(res, user);
 
     return res.json({
       token,
@@ -390,6 +393,8 @@ router.post('/google', googleLimiter, async (req, res) => {
 
     // Antes o login Google nao emitia refresh token (diferente do login normal).
     const token = setSessionCookies(res, user);
+    // Acabou de provar quem e (senha/Google): o painel abre ja, sem pedir o PIN (12.4).
+    if (needsUnlock(user)) setUnlocked(res, user);
 
     return res.json({
       token,
@@ -524,6 +529,7 @@ router.post('/logout', (req, res) => {
   // Antes so apagava o access token: o refresh token (30 dias) ficava no
   // browser e /api/refresh devolvia a sessao depois do "logout".
   clearSessionCookies(res);
+  clearUnlocked(res);
   return res.json({ message: 'Sessão encerrada.' });
 });
 
@@ -545,9 +551,15 @@ router.get('/me', async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true, language: true }
+      select: { id: true, role: true, name: true, email: true, tenant_id: true, is_active: true, language: true, password_hash: true, lock_pin_hash: true }
     });
     if (!user || !user.is_active) return res.status(401).json({ error: 'Conta inactiva ou não encontrada' });
+    // Fase 12.4: o painel do dono sabe se tem de pedir o PIN (nunca sai nenhum hash).
+    const lock = user.role === 'owner' && !payload.scope
+      ? { has_pin: Boolean(user.lock_pin_hash), unlocked: !user.lock_pin_hash || Boolean(readUnlocked(req, user)) }
+      : undefined;
+    delete user.password_hash;
+    delete user.lock_pin_hash;
     if (user.tenant_id) {
       const tenant = await prisma.tenant.findUnique({
         where: { id: user.tenant_id },
@@ -560,6 +572,7 @@ router.get('/me', async (req, res) => {
         user: {
           ...user,
           scope: payload.scope || null,
+          lock,
           tenant: tenant ? { name: tenant.name, location: tenant.location } : null,
         },
       });

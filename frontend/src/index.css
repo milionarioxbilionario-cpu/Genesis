@@ -35,6 +35,12 @@
   .scrollbar-none::-webkit-scrollbar { display: none; }
 }
 
+/* POS (12.5): altura real do ecra visivel. No Safari do iPhone 100vh inclui a
+   area atras das barras do browser e o botao Cobrar ficava escondido. */
+.pos-root { height: 100vh; height: 100dvh; }
+/* Espaco da barra do iPhone (home) por baixo dos botoes de baixo. */
+.pos-safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+
 /* POS: a faixa da ultima leitura do leitor entra de cima (feedback, nao decoracao). */
 .pos-scan { animation: pos-scan-in var(--dur) var(--ease); }
 @keyframes pos-scan-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }

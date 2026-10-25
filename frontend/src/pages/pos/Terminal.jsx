@@ -4,6 +4,7 @@ import { Lock, Monitor } from 'lucide-react';
 import api from '../../utils/api';
 import { errorMessage } from '../../utils/format';
 import { clearCatalog } from '../../utils/productCache';
+import { checkOfflinePin, clearSnapshots, isOfflineError, loadSnapshot, pruneVerifiers, rememberPin, saveSnapshot } from '../../utils/offlinePin';
 import { BrandMark, Alert, Button, Input, LanguageSwitch, PinPad, Spinner, cx } from '../../components/ui';
 import { setLang, storedLang } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
@@ -24,15 +25,36 @@ export default function Terminal() {
     try {
       const res = await api.get('/api/pos/terminal', { silent: true });
       const d = res.data;
+      // 12.2: copia para abrir sem rede (sem a sessao, que so o servidor conhece)
+      // e limpeza dos PINs guardados de perfis removidos ou com PIN mudado.
+      saveSnapshot(SNAPSHOT_KEY, { ...d, session_cashier_id: null });
+      pruneVerifiers(`cashier:${d.terminal.id}:`, Object.fromEntries(d.cashiers.map((c) => [pinKey(d, c), c.pin_v])));
       const cashier = d.cashiers.find((c) => c.id === d.session_cashier_id);
-      setState(cashier ? { status: 'selling', info: d, cashier } : { status: 'profiles', info: d });
+      setState((s) => {
+        // Ja a vender sem rede: a rede voltou, o caixista continua (a fila envia as
+        // vendas pelo cookie do terminal); so os ecras seguintes pedem o PIN.
+        if (s.status === 'selling' && s.offline) return { ...s, info: d, offline: false };
+        return cashier ? { status: 'selling', info: d, cashier } : { status: 'profiles', info: d };
+      });
     } catch (err) {
-      if (err?.response?.data?.code === 'TERMINAL_NOT_PAIRED') setState({ status: 'pair' });
+      if (err?.response?.data?.code === 'TERMINAL_NOT_PAIRED') { clearSnapshots(SNAPSHOT_KEY); setState({ status: 'pair' }); return; }
+      const snap = isOfflineError(err) ? await loadSnapshot(SNAPSHOT_KEY) : null;
+      if (snap) setState((s) => (s.status === 'selling' ? s : { status: 'profiles', info: snap.data, offline: true, savedAt: snap.saved_at }));
       else setState({ status: 'error', message: errorMessage(err, 'Não foi possível contactar o servidor.') });
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Sem rede: volta a tentar quando o aparelho diz que ha rede e de 20 em 20 s.
+  const offline = Boolean(state.offline);
+  useEffect(() => {
+    if (!offline) return undefined;
+    const retry = () => load();
+    window.addEventListener('online', retry);
+    const timer = setInterval(retry, 20000);
+    return () => { window.removeEventListener('online', retry); clearInterval(timer); };
+  }, [offline, load]);
 
   const sellingId = state.status === 'selling' ? state.cashier.id : null;
   useEffect(() => {
@@ -69,7 +91,11 @@ export default function Terminal() {
         info={state.info}
         cashier={state.cashier}
         askDevices={Boolean(state.justLoggedIn)}
-        onLock={async () => { await api.post('/api/pos/lock').catch(() => {}); load(); }}
+        onLock={async () => {
+          await api.post('/api/pos/lock').catch(() => {});
+          if (state.offline) setState({ status: 'profiles', info: state.info, offline: true, savedAt: state.savedAt });
+          else load();
+        }}
       />
     );
   }
@@ -77,10 +103,15 @@ export default function Terminal() {
     <ProfilesScreen
       info={state.info}
       notice={state.notice}
-      onLoggedIn={(cashier) => setState({ status: 'selling', info: state.info, cashier, justLoggedIn: true })}
+      offline={offline}
+      savedAt={state.savedAt}
+      onLoggedIn={(cashier, viaOffline) => setState({ status: 'selling', info: state.info, cashier, justLoggedIn: !viaOffline, offline: viaOffline, savedAt: state.savedAt })}
     />
   );
 }
+
+const SNAPSHOT_KEY = 'terminal:info';
+const pinKey = (info, cashier) => `cashier:${info.terminal.id}:${cashier.id}`;
 
 function Centered({ children }) {
   return <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-4">{children}</div>;
@@ -130,20 +161,33 @@ function PairScreen({ onPaired }) {
   );
 }
 
-function ProfilesScreen({ info, notice, onLoggedIn }) {
+function ProfilesScreen({ info, notice, offline, savedAt, onLoggedIn }) {
   const { t } = useI18n();
   const [selected, setSelected] = useState(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // Sem rede: o PIN e comparado com o verificador guardado na ultima entrada com rede.
+  async function loginOffline(value) {
+    const check = await checkOfflinePin(pinKey(info, selected), value);
+    if (check.result === 'ok') { onLoggedIn(selected, true); return; }
+    setPin('');
+    if (check.result === 'unknown') setError(t('Sem ligação: este perfil ainda não entrou com internet neste aparelho. Entre uma vez com internet para poder vender sem ela.'));
+    else if (check.result === 'locked') setError(t('Demasiados PINs errados. Espere 15 minutos ou ligue a internet.'));
+    else setError(t('PIN incorrecto.') + ' ' + t('Restam {n} tentativa(s).', { n: check.remaining }));
+  }
+
   async function login(value) {
     if (busy || !selected) return;
     setBusy(true); setError('');
     try {
+      if (offline) { await loginOffline(value); return; }
       const res = await api.post('/api/pos/login', { cashier_id: selected.id, pin: value });
-      onLoggedIn({ ...selected, language: res.data?.cashier?.language || selected.language });
+      rememberPin(pinKey(info, selected), value, selected.pin_v);
+      onLoggedIn({ ...selected, language: res.data?.cashier?.language || selected.language }, false);
     } catch (err) {
+      if (isOfflineError(err)) { await loginOffline(value); return; }
       setPin('');
       const rem = err?.response?.data?.remaining;
       setError(errorMessage(err, 'PIN incorrecto.') + (typeof rem === 'number' ? ' ' + t('Restam {n} tentativa(s).', { n: rem }) : ''));
@@ -164,6 +208,12 @@ function ProfilesScreen({ info, notice, onLoggedIn }) {
           <div className="w-full max-w-3xl">
             <h1 className="text-xl font-semibold tracking-tight text-ink">{t('Quem está a vender?')}</h1>
             <p className="mt-1 text-base text-ink-muted">{t('Escolha o seu perfil e introduza o seu PIN.')}</p>
+            {offline && (
+              <Alert tone="warning" className="mt-5" title={t('Sem ligação à internet')}>
+                {t('Pode vender na mesma: as vendas ficam guardadas neste aparelho e são enviadas quando a internet voltar.')}
+                {savedAt && <> {t('Perfis guardados às {time}.', { time: new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}</>}
+              </Alert>
+            )}
             {notice && <Alert tone="info" className="mt-5">{t(notice)}</Alert>}
             {info.cashiers.length === 0 ? (
               <Alert tone="warning" className="mt-6" title={t('Ainda não há caixistas')}>{t('O dono cria os caixistas e os PINs em Equipa.')}</Alert>

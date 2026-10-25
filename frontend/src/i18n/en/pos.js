@@ -27,6 +27,16 @@ addTranslations('en', {
   'PIN incorrecto.': 'Wrong PIN.',
   'Restam {n} tentativa(s).': '{n} attempt(s) left.',
   'A sua língua': 'Your language',
+  // Fase 12.5: telemovel
+  '{n} artigo(s)': '{n} item(s)',
+  'Toque num produto para começar': 'Tap a product to start',
+  'Voltar aos produtos': 'Back to products',
+  // Fase 12.2: terminal sem rede
+  'Sem ligação à internet': 'No internet connection',
+  'Pode vender na mesma: as vendas ficam guardadas neste aparelho e são enviadas quando a internet voltar.': 'You can keep selling: sales are saved on this device and sent when the internet comes back.',
+  'Perfis guardados às {time}.': 'Profiles saved at {time}.',
+  'Sem ligação: este perfil ainda não entrou com internet neste aparelho. Entre uma vez com internet para poder vender sem ela.': 'Offline: this profile has not signed in with internet on this device yet. Sign in once with internet to be able to sell without it.',
+  'Demasiados PINs errados. Espere 15 minutos ou ligue a internet.': 'Too many wrong PINs. Wait 15 minutes or connect to the internet.',
   // 9.5: ecra de venda
   'Cartão': 'Card',
   'M-Pesa': 'M-Pesa',
@@ -117,7 +127,6 @@ addTranslations('en', {
   'As minhas últimas vendas': 'My latest sales',
   'Só é possível cancelar vendas de hoje.': 'Only today\'s sales can be cancelled.',
   'Ainda não há vendas.': 'No sales yet.',
-  '{n} artigo(s)': '{n} item(s)',
   'Pesquisar…': 'Search…',
   'Escolher produto': 'Choose product',
   'Quebra registada: {n} × {name}.': 'Breakage recorded: {n} × {name}.',

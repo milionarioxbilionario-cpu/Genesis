@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, CircleAlert, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Settings2, Trash2, WifiOff } from 'lucide-react';
+import { Camera, ChevronUp, CircleAlert, ClipboardCheck, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Settings2, ShoppingBasket, Trash2, WifiOff, X } from 'lucide-react';
 import BarcodeScanner from '../../components/BarcodeScanner';
 import DevicesDialog from './DevicesDialog';
 import { wasAsked } from '../../utils/devices';
@@ -13,6 +13,9 @@ import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { BrandMark, Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
+
+// Ecra de toque (telemovel/tablet): decide o foco automatico da pesquisa.
+const TOUCH = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
 
 const PAYMENTS = [
   { value: 'cash', label: 'Dinheiro' },
@@ -49,6 +52,8 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [shift, setShift] = useState(null);
+  // 12.5: no telemovel o cesto abre por cima dos produtos (barra fixa em baixo).
+  const [cartOpen, setCartOpen] = useState(false);
   const [dialog, setDialog] = useState(null); // 'pin' | 'close' | 'recent' | 'shrink' | 'demand' | {openShift} | {receipt}
   const [scan, setScan] = useState(null); // ultima leitura: { code, name?, ok, at }
   const pendingSale = useRef(null);
@@ -78,7 +83,9 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
     const t = setInterval(() => { refreshCatalog(); refreshShift(); }, 30000);
     return () => clearInterval(t);
   }, [catalogSource, isOnline, refreshCatalog, refreshShift]);
-  useEffect(() => { if (!dialog && !devicesOpen && !camera) searchRef.current?.focus(); }, [dialog, cart.length, devicesOpen, camera]);
+  // Ecras de toque: sem foco automatico (no iPhone abria o teclado a cada produto).
+  useEffect(() => { if (!dialog && !devicesOpen && !camera && !TOUCH) searchRef.current?.focus(); }, [dialog, cart.length, devicesOpen, camera]);
+  useEffect(() => { if (!cart.length) setCartOpen(false); }, [cart.length]);
 
   const categories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(), [products]);
   const visible = useMemo(() => {
@@ -246,7 +253,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   chargeRef.current = () => charge();
 
   return (
-    <div className="flex h-screen flex-col bg-bg">
+    <div className="pos-root flex flex-col bg-bg">
       {/* Barra superior */}
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-4 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -270,7 +277,8 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           {/* Lingua do caixista (9.3): guardada na conta dele, nao no aparelho. No
               telemovel nao cabe aqui: fica no dialogo Dispositivos. */}
           <LanguageSwitch compact remember={false} onChange={saveLanguage} className="hidden px-2 sm:inline-flex" />
-          <Button size="sm" onClick={() => setDialog('close')}>{t('Fechar turno')}</Button>
+          <Button size="sm" className="hidden sm:inline-flex" onClick={() => setDialog('close')}>{t('Fechar turno')}</Button>
+          <IconButton label={t('Fechar turno')} icon={ClipboardCheck} size="sm" variant="secondary" className="sm:hidden" onClick={() => setDialog('close')} />
           <IconButton label={t('Bloquear terminal')} icon={Lock} size="sm" variant="secondary" onClick={onLock} />
         </div>
       </header>
@@ -295,9 +303,9 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         <Alert tone="info" className="m-4 mb-0">{t('Sem ligação: a usar o catálogo guardado neste terminal. As vendas são enviadas quando a ligação voltar.')}</Alert>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {/* Produtos */}
-        <section className="flex min-h-0 flex-1 flex-col p-4">
+        <section className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
           <div className="flex items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
@@ -332,7 +340,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
               </span>
             </div>
           )}
-          <div ref={gridRef} onKeyDown={onGridKey} className="mt-3 grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto p-0.5 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div ref={gridRef} onKeyDown={onGridKey} className="mt-3 grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto p-0.5 pb-3 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {visible.map((p) => {
               const out = (p.stock_qty || 0) <= 0;
               const low = !out && p.stock_qty <= (p.min_stock || 5);
@@ -355,11 +363,34 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           </div>
         </section>
 
-        {/* Cesto */}
-        <aside className="flex max-h-[55vh] w-full shrink-0 flex-col border-t border-border bg-surface lg:max-h-none lg:w-[400px] lg:border-l lg:border-t-0">
+        {/* Telemovel: barra fixa com o total; toca para abrir o cesto e cobrar. */}
+        <div className="pos-safe-bottom shrink-0 border-t border-border bg-surface px-3 pt-3 md:hidden">
+          <button
+            type="button"
+            disabled={!cart.length}
+            onClick={() => setCartOpen(true)}
+            className="flex h-14 w-full items-center gap-3 rounded-lg bg-accent px-4 text-left text-white transition-colors hover:bg-accent-hover disabled:bg-subtle disabled:text-ink-muted"
+          >
+            <ShoppingBasket size={20} className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate text-base font-medium">
+              {cart.length ? t('{n} artigo(s)', { n: cart.reduce((n, l) => n + l.quantity, 0) }) : t('Toque num produto para começar')}
+            </span>
+            {cart.length > 0 && <span className="num shrink-0 text-lg font-semibold">{money(total)}</span>}
+            {cart.length > 0 && <ChevronUp size={18} className="shrink-0" />}
+          </button>
+        </div>
+
+        {/* Cesto: coluna fixa a partir do tablet; no telemovel, ecra por cima. */}
+        <aside className={cx(
+          'flex-col bg-surface md:static md:flex md:w-[340px] md:shrink-0 md:border-l md:border-border lg:w-[400px]',
+          cartOpen ? 'pos-root fixed inset-x-0 top-0 z-30 flex' : 'hidden',
+        )}>
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="font-semibold text-ink">{t('Venda actual')}</h2>
-            {cart.length > 0 && <Button size="sm" variant="ghost" onClick={resetSale}>{t('Limpar')}</Button>}
+            <span className="flex items-center gap-1">
+              {cart.length > 0 && <Button size="sm" variant="ghost" onClick={resetSale}>{t('Limpar')}</Button>}
+              <IconButton label={t('Voltar aos produtos')} icon={X} size="sm" variant="ghost" className="md:hidden" onClick={() => setCartOpen(false)} />
+            </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {cart.length === 0 ? (
@@ -380,7 +411,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
             ))}
           </div>
 
-          <div className="border-t border-border px-4 py-3">
+          <div className="pos-safe-bottom max-h-[75%] shrink-0 overflow-y-auto border-t border-border px-4 py-3 md:max-h-none">
             <div className="flex justify-between py-1 text-base text-ink-2"><span>{t('Subtotal')}</span><span className="num">{money(subtotal)}</span></div>
             {showDiscount ? (
               <div className="py-1">

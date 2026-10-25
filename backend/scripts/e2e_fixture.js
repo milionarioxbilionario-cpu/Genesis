@@ -1,8 +1,10 @@
 // Dados para os testes de browser (frontend/tests/e2e). Cria uma loja
 // descartavel com dono, caixista com PIN e produtos; ou apaga-a.
-//   node scripts/e2e_fixture.js create <ficheiro.json> [onboarding|fecho|demo]
+//   node scripts/e2e_fixture.js create <ficheiro.json> [onboarding|fecho|demo|sempin]
 //   node scripts/e2e_fixture.js delete <ficheiro.json>
 // Com "onboarding": loja nova, sem produtos nem custos e com o assistente por fazer.
+// Fase 12.4: o dono ja tem o PIN do painel (1357), como qualquer dono depois do
+// 1.o acesso; com "sempin" fica sem ele (o painel pede para o criar).
 require('dotenv').config();
 const fs = require('fs');
 const crypto = require('crypto');
@@ -18,9 +20,9 @@ async function create(file, mode) {
     phone: '841234567', status: 'trial', trial_ends_at: new Date(Date.now() + 21 * 86400000), onboarding_completed: !fresh,
     discount_free_pct: 10, cancel_pin_hash: await bcrypt.hash('4321', 10), opening_time: '08:00', closing_time: '21:00',
   } });
-  const owner = await prisma.user.create({ data: { tenant_id: tenant.id, role: 'owner', name: 'Ana Machava', email: tag.toLowerCase() + '@teste.local', password_hash: await bcrypt.hash(ownerPw, 12), is_active: true } });
+  const owner = await prisma.user.create({ data: { tenant_id: tenant.id, role: 'owner', name: 'Ana Machava', email: tag.toLowerCase() + '@teste.local', password_hash: await bcrypt.hash(ownerPw, 12), is_active: true, lock_pin_hash: mode === 'sempin' ? null : await bcrypt.hash('1357', 10) } });
   const cashier = await prisma.user.create({ data: { tenant_id: tenant.id, role: 'cashier', name: 'Carlos', email: tag.toLowerCase() + '-caixa@pos.genesis.local', password_hash: await bcrypt.hash(crypto.randomBytes(12).toString('hex'), 10), pin_hash: await bcrypt.hash('2468', 10), is_active: true } });
-  const out = { tenantId: tenant.id, owner: { email: owner.email, password: ownerPw }, cashier: { id: cashier.id, name: cashier.name, pin: '2468' }, authPin: '4321' };
+  const out = { tenantId: tenant.id, owner: { email: owner.email, password: ownerPw }, cashier: { id: cashier.id, name: cashier.name, pin: '2468' }, authPin: '4321', lockPin: mode === 'sempin' ? null : '1357' };
   if (fresh) {
     fs.writeFileSync(file, JSON.stringify(out, null, 2));
     console.log('fixture (onboarding) criada: ' + tenant.id);
@@ -126,7 +128,7 @@ async function remove(file) {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const m of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion']) {
+  for (const m of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
     await prisma[m].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });

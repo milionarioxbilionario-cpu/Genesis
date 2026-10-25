@@ -82,7 +82,7 @@ function Sidebar({ tenant, onNavigate }) {
 }
 
 export default function AppShell() {
-  const { user, loading } = useSession();
+  const { user, loading, offline: sessionOffline } = useSession();
   const { t } = useI18n();
   const location = useLocation();
   const online = useOnline();
@@ -116,6 +116,11 @@ export default function AppShell() {
       )}
 
       <div className="lg:pl-60">
+        {(sessionOffline || !online) && (
+          <div className="no-print bg-warning px-4 py-1.5 text-center text-sm font-medium text-white">
+            {t('Sem ligação — a mostrar os dados guardados neste aparelho. Só consulta: nada pode ser alterado até a internet voltar.')}
+          </div>
+        )}
         {user?.scope === 'support' && (
           <div className="no-print bg-info px-4 py-1.5 text-center text-sm font-medium text-white">{t('Modo suporte Genesis — só leitura. Nenhuma alteração é possível.')}</div>
         )}
