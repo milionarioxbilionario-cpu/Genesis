@@ -27,7 +27,9 @@ function SalesTable() {
   const cashiers = useApi('/api/owner/cashiers');
   const query = useMemo(() => {
     const p = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE) });
-    for (const [k, v] of Object.entries(filters)) if (v) p.set(k, v);
+    // «Até hoje» vai sem limite: com o relogio do aparelho atrasado (ja aconteceu), o
+    // «hoje» do aparelho era ontem para o servidor e as vendas de agora nao apareciam.
+    for (const [k, v] of Object.entries(filters)) if (v && !(k === 'to' && v === isoDay())) p.set(k, v);
     return '/api/owner/sales?' + p.toString();
   }, [filters, page]);
   const { data, loading } = useApi(query);
