@@ -132,4 +132,4 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   };
 }
 
-module.exports = { getShiftState, closeShiftBlind, shiftStatus };
+module.exports = { getShiftState, closeShiftBlind, shiftStatus, firstActivityAt };

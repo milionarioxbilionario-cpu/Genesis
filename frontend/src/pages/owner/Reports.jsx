@@ -5,7 +5,7 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { lossReason, timelineDetail, timelineExtra, timelineTitle, timelineWhen, timelineWho } from '../../utils/timelineText';
 import PdfButton from '../../components/PdfButton';
-import { money, int, isoDay, date, dateTime, monthName, PAYMENT_LABEL } from '../../utils/format';
+import { money, int, isoDay, date, dateTime, monthName, PAYMENT_LABEL, axisMoney } from '../../utils/format';
 import { getLang, locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import SaleDrawer from '../../components/SaleDrawer';
@@ -17,7 +17,6 @@ function NoData() {
   return <div className="flex h-full items-center justify-center text-base text-ink-muted">{t('Sem vendas neste período.')}</div>;
 }
 
-const chartMoney = (v) => (v / 100).toLocaleString(locale(), { maximumFractionDigits: 0 });
 const tooltipStyle = { border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 };
 // Portugues como sempre foi ("segunda, 12/10"); ingles pelo Intl ("Monday, 12/10").
 const WEEKDAYS_PT = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -320,7 +319,7 @@ function Weekly({ openDay }) {
                     <BarChart data={data.by_day.map((d) => ({ ...d, label: d.date.slice(8, 10) + '/' + d.date.slice(5, 7) }))} margin={{ left: -12, right: 4, top: 4 }}>
                       <CartesianGrid vertical={false} stroke="var(--border)" />
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                      <YAxis width={80} tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                      <YAxis width={80} tickFormatter={axisMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                       <Tooltip cursor={{ fill: 'var(--subtle)' }} formatter={(v) => [money(v), t('Receita')]} contentStyle={tooltipStyle} />
                       <Bar isAnimationActive={false} dataKey="revenue" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                     </BarChart>
@@ -455,7 +454,7 @@ function Monthly() {
                     <BarChart data={data.revenue_history.map((m) => ({ ...m, label: monthName(Number(m.key.slice(5))).slice(0, 3) }))} margin={{ left: -12, right: 4, top: 4 }}>
                       <CartesianGrid vertical={false} stroke="var(--border)" />
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                      <YAxis width={80} tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                      <YAxis width={80} tickFormatter={axisMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                       <Tooltip cursor={{ fill: 'var(--subtle)' }} formatter={(v) => [money(v), t('Receita')]} contentStyle={tooltipStyle} />
                       <Bar isAnimationActive={false} dataKey="revenue" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={32} />
                     </BarChart>

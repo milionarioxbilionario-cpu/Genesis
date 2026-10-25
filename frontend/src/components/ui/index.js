@@ -8,3 +8,4 @@ export { ProductImage, categoryIcon } from './ProductImage';
 export { PRODUCT_ICONS, iconByKey } from './productIcons';
 export { LanguageSwitch } from './LanguageSwitch';
 export { BrandMark } from './BrandMark';
+export { useCountUp, CountUpMoney, CountUpInt } from './CountUp';

@@ -21,6 +21,7 @@ const { sendWhatsAppAlert } = require('../utils/whatsapp');
 const { reqLang, tr } = require('../utils/lang');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
 const { loadOwnerNotifications } = require('../services/notifications');
+const { ownerOverview } = require('../services/overview');
 const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
 const { invalidateSessionUser } = require('../utils/sessionUser');
@@ -352,6 +353,11 @@ router.post('/debts/:id/payment', asyncHandler(async (req, res) => {
 }));
 
 // ---------------------------------------------------------------- metas
+// Fase 13: visao geral curta do Inicio (hoje, meta, turnos, ultimas vendas) num so pedido.
+router.get('/overview', asyncHandler(async (req, res) => {
+  res.json(await ownerOverview(tenantOf(req)));
+}));
+
 router.get('/goals/current', asyncHandler(async (req, res) => {
   const now = new Date();
   const month = now.getMonth() + 1;

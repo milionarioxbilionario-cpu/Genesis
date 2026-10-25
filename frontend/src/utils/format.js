@@ -17,12 +17,27 @@ function numberFmt(kind) {
   return fmtCache.get(key);
 }
 
-export function money(cents, { sign = false } = {}) {
+// Modo privado (Fase 13): no painel do dono os valores podem ficar escondidos
+// ("•••• MT") para quem esta ao lado nao ver. Ligado por utils/privacy.jsx.
+// Os PDFs (recibo, relatorios) usam moneyExact: um documento sai sempre certo.
+let moneyHidden = false;
+export const setMoneyHidden = (v) => { moneyHidden = Boolean(v); };
+export const isMoneyHidden = () => moneyHidden;
+export const HIDDEN_MONEY = '•••• MT';
+
+export function money(cents, opts) {
+  return moneyHidden ? HIDDEN_MONEY : moneyExact(cents, opts);
+}
+
+export function moneyExact(cents, { sign = false } = {}) {
   const n = Number(cents || 0) / 100;
   const s = numberFmt('money').format(Math.abs(n)) + ' MT';
   if (n < 0) return '−' + s;
   return sign && n > 0 ? '+' + s : s;
 }
+
+// Eixos dos graficos (sem casas decimais); no modo privado ficam em branco.
+export const axisMoney = (cents) => (moneyHidden ? '' : (Number(cents || 0) / 100).toLocaleString(locale(), { maximumFractionDigits: 0 }));
 
 export const int = (n) => numberFmt('int').format(Number(n || 0));
 

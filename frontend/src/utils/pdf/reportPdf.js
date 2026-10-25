@@ -3,7 +3,8 @@
 // do ecra principal do iPhone (teste do fundador, 10/10/2026).
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { money, int, date, dateTime, PAYMENT_LABEL } from '../format';
+// PDF sai sempre com os valores, mesmo no modo privado.
+import { moneyExact as money, int, date, dateTime, PAYMENT_LABEL } from '../format';
 import { lossReason, timelineDetail, timelineExtra, timelineTitle, timelineValueText, timelineWhen, timelineWho } from '../timelineText';
 import { pdfText, safeFileName } from './text';
 import { getLang, locale, t } from '../../i18n/core.js';

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
+import { BarChart3, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
+import { PrivacyContext, usePrivacy, usePrivacyState } from '../utils/privacy';
 import api, { saveLanguage } from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
 import { BrandMark, cx, IconButton, LanguageSwitch } from '../components/ui';
@@ -81,6 +82,13 @@ function Sidebar({ tenant, onNavigate }) {
   );
 }
 
+// Olho do modo privado: esconde os valores em dinheiro de todo o painel.
+function PrivacyToggle() {
+  const { hidden, toggle } = usePrivacy();
+  const { t } = useI18n();
+  return <IconButton label={hidden ? t('Mostrar valores') : t('Esconder valores')} icon={hidden ? EyeOff : Eye} variant={hidden ? 'secondary' : 'ghost'} onClick={toggle} aria-pressed={hidden} />;
+}
+
 export default function AppShell() {
   const { user, loading, offline: sessionOffline } = useSession();
   const { t } = useI18n();
@@ -88,6 +96,7 @@ export default function AppShell() {
   const online = useOnline();
   const [tenant, setTenant] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const privacy = usePrivacyState(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -103,6 +112,7 @@ export default function AppShell() {
     ? Math.ceil((new Date(tenant.trial_ends_at) - Date.now()) / 86400000) : null;
 
   return (
+    <PrivacyContext.Provider value={privacy}>
     <div className="min-h-screen bg-bg">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-surface lg:block">
         <Sidebar tenant={tenant} />
@@ -135,14 +145,18 @@ export default function AppShell() {
               </span>
             )}
             {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}
+            <PrivacyToggle />
             {user?.role === 'owner' && <NotificationBell />}
           </div>
         </header>
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">
-          <Outlet context={{ tenant, reloadTenant: () => api.get('/api/owner/tenant').then((r) => setTenant(r.data)) }} />
+          {/* key: o React Router devolve sempre o mesmo elemento da pagina; ao mudar o modo
+              privado a pagina volta a montar para todos os money() mudarem. */}
+          <Outlet key={privacy.hidden ? 'privado' : 'visivel'} context={{ tenant, reloadTenant: () => api.get('/api/owner/tenant').then((r) => setTenant(r.data)) }} />
         </main>
         {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <MonthCloseDialog />}
       </div>
     </div>
+    </PrivacyContext.Provider>
   );
 }

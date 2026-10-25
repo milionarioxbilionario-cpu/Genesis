@@ -3,7 +3,8 @@
 // continua a imprimir pelo dialogo de impressao (receiptPrinter.js).
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { money } from '../format';
+// PDF sai sempre com os valores, mesmo no modo privado.
+import { moneyExact as money } from '../format';
 import { pdfText, safeFileName, dmy, hms } from './text';
 import { getLang, locale, t } from '../../i18n/core.js';
 

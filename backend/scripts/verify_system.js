@@ -1706,7 +1706,85 @@ async function test32() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32 };
+// ---------------------------------------------------------------------------
+async function test33() {
+  section(33, 'Visao geral do dono: hoje vs ontem a mesma hora, meta, turno de cada caixista, ultimas vendas (Fase 13)');
+  const { ownerOverview } = require('../src/services/overview');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  const extra = await prisma.user.create({ data: {
+    tenant_id: t, role: 'cashier', name: 'Zara Teste', email: 'zara-' + crypto.randomUUID() + '@teste.local',
+    password_hash: await bcrypt.hash(crypto.randomBytes(12).toString('hex'), 10), pin_hash: await bcrypt.hash('1111', 10), is_active: true } });
+  const made = [];
+  try {
+    const before = await owner.req('GET', '/api/owner/overview');
+    ok(before.status === 200 && before.data?.today && before.data.month && Array.isArray(before.data.cashiers) && Array.isArray(before.data.recent_sales), 'dono: 200 com hoje, mes, caixistas e ultimas vendas', before.status);
+    const zara0 = before.data.cashiers.find((c) => c.id === extra.id);
+    ok(zara0?.state === 'not_started', 'caixista sem actividade hoje: «ainda nao abriu» (laranja)', zara0);
+
+    // Venda de hoje: entra no total, no numero de vendas e nas ultimas vendas.
+    const term = await cashierTerminal();
+    const sale = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }));
+    ok(sale.status === 201, 'venda de 100 MT no terminal', sale.status);
+    if (sale.data?.id) made.push(sale.data.id);
+    const after = (await owner.req('GET', '/api/owner/overview')).data;
+    ok(after.today.revenue === before.data.today.revenue + 10000 && after.today.sales_count === before.data.today.sales_count + 1, 'hoje: +100 MT e +1 venda', [before.data.today.revenue, after.today.revenue]);
+    ok(after.today.gross_profit === before.data.today.gross_profit + 4000, 'lucro bruto de hoje: +40 MT (100 - 60 de custo)', [before.data.today.gross_profit, after.today.gross_profit]);
+    ok(after.today.by_hour.length === new Date().getHours() + 1 && after.today.by_hour.reduce((s, h) => s + h.revenue, 0) === after.today.revenue, 'grafico por hora soma o total de hoje');
+    ok(after.recent_sales[0]?.id === sale.data?.id && after.recent_sales.length <= 5 && after.recent_sales[0].cashier === ctx.cashier.name, 'a venda e a 1.a das ultimas vendas, com o nome do caixista', after.recent_sales[0]);
+    const carlos = after.cashiers.find((c) => c.id === ctx.cashier.id);
+    ok(carlos?.state === 'working' && carlos.today_sales >= 1, 'caixista que entrou e vendeu hoje: «a trabalhar» (verde)', carlos);
+    ok(after.month.revenue >= after.today.revenue && after.month.by_day.length === new Date().getDate(), 'mes: acumulado inclui hoje e tem um ponto por dia');
+    const acc = after.month.by_day[after.month.by_day.length - 1].accumulated;
+    ok(acc === after.month.revenue, 'acumulado do ultimo dia = receita do mes', [acc, after.month.revenue]);
+
+    // Ontem a mesma hora: uma venda de ontem 1 h antes desta hora conta; depois desta hora nao.
+    const y1 = new Date(Date.now() - 86400000 - 3600000);
+    const y2 = new Date(Date.now() - 86400000 + 3600000);
+    for (const [when, amount] of [[y1, 5000], [y2, 70000]]) {
+      // Noutro caixista: no turno aberto do Carlos, uma venda de ontem fazia o fecho contar como de ontem (turno 24/24).
+      const s = await prisma.sale.create({ data: { tenant_id: t, cashier_user_id: extra.id, total_amount: amount, total_cost: 0, payment_method: 'cash', amount_received: amount, change_given: 0, status: 'completed', daily_number: 900 + made.length, created_at: when } });
+      made.push(s.id);
+    }
+    const cmp = (await owner.req('GET', '/api/owner/overview')).data;
+    const sameDay = y1.getDate() === new Date(Date.now() - 86400000).getDate() && y2.getDate() === y1.getDate();
+    if (sameDay) ok(cmp.today.yesterday_same_time - after.today.yesterday_same_time === 5000, 'ontem «a mesma hora» conta so ate esta hora (5 000 sim, 70 000 depois nao)', [after.today.yesterday_same_time, cmp.today.yesterday_same_time]);
+    else ok(true, 'ontem a mesma hora: perto da meia-noite, verificacao saltada');
+
+    // Meta: percentagem, quanto falta, projeccao.
+    const g = await owner.req('POST', '/api/owner/goals', { target_amount: cmp.month.revenue * 4 || 100000 });
+    ok(g.status === 200 || g.status === 201, 'meta definida', g.status);
+    const m = (await owner.req('GET', '/api/owner/overview')).data.month;
+    ok(m.has_goal && Math.abs(m.pct - 25) <= 0.1 && m.remaining === m.target - m.revenue, 'meta: 25% e quanto falta certo', m);
+
+    // Fecho de turno: cinzento; com dinheiro a menos: vermelho.
+    const close = await term.req('POST', '/api/pos/shift/close', { declared_amount: 999999 });
+    ok(close.status === 200 || close.status === 201, 'caixista fecha o turno (contou a mais)', close);
+    const closed = (await owner.req('GET', '/api/owner/overview')).data.cashiers.find((c) => c.id === ctx.cashier.id);
+    ok(closed?.state === 'closed', 'turno fechado hoje: «turno fechado» (cinzento)', closed);
+    const short = await prisma.shiftClosing.findFirst({ where: { tenant_id: t, cashier_user_id: ctx.cashier.id }, orderBy: { closed_at: 'desc' } });
+    await prisma.shiftClosing.update({ where: { id: short.id }, data: { difference: -2500 } });
+    const red = (await owner.req('GET', '/api/owner/overview')).data.cashiers.find((c) => c.id === ctx.cashier.id);
+    ok(red?.state === 'short' && red.last_closing_difference === -2500, 'fechou hoje com 25 MT a menos: vermelho (problema)', red);
+    await prisma.shiftClosing.update({ where: { id: short.id }, data: { difference: short.difference } });
+
+    // Papeis e isolamento.
+    ok((await client(signAccessToken(ctx.cashier)).req('GET', '/api/owner/overview')).status === 403, 'caixista: 403');
+    ok((await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('GET', '/api/owner/overview')).status === 403, 'caixista no terminal: 403');
+    ok((await client(signAccessToken(ctx.owner, { scope: 'support' })).req('GET', '/api/owner/overview')).status === 200, 'modo suporte (so leitura): 200');
+    const foreign = await prisma.runWithTenant(crypto.randomUUID(), () => ownerOverview(t));
+    ok(foreign.today.sales_count === 0 && foreign.cashiers.length === 0 && foreign.recent_sales.length === 0, 'no contexto de outra loja nao se ve nada desta (RLS)', foreign.today);
+    const mine = await prisma.runWithTenant(t, () => ownerOverview(t));
+    ok(mine.today.sales_count >= 1 && mine.cashiers.length >= 2, 'contraprova: no contexto desta loja ve-se tudo');
+  } finally {
+    await prisma.saleItem.deleteMany({ where: { sale_id: { in: made } } });
+    await prisma.sale.deleteMany({ where: { id: { in: made } } });
+    await prisma.auditLog.deleteMany({ where: { user_id: extra.id } });
+    await prisma.user.delete({ where: { id: extra.id } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33 };
 
 (async () => {
   await prisma.ready();
