@@ -2079,3 +2079,13 @@ Confirmei no próprio site, como se fosse o robô do Google: as 4 páginas mostr
 Testes no site real: site 46 de 46, painel e terminal 40 de 40 (com uma loja de teste, apagada no fim), terminal sem internet 8 de 8. Nenhum erro.
 Também avisei o Bing (e outros motores de busca) de que há páginas novas, por um serviço chamado IndexNow. Respondeu «aceite».
 A seguir: confirmar no teu Chrome o Google Search Console e o Bing Webmaster Tools, pedir ao Google para ler as páginas novas, e ver se a Cloudflare não está a bloquear as IAs.
+
+
+==================== 25/10/2026 — Google, Bing e IAs (11.5) — fim da parte do site ====================
+Usei o teu Chrome (com a tua conta) para confirmar e terminar o que faltava:
+- Google Search Console: enviei o "mapa do site" e o Google encontrou as 4 páginas. Pedi ao Google para as ler com prioridade (respondeu "Indexação solicitada" nas 4). A página principal já estava no Google, mas era a antiga, vazia.
+- Bing: enviei o mesmo mapa do site (está "a processar").
+- Cloudflare: confirmei que as IAs (ChatGPT, Perplexity, Claude, Gemini) NÃO estão bloqueadas. Não mudei nada lá.
+- Passei o site no teste oficial do Google: a ficha da empresa e da app estão válidas. Corrigi um pormenor que o Google não aceitava e voltei a publicar. Fica só um aviso opcional, a "avaliação de clientes", que só se põe quando houver avaliações verdadeiras.
+- Escrevi um guia simples: "Guia - aparecer no Google.txt" (na pasta do Genesis). Diz o que foi feito, quanto tempo o Google costuma demorar e o que podes fazer para ajudar.
+O Google costuma demorar de alguns dias a algumas semanas a mostrar as páginas novas. Pesquisa "Genesis MZ" daqui a uma semana.

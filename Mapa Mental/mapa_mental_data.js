@@ -1,30 +1,30 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-25T11:42:26.679Z */
+   Gerado em: 2026-10-25T12:04:11.275Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-25T11:42:26.679Z",
+ "generatedAt": "2026-10-25T12:04:11.275Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 286,
+  "files": 288,
   "planned": 5,
   "links": 511,
-  "lines": 40332,
+  "lines": 40400,
   "byStatus": {
    "ok": 193,
    "partial": 8,
    "broken": 0,
    "planned": 5,
-   "untracked": 85
+   "untracked": 87
   },
   "byGroup": {
-   "infra": 24,
+   "infra": 25,
    "docs": 11,
    "admin": 12,
    "backend-data": 68,
    "backend": 63,
-   "frontend-pub": 6,
+   "frontend-pub": 7,
    "frontend": 104,
    "scripts": 3
   }
@@ -132,9 +132,9 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 24,
+   "nodes": 25,
    "clusters": {
-    ".": 7,
+    ".": 8,
     "backend": 1,
     "deploy": 3,
     "frontend": 4,
@@ -211,10 +211,10 @@ window.GENESIS_MINDMAP = {
    "id": "frontend-pub",
    "label": "Frontend - Config",
    "tone": "#0ea5e9",
-   "nodes": 6,
+   "nodes": 7,
    "clusters": {
     "frontend": 4,
-    "frontend/public": 1,
+    "frontend/public": 2,
     "frontend/public/site/shots": 1
    }
   },
@@ -280,6 +280,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "Guia - aparecer no Google.txt",
+   "path": "Guia - aparecer no Google.txt",
+   "label": "Guia - aparecer no Google.txt",
+   "group": "infra",
+   "dir": ".",
+   "ext": ".txt",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 45,
+   "size": 3188,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "Mapa Mental/Mapa_Mental.md",
    "path": "Mapa Mental/Mapa_Mental.md",
    "label": "Mapa_Mental.md",
@@ -292,8 +313,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1166,
-   "size": 246124,
+   "lines": 1187,
+   "size": 250636,
    "externals": [
     "@prisma/client"
    ],
@@ -4434,7 +4455,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 318,
-   "size": 44466,
+   "size": 44279,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4455,7 +4476,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 173,
-   "size": 24044,
+   "size": 23857,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4476,7 +4497,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 318,
-   "size": 44519,
+   "size": 44332,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4518,7 +4539,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 173,
-   "size": 24117,
+   "size": 23930,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4540,6 +4561,27 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 15,
    "size": 618,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/public/05c70f306ca5185ab7e583ccee3071e1.txt",
+   "path": "frontend/public/05c70f306ca5185ab7e583ccee3071e1.txt",
+   "label": "05c70f306ca5185ab7e583ccee3071e1.txt",
+   "group": "frontend-pub",
+   "dir": "frontend/public",
+   "ext": ".txt",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 1,
+   "size": 32,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4811,8 +4853,8 @@ window.GENESIS_MINDMAP = {
    "role": "Site publico.",
    "security": "",
    "planned": false,
-   "lines": 414,
-   "size": 24586,
+   "lines": 415,
+   "size": 24506,
    "externals": [],
    "dependsOn": [
     "frontend/src/ui/marca.js",
