@@ -1548,7 +1548,7 @@
       "status": "ok",
       "summary": "Encaminhamento por sessao, menu movel, saudacao do WhatsApp pela hora.",
       "role": "Site publico.",
-      "notes": "24/10/2026 Fase 11.1: site.mjs 9/9."
+      "notes": "25/10 Fase 14: site novo; site.mjs 54/54 em producao."
     },
     "frontend/src/ui/marca.js": {
       "status": "ok",
@@ -1575,7 +1575,7 @@
       "status": "ok",
       "summary": "Modelo HTML das 4 paginas do site publico (PT/EN), SEO e JSON-LD.",
       "role": "Site publico.",
-      "notes": "25/10/2026: site.test 9/9, site.mjs 46/46."
+      "notes": "25/10 Fase 14: site novo; site.mjs 54/54 em producao."
     },
     "frontend/site/build.js": {
       "status": "ok",
@@ -1664,6 +1664,14 @@
     "frontend/tests/e2e/fase13.mjs": {
       "status": "ok",
       "summary": "Teste de browser da Fase 13 (Inicio, animacao, modo privado, telemovel)."
+    },
+    "frontend/site/textos.pt.js": {
+      "status": "ok",
+      "notes": "25/10 Fase 14: site novo; site.mjs 54/54 em producao."
+    },
+    "frontend/site/textos.en.js": {
+      "status": "ok",
+      "notes": "25/10 Fase 14: site novo; site.mjs 54/54 em producao."
     }
   }
 }

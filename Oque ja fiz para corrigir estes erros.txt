@@ -2117,3 +2117,15 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Os números sobem quando o Início abre e as barras crescem, como no vídeo que mandaste, mas de forma discreta. Quem tem o telemóvel configurado para "menos movimento" vê os números logo, sem animação.
 - Modo privado: há um olho no cabeçalho. Tocando, TODOS os valores em dinheiro do painel ficam "•••• MT" (Início, Relatórios, Produtos...). Fica ligado mesmo depois de fechar. Os recibos e os PDFs saem sempre com os valores certos.
 - Testado no genesismz.com: Início e modo privado 19 de 19; painel e terminal 41 de 41. O Início abre em cerca de 1 segundo.
+
+
+==================== 25/10/2026 — Site novo (Fase 14) — já no genesismz.com ====================
+- No topo do site o botão "Entrar" aparece sempre, também no telemóvel. No computador aparece também "Terminal".
+- A parte de cima ficou no verde da marca, com o dourado nos destaques, e tem logo à vista: "Experimentar grátis", "Falar no WhatsApp", "Entrar no painel" e "Abrir o terminal". Quem já tem conta não precisa de procurar.
+- Os problemas passaram a estar escritos como SOLUÇÕES. Por exemplo, nas validades agora diz claramente: "O Genesis controla as validades: cada compra entra como um lote com a sua data, vende-se primeiro o que expira primeiro, avisa antes de expirar e regista as perdas."
+- Cada funcionalidade tem um resumo e um botão "Ver mais detalhes" com a explicação completa.
+- Secção nova que explica os relatórios um a um: Diário ("Como correu hoje?"), Semanal ("Como foi a semana?") e Mensal ("Quanto lucrei de verdade?").
+- No telemóvel aparece a imagem do telemóvel; no computador, a do computador. As imagens são reais, do Início novo.
+- Os blocos aparecem suavemente quando se desce a página (o "scroll animado"), de forma discreta. Quem não tem JavaScript ou pediu "menos movimento" vê tudo normalmente.
+- O que NÃO pus de propósito: a calculadora de vários estabelecimentos e o plano Premium. Só os ponho quando existirem de verdade (fases 16 e 17).
+- Avisei o Bing/IndexNow de que as páginas mudaram. Testes no site real: 54 de 54.
