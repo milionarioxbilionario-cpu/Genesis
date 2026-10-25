@@ -2108,3 +2108,12 @@ O Google costuma demorar de alguns dias a algumas semanas a mostrar as páginas 
 Testes: tudo testado no computador e depois no próprio genesismz.com (painel e terminal 41 de 41; esta parte nova 29 de 29). As lojas de teste foram todas apagadas; a tua "Loja de Kleyton" está intacta.
 O que preciso que testes no teu iPhone: desligar os dados com o terminal aberto e recarregar; entrar no painel e ver se pede o PIN; activar o Face ID.
 Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Documents\Genesis-copias).
+
+
+==================== 25/10/2026 — Início novo, números animados e modo privado (Fase 13) — já no genesismz.com ====================
+- O Início ficou curto, só com o que disseste que importa: "Hoje até agora" (quanto já entrou, número de vendas, ticket médio, lucro bruto e se está melhor ou pior do que ontem À MESMA HORA), a "Meta do mês" (percentagem, quanto falta e quando lá chegas a este ritmo), "Caixistas agora" e "Últimas vendas".
+- Cores dos caixistas, como combinámos: verde = a trabalhar, cinzento = turno fechado, laranja = ainda não abriu, vermelho = problema (bloqueado, ou fechou com dinheiro a menos).
+- Saiu do Início o que se repetia (stock baixo, chenecas, validades, gráfico de 7 dias): continua no sino e nas páginas próprias.
+- Os números sobem quando o Início abre e as barras crescem, como no vídeo que mandaste, mas de forma discreta. Quem tem o telemóvel configurado para "menos movimento" vê os números logo, sem animação.
+- Modo privado: há um olho no cabeçalho. Tocando, TODOS os valores em dinheiro do painel ficam "•••• MT" (Início, Relatórios, Produtos...). Fica ligado mesmo depois de fechar. Os recibos e os PDFs saem sempre com os valores certos.
+- Testado no genesismz.com: Início e modo privado 19 de 19; painel e terminal 41 de 41. O Início abre em cerca de 1 segundo.
