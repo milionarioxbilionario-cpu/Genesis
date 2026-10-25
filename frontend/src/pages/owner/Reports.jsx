@@ -320,7 +320,7 @@ function Weekly({ openDay }) {
                     <BarChart data={data.by_day.map((d) => ({ ...d, label: d.date.slice(8, 10) + '/' + d.date.slice(5, 7) }))} margin={{ left: -12, right: 4, top: 4 }}>
                       <CartesianGrid vertical={false} stroke="var(--border)" />
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                      <YAxis tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                      <YAxis width={80} tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                       <Tooltip cursor={{ fill: 'var(--subtle)' }} formatter={(v) => [money(v), t('Receita')]} contentStyle={tooltipStyle} />
                       <Bar isAnimationActive={false} dataKey="revenue" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                     </BarChart>
@@ -455,7 +455,7 @@ function Monthly() {
                     <BarChart data={data.revenue_history.map((m) => ({ ...m, label: monthName(Number(m.key.slice(5))).slice(0, 3) }))} margin={{ left: -12, right: 4, top: 4 }}>
                       <CartesianGrid vertical={false} stroke="var(--border)" />
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                      <YAxis tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                      <YAxis width={80} tickFormatter={chartMoney} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                       <Tooltip cursor={{ fill: 'var(--subtle)' }} formatter={(v) => [money(v), t('Receita')]} contentStyle={tooltipStyle} />
                       <Bar isAnimationActive={false} dataKey="revenue" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={32} />
                     </BarChart>

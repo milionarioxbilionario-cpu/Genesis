@@ -1054,7 +1054,7 @@
     },
     "frontend/src/pages/owner/Reports.jsx": {
       "status": "ok",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou. | 25/10/2026: eixo Y width=80 (cortava 120 000).",
       "summary": "Ecra dos relatorios: KPIs, ranking por niveis, rastreio com filtros, cascata mensal, botao PDF / imprimir por separador.",
       "role": "Painel do dono."
     },
@@ -1546,7 +1546,7 @@
     },
     "frontend/site/site.js": {
       "status": "ok",
-      "summary": "Unico JS do site publico: encaminha app instalada/sessoes para a app, grava a lingua, menu movel.",
+      "summary": "Encaminhamento por sessao, menu movel, saudacao do WhatsApp pela hora.",
       "role": "Site publico.",
       "notes": "24/10/2026 Fase 11.1: site.mjs 9/9."
     },
@@ -1570,6 +1570,32 @@
       "summary": "Simbolo da marca (G + quadrado dourado, de ui/marca.js) num quadrado verde; substitui o antigo G de texto no AuthLayout, AppShell, Onboarding, Terminal, PosScreen e admin.",
       "role": "UI kit (marca).",
       "notes": "25/10/2026: flows.mjs 40/40 + idioma_admin 17/17, 0 erros de JS, capturas revistas."
+    },
+    "frontend/site/template.js": {
+      "status": "ok",
+      "summary": "Modelo HTML das 4 paginas do site publico (PT/EN), SEO e JSON-LD.",
+      "role": "Site publico.",
+      "notes": "25/10/2026: site.test 9/9, site.mjs 46/46."
+    },
+    "frontend/site/build.js": {
+      "status": "ok",
+      "summary": "Monta as paginas (icones lucide em linha, capturas).",
+      "role": "Site publico."
+    },
+    "frontend/site/config.js": {
+      "status": "ok",
+      "summary": "Fonte unica: WhatsApp, preco, contas de pagamento (vazias = escondidas).",
+      "role": "Site publico."
+    },
+    "frontend/scripts/gerar_site.mjs": {
+      "status": "ok",
+      "summary": "Gera index/planos/en + sitemap; --check.",
+      "role": "Ferramenta do site."
+    },
+    "frontend/scripts/capturas_site.mjs": {
+      "status": "ok",
+      "summary": "Capturas reais PT/EN em WebP numa loja demo.",
+      "role": "Ferramenta do site."
     }
   }
 }

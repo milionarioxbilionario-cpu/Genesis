@@ -73,7 +73,7 @@ export default function Home() {
                 <BarChart data={week.data.salesByDay} margin={{ left: -12, right: 4, top: 4 }}>
                   <CartesianGrid vertical={false} stroke="var(--border)" />
                   <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                  <YAxis tickFormatter={chartMoney} allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <YAxis width={80} tickFormatter={chartMoney} allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
                   <Tooltip cursor={{ fill: 'var(--subtle)' }} formatter={(v) => [money(v), t('Receita')]} contentStyle={{ border: '1px solid var(--border)', borderRadius: 8, fontSize: 13 }} />
                   <Bar isAnimationActive={false} dataKey="revenue" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={36} />
                 </BarChart>

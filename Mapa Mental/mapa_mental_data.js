@@ -1,31 +1,31 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-25T08:09:46.457Z */
+   Gerado em: 2026-10-25T11:42:26.679Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-25T08:09:46.457Z",
+ "generatedAt": "2026-10-25T11:42:26.679Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 274,
+  "files": 286,
   "planned": 5,
-  "links": 501,
-  "lines": 38004,
+  "links": 511,
+  "lines": 40332,
   "byStatus": {
-   "ok": 188,
+   "ok": 193,
    "partial": 8,
    "broken": 0,
    "planned": 5,
-   "untracked": 78
+   "untracked": 85
   },
   "byGroup": {
-   "infra": 16,
+   "infra": 24,
    "docs": 11,
    "admin": 12,
    "backend-data": 68,
    "backend": 63,
-   "frontend-pub": 5,
-   "frontend": 101,
+   "frontend-pub": 6,
+   "frontend": 104,
    "scripts": 3
   }
  },
@@ -36,22 +36,22 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:path",
-   "count": 27
+   "count": 31
+  },
+  {
+   "pkg": "node:fs",
+   "count": 30
   },
   {
    "pkg": "lucide-react",
    "count": 26
   },
   {
-   "pkg": "node:fs",
-   "count": 26
+   "pkg": "@playwright/test",
+   "count": 22
   },
   {
    "pkg": "dotenv",
-   "count": 21
-  },
-  {
-   "pkg": "@playwright/test",
    "count": 21
   },
   {
@@ -64,11 +64,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:test",
-   "count": 19
+   "count": 20
   },
   {
    "pkg": "node:assert",
-   "count": 19
+   "count": 20
   },
   {
    "pkg": "express",
@@ -103,6 +103,10 @@ window.GENESIS_MINDMAP = {
    "count": 5
   },
   {
+   "pkg": "node:url",
+   "count": 5
+  },
+  {
    "pkg": "qrcode",
    "count": 4
   },
@@ -121,10 +125,6 @@ window.GENESIS_MINDMAP = {
   {
    "pkg": "node:module",
    "count": 3
-  },
-  {
-   "pkg": "child_process",
-   "count": 3
   }
  ],
  "groups": [
@@ -132,13 +132,14 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 16,
+   "nodes": 24,
    "clusters": {
     ".": 7,
     "backend": 1,
     "deploy": 3,
-    "frontend": 3,
-    "frontend/site": 2
+    "frontend": 4,
+    "frontend/en": 2,
+    "frontend/site": 7
    }
   },
   {
@@ -210,19 +211,20 @@ window.GENESIS_MINDMAP = {
    "id": "frontend-pub",
    "label": "Frontend - Config",
    "tone": "#0ea5e9",
-   "nodes": 5,
+   "nodes": 6,
    "clusters": {
     "frontend": 4,
-    "frontend/public": 1
+    "frontend/public": 1,
+    "frontend/public/site/shots": 1
    }
   },
   {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 101,
+   "nodes": 104,
    "clusters": {
-    "frontend/scripts": 2,
+    "frontend/scripts": 4,
     "frontend/src": 4,
     "frontend/src/components": 6,
     "frontend/src/components/ui": 10,
@@ -239,7 +241,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils": 16,
     "frontend/src/utils/pdf": 4,
     "frontend/tests/e2e": 20,
-    "frontend/tests": 5
+    "frontend/tests": 6
    }
   },
   {
@@ -268,7 +270,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 121,
-   "size": 15871,
+   "size": 16328,
    "externals": [
     "@prisma/client"
    ],
@@ -290,8 +292,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1153,
-   "size": 241678,
+   "lines": 1166,
+   "size": 246124,
    "externals": [
     "@prisma/client"
    ],
@@ -334,8 +336,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1576,
-   "size": 94430,
+   "lines": 1602,
+   "size": 95383,
    "externals": [
     "nodemailer"
    ],
@@ -1391,7 +1393,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 150,
-   "size": 11086,
+   "size": 11125,
    "externals": [
     "dotenv",
     "fs",
@@ -4419,6 +4421,48 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "frontend/en/index.html",
+   "path": "frontend/en/index.html",
+   "label": "index.html",
+   "group": "infra",
+   "dir": "frontend/en",
+   "ext": ".html",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 318,
+   "size": 44466,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/en/pricing.html",
+   "path": "frontend/en/pricing.html",
+   "label": "pricing.html",
+   "group": "infra",
+   "dir": "frontend/en",
+   "ext": ".html",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 173,
+   "size": 24044,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "frontend/index.html",
    "path": "frontend/index.html",
    "label": "index.html",
@@ -4431,8 +4475,8 @@ window.GENESIS_MINDMAP = {
    "role": "Site publico.",
    "security": "",
    "planned": false,
-   "lines": 28,
-   "size": 1537,
+   "lines": 318,
+   "size": 44519,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4454,6 +4498,27 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 37,
    "size": 876,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/planos.html",
+   "path": "frontend/planos.html",
+   "label": "planos.html",
+   "group": "infra",
+   "dir": "frontend",
+   "ext": ".html",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 173,
+   "size": 24117,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -4497,6 +4562,53 @@ window.GENESIS_MINDMAP = {
    "lines": 15,
    "size": 340,
    "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/public/site/shots/shots.json",
+   "path": "frontend/public/site/shots/shots.json",
+   "label": "shots.json",
+   "group": "frontend-pub",
+   "dir": "frontend/public/site/shots",
+   "ext": ".json",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 53,
+   "size": 917,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/scripts/capturas_site.mjs",
+   "path": "frontend/scripts/capturas_site.mjs",
+   "label": "capturas_site.mjs",
+   "group": "frontend",
+   "dir": "frontend/scripts",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Capturas reais PT/EN em WebP numa loja demo.",
+   "notes": "",
+   "role": "Ferramenta do site.",
+   "security": "",
+   "planned": false,
+   "lines": 136,
+   "size": 7138,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:url",
+    "@playwright/test"
+   ],
    "dependsOn": [],
    "usedBy": [],
    "inbound": 0,
@@ -4555,6 +4667,88 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "frontend/scripts/gerar_site.mjs",
+   "path": "frontend/scripts/gerar_site.mjs",
+   "label": "gerar_site.mjs",
+   "group": "frontend",
+   "dir": "frontend/scripts",
+   "ext": ".mjs",
+   "status": "ok",
+   "summary": "Gera index/planos/en + sitemap; --check.",
+   "notes": "",
+   "role": "Ferramenta do site.",
+   "security": "",
+   "planned": false,
+   "lines": 23,
+   "size": 1066,
+   "externals": [
+    "node:fs",
+    "node:path"
+   ],
+   "dependsOn": [
+    "frontend/site/build.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "frontend/site/build.js",
+   "path": "frontend/site/build.js",
+   "label": "build.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Monta as paginas (icones lucide em linha, capturas).",
+   "notes": "",
+   "role": "Site publico.",
+   "security": "",
+   "planned": false,
+   "lines": 41,
+   "size": 2012,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "node:url"
+   ],
+   "dependsOn": [
+    "frontend/site/textos.pt.js",
+    "frontend/site/textos.en.js",
+    "frontend/site/template.js"
+   ],
+   "usedBy": [
+    "frontend/scripts/gerar_site.mjs",
+    "frontend/tests/site.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 3
+  },
+  {
+   "id": "frontend/site/config.js",
+   "path": "frontend/site/config.js",
+   "label": "config.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Fonte unica: WhatsApp, preco, contas de pagamento (vazias = escondidas).",
+   "notes": "",
+   "role": "Site publico.",
+   "security": "",
+   "planned": false,
+   "lines": 25,
+   "size": 1116,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/site/template.js",
+    "frontend/tests/site.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 0
+  },
+  {
    "id": "frontend/site/site.css",
    "path": "frontend/site/site.css",
    "label": "site.css",
@@ -4567,8 +4761,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 29,
-   "size": 984,
+   "lines": 73,
+   "size": 3701,
    "externals": [
     "@fontsource-variable/inter"
    ],
@@ -4589,13 +4783,13 @@ window.GENESIS_MINDMAP = {
    "dir": "frontend/site",
    "ext": ".js",
    "status": "ok",
-   "summary": "Unico JS do site publico: encaminha app instalada/sessoes para a app, grava a lingua, menu movel.",
+   "summary": "Encaminhamento por sessao, menu movel, saudacao do WhatsApp pela hora.",
    "notes": "24/10/2026 Fase 11.1: site.mjs 9/9.",
    "role": "Site publico.",
    "security": "",
    "planned": false,
-   "lines": 53,
-   "size": 2380,
+   "lines": 69,
+   "size": 3301,
    "externals": [],
    "dependsOn": [
     "frontend/site/site.css"
@@ -4603,6 +4797,80 @@ window.GENESIS_MINDMAP = {
    "usedBy": [],
    "inbound": 0,
    "outbound": 1
+  },
+  {
+   "id": "frontend/site/template.js",
+   "path": "frontend/site/template.js",
+   "label": "template.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Modelo HTML das 4 paginas do site publico (PT/EN), SEO e JSON-LD.",
+   "notes": "25/10/2026: site.test 9/9, site.mjs 46/46.",
+   "role": "Site publico.",
+   "security": "",
+   "planned": false,
+   "lines": 414,
+   "size": 24586,
+   "externals": [],
+   "dependsOn": [
+    "frontend/src/ui/marca.js",
+    "frontend/site/config.js"
+   ],
+   "usedBy": [
+    "frontend/site/build.js"
+   ],
+   "inbound": 1,
+   "outbound": 2
+  },
+  {
+   "id": "frontend/site/textos.en.js",
+   "path": "frontend/site/textos.en.js",
+   "label": "textos.en.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 193,
+   "size": 11451,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/site/build.js",
+    "frontend/tests/site.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/site/textos.pt.js",
+   "path": "frontend/site/textos.pt.js",
+   "label": "textos.pt.js",
+   "group": "infra",
+   "dir": "frontend/site",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 195,
+   "size": 11794,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "frontend/site/build.js",
+    "frontend/tests/site.test.mjs"
+   ],
+   "inbound": 2,
+   "outbound": 0
   },
   {
    "id": "frontend/src/App.jsx",
@@ -5770,7 +6038,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 182,
-   "size": 10514,
+   "size": 10525,
    "externals": [
     "react",
     "react-router-dom",
@@ -5904,12 +6172,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Ecra dos relatorios: KPIs, ranking por niveis, rastreio com filtros, cascata mensal, botao PDF / imprimir por separador.",
-   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou.",
+   "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou. | 25/10/2026: eixo Y width=80 (cortava 120 000).",
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
    "lines": 533,
-   "size": 36100,
+   "size": 36122,
    "externals": [
     "react",
     "react-router-dom",
@@ -6283,9 +6551,10 @@ window.GENESIS_MINDMAP = {
    "dependsOn": [],
    "usedBy": [
     "frontend/scripts/gerar_icones.mjs",
+    "frontend/site/template.js",
     "frontend/src/components/ui/BrandMark.jsx"
    ],
-   "inbound": 2,
+   "inbound": 3,
    "outbound": 0
   },
   {
@@ -7434,8 +7703,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 63,
-   "size": 3538,
+   "lines": 136,
+   "size": 7905,
    "externals": [
     "node:fs",
     "node:path",
@@ -7611,6 +7880,37 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "frontend/tests/site.test.mjs",
+   "path": "frontend/tests/site.test.mjs",
+   "label": "site.test.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 119,
+   "size": 6521,
+   "externals": [
+    "node:test",
+    "node:assert",
+    "node:fs",
+    "node:path"
+   ],
+   "dependsOn": [
+    "frontend/site/build.js",
+    "frontend/site/config.js",
+    "frontend/site/textos.pt.js",
+    "frontend/site/textos.en.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 4
+  },
+  {
    "id": "frontend/vite.config.js",
    "path": "frontend/vite.config.js",
    "label": "vite.config.js",
@@ -7623,8 +7923,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 89,
-   "size": 3613,
+   "lines": 92,
+   "size": 3851,
    "externals": [
     "vite",
     "node:url",
@@ -8883,12 +9183,36 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/ui/marca.js"
   },
   {
+   "source": "frontend/scripts/gerar_site.mjs",
+   "target": "frontend/site/build.js"
+  },
+  {
+   "source": "frontend/site/build.js",
+   "target": "frontend/site/textos.pt.js"
+  },
+  {
+   "source": "frontend/site/build.js",
+   "target": "frontend/site/textos.en.js"
+  },
+  {
+   "source": "frontend/site/build.js",
+   "target": "frontend/site/template.js"
+  },
+  {
    "source": "frontend/site/site.css",
    "target": "frontend/src/ui/tokens.css"
   },
   {
    "source": "frontend/site/site.js",
    "target": "frontend/site/site.css"
+  },
+  {
+   "source": "frontend/site/template.js",
+   "target": "frontend/src/ui/marca.js"
+  },
+  {
+   "source": "frontend/site/template.js",
+   "target": "frontend/site/config.js"
   },
   {
    "source": "frontend/src/App.jsx",
@@ -9925,6 +10249,22 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/tests/search.test.mjs",
    "target": "frontend/src/utils/search.js"
+  },
+  {
+   "source": "frontend/tests/site.test.mjs",
+   "target": "frontend/site/build.js"
+  },
+  {
+   "source": "frontend/tests/site.test.mjs",
+   "target": "frontend/site/config.js"
+  },
+  {
+   "source": "frontend/tests/site.test.mjs",
+   "target": "frontend/site/textos.pt.js"
+  },
+  {
+   "source": "frontend/tests/site.test.mjs",
+   "target": "frontend/site/textos.en.js"
   },
   {
    "source": "backend/src/services/report.service.js",

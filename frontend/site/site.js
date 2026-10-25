@@ -50,3 +50,19 @@ if (toggle && menu) {
   });
   menu.addEventListener('click', (e) => { if (e.target.closest('a')) { menu.setAttribute('hidden', ''); toggle.setAttribute('aria-expanded', 'false'); } });
 }
+
+// WhatsApp: a mensagem ja escrita leva a saudacao da hora de quem visita
+// (bom dia ate as 12h, boa tarde ate as 18h, boa noite depois). Sem JS, o link
+// do HTML sai com «Ola». Calculada no toque: a pagina pode ficar aberta horas.
+const greetings = (document.documentElement.dataset.waGreet || '').split('|');
+function greetingFor(hour) {
+  return hour >= 5 && hour < 12 ? greetings[0] : hour >= 12 && hour < 18 ? greetings[1] : greetings[2];
+}
+function withGreeting(a) {
+  const g = greetingFor(new Date().getHours());
+  if (!g || !a.dataset.wa) return;
+  // encodeURIComponent (%20), nao searchParams (+): o mesmo formato do HTML.
+  a.href = a.href.split('?')[0] + '?text=' + encodeURIComponent(a.dataset.wa.replace('{g}', g));
+}
+document.querySelectorAll('a[data-wa]').forEach(withGreeting);
+document.addEventListener('click', (e) => { const a = e.target.closest('a[data-wa]'); if (a) withGreeting(a); }, true);

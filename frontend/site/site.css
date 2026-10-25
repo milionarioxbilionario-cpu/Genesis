@@ -3,9 +3,10 @@
    Tailwind com configuracao propria (tailwind.site.config.js): so as classes
    usadas nas paginas do site entram neste CSS, nao as da app.
    ========================================================================== */
-@config "../tailwind.site.config.js";
+/* Os @import tem de vir antes do @config (senao o CSS perde a letra e as cores). */
 @import '@fontsource-variable/inter';
 @import '../src/ui/tokens.css';
+@config "../tailwind.site.config.js";
 
 @tailwind base;
 @tailwind components;
@@ -25,4 +26,47 @@
   }
   :focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--radius-sm); }
   [id] { scroll-margin-top: 80px; }
+}
+
+/* Cor de texto sobre o verde da marca (seccao de seguranca). */
+:root { --brand-tint: #D3E5DE; }
+
+@layer components {
+  .skip { position: absolute; left: -9999px; top: 8px; z-index: 50; padding: 8px 12px; background: var(--surface); border-radius: var(--radius); }
+  .skip:focus { left: 8px; }
+  .section { @apply py-16 sm:py-20; }
+  .eyebrow { @apply text-sm font-semibold uppercase tracking-wider text-accent; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .btn-primary, .btn-secondary, .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded px-4 py-2 text-base font-medium transition-colors;
+    min-height: 40px;
+  }
+  .btn-lg { @apply px-5 text-md; min-height: 48px; }
+  .btn-primary { @apply bg-accent text-white hover:bg-accent-hover; }
+  .btn-secondary { @apply border border-border-strong bg-surface text-ink hover:bg-subtle; }
+  .btn-ghost { @apply text-ink-2 hover:bg-subtle hover:text-ink; }
+  .btn-icon { @apply inline-flex h-10 w-10 items-center justify-center rounded text-ink-2 hover:bg-subtle; }
+  .nav-link { @apply text-base text-ink-2 hover:text-ink; }
+  .nav-link[aria-current='page'] { @apply font-medium text-ink; }
+  .menu-link { @apply rounded px-2 py-2.5 text-md text-ink hover:bg-subtle; }
+  .footer-link { @apply text-base text-ink-2 hover:text-ink; }
+  .text-link { @apply font-medium text-accent underline underline-offset-2 hover:text-accent-hover; }
+
+  .card { @apply rounded-lg border border-border bg-surface p-6; }
+  .plan { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .icon-tile { @apply inline-flex h-10 w-10 items-center justify-center rounded bg-accent-soft text-accent; }
+  .icon-tile-dark { @apply inline-flex h-12 w-12 items-center justify-center rounded-lg text-white; background: var(--brand-dark); }
+  .text-brand-tint { color: var(--brand-tint); }
+  .step { @apply inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-base font-semibold text-white; }
+  .badge { @apply inline-block rounded bg-accent-soft px-3 py-1 text-base font-medium text-accent-text; }
+
+  /* Moldura das capturas: so contorno e sombra, sem enfeites. */
+  .frame { @apply overflow-hidden rounded-lg border border-border-strong bg-surface shadow-pop; }
+  .phone { @apply overflow-hidden rounded-lg border-4 border-ink bg-surface shadow-pop; border-radius: 18px; }
+
+  .faq summary { @apply flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-md font-medium text-ink; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq p { @apply pb-5 text-md text-ink-2; }
+  .faq[open] .faq-chevron { transform: rotate(180deg); }
 }

@@ -54,6 +54,79 @@ try {
     }
     await cx.close();
   }
+
+  // 3) Fase 11.3: as 4 paginas. Sem JS (o que o Google le) e com JS.
+  const PAGES = [
+    { url: '/', lang: 'pt-MZ', h1: 'Vendas, stock e caixa' },
+    { url: '/planos', lang: 'pt-MZ', h1: 'Um preço simples' },
+    { url: '/en/', lang: 'en', h1: 'Sales, stock and cash' },
+    { url: '/en/pricing', lang: 'en', h1: 'Simple pricing' },
+  ];
+  const raw = await browser.newContext({ javaScriptEnabled: false });
+  for (const pg of PAGES) {
+    const res = await raw.request.get(BASE + pg.url);
+    const html = await res.text();
+    ok(res.status() === 200 && html.includes(`lang="${pg.lang}"`) && html.includes(pg.h1), `${pg.url}: sem JS já tem a língua e o h1`);
+    let ld = null;
+    try { ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]); } catch { /* falha abaixo */ }
+    ok(ld?.['@graph']?.some((g) => g['@type'] === 'SoftwareApplication' && g.offers?.priceCurrency === 'MZN'), `${pg.url}: JSON-LD válido com o preço em MZN`);
+  }
+  await raw.close();
+
+  for (const [vp, name] of [[{ width: 1440, height: 900 }, 'computador'], [{ width: 390, height: 844 }, 'telemóvel']]) {
+    const cx = await browser.newContext({ viewport: vp, locale: 'pt-PT' });
+    const p = await cx.newPage();
+    watch(p);
+    for (const pg of PAGES) {
+      await p.goto(BASE + pg.url + (pg.url.endsWith('/') ? '?site' : ''));
+      await p.waitForLoadState('networkidle');
+      const look = await p.evaluate(() => ({
+        sw: document.documentElement.scrollWidth, w: window.innerWidth,
+        font: getComputedStyle(document.body).fontFamily,
+        btn: getComputedStyle(document.querySelector('.btn-primary')).backgroundColor,
+      }));
+      ok(look.sw <= look.w, `${pg.url} (${name}): sem deslocamento horizontal`, look);
+      ok(/Inter/.test(look.font) && look.btn === 'rgb(11, 77, 59)', `${pg.url} (${name}): letra Inter e verde do logótipo carregados`, look);
+      const imgs = await p.evaluate(() => [...document.images].filter((i) => i.getBoundingClientRect().width > 0).length);
+      if (pg.url.endsWith('/')) ok(imgs >= 1, `${pg.url} (${name}): imagem da app visível`);
+    }
+    if (name === 'telemóvel') {
+      await p.goto(BASE + '/?site');
+      await p.locator('[data-menu-toggle]').click();
+      ok(await p.locator('[data-menu]').isVisible() && await p.locator('[data-menu]').getByRole('link', { name: 'Planos' }).isVisible(), 'telemóvel: o menu abre com os links');
+    }
+    await cx.close();
+  }
+
+  // 4) WhatsApp: mensagem escrita com a saudacao da hora de quem visita.
+  for (const [hour, want, url] of [[9, 'Bom dia!', '/?site'], [15, 'Boa tarde!', '/?site'], [21, 'Boa noite!', '/planos'], [9, 'Good morning!', '/en/?site']]) {
+    const cx = await browser.newContext();
+    const p = await cx.newPage();
+    await p.clock.setFixedTime(new Date(2026, 9, 25, hour, 0));
+    await p.goto(BASE + url);
+    await p.waitForLoadState('networkidle');
+    const href = await p.locator('a[data-wa]').first().getAttribute('href');
+    const text = decodeURIComponent(href.split('?text=')[1] || '');
+    ok(href.startsWith('https://wa.me/258870150055?text=') && text.startsWith(want), `WhatsApp às ${hour}h em ${url}: «${want}»`, text);
+    await cx.close();
+  }
+  {
+    const cx = await browser.newContext();
+    const p = await cx.newPage();
+    await p.goto(BASE + '/planos');
+    await p.waitForLoadState('networkidle');
+    const join = decodeURIComponent((await p.getByRole('link', { name: 'Aderir ao plano' }).getAttribute('href')).split('?text=')[1]);
+    ok(/Quero aderir ao plano Genesis MZ de 3\s000\sMT\/mês\./.test(join), '«Aderir ao plano» leva o plano e o preço na mensagem', join);
+    const paid = decodeURIComponent((await p.getByRole('link', { name: /Já paguei/ }).getAttribute('href')).split('?text=')[1]);
+    ok(/Já paguei a subscrição/.test(paid), '«Já paguei» pede o comprovativo', paid);
+    await p.getByRole('link', { name: 'EN', exact: true }).first().click();
+    await p.waitForURL('**/en/pricing');
+    ok(new URL(p.url()).pathname === '/en/pricing', 'PT → EN na página de planos abre /en/pricing', p.url());
+    await p.getByRole('link', { name: 'PT', exact: true }).first().click();
+    await p.waitForURL((u) => u.pathname === '/planos');
+    ok(new URL(p.url()).pathname === '/planos', 'EN → PT volta a /planos', p.url());
+    await cx.close();
+  }
 } finally {
   await browser.close();
 }

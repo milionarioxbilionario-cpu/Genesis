@@ -1,0 +1,52 @@
+{
+  "inicio-pt": {
+    "file": "inicio-pt.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "alertas-pt": {
+    "file": "alertas-pt.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "mensal-pt": {
+    "file": "mensal-pt.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "telemovel-pt": {
+    "file": "telemovel-pt.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "terminal-pt": {
+    "file": "terminal-pt.webp",
+    "width": 1366,
+    "height": 768
+  },
+  "inicio-en": {
+    "file": "inicio-en.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "alertas-en": {
+    "file": "alertas-en.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "mensal-en": {
+    "file": "mensal-en.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "telemovel-en": {
+    "file": "telemovel-en.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "terminal-en": {
+    "file": "terminal-en.webp",
+    "width": 1366,
+    "height": 768
+  }
+}

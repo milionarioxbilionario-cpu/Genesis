@@ -2055,3 +2055,18 @@ Um engano meu durante os testes: pus sem querer o mesmo teste a correr duas veze
 As lojas de teste foram apagadas e os servidores de teste desligados.
 Ainda NÃO está no genesismz.com: publico tudo junto no fim do site (11.4), com a tua confirmação.
 A seguir: a página completa do site em português e inglês, com a página de planos (11.3).
+
+
+==================== 25/10/2026 — Site público completo, em português e inglês (11.3) — testado no meu computador ====================
+O site genesismz.com passa a ter páginas a sério, que apresentam e vendem o Genesis (português e inglês):
+- Página principal: o que o Genesis resolve (dinheiro que falta na caixa, stock que estraga, chenecas esquecidas, não saber o lucro real), as funcionalidades, imagens reais da app numa loja de exemplo, para que tipos de loja serve, como começar, segurança, preço e perguntas frequentes.
+- Página de planos: 3 000 MT/mês, «Clientes novos: o 1.º mês é grátis». O botão «Aderir ao plano» abre o WhatsApp para o teu número com a mensagem já escrita e a saudação certa para a hora (bom dia, boa tarde ou boa noite). Há também um botão para perguntar pelo plano anual e um «Já paguei — enviar comprovativo».
+- Os números de e-Mola/M-Pesa e as contas de banco: a secção já está feita mas fica escondida até me dares os números verdadeiros e os nomes dos titulares (não invento números). Quando mos deres, troco num só sítio.
+- Tudo o que o site diz foi confirmado na app. Não pus testemunhos, números de clientes nem coisas que ainda não funcionam (como os relatórios automáticos por WhatsApp).
+- O Google, o Bing e as IAs conseguem ler o texto sem correr nada, e cada página tem a "ficha" que o Google usa (nome Genesis MZ, preço em meticais, perguntas e respostas).
+Dois defeitos encontrados e corrigidos pelo caminho:
+1) A página do site perdia a letra e as cores (aparecia com letra de jornal e o botão verde invisível). Já vinha da parte anterior; está corrigido e há um teste que o apanha se voltar.
+2) Na app, no relatório mensal, o gráfico "Últimos 6 meses" cortava os números grandes (mostrava "20 000" em vez de "120 000"). Corrigido nos 3 gráficos.
+Enganos meus apanhados antes de terminar: a imagem do terminal na versão portuguesa tinha saído em inglês. Refiz as imagens e confirmei uma a uma.
+Prova: testes do site 9 de 9 e 46 de 46 no browser (computador e telemóvel, com e sem JavaScript), teste sem internet 8 de 8, painel e terminal 40 de 40, relatórios 16 de 16. As lojas de teste foram apagadas.
+Ainda NÃO está no genesismz.com: a seguir publico (11.4).
