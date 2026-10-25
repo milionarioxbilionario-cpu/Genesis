@@ -1,7 +1,7 @@
 Plano a Executar — Auditoria e Plano de Ação
 Projeto: Genesis — SaaS POS Multi-tenant
 Data: 2026-09-09
-Autor: AI assistant (Copilot CLI runtime in VS Code)
+Autor: Kleyton Abelardo Velichane
 
 Índice
 1. Resumo rápido do estado atual (ETAPA 0)

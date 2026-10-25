@@ -1,5 +1,5 @@
 {
-  "$comment": "Fase 9.7 (18/10/2026): nomes em ingles do catalogo-mestre PROPOSTOS pelo Claude para o fundador rever (decisao 17/10: 'eu proponho, tu reves'). Chave = nome em portugues. Marcas ficam como estao; pratos locais mantem o nome local. Aplicar: node scripts/apply_master_en.js (so preenche os que estao vazios; --forcar substitui).",
+  "$comment": "Fase 9.7 (18/10/2026): nomes em ingles do catalogo-mestre PROPOSTOS para o fundador rever (decisao 17/10: 'eu proponho, tu reves'). Chave = nome em portugues. Marcas ficam como estao; pratos locais mantem o nome local. Aplicar: node scripts/apply_master_en.js (so preenche os que estao vazios; --forcar substitui).",
   "Água Namaacha 1,5L": "Namaacha Water 1.5L",
   "Água Namaacha 500ml": "Namaacha Water 500ml",
   "Água Namaacha 5L": "Namaacha Water 5L",

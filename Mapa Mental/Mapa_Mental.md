@@ -113,7 +113,7 @@ Actualizado: 3 de Outubro de 2026 (Genesis 2.0 — RLS real, terminal POS com PI
 | Senha exposta no GitHub | Removida dos ficheiros; contas ainda por rodar | 🔴 CONHECIDO COMO QUEBRADO até o fundador rodar as senhas | 03/10 |
 | Inglês (especificação 6.10) | O i18n antigo (só login) foi removido; a app está só em português | ❌ NÃO EXISTE AINDA | 03/10 |
 
-### Genesis 2.1 — Fase 0 (03/10/2026, noite) — plano `~/.claude/plans/a-malha-entrou-dentro-effervescent-honey.md`
+### Genesis 2.1 — Fase 0 (03/10/2026, noite) — plano `Para o Claude/planos/a-malha-entrou-dentro-effervescent-honey.md`
 | Caminho | O que faz | Estado | Última verificação |
 |---|---|---|---|
 | Onboarding (`pages/owner/Onboarding.jsx` + `routes/catalogs.js`) | 5 passos; categorias adicionais; catálogo com coluna de código de barras (Enter do leitor salta de linha; código repetido bloqueia); fornecedores no passo 4; explicação de cada passo | ✅ CONFIRMADO FUNCIONAL | 04/10 — `onboarding.mjs` 18/18, 0 erros JS; import inválido → 400 com produto e campo |
@@ -305,7 +305,7 @@ Decisões (12/10): **1a** email obrigatório no pedido de conta; **2a** o limite
 | Menu do dono vs Prompt Mestre (Fase 3.1) | O menu actual (8 itens: Início, Vendas, Produtos, Fornecedores, Chenecas, Equipa, Relatórios, Definições) difere do Prompt Mestre e do CLAUDE.md (10 itens: Dashboard, Produtos, Stock, Caixistas, Trabalhadores, Fornecedores, Chenecas, Relatórios, Metas, Definições). PDF com capturas e 3 opções entregue ao fundador | ⚠️ decisão do fundador em aberto | 18/10 — PDF `Menu_do_dono_hoje_vs_Prompt_Mestre.pdf` (Ambiente de Trabalho) |
 | `verify_system.js` secção 10 corrida sozinha | Falha «lista com o PIN do dono» porque espera vendas do caixista feitas por secções anteriores; com a 2 antes passa | ⚠️ dependência de ordem do teste (não é defeito do produto) | 18/10 — `verify_system 2 10` passou |
 
-### Fase 11 — Site público (landing + planos, PT/EN) e SEO — plano `~/.claude/plans/o-meu-site-n-o-gleaming-clock.md` (aprovado 24/10)
+### Fase 11 — Site público (landing + planos, PT/EN) e SEO — plano `Para o Claude/planos/o-meu-site-n-o-gleaming-clock.md` (aprovado 24/10)
 Causa (24/10, `curl` como Googlebot a genesismz.com): todas as URLs — incluindo `/robots.txt` e `/sitemap.xml` — devolviam o mesmo `index.html` vazio da app, que salta por JS para `/entrar`; título «Genesis»; favicon azul antigo. Decisões do fundador (24/10): 3.000 MT/mês, 1.º mês grátis só para clientes novos; contacto WhatsApp +258 87 015 0055 (provisório); site e app com as cores do logótipo; PT e EN já.
 
 | Caminho | O que faz | Estado | Última verificação |
@@ -390,7 +390,7 @@ Causa (24/10, `curl` como Googlebot a genesismz.com): todas as URLs — incluind
 - Segue-se: parar. Próxima mini-meta proposta: Fase 0.4 (ficheiros residuais e `.gitignore`).
 
 ### [2026-09-18] — Fase 0.4-H: expurgo de dev.db/logs/dumps do histórico + `.gitignore`
-- Contexto/incidente: um segundo agente (Copilot CLI, pid 40748) commitou e **já publicou** enquanto esta sessão investigava: `f58b30b "Melhoria na arquitetura"` (03:33) engoliu todo o trabalho pendente das Fases 0.1–0.3 **e** arrastou para o git `backend/prisma/dev.db`, `logs/*.log`, `tree (copy 1)`; `ac104e5 "Prompt"` (03:35) adicionou `Desktop.zip`. O prompt mestre não registava nada disto. O fundador confirmou ter parado esse agente.
+- Contexto/incidente: um segundo agente (pid 40748) commitou e **já publicou** enquanto esta sessão investigava: `f58b30b "Melhoria na arquitetura"` (03:33) engoliu todo o trabalho pendente das Fases 0.1–0.3 **e** arrastou para o git `backend/prisma/dev.db`, `logs/*.log`, `tree (copy 1)`; `ac104e5 "Prompt"` (03:35) adicionou `Desktop.zip`. O prompt mestre não registava nada disto. O fundador confirmou ter parado esse agente.
 - Motivo da urgência: `backend/prisma/dev.db` (34 commits de histórico) contém 33 users / 29 tenants com hashes bcrypt; `logs/backend.log` continha **credenciais em texto claro** e essas credenciais **funcionam** (o próprio `test.sh` faz login com elas).
 - Ficheiros alterados: `.gitignore` (consolidado); história do git reescrita; `backend/prisma/dev.db` restaurada do backup.
 - Procedimento (prova):
@@ -661,7 +661,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 
 ### [2026-10-03] — Organização da memória persistente: CLAUDE.md + skills do Prompt Mestre
 - Ficheiros alterados: `CLAUDE.md` (criado e depois expandido); novos `.claude/skills/genesis-spec/SKILL.md`, `.claude/skills/genesis-guia-tecnico/SKILL.md`, `.claude/skills/genesis-historico-auditoria/SKILL.md`.
-- Porquê: o `Prompt_Mestre.txt` (2198 linhas) é demasiado grande para carregar em todas as sessões. O essencial (Regras Invioláveis da Secção 8, regra dos centavos, regra do RLS/isolamento, hierarquia de 3 níveis da Secção 4, protocolo Mapa Mental + ficheiro "Oque ja fiz…") foi fundido no `CLAUDE.md`, que o Claude Code lê sempre. As Secções 6 (spec funcional), 18 (guia técnico) e 12-13 (auditoria/bugs) foram copiadas literalmente para skills que só carregam quando invocadas.
+- Porquê: o `Prompt_Mestre.txt` (2198 linhas) é demasiado grande para carregar em todas as sessões. O essencial (Regras Invioláveis da Secção 8, regra dos centavos, regra do RLS/isolamento, hierarquia de 3 níveis da Secção 4, protocolo Mapa Mental + ficheiro "Oque ja fiz…") foi fundido no `CLAUDE.md`, que o assistente lê sempre. As Secções 6 (spec funcional), 18 (guia técnico) e 12-13 (auditoria/bugs) foram copiadas literalmente para skills que só carregam quando invocadas.
 - Prova: `wc -l CLAUDE.md` abaixo de 200 linhas; as três skills criadas com `sed -n` sobre as linhas exactas do `Prompt_Mestre.txt` (491-726, 1542-1949, 959-1268). Verificado que `Mapa Mental/` e `Oque ja fiz para corrigir estes erros.txt` já existiam (Secção 0 / Secção 22) — nada foi recriado.
 - Resultado: funcionou. Nenhum ficheiro de código foi tocado.
 - Segue-se: aguardar o fundador para escolher a próxima mini-meta.
@@ -683,7 +683,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Segue-se: o fundador valida no balcão real (emparelhar um PC, criar PIN em Equipa) e decide o alojamento.
 
 ### [2026-10-03] — Genesis 2.1, Fase 0: commit do 2.0 + reprodução dos bugs relatados (onboarding OK; causa real do "servidor indisponível")
-- Plano aprovado: `~/.claude/plans/a-malha-entrou-dentro-effervescent-honey.md` (acrescento ao 2.0; não desfaz nada — sem modo escuro, onboarding continua no 1.º login).
+- Plano aprovado: `Para o Claude/planos/a-malha-entrou-dentro-effervescent-honey.md` (acrescento ao 2.0; não desfaz nada — sem modo escuro, onboarding continua no 1.º login).
 - Ficheiros alterados: commit `0cf0d30` (Genesis 2.0, ~190 ficheiros, varredura de segredos = 0); `backend/scripts/e2e_fixture.js` (modo `onboarding`); novo `frontend/tests/e2e/onboarding.mjs`; `backend/src/utils/dbEngine2.js` (3 tentativas); `backend/src/utils/prisma.js` (`connect_timeout`/`pool_timeout`).
 - Porquê: o fundador relatou (versão antiga) onboarding partido, "servidor indisponível" ao vender e fecho de turno a dizer "já fechado".
 - Prova real:
@@ -771,7 +771,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 
 
 ### [2026-10-05] — Domínio genesismz.com na Cloudflare; alojamento ainda por resolver
-- Decisões do fundador: domínio de produção **genesismz.com** (registado na Namecheap; substitui o `genesis.co.mz` do Prompt Mestre — previsto: `genesismz.com` = app/terminal, `admin.genesismz.com` = painel admin). DNS na **Cloudflare, plano Free**, como escudo à frente do servidor (DNS, HTTPS, DDoS, cache). Plugin `cloudflare@cloudflare` instalado no Claude Code (âmbito do utilizador).
+- Decisões do fundador: domínio de produção **genesismz.com** (registado na Namecheap; substitui o `genesis.co.mz` do Prompt Mestre — previsto: `genesismz.com` = app/terminal, `admin.genesismz.com` = painel admin). DNS na **Cloudflare, plano Free**, como escudo à frente do servidor (DNS, HTTPS, DDoS, cache). Plugin `cloudflare@cloudflare` instalado no assistente (âmbito do utilizador).
 - Alojamento: DigitalOcean, Vultr e Hetzner bloquearam o fundador nas tentativas de pagamento (cartão moçambicano recusado várias vezes → anti-fraude). Recomendado: resolver o meio de pagamento (banco com compras internacionais/3D Secure, ou PayPal) e pedir desbloqueio; entretanto Render grátis em Frankfurt só para teste (adormece após 15 min — não serve para loja real).
 - Rejeitado com fundamento: correr o backend em Cloudflare Workers — o plano grátis tem ~10 ms de CPU por pedido (o `bcrypt` dos logins/PINs não cabe), o Prisma com transacções interactivas e RLS, os códigos de emparelhamento/limites em memória e o job horário teriam de ser reescritos; os Workers correm longe da BD. O projecto Workers `genesisproject` criado pelo fundador falhou no build (sem `package.json` na raiz — o repo são 3 projectos) e não deve ser usado para o backend.
 - Prova: `nslookup -type=ns genesismz.com 8.8.8.8` → `sage.ns.cloudflare.com`, `indie.ns.cloudflare.com`. Registos: só os 5 MX + SPF do reencaminhamento de email da Namecheap (A e CNAME do "parking" apagados). Nenhum registo do site ainda (não há servidor).
@@ -904,7 +904,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Segue-se: paragem entre fases. 8.3 — "Entrada de stock" só para produtos novos (reutiliza este formulário) + "Ajuste manual" com Adicionar/Retirar (quantidade positiva; Adicionar com validade, custo e fornecedor opcional, para as compras de produtos existentes).
 
 ### [2026-10-10] — Publicação da 8.2 + push; Fase 8.3-A: turno por dia e fecho explicado
-- Pedido do fundador: publicar a 8.2, investigar fechos estranhos na loja do Kleyton, um fecho por dia com reabertura automática no dia seguinte (lojas 24/24), depois a 8.3. Plano aprovado: `~/.claude/plans/publica-no-genesismz-com-noble-trinket.md`.
+- Pedido do fundador: publicar a 8.2, investigar fechos estranhos na loja do Kleyton, um fecho por dia com reabertura automática no dia seguinte (lojas 24/24), depois a 8.3. Plano aprovado: `Para o Claude/planos/publica-no-genesismz-com-noble-trinket.md`.
 - **Publicação 8.2:** `publicar.sh` → "PUBLICADO adb4cce"; `git push` `5315522..adb4cce`; de fora: /, /entrar, admin 200, `/api/auth/me` 401, `/api/admin/catalog-suggestions` 403 sem origem admin, `/api/catalogs/bottle_store` com o campo `icon`. **`fase8_2.mjs` contra genesismz.com + admin.genesismz.com: todos os passos passaram** (loja e admin de teste apagados).
 - **Diagnóstico (dados reais, só leitura):**
   - Wendy: 1 279 MT em dinheiro + 75 MT em **e-Mola**. O esperado conta só dinheiro → 1 279; 1 300 → +21. Correcto, mas o ecrã não o explicava.
@@ -954,7 +954,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Segue-se: paragem e confirmação do fundador antes de publicar a 8.3-B; depois 8.4 (vendas perdidas).
 
 ### [2026-10-11] — Publicação da 8.3-B + push; Fase 8.4: vendas perdidas fora do catálogo + «Pedidos de clientes» no admin
-- Pedido do fundador (11/10): «publica no genesismz.com, faz push e avança para todas as fases restantes, não precisas parar para confirmar… só pare se precisares de uma validação minha». Regra 1 aplicada como meio-termo: 8.4–8.8 = mini-metas da Fase 8, cada uma com prova, publicação e checkpoint curto; paragem a sério no fim da Fase 8. Plano: `~/.claude/plans/publica-no-genesismz-com-noble-trinket.md`.
+- Pedido do fundador (11/10): «publica no genesismz.com, faz push e avança para todas as fases restantes, não precisas parar para confirmar… só pare se precisares de uma validação minha». Regra 1 aplicada como meio-termo: 8.4–8.8 = mini-metas da Fase 8, cada uma com prova, publicação e checkpoint curto; paragem a sério no fim da Fase 8. Plano: `Para o Claude/planos/publica-no-genesismz-com-noble-trinket.md`.
 - Decisões do fundador (11/10): 8.7 — preferências + envio programado construído mas **desligado** (`REPORTS_WHATSAPP=true` para ligar, depois de número WhatsApp Business aprovado); 8.8 — impressora USB + Bluetooth, e o recibo **sempre** guardado em PDF no aparelho (Android e iPhone), haja ou não impressora.
 - **Publicação 8.3-B:** `git push` `992e14d..f7f2576`; `publicar.sh` → «PUBLICADO f7f2576». De fora: /, /entrar, admin 200; `/api/auth/me` 401; **`stock.mjs` contra https://genesismz.com: 18/18, 0 erros de JS** (loja de teste apagada).
 - **8.4, ficheiros:** migração `20261011_vendas_perdidas` + `schema.prisma`/`schema.sqlite.prisma` (iguais); `routes/demand_captures.js` (reescrito com `asyncHandler`); novos `utils/lostRequests.js` + `tests/lostRequests.test.js`; `services/reports.js`; `routes/admin.js`; `scripts/verify_system.js` (secção 23); frontend `pages/pos/{PosDialogs,PosScreen}.jsx`, `pages/owner/Reports.jsx`, `utils/pdf/reportPdf.js`, `pages/owner/Settings.jsx` (regex); `admin-frontend/src/App.jsx` (página «Pedidos de clientes»); novo `tests/e2e/fase8_4.mjs`.
@@ -1139,7 +1139,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - Segue-se: 10.2 (WhatsApp dos alertas — lembretes 7/1/0 ao devedor, lista diária ao dono, stock mínimo — desligado até haver número) ou o fundador decide; decisão do menu pendente (PDF).
 
 ### [2026-10-24] — Fase 11.1: fundação do site público (local)
-- Pedido do fundador: o site não aparece no Google nem nas IAs; quer uma landing real que apresente e venda o produto, com planos, e que encaminhe para entrar / pedir conta / terminal. Plano aprovado (`~/.claude/plans/o-meu-site-n-o-gleaming-clock.md`), decisões na Parte A (Fase 11).
+- Pedido do fundador: o site não aparece no Google nem nas IAs; quer uma landing real que apresente e venda o produto, com planos, e que encaminhe para entrar / pedir conta / terminal. Plano aprovado (`Para o Claude/planos/o-meu-site-n-o-gleaming-clock.md`), decisões na Parte A (Fase 11).
 - **Causa confirmada** com `curl` (UA Googlebot) a genesismz.com: `/`, `/robots.txt`, `/sitemap.xml`, `/entrar` → todos 200 com o mesmo HTML vazio da app.
 - **Ficheiros:** `frontend/index.html` → `frontend/app.html` (git mv) + `index.html` novo (landing provisória); novos `frontend/site/{site.js,site.css}`, `frontend/tailwind.site.config.js`, `frontend/src/ui/marca.js`, `frontend/scripts/gerar_icones.mjs`, `frontend/public/{robots.txt,sitemap.xml,favicon.ico,favicon-48.png,apple-touch-icon.png,icons/*}`, `frontend/tests/e2e/{site,pwa_offline}.mjs`; alterados `frontend/vite.config.js`, `frontend/tailwind.config.js` (content → `app.html`), `frontend/src/App.jsx`, `frontend/src/pages/auth/AuthLayout.jsx`, `frontend/src/ui/tokens.css`, `frontend/public/favicon.svg`, `deploy/nginx.conf`, `CLAUDE.md`.
 - **Decisões minhas:** landing = `index.html` e app = `app.html` (o service worker pré-guarda a landing em `/` e cai na app em todas as outras rotas, offline incluído); `start_url` `/inicio` com `id: '/'`; quem já tem sessão segue directo (o Googlebot não tem), `?site` mostra o site; nginx com recuos que servem também o build antigo (pode entrar antes da publicação).
@@ -1151,7 +1151,7 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 ### [2026-10-25] — Fase 11.2 (marca na app) por verificar no browser; login «pendurado» com a BD em baixo corrigido
 - **Estado encontrado:** 11.1 no commit `7e65b85`; a 11.2 estava escrita mas sem prova e sem commit (`BrandMark.jsx`, tokens com o verde do logo, PDF, `og-{pt,en}.png`, admin) + modo `demo` no `e2e_fixture.js` (preparação da 11.3).
 - **Prova da 11.2 até agora:** grep sem «G» de texto nem `#047857` fora do `--positive`; `npm run build` frontend e admin OK; bundle principal sem código admin (0); `og-pt.png` revista à vista.
-- **Testes de browser interrompidos:** `flows.mjs` parou à espera de «A repor» e `idioma_admin.mjs` à espera de «Invalid credentials» (0 erros de JS em ambos). O log do backend mostra 6 × «Can't reach database server» (Supabase, porta 6543) nesse período; depois o Claude Code parou os 3 servidores de teste por falta de memória no PC. Não volto a arrancá-los sem o fundador. Lojas/admin de teste apagados.
+- **Testes de browser interrompidos:** `flows.mjs` parou à espera de «A repor» e `idioma_admin.mjs` à espera de «Invalid credentials» (0 erros de JS em ambos). O log do backend mostra 6 × «Can't reach database server» (Supabase, porta 6543) nesse período; depois o PC parou os 3 servidores de teste por falta de memória no PC. Não volto a arrancá-los sem o fundador. Lojas/admin de teste apagados.
 - **Defeito real encontrado no log:** `[unhandledRejection] ReferenceError: normalizedEmail is not defined` em `routes/auth.js:323`. Corrigido nas 3 rotas (ver Parte A). Prova e contraprova na Parte A. Explica o `idioma_admin` pendurado: o login falhou na BD e nunca respondeu.
 - **Ficheiros alterados nesta sessão:** `backend/src/routes/auth.js`, `Mapa Mental/*`, `Oque ja fiz…txt`.
 - Segue-se: com memória livre e a BD acessível, correr `flows.mjs` + `idioma_admin.mjs` e rever capturas (entrar, painel, terminal, admin) → fechar a 11.2 e commit; publicar a correcção do `auth.js` com a 11.4 (ou antes, se o fundador quiser).

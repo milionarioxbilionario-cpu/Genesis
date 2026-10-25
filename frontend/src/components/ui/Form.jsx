@@ -63,7 +63,7 @@ export function Textarea({ label, hint, error, className, id, rows = 3, ...rest 
 }
 
 // O utilizador escreve em Meticais (o que e natural); o valor devolvido em
-// onChange e SEMPRE centavos inteiros (regra 6 do CLAUDE.md).
+// onChange e SEMPRE centavos inteiros (regra 6: dinheiro em centavos).
 export function MoneyInput({ label, hint, error, valueCents, onChangeCents, className, id, ...rest }) {
   const auto = useId();
   const fid = id || auto;

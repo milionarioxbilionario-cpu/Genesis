@@ -10,4 +10,4 @@ Notes:
 - The per-transaction SET LOCAL is a Postgres-only mechanism. For local SQLite (dev.db) the code skips the SET to avoid syntax errors.
 - For production, ensure the DATABASE_URL points to Postgres and RLS SQL from backend/prisma/rls_policies.sql is applied.
 
-If anything unexpected appears, revert via git. Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+If anything unexpected appears, revert via git.
