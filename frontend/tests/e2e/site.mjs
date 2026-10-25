@@ -98,6 +98,42 @@ try {
     await cx.close();
   }
 
+  // 3b) Fase 14: acessos claros no topo, «Ver mais detalhes», relatorios explicados,
+  //     blocos que aparecem ao descer (e tudo visivel sem JS / com menos movimento).
+  {
+    const cx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'pt-PT' });
+    const p = await cx.newPage();
+    watch(p);
+    await p.goto(BASE + '/?site');
+    await p.waitForLoadState('networkidle');
+    ok(await p.locator('header').getByRole('link', { name: 'Entrar', exact: true }).isVisible(), 'telemóvel: «Entrar» visível no topo sem abrir o menu');
+    ok(await p.getByRole('link', { name: /Entrar no painel/ }).isVisible() && await p.getByRole('link', { name: /Abrir o terminal/ }).isVisible(), 'herói: «Entrar no painel» e «Abrir o terminal» à vista');
+    ok(await p.getByText('O Genesis controla as validades').isVisible().catch(() => false) || (await p.content()).includes('O Genesis controla as validades'), 'validades escritas como solução («O Genesis controla as validades»)');
+    const first = p.locator('details.more').first();
+    await first.scrollIntoViewIfNeeded();
+    await first.locator('summary').click();
+    ok(await first.evaluate((d) => d.open) && await first.locator('li').first().isVisible(), '«Ver mais detalhes» abre a lista da funcionalidade');
+    ok(await p.locator('#relatorios-titulo').count() === 1 && (await p.content()).includes('Quanto lucrei de verdade?'), 'relatórios explicados: diário, semanal e mensal');
+    const lastCard = p.locator('.rv').last();
+    await lastCard.scrollIntoViewIfNeeded();
+    await p.waitForTimeout(900);
+    ok(await lastCard.evaluate((el) => el.classList.contains('is-in') && getComputedStyle(el).opacity === '1'), 'ao descer, os blocos aparecem (opacidade 1)');
+    await cx.close();
+    const nojs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+    const np = await nojs.newPage();
+    await np.goto(BASE + '/');
+    const hidden = await np.locator('.rv').evaluateAll((els) => els.filter((e) => getComputedStyle(e).opacity !== '1').length);
+    ok(hidden === 0, 'sem JavaScript: nada fica escondido', hidden);
+    await nojs.close();
+    const rm = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });
+    const rp = await rm.newPage();
+    await rp.goto(BASE + '/?site');
+    await rp.waitForLoadState('networkidle');
+    const moving = await rp.locator('.rv').evaluateAll((els) => els.filter((e) => getComputedStyle(e).opacity !== '1').length);
+    ok(moving === 0, 'menos movimento: tudo visível sem animação', moving);
+    await rm.close();
+  }
+
   // 4) WhatsApp: mensagem escrita com a saudacao da hora de quem visita.
   for (const [hour, want, url] of [[9, 'Bom dia!', '/?site'], [15, 'Boa tarde!', '/?site'], [21, 'Boa noite!', '/planos'], [9, 'Good morning!', '/en/?site']]) {
     const cx = await browser.newContext();

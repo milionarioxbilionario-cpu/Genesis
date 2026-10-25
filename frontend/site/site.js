@@ -2,6 +2,9 @@
 // no HTML (os motores de busca e as IAs leem-no sem correr isto).
 import './site.css';
 
+// Fase 14: com JS, os blocos .rv aparecem ao chegar ao ecra (ver site.css).
+document.documentElement.classList.add('js');
+
 const PAGE_LANG = document.documentElement.lang.startsWith('en') ? 'en' : 'pt';
 const LANG_KEY = 'genesis.lang'; // a mesma chave de src/i18n/core.js
 const params = new URLSearchParams(location.search);
@@ -66,3 +69,12 @@ function withGreeting(a) {
 }
 document.querySelectorAll('a[data-wa]').forEach(withGreeting);
 document.addEventListener('click', (e) => { const a = e.target.closest('a[data-wa]'); if (a) withGreeting(a); }, true);
+
+// Fase 14: revelar ao descer. Sem IntersectionObserver (browsers antigos) fica tudo visivel.
+const reveal = document.querySelectorAll('.rv');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+  reveal.forEach((el, i) => { el.style.transitionDelay = (i % 3) * 70 + 'ms'; io.observe(el); });
+} else reveal.forEach((el) => el.classList.add('is-in'));

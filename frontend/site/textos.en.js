@@ -25,6 +25,7 @@ export default {
   nav: {
     features: 'Features', who: 'Who it is for', how: 'Getting started', pricing: 'Pricing', faq: 'FAQ',
     signIn: 'Sign in', terminal: 'Terminal', start: 'Try it free', menu: 'Open the menu', home: 'Home',
+    signInLong: 'Sign in to the panel', terminalLong: 'Open the terminal',
   },
 
   wa: {
@@ -39,38 +40,56 @@ export default {
   hero: {
     eyebrow: 'Point of sale for shops in Mozambique',
     title: 'Sales, stock and cash for your shop — even without internet',
-    lead: 'With Genesis MZ, cashiers sell at the terminal and the owner follows the real profit, the stock and customer credit, on a computer or a phone.',
+    lead: 'Cashiers sell at the terminal with their own PIN. The owner sees on the phone what came in, the real profit, the stock, the expiry dates and customer credit — and nobody touches the money without it being recorded.',
+    already: 'Already have an account?',
+    counter: 'At the counter?',
     primary: 'Try it free',
     secondary: 'Chat on WhatsApp',
-    note: 'First month free for new customers · then {price}/month',
+    note: 'First month free for new customers · then {price}/month, everything included',
+    trust: ['Sells offline', 'Cash, M-Pesa, e-Mola and Card', 'Panel with PIN and Face ID', 'Phone, tablet and computer'],
     shotAlt: 'Genesis MZ sales terminal with a customer basket and the Cash, M-Pesa, e-Mola and Card payment options',
     phoneAlt: 'Genesis MZ owner panel on a phone, with today\'s and this month\'s revenue',
   },
 
   pains: {
-    title: 'Everyday problems, solved',
-    lead: 'What costs a small shop the most is rarely a sale. It is the missing cash, the stock that expires and the credit nobody collected.',
+    title: 'What Genesis solves in your shop',
+    lead: 'What costs a small shop the most is rarely a sale. It is the missing cash, the stock that expires and the credit nobody collected. Genesis has an answer for each one.',
+    problem: 'The problem',
+    solution: 'How Genesis solves it',
     items: [
-      { icon: 'wallet', q: 'Cash goes missing', a: 'At the end of the shift the cashier counts the cash without seeing how much there should be. Genesis compares and the owner sees the difference. Three counts below lock the profile until the owner decides.' },
-      { icon: 'calendar-clock', q: 'Stock disappears or expires', a: 'Stock by batch, with expiry dates. What expires first always leaves first, the alert arrives before it expires and losses are recorded with the reason.' },
-      { icon: 'hand-coins', q: 'Customer credit is forgotten', a: 'Every credit ("cheneca") with name, phone, amount and due date. The alert shows the ones due today, tomorrow or already overdue.' },
-      { icon: 'chart-column', q: 'You do not know your real profit', a: 'The monthly report subtracts salaries, rent, expenses and supplier deliveries. You see the net profit, not just what came into the till.' },
+      { icon: 'wallet', q: 'Cash goes missing from the till', a: 'At the end of the shift the cashier counts the cash without seeing how much there should be (blind count). Genesis compares it with the sales and shows the owner the difference. Three counts below lock the profile until the owner decides.' },
+      { icon: 'calendar-clock', q: 'Products that spoil or pass their expiry date', a: 'Genesis tracks expiry dates: every purchase comes in as a batch with its own date, the batch that expires first is always sold first, the alert arrives before it expires and whatever passes the date is recorded as a loss, with the reason.' },
+      { icon: 'hand-coins', q: 'Forgotten customer credit', a: 'Every credit ("cheneca") keeps the name, phone, amount and due date. Genesis warns about the ones due today, tomorrow or already overdue, and records every payment.' },
+      { icon: 'chart-column', q: 'Not knowing your real profit', a: 'The monthly report takes salaries, rent, expenses and supplier deliveries away from what came in. You see the real net profit, not just the cash in the till.' },
     ],
   },
 
   features: {
     title: 'Everything the shop needs, in one system',
+    lead: 'A summary of each part. Tap «See more details» to know exactly what it does.',
+    more: 'See more details',
     items: [
-      { icon: 'scan-barcode', t: 'A fast sales terminal', d: 'Accent-insensitive search, barcode scanner, phone camera and keyboard shortcuts. Each cashier signs in with their own 4-digit PIN.' },
-      { icon: 'wifi-off', t: 'Sells without internet', d: 'Sales are kept on the device and are sent automatically when the network is back. Each sale has its own number, so it is never counted twice.' },
-      { icon: 'smartphone', t: 'Cash, M-Pesa, e-Mola and Card', d: 'Each payment method appears separately in the reports and in the shift close.' },
-      { icon: 'lock-keyhole', t: 'Owner PIN for sensitive actions', d: 'Cancelling a sale, a discount above the limit or reopening the shift needs the owner\'s PIN. Wrong attempts are recorded.' },
-      { icon: 'qr-code', t: 'Receipts with a verification QR', d: 'Receipts as PDF or printed. The customer scans the QR and confirms the receipt is genuine.' },
-      { icon: 'file-chart-column', t: 'Daily, weekly and monthly reports', d: 'Best-selling and most profitable products, comparison with the previous period, sales lost to missing products and a PDF to share.' },
-      { icon: 'shopping-cart', t: 'Suggested shopping list', d: 'Genesis suggests what to buy based on sales. The list goes to the supplier on WhatsApp in one tap.' },
-      { icon: 'bell', t: 'Alerts in one bell', d: 'Low stock, expiry dates, customer credit, shift-close differences and the monthly goal reached.' },
-      { icon: 'users', t: 'Team and goals', d: 'Cashiers, workers and salaries. A monthly sales goal with day-by-day progress.' },
-      { icon: 'languages', t: 'Portuguese and English', d: 'Each person chooses their language: panel, terminal, receipts and PDFs.' },
+      { icon: 'scan-barcode', t: 'A fast sales terminal', d: 'Search, barcode scanner, phone camera and keyboard shortcuts. Each cashier signs in with their own PIN.', more: ['Accent-insensitive search.', 'USB or Bluetooth barcode scanner and the phone camera.', 'Keyboard shortcuts to charge, discount, amount received, payment method and categories.', 'Each cashier signs in at the terminal with a 4-digit PIN; the owner\'s account never stays at the counter.', 'On a phone the products fill the screen and the total sits in a bar at the bottom.'] },
+      { icon: 'wifi-off', t: 'Sells without internet', d: 'Sales are kept on the device and are sent automatically when the network is back. The terminal opens even offline.', more: ['The terminal opens offline with the saved profiles and the cashier signs in with the PIN.', 'Each sale has its own number from the device: when it syncs, it is never counted twice.', 'When the sale arrives, the server checks prices and stock again.', 'Offline, the owner sees in the panel the data already opened, read-only.'] },
+      { icon: 'smartphone', t: 'Cash, M-Pesa, e-Mola and Card', d: 'Each payment method appears separately in the reports and in the shift close.', more: ['Change is calculated on screen.', 'The shift close counts only cash; M-Pesa, e-Mola and card are shown apart.', 'The reports show how much came in through each payment method.'] },
+      { icon: 'calendar-clock', t: 'Stock by batch and expiry dates', d: 'Each purchase is a batch with an expiry date. Genesis sells what expires first and warns you before.', more: ['The owner chooses how many days before the expiry date to be warned.', 'The day after the expiry date, what was not sold is recorded as a loss automatically.', 'Breakage and internal use are recorded with the reason.', 'Stock adjustments by the owner only, always recorded.'] },
+      { icon: 'lock-keyhole', t: 'Owner PIN for sensitive actions', d: 'Cancelling a sale, a discount above the limit or reopening the shift needs the owner\'s PIN.', more: ['Up to the limit the owner chooses, the cashier gives the discount alone; above it, the PIN is needed.', 'Wrong PINs are recorded; too many errors lock for 15 minutes.', 'Everything stays in the history (audit log) the owner can check.'] },
+      { icon: 'fingerprint-pattern', t: 'A protected owner panel', d: 'The panel asks for your PIN (or Face ID / fingerprint) every time you open the app and after 5 minutes idle.', more: ['If someone picks up your phone, they do not see the shop\'s figures.', 'Five wrong PINs end the session: you can only get back in with email and password.', 'Private mode: one tap on the eye hides every money amount from the screen.'] },
+      { icon: 'qr-code', t: 'Receipts with a verification QR', d: 'Receipts as PDF or printed. The customer scans the QR and confirms the receipt is genuine.', more: ['Thermal receipt printer (optional) or a PDF to share.', 'The QR opens a Genesis page that confirms the sale.'] },
+      { icon: 'shopping-cart', t: 'Suggested shopping list', d: 'Genesis suggests what to buy based on sales and sends the list to the supplier on WhatsApp.', more: ['It counts what was sold, the missing stock and what customers asked for and was not there.', 'It shows the investment at cost price and the supplier delivery.', 'The message goes ready-written to the supplier\'s WhatsApp.'] },
+      { icon: 'bell', t: 'Alerts in one bell', d: 'Low stock, expiry dates, customer credit, shift-close differences and the monthly goal reached.', more: ['Alerts disappear on their own when the situation is solved.', 'Tapping an alert opens the right page.'] },
+      { icon: 'users', t: 'Team, salaries and goals', d: 'Cashiers, workers and salaries. A monthly sales goal with day-by-day progress.', more: ['On the Home page you see who is working now, who already closed the shift and who has not started.', 'The goal shows how much is left and on which day you get there at the current pace.'] },
+      { icon: 'languages', t: 'Portuguese and English', d: 'Each person chooses their language: panel, terminal, receipts and PDFs.', more: ['The choice is saved in each person\'s account.'] },
+    ],
+  },
+
+  reports: {
+    title: 'Reports that answer your questions',
+    lead: 'Three reports, each for one question. All of them also come as a PDF, to keep or share.',
+    items: [
+      { icon: 'sun', t: 'Daily', q: 'How did today go?', points: ['Revenue and gross profit of the day', 'Sales by cashier and by payment method', 'Comparison with the previous day', 'Cancellations, shift closes and breakage', 'Products customers asked for that were not in stock'] },
+      { icon: 'calendar-range', t: 'Weekly', q: 'How was the week?', points: ['Best and worst day of the week', 'Best-selling and most profitable', 'Comparison with the previous week', 'What to buy for next week'] },
+      { icon: 'calendar-check', t: 'Monthly', q: 'How much did I really make?', points: ['From revenue to net profit: minus salaries, rent, expenses and deliveries', 'Monthly goal and the last 12 months', 'Losses from expiry dates and breakage', 'What to buy for next month'] },
     ],
   },
 
@@ -78,7 +97,7 @@ export default {
     title: 'See what it looks like',
     lead: 'Real Genesis MZ screens, in a demo shop.',
     items: [
-      { key: 'inicio', cap: 'Owner panel: the day, the month and the goal' },
+      { key: 'inicio', cap: 'Owner home: today, the goal and who is working' },
       { key: 'mensal', cap: 'Monthly report: from revenue to net profit' },
       { key: 'alertas', cap: 'Alerts: stock, expiry dates and customer credit' },
     ],
@@ -107,6 +126,7 @@ export default {
   security: {
     title: 'Your shop\'s data is yours alone',
     items: [
+      'The owner panel asks for a PIN or Face ID when it opens and after 5 minutes idle.',
       'Each shop is kept apart from the others by two independent layers: in the application and in the database itself.',
       'Cashiers do not see costs, margins, reports or their colleagues\' sales.',
       'Cancellations, discounts and stock adjustments stay in the history the owner can check.',
@@ -124,7 +144,8 @@ export default {
   faq: {
     title: 'Frequently asked questions',
     items: [
-      { q: 'Do I need internet to sell?', a: 'No. Once the terminal has opened with a connection, it keeps selling offline and sends the sales when the connection is back. To see the reports in the owner panel you need internet.' },
+      { q: 'Do I need internet to sell?', a: 'No. Once the cashier has signed in once with internet on that device, the terminal opens and sells offline and sends the sales when the connection is back. Offline, the owner panel shows the data already opened, read-only.' },
+      { q: 'What if someone picks up my phone?', a: 'The owner panel asks for your PIN (or Face ID / fingerprint) every time you open the app and after 5 minutes without use. There is also private mode, which hides money amounts from the screen.' },
       { q: 'What equipment do I need?', a: 'A computer, tablet or phone with an up-to-date browser (Chrome, Edge or Safari). A barcode scanner and a receipt printer are optional: without a printer, the receipt is a PDF.' },
       { q: 'Does it work on a phone?', a: 'Yes. The owner panel and the terminal work on a phone and can be installed on the home screen, like an app.' },
       { q: 'Can cashiers see the shop\'s profit?', a: 'No. Cashiers only see the terminal: they sell, print the receipt and record breakages and customer requests. Costs, margins and reports are for the owner only.' },
@@ -162,6 +183,7 @@ export default {
       'Cash, M-Pesa, e-Mola and Card kept separate',
       'Stock by batch, expiry dates and alerts',
       'Blind shift close',
+      'Owner panel with PIN, Face ID and private mode',
       'Customer credit, suppliers and shopping list',
       'Daily, weekly and monthly reports with net profit',
       'PDF or printed receipts, with QR',

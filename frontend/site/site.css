@@ -65,8 +65,47 @@
   .frame { @apply overflow-hidden rounded-lg border border-border-strong bg-surface shadow-pop; }
   .phone { @apply overflow-hidden rounded-lg border-4 border-ink bg-surface shadow-pop; border-radius: 18px; }
 
+  /* Fase 14: heroi e chamada final no verde da marca, com o dourado so nos destaques. */
+  .hero {
+    background-color: var(--brand);
+    background-image: radial-gradient(900px 420px at 85% -10%, #17694F 0%, transparent 60%), radial-gradient(700px 380px at -10% 110%, #083A2C 0%, transparent 60%);
+  }
+  .eyebrow-dark { @apply text-sm font-semibold uppercase tracking-wider; color: var(--brand-gold); }
+  .text-brand-gold { color: var(--brand-gold); }
+  .btn-gold, .btn-on-dark {
+    @apply inline-flex items-center gap-2 rounded px-4 py-2 text-base font-semibold transition-colors;
+    min-height: 40px;
+  }
+  .btn-gold { background: var(--brand-gold); color: #1C1917; }
+  .btn-gold:hover { background: #FFC529; }
+  .btn-on-dark { border: 1px solid #4F8C79; color: #FFFFFF; }
+  .btn-on-dark:hover { background: #12604A; }
+  .access-card { @apply flex flex-col gap-0.5 rounded-lg px-4 py-3 transition-colors; border: 1px solid #2F7461; background: #0E553F; }
+  .access-card:hover { background: #12604A; border-color: #4F8C79; }
+  .band-soft { background: var(--accent-soft); }
+  .label-muted { @apply text-xs font-semibold uppercase tracking-wider text-ink-muted; }
+  .label-accent { @apply flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent; }
+  .solution { border-left: 3px solid var(--accent); }
+
+  /* «Ver mais detalhes»: <details> nativo (funciona sem JS e o Google le o texto). */
+  .more summary { @apply inline-flex cursor-pointer list-none items-center gap-1.5 text-base font-medium text-accent hover:text-accent-hover; }
+  .more summary::-webkit-details-marker { display: none; }
+  .more[open] .more-chevron { transform: rotate(180deg); }
+  .more ul { @apply mt-3 space-y-2 border-t border-border pt-3; }
+  .more li { @apply flex gap-2.5 text-base text-ink-2; }
+
   .faq summary { @apply flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-md font-medium text-ink; }
   .faq summary::-webkit-details-marker { display: none; }
   .faq p { @apply pb-5 text-md text-ink-2; }
   .faq[open] .faq-chevron { transform: rotate(180deg); }
+}
+
+/* Fase 14: os blocos aparecem a subir 12 px quando chegam ao ecra. So com JS
+   (classe .js no <html>, posta pelo site.js): sem JS fica tudo visivel. Sem
+   movimento para quem pediu menos movimento. */
+.js .rv { opacity: 0; transform: translateY(12px); transition: opacity 600ms cubic-bezier(0.2, 0, 0, 1), transform 600ms cubic-bezier(0.2, 0, 0, 1); }
+.js .rv.is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
 }

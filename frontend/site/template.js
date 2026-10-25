@@ -66,6 +66,8 @@ function head(t, page, ctx) {
     <meta name="twitter:description" content="${esc(desc)}" />
     <meta name="twitter:image" content="${ogImg}" />
     <script type="application/ld+json">${JSON.stringify(jsonLd(t, page, ctx)).replace(/</g, '\\u003c')}</script>
+    <!-- Antes do 1.o desenho: com JS os blocos aparecem ao descer (site.css .rv); sem JS fica tudo visivel. -->
+    <script>document.documentElement.classList.add('js')</script>
     <script type="module" src="/site/site.js"></script>
   </head>`;
 }
@@ -117,7 +119,8 @@ function header(t, page, { icon }) {
         <nav class="hidden items-center gap-6 lg:flex" aria-label="${esc(t.nav.menu)}">${links.map(navLink).join('')}</nav>
         <div class="ml-auto flex items-center gap-2">
           <a href="${other}" hreflang="${t.other.lang}" lang="${t.other.lang}" class="btn-ghost hidden sm:inline-flex" title="${esc(t.other.label)}">${icon('languages', 'h-4 w-4')}${t.other.short}</a>
-          <a data-app href="/inicio" class="btn-ghost hidden md:inline-flex">${esc(t.nav.signIn)}</a>
+          <a data-app href="/terminal" class="btn-ghost hidden xl:inline-flex">${icon('monitor', 'h-4 w-4')}${esc(t.nav.terminal)}</a>
+          <a data-app href="/inicio" class="btn-secondary">${esc(t.nav.signIn)}</a>
           <a data-app href="/pedir-conta" class="btn-primary hidden sm:inline-flex">${esc(t.nav.start)}</a>
           <button type="button" class="btn-icon lg:hidden" data-menu-toggle aria-expanded="false" aria-controls="menu" aria-label="${esc(t.nav.menu)}">${icon('menu', 'h-5 w-5')}</button>
         </div>
@@ -183,44 +186,74 @@ export function renderHome(t, ctx) {
   return `${head(t, 'home', ctx)}
   <body class="bg-bg text-ink">${header(t, 'home', ctx)}
     <main id="conteudo">
-      <section class="border-b border-border bg-surface">
-        <div class="mx-auto grid max-w-content items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:py-20">
-          <div>
-            <p class="eyebrow">${esc(t.hero.eyebrow)}</p>
-            <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">${esc(h1a)} <span class="text-brand">— ${esc(h1b)}</span></h1>
-            <p class="mt-5 max-w-xl text-md text-ink-2">${esc(t.hero.lead)}</p>
+      <section class="hero text-white">
+        <div class="mx-auto grid max-w-content items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:py-20">
+          <div class="rv">
+            <p class="eyebrow-dark">${esc(t.hero.eyebrow)}</p>
+            <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">${esc(h1a)} <span class="text-brand-gold">— ${esc(h1b)}</span></h1>
+            <p class="mt-5 max-w-xl text-md text-brand-tint">${esc(t.hero.lead)}</p>
             <div class="mt-8 flex flex-wrap gap-3">
-              <a data-app href="/pedir-conta" class="btn-primary btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
-              <a ${waAttrs(t, 'contact')} class="btn-secondary btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
+              <a data-app href="/pedir-conta" class="btn-gold btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
+              <a ${waAttrs(t, 'contact')} class="btn-on-dark btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
             </div>
-            <p class="mt-4 text-sm text-ink-muted">${esc(fill(t, t.hero.note))}</p>
+            <p class="mt-4 text-sm text-brand-tint">${esc(fill(t, t.hero.note))}</p>
+            <div class="mt-6 grid gap-2 sm:grid-cols-2">
+              <a data-app href="/inicio" class="access-card"><span class="text-sm text-brand-tint">${esc(t.hero.already)}</span><span class="flex items-center gap-2 font-semibold">${icon('log-in', 'h-4 w-4')}${esc(t.nav.signInLong)}</span></a>
+              <a data-app href="/terminal" class="access-card"><span class="text-sm text-brand-tint">${esc(t.hero.counter)}</span><span class="flex items-center gap-2 font-semibold">${icon('monitor', 'h-4 w-4')}${esc(t.nav.terminalLong)}</span></a>
+            </div>
           </div>
-          <div class="relative pb-6 sm:pb-10">
-            <div class="frame">${shot(ctx, shotLang('terminal'), t.hero.shotAlt, { eager: true, cls: 'block w-full' })}</div>
-            <div class="phone absolute -bottom-2 right-3 hidden w-[24%] sm:block">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { cls: 'block w-full' })}</div>
+          <div class="rv relative pb-6 sm:pb-10">
+            <div class="mx-auto w-[62%] max-w-[300px] sm:hidden"><div class="phone">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { eager: true, cls: 'block w-full' })}</div></div>
+            <div class="hidden sm:block">
+              <div class="frame">${shot(ctx, shotLang('terminal'), t.hero.shotAlt, { eager: true, cls: 'block w-full' })}</div>
+              <div class="phone absolute -bottom-2 right-3 w-[24%]">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { cls: 'block w-full' })}</div>
+            </div>
           </div>
+        </div>
+        <div class="border-t border-[#1F6450]">
+          <ul class="mx-auto grid max-w-content grid-cols-2 gap-x-6 gap-y-3 px-4 py-5 text-sm font-medium sm:px-6 lg:grid-cols-4">
+            ${t.hero.trust.map((x) => `<li class="flex items-center gap-2">${icon('circle-check', 'h-4 w-4 shrink-0 text-brand-gold')}<span>${esc(x)}</span></li>`).join('\n            ')}
+          </ul>
         </div>
       </section>
 
       <section class="section" aria-labelledby="dores-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.pains.title, t.pains.lead, 'dores')}
           <div class="mt-10 grid gap-4 md:grid-cols-2">
-            ${t.pains.items.map((p) => `<article class="card">
-              <div class="icon-tile">${icon(p.icon, 'h-5 w-5')}</div>
-              <h3 class="mt-4 text-lg font-semibold text-ink">${esc(p.q)}</h3>
-              <p class="mt-2 text-md text-ink-2">${esc(p.a)}</p>
+            ${t.pains.items.map((p) => `<article class="card rv solution">
+              <div class="flex items-center gap-3"><div class="icon-tile">${icon(p.icon, 'h-5 w-5')}</div><p class="label-muted">${esc(t.pains.problem)}</p></div>
+              <h3 class="mt-3 text-lg font-semibold text-ink">${esc(p.q)}</h3>
+              <p class="label-accent mt-4">${icon('check', 'h-4 w-4')}${esc(t.pains.solution)}</p>
+              <p class="mt-1.5 text-md text-ink-2">${esc(p.a)}</p>
             </article>`).join('\n            ')}
           </div>
         </div>
       </section>
 
       <section id="${id.features}" class="section border-y border-border bg-surface" aria-labelledby="${id.features}-titulo">
-        <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.features.title, '', id.features)}
-          <div class="mt-10 grid gap-x-10 gap-y-8 md:grid-cols-2">
-            ${t.features.items.map((f) => `<div class="flex gap-4">
-              <div class="icon-tile shrink-0">${icon(f.icon, 'h-5 w-5')}</div>
-              <div><h3 class="text-md font-semibold text-ink">${esc(f.t)}</h3><p class="mt-1 text-base text-ink-2">${esc(f.d)}</p></div>
-            </div>`).join('\n            ')}
+        <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.features.title, t.features.lead, id.features)}
+          <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            ${t.features.items.map((f) => `<article class="card rv flex flex-col">
+              <div class="icon-tile">${icon(f.icon, 'h-5 w-5')}</div>
+              <h3 class="mt-4 text-md font-semibold text-ink">${esc(f.t)}</h3>
+              <p class="mt-1 text-base text-ink-2">${esc(f.d)}</p>
+              <details class="more mt-auto pt-3">
+                <summary>${esc(t.features.more)}${icon('chevron-down', 'more-chevron h-4 w-4')}</summary>
+                <ul>${f.more.map((m) => `<li>${icon('check', 'mt-1 h-4 w-4 shrink-0 text-accent')}<span>${esc(m)}</span></li>`).join('')}</ul>
+              </details>
+            </article>`).join('\n            ')}
+          </div>
+        </div>
+      </section>
+
+      <section class="section band-soft" aria-labelledby="relatorios-titulo">
+        <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.reports.title, t.reports.lead, 'relatorios')}
+          <div class="mt-10 grid gap-4 lg:grid-cols-3">
+            ${t.reports.items.map((r) => `<article class="card rv">
+              <div class="flex items-center gap-3"><div class="icon-tile">${icon(r.icon, 'h-5 w-5')}</div><h3 class="text-lg font-semibold text-ink">${esc(r.t)}</h3></div>
+              <p class="mt-3 text-md font-medium text-accent-text">«${esc(r.q)}»</p>
+              <ul class="mt-3 space-y-2">${r.points.map((x) => `<li class="flex gap-2.5 text-base text-ink-2">${icon('check', 'mt-1 h-4 w-4 shrink-0 text-accent')}<span>${esc(x)}</span></li>`).join('')}</ul>
+            </article>`).join('\n            ')}
           </div>
         </div>
       </section>
@@ -228,7 +261,7 @@ export function renderHome(t, ctx) {
       <section class="section" aria-labelledby="ecras-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.screens.title, t.screens.lead, 'ecras')}
           <div class="mt-10 grid gap-8 lg:grid-cols-3">
-            ${t.screens.items.map((s) => `<figure>
+            ${t.screens.items.map((s) => `<figure class="rv">
               <div class="frame">${shot(ctx, shotLang(s.key), s.cap, { cls: 'block w-full' })}</div>
               <figcaption class="mt-3 text-base text-ink-2">${esc(s.cap)}</figcaption>
             </figure>`).join('\n            ')}
@@ -239,7 +272,7 @@ export function renderHome(t, ctx) {
       <section id="${id.who}" class="section border-y border-border bg-surface" aria-labelledby="${id.who}-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.who.title, t.who.lead, id.who)}
           <ul class="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            ${t.who.items.map((w) => `<li class="card flex flex-col items-center gap-3 py-6 text-center"><span class="icon-tile">${icon(w.icon, 'h-5 w-5')}</span><span class="text-md font-medium text-ink">${esc(w.t)}</span></li>`).join('\n            ')}
+            ${t.who.items.map((w) => `<li class="card rv flex flex-col items-center gap-3 py-6 text-center"><span class="icon-tile">${icon(w.icon, 'h-5 w-5')}</span><span class="text-md font-medium text-ink">${esc(w.t)}</span></li>`).join('\n            ')}
           </ul>
           <p class="mt-6 text-base text-ink-2"><a ${waAttrs(t, 'contact')} class="text-link">${esc(t.who.other)}</a></p>
         </div>
@@ -248,7 +281,7 @@ export function renderHome(t, ctx) {
       <section id="${id.how}" class="section" aria-labelledby="${id.how}-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.how.title, '', id.how)}
           <ol class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            ${t.how.items.map((s, i) => `<li class="card">
+            ${t.how.items.map((s, i) => `<li class="card rv">
               <span class="step">${i + 1}</span>
               <h3 class="mt-4 text-md font-semibold text-ink">${esc(s.t)}</h3>
               <p class="mt-1 text-base text-ink-2">${esc(s.d)}</p>
@@ -272,7 +305,7 @@ export function renderHome(t, ctx) {
 
       <section class="section" aria-labelledby="preco-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">
-          <div class="card mx-auto max-w-2xl p-8 text-center sm:p-10">
+          <div class="card rv mx-auto max-w-2xl p-8 text-center sm:p-10">
             <h2 id="preco-titulo" class="text-2xl font-bold tracking-tight text-ink">${esc(t.priceBlock.title)}</h2>
             <p class="mt-3 text-md text-ink-2">${esc(t.priceBlock.lead)}</p>
             <p class="mt-6"><span class="num text-4xl font-bold tracking-tight text-ink">${esc(priceText(t))}</span><span class="text-md text-ink-muted">${esc(t.perMonth)}</span></p>
@@ -302,13 +335,13 @@ function faqList(t, items, icon) {
 }
 
 function finalCta(t, icon) {
-  return `<section class="section" aria-labelledby="final-titulo">
-        <div class="mx-auto max-w-content px-4 text-center sm:px-6">
-          <h2 id="final-titulo" class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">${esc(t.final.title)}</h2>
-          <p class="mx-auto mt-4 max-w-xl text-md text-ink-2">${esc(t.final.lead)}</p>
+  return `<section class="section hero text-white" aria-labelledby="final-titulo">
+        <div class="rv mx-auto max-w-content px-4 text-center sm:px-6">
+          <h2 id="final-titulo" class="text-2xl font-bold tracking-tight sm:text-3xl">${esc(t.final.title)}</h2>
+          <p class="mx-auto mt-4 max-w-xl text-md text-brand-tint">${esc(t.final.lead)}</p>
           <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <a data-app href="/pedir-conta" class="btn-primary btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
-            <a ${waAttrs(t, 'contact')} class="btn-secondary btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
+            <a data-app href="/pedir-conta" class="btn-gold btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
+            <a ${waAttrs(t, 'contact')} class="btn-on-dark btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
           </div>
         </div>
       </section>`;
