@@ -337,6 +337,15 @@ Causa (24/10, `curl` como Googlebot a genesismz.com): todas as URLs — incluind
 | `vite.config.js` (entradas) | + `planos`, `en/index`, `en/pricing` | ✅ | 25/10 — `dist/` com as 4 páginas; `pwa_offline.mjs` 8/8 |
 | `backend/src/routes/auth.js` (`/login`, `/forgot-password`, `/reset-password`) | 🔴→✅ `normalizedEmail` declarada dentro do `try` e usada no `catch`: com a BD em baixo o `catch` lançava `ReferenceError` e **o pedido ficava sem resposta** (o login «pendurava»). Variável passou para fora do `try` | ✅ CONFIRMADO (local) · por publicar | 25/10 — teste num processo com BD falsa em baixo: `/login` e `/forgot-password` 500 imediato; **contraprova** com a versão antiga: sem resposta em 4 s + `unhandledRejection`. Detector (parser Babel) em `backend/src`, `backend/scripts`, `frontend/src`, `admin-frontend/src`: 0 casos (versão antiga: 3) · `/reset-password` não exercitado até ao catch (recusa o código antes da BD) |
 
+### Fases 12–20 — plano `Para o Claude/planos/joyful-wibbling-lighthouse.md` (aprovado 25/10)
+Decisões do fundador: memória `plan-fases-12-20-decisoes`. Ordem: Etapa 0 → 12 defeitos → 13 visão geral → 14 site → 15 recibo/IVA/peso → 16 perfil/planos/aniversário → 17 vários estabelecimentos → 18 restaurante → 19 revenda/encomendas → 20 extras. **Só registados (sem construir):** apps Android/iOS/computador; modo escuro; chat com IA no Premium; confirmação automática de pagamentos.
+
+| Caminho | O que faz | Estado | Última verificação |
+|---|---|---|---|
+| **Etapa 0** histórico do git | 63 commits reescritos (`filter-branch`): autor e committer `Mente-MiIionaria <218531686+Mente-MiIionaria@users.noreply.github.com>`; sem `Co-Authored-By`/`Claude-Session`; `CLAUDE.md` e `.claude/` fora da raiz em todo o histórico. Cópia antes: `C:\Users\CMM\Documents\Genesis-copias\genesis-antes-reescrita.bundle` + tag local `antes-reescrita` | ✅ CONFIRMADO | 25/10 — 63/63 commits com o autor novo; 0 menções nas mensagens; `git diff antes-reescrita main` só com a limpeza; push `805acd0…3d8987a` (forced); API de contribuidores do GitHub: só `Mente-MiIionaria` |
+| `Para o Claude/` (`CLAUDE.md`, `skills/`, `memoria/`, `planos/`, `restaurar.mjs`, `COMO MUDAR DE PC.txt`) + `scripts/backup_claude.mjs` | Cópia versionada das instruções e da memória do assistente; na raiz `CLAUDE.md` e `.claude/` estão no `.gitignore`. `backup_claude.mjs` antes de cada commit; `restaurar.mjs` repõe tudo num PC novo | ✅ CONFIRMADO | 25/10 — backup: 3 skills, 8 memórias, 5 planos; `restaurar.mjs` corrido (copiou para os sítios certos); grep de segredos na pasta: 0 |
+| Repositório GitHub privado | Pedido pelo fundador. Ao confirmar, o GitHub pede «sudo mode» (GitHub Mobile ou código por e-mail) | ⚠️ À ESPERA DO FUNDADOR — separador aberto no Chrome dele, falta aprovar no telemóvel | 25/10 |
+
 ---
 
 ## Parte B — JORNAL CRONOLÓGICO
@@ -1184,3 +1193,10 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Teste de resultados do Google:** 2 avisos não críticos → retirei `priceSpecification` (commit + publicação `294ffb8`, `site.test` 9/9, build OK) → 1 aviso (`aggregateRating`, fica de fora: não há avaliações reais).
 - **Guia** `Guia - aparecer no Google.txt` (forçado no git: a regra `*.txt` do `.gitignore` é para dumps; o guia não tem segredos).
 - **Fim da Fase 11** (11.1–11.5). Por decidir pelo fundador: números de e-Mola/M-Pesa/banco para o site; preço do plano anual; menu do dono (PDF de 18/10); próxima fase (subscrições / confirmação automática de pagamentos, alertas por WhatsApp quando houver número Business).
+
+### [2026-10-25] — Etapa 0: repositório em nome do fundador, «Para o Claude», privado (em curso)
+- **Pedido:** o GitHub deve mostrar só o fundador (conta Mente-MiIionaria, confirmada pelo README «KLEYTON ABELARDO»); as instruções e a memória do assistente ficam no GitHub numa pasta «Para o Claude», com instruções para mudar de PC; o repositório passa a privado.
+- **Ficheiros:** novos `scripts/backup_claude.mjs`, `Para o Claude/*`; `.gitignore` (+ `/CLAUDE.md`, `/.claude/`); `CLAUDE.md` (secção «Git authorship»); limpeza de menções de autoria em `Plano_a_executar.md`, `backend/CHANGELOG_AUTOMATED.md`, `backend/scripts/master_catalog_en.json`, `frontend/src/components/ui/Form.jsx` e neste Mapa Mental (caminhos dos planos → `Para o Claude/planos/`).
+- **Prova:** bundle verificado («is okay») antes de mexer; `filter-branch` 63/63; autores = 1 (Mente-MiIionaria); 0 menções a Claude/Copilot/Anthropic nas mensagens; push forçado com `--force-with-lease` ao hash antigo; API do GitHub: contribuidor único `Mente-MiIionaria` (64).
+- **Por fazer pelo fundador:** aprovar no GitHub Mobile (ou código por e-mail) a passagem a privado; o separador está aberto no Chrome dele em «Confirm access».
+- Segue-se: Fase 12 (defeitos: botão Google, terminal e painel sem rede, bloqueio do painel, telemóvel/tablet).

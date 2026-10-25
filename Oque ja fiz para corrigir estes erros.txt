@@ -2089,3 +2089,10 @@ Usei o teu Chrome (com a tua conta) para confirmar e terminar o que faltava:
 - Passei o site no teste oficial do Google: a ficha da empresa e da app estão válidas. Corrigi um pormenor que o Google não aceitava e voltei a publicar. Fica só um aviso opcional, a "avaliação de clientes", que só se põe quando houver avaliações verdadeiras.
 - Escrevi um guia simples: "Guia - aparecer no Google.txt" (na pasta do Genesis). Diz o que foi feito, quanto tempo o Google costuma demorar e o que podes fazer para ajudar.
 O Google costuma demorar de alguns dias a algumas semanas a mostrar as páginas novas. Pesquisa "Genesis MZ" daqui a uma semana.
+
+
+==================== 25/10/2026 — O GitHub passa a mostrar só tu (Etapa 0) ====================
+- Todos os 63 registos do projecto no GitHub (os "commits") passaram a estar em teu nome, na conta Mente-MiIionaria. Antes apareciam como "unknown" e com a assinatura do assistente. Agora o GitHub mostra só um contribuidor: tu.
+- Antes de mexer guardei uma cópia completa do projecto em C:\Users\CMM\Documents\Genesis-copias\ (se algo correr mal, volta-se atrás).
+- Criei a pasta "Para o Claude" no projecto, com as instruções do assistente, a memória dele, os planos e o ficheiro "COMO MUDAR DE PC.txt". Se mudares de computador, segues esse ficheiro e eu continuo de onde parámos.
+- Passar o projecto a PRIVADO: já cliquei em tudo no GitHub, mas no fim o GitHub pede para confirmares que és tu (no telemóvel, na app GitHub Mobile, ou com um código no e-mail). Deixei essa página aberta no teu Chrome. Só tu podes fazer esse último passo.
