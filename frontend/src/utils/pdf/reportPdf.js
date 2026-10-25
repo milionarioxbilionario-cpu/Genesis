@@ -11,7 +11,7 @@ import { getLang, locale, t } from '../../i18n/core.js';
 // 9.6: o PDF sai na lingua de quem o gera (t + locale); em portugues fica igual.
 
 const M = 14;
-const ACCENT = [4, 120, 87];
+const ACCENT = [11, 77, 59]; // verde do logotipo (tokens --accent)
 const INK = [28, 25, 23];
 const MUTED = [120, 113, 108];
 const decimal = (v) => (getLang() === 'pt' ? String(v).replace('.', ',') : String(v));

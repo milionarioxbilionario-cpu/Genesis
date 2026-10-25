@@ -2046,3 +2046,12 @@ O que testei hoje: a app e o painel admin compilam sem erros, e confirmei que n�
 O que NÃO consegui testar: os testes no browser pararam a meio. A ligação à base de dados falhou várias vezes e depois o computador ficou com pouca memória e os servidores de teste foram desligados. Apaguei as lojas de teste. Por isso a 11.2 ainda está «feita mas não verificada».
 Um defeito verdadeiro que encontrei por causa disto: quando a base de dados falha no momento em que alguém tenta entrar (ou pede «Esqueci a senha»), o servidor nunca respondia. A pessoa ficava a olhar para o botão a rodar sem nenhuma mensagem. Corrigi: agora responde logo com um erro. Provei com um teste que simula a base de dados em baixo: antes ficava sem resposta, agora responde na hora. Procurei o mesmo erro em todo o código e não há mais nenhum caso.
 Falta: voltar a correr os testes no browser quando o computador tiver memória livre, e publicar no genesismz.com (ainda não publiquei nada disto).
+
+
+==================== 25/10/2026 — Marca na app (11.2) testada: passou ====================
+Voltei a correr os testes no browser que tinham parado. Desta vez passaram todos: painel do dono e terminal 40 de 40, painel admin 17 de 17, sem nenhum erro.
+Vi as imagens dos ecrãs uma a uma: a página de entrar, o painel, o terminal de vendas, o menu no telemóvel e o painel admin já têm o símbolo do teu logótipo e o verde do logótipo nos botões.
+Um engano meu durante os testes: pus sem querer o mesmo teste a correr duas vezes. Parei-o antes de começar, apaguei a loja de teste e repeti com uma loja nova. Não afectou nada do Genesis.
+As lojas de teste foram apagadas e os servidores de teste desligados.
+Ainda NÃO está no genesismz.com: publico tudo junto no fim do site (11.4), com a tua confirmação.
+A seguir: a página completa do site em português e inglês, com a página de planos (11.3).

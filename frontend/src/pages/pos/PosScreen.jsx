@@ -11,7 +11,7 @@ import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
-import { Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
+import { BrandMark, Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
 import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
 
 const PAYMENTS = [
@@ -250,7 +250,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       {/* Barra superior */}
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-4 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+          <BrandMark />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-base font-semibold text-ink">{info.store.name}</p>
             <p className="truncate text-xs text-ink-muted">{cashier.name} · {info.terminal.name}</p>

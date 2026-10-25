@@ -1,8 +1,8 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-25T07:08:50.229Z */
+   Gerado em: 2026-10-25T08:09:46.457Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-25T07:08:50.229Z",
+ "generatedAt": "2026-10-25T08:09:46.457Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
@@ -10,10 +10,10 @@ window.GENESIS_MINDMAP = {
   "files": 274,
   "planned": 5,
   "links": 501,
-  "lines": 37984,
+  "lines": 38004,
   "byStatus": {
-   "ok": 186,
-   "partial": 10,
+   "ok": 188,
+   "partial": 8,
    "broken": 0,
    "planned": 5,
    "untracked": 78
@@ -290,8 +290,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1133,
-   "size": 236443,
+   "lines": 1153,
+   "size": 241678,
    "externals": [
     "@prisma/client"
    ],
@@ -335,7 +335,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 1576,
-   "size": 94417,
+   "size": 94430,
    "externals": [
     "nodemailer"
    ],
@@ -4851,9 +4851,9 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/components/ui",
    "ext": ".jsx",
-   "status": "partial",
+   "status": "ok",
    "summary": "Simbolo da marca (G + quadrado dourado, de ui/marca.js) num quadrado verde; substitui o antigo G de texto no AuthLayout, AppShell, Onboarding, Terminal, PosScreen e admin.",
-   "notes": "25/10/2026: build OK; NAO VERIFICADO no browser.",
+   "notes": "25/10/2026: flows.mjs 40/40 + idioma_admin 17/17, 0 erros de JS, capturas revistas.",
    "role": "UI kit (marca).",
    "security": "",
    "planned": false,
@@ -6295,9 +6295,9 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/ui",
    "ext": ".css",
-   "status": "partial",
+   "status": "ok",
    "summary": "Fonte unica de verdade visual: tema claro unico, neutros stone, acento = verde do logotipo #0B4D3B (Fase 11.2), positivo = esmeralda #047857, dourado #F2B300 so da marca.",
-   "notes": "25/10/2026: build frontend + admin OK; capturas no browser por fazer (testes interrompidos por falta de memoria).",
+   "notes": "25/10/2026: verde do logo verificado no browser (flows 40/40, idioma_admin 17/17, capturas revistas).",
    "role": "Design tokens.",
    "security": "",
    "planned": false,

@@ -4,7 +4,7 @@ import { Lock, Monitor } from 'lucide-react';
 import api from '../../utils/api';
 import { errorMessage } from '../../utils/format';
 import { clearCatalog } from '../../utils/productCache';
-import { Alert, Button, Input, LanguageSwitch, PinPad, Spinner, cx } from '../../components/ui';
+import { BrandMark, Alert, Button, Input, LanguageSwitch, PinPad, Spinner, cx } from '../../components/ui';
 import { setLang, storedLang } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import '../../i18n/en/pos';
@@ -89,7 +89,7 @@ function Centered({ children }) {
 function Brand({ store }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+      <BrandMark />
       <span className="text-md font-semibold text-ink">{store || 'Genesis'}</span>
     </div>
   );

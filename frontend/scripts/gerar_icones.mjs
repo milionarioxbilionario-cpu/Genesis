@@ -54,5 +54,34 @@ sizes.forEach((s, i) => {
 });
 fs.writeFileSync(path.join(PUBLIC, 'favicon.ico'), Buffer.concat([header, ...images]));
 
+// Imagem de partilha (Open Graph, 1200x630): o que aparece no WhatsApp,
+// Facebook e LinkedIn ao colar o link. Uma por lingua.
+const font = fs.readFileSync(path.join(PUBLIC, '..', 'node_modules', '@fontsource-variable', 'inter', 'files', 'inter-latin-wght-normal.woff2')).toString('base64');
+const OG = {
+  pt: { tag: 'VENDAS · STOCK · CAIXA', line: 'Para lojas em Moçambique. Vende mesmo sem internet.' },
+  en: { tag: 'SALES · STOCK · CASH', line: 'For shops in Mozambique. Keeps selling offline.' },
+};
+fs.mkdirSync(path.join(PUBLIC, 'site'), { recursive: true });
+await page.setViewportSize({ width: 1200, height: 630 });
+for (const [lang, o] of Object.entries(OG)) {
+  await page.setContent(`<html><head><style>
+    @font-face { font-family: Inter; src: url(data:font/woff2;base64,${font}) format('woff2'); font-weight: 100 900; }
+    body { margin: 0; width: 1200px; height: 630px; background: #F5F4EF; font-family: Inter; color: #13201B;
+      display: flex; flex-direction: column; justify-content: center; padding: 0 96px; box-sizing: border-box; }
+    .row { display: flex; align-items: center; gap: 40px; }
+    .name { font-size: 112px; font-weight: 850; letter-spacing: -5px; line-height: 1; }
+    .name span { color: #0B4D3B; font-weight: 700; letter-spacing: -2px; margin-left: 18px; }
+    .tag { margin-top: 22px; font-size: 26px; font-weight: 600; letter-spacing: 7px; color: #3F4A45; }
+    .line { margin-top: 64px; font-size: 34px; font-weight: 500; color: #13201B; }
+    .url { margin-top: 14px; font-size: 26px; font-weight: 600; color: #0B4D3B; }
+  </style></head><body>
+    <div class="row">${markSvg({ size: 180, radius: 0.19, scale: 0.62 })}
+      <div><div class="name">Genesis<span>MZ</span></div><div class="tag">${o.tag}</div></div></div>
+    <div class="line">${o.line}</div><div class="url">genesismz.com</div>
+  </body></html>`);
+  await page.evaluate(() => document.fonts.ready);
+  fs.writeFileSync(path.join(PUBLIC, 'site', `og-${lang}.png`), await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 630 } }));
+}
+
 await browser.close();
 console.log('icones gerados em', PUBLIC);

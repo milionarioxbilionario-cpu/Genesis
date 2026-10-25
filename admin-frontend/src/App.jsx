@@ -5,6 +5,7 @@ import { BookOpen, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, Scr
 import {
   Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, LanguageSwitch, MoneyInput, PageHeader,
   PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
+  BrandMark,
 } from '@ui';
 import { I18nProvider, useI18n } from '@i18n/react.jsx';
 import { getLang, setLang } from '@i18n/core.js';
@@ -67,7 +68,7 @@ function Login() {
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-24">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+          <BrandMark />
           <span className="text-md font-semibold text-ink">Genesis Admin</span>
           {/* Antes de entrar: fica no aparelho; depois manda a lingua da conta. */}
           <LanguageSwitch className="ml-auto" />
@@ -117,7 +118,7 @@ function Shell() {
     <div className="min-h-screen bg-bg">
       <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col border-r border-border bg-surface md:flex">
         <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
-          <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+          <BrandMark />
           <span className="font-semibold text-ink">Admin</span>
         </div>
         <nav className="flex-1 px-3 py-3">

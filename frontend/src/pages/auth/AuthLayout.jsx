@@ -1,5 +1,5 @@
 import React from 'react';
-import { LanguageSwitch } from '../../components/ui';
+import { BrandMark, LanguageSwitch } from '../../components/ui';
 import { useI18n } from '../../i18n/react';
 import '../../i18n/en/auth';
 
@@ -12,7 +12,7 @@ export default function AuthLayout({ title, description, children, footer, wide 
       <header className="flex h-16 items-center justify-between gap-3 px-6">
         {/* Link normal (nao do router): a raiz e o site publico, fora da SPA. */}
         <a href="/" className="flex items-center gap-2.5" aria-label="Genesis">
-          <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+          <BrandMark />
           <span className="text-md font-semibold tracking-tight text-ink">Genesis</span>
         </a>
         <LanguageSwitch />

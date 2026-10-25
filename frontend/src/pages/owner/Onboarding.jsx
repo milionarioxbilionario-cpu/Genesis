@@ -7,7 +7,7 @@ import { useSession } from '../../utils/session';
 import { useI18n } from '../../i18n/react';
 import '../../i18n/en/auth';
 import '../../i18n/en/owner';
-import { Alert, Button, Card, Input, LanguageSwitch, MoneyInput, Spinner, cx } from '../../components/ui';
+import { BrandMark, Alert, Button, Card, Input, LanguageSwitch, MoneyInput, Spinner, cx } from '../../components/ui';
 import { BUSINESS_TYPES } from '../auth/RequestAccount';
 
 // Nomes dos passos em portugues = chave da traducao.
@@ -91,7 +91,7 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-bg">
       <header className="flex h-14 items-center gap-2.5 border-b border-border bg-surface px-6">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+        <BrandMark />
         <span className="font-semibold text-ink">{t('Configurar a loja')}</span>
         <span className="ml-auto hidden text-sm text-ink-muted sm:inline">{user?.name}</span>
         <LanguageSwitch className="ml-auto sm:ml-3" onChange={saveLanguage} />

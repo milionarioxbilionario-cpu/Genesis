@@ -392,10 +392,10 @@
       "notes": "Tem cores hex fixas (receipt-shell, POS) e nao acompanha o tema claro."
     },
     "frontend/src/ui/tokens.css": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Fonte unica de verdade visual: tema claro unico, neutros stone, acento = verde do logotipo #0B4D3B (Fase 11.2), positivo = esmeralda #047857, dourado #F2B300 so da marca.",
       "role": "Design tokens.",
-      "notes": "25/10/2026: build frontend + admin OK; capturas no browser por fazer (testes interrompidos por falta de memoria)."
+      "notes": "25/10/2026: verde do logo verificado no browser (flows 40/40, idioma_admin 17/17, capturas revistas)."
     },
     "frontend/src/ui/primitives.css": {
       "status": "ok",
@@ -1566,10 +1566,10 @@
       "notes": "24/10/2026 Fase 11.1: rotas do site + @app noindex; NAO verificado (servidor na 11.4)."
     },
     "frontend/src/components/ui/BrandMark.jsx": {
-      "status": "partial",
+      "status": "ok",
       "summary": "Simbolo da marca (G + quadrado dourado, de ui/marca.js) num quadrado verde; substitui o antigo G de texto no AuthLayout, AppShell, Onboarding, Terminal, PosScreen e admin.",
       "role": "UI kit (marca).",
-      "notes": "25/10/2026: build OK; NAO VERIFICADO no browser."
+      "notes": "25/10/2026: flows.mjs 40/40 + idioma_admin 17/17, 0 erros de JS, capturas revistas."
     }
   }
 }

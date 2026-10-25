@@ -3,7 +3,7 @@ import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-route
 import { BarChart3, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
 import api, { saveLanguage } from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
-import { cx, IconButton, LanguageSwitch } from '../components/ui';
+import { BrandMark, cx, IconButton, LanguageSwitch } from '../components/ui';
 import { useI18n } from '../i18n/react';
 import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
@@ -43,7 +43,7 @@ function Sidebar({ tenant, onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
-        <span className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-semibold text-white">G</span>
+        <BrandMark />
         <div className="min-w-0">
           <p className="truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}</p>
           <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>

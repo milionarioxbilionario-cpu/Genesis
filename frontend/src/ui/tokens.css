@@ -1,7 +1,8 @@
 /* ==========================================================================
    GENESIS — DESIGN TOKENS (fonte unica de verdade visual, Genesis 2.0)
 
-   UM so tema, claro. Paleta fixa: neutros "stone" + um acento verde-esmeralda.
+   UM so tema, claro. Paleta fixa: neutros "stone" + o verde do logotipo como acento
+   (Fase 11.2; antes verde-esmeralda #047857, que continua a ser o "positivo").
    Regras:
    - O acento (--accent) e para a ACCAO PRINCIPAL de cada ecra e para o item
      activo da navegacao. Nao para decorar.
@@ -29,10 +30,10 @@
   --text-faint: #A8A29E;  /* placeholders */
 
   /* Acento (marca) */
-  --accent: #047857;
-  --accent-hover: #065F46;
-  --accent-soft: #ECFDF5;
-  --accent-text: #065F46;
+  --accent: #0B4D3B;
+  --accent-hover: #083A2C;
+  --accent-soft: #EAF2EF;
+  --accent-text: #0B4D3B;
 
   /* Marca (logotipo e site publico). O dourado e so da marca, nunca semantico. */
   --brand: #0B4D3B;
@@ -55,7 +56,7 @@
   --radius: 8px;
   --radius-lg: 12px;
   --shadow-pop: 0 8px 24px rgba(28, 25, 23, 0.10), 0 1px 2px rgba(28, 25, 23, 0.06);
-  --focus: 0 0 0 3px rgba(4, 120, 87, 0.22);
+  --focus: 0 0 0 3px rgba(11, 77, 59, 0.24);
 
   /* Movimento: so feedback de estado, nunca decoracao. */
   --ease: cubic-bezier(0.2, 0, 0, 1);

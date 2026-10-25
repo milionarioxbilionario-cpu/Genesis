@@ -7,3 +7,4 @@ export { Dialog, Drawer, ConfirmProvider, useConfirm, ToastProvider, useToast } 
 export { ProductImage, categoryIcon } from './ProductImage';
 export { PRODUCT_ICONS, iconByKey } from './productIcons';
 export { LanguageSwitch } from './LanguageSwitch';
+export { BrandMark } from './BrandMark';
