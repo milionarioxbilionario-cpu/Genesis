@@ -2169,3 +2169,13 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Pagamento dividido no terminal: "Dividir o pagamento" deixa o cliente pagar parte por M-Pesa, e-Mola, cartão ou transferência e o resto em dinheiro, com o troco certo. O fecho do turno só conta o dinheiro vivo. A transferência passou a ser uma forma de pagamento própria.
 - Testes no site real: recibo, impostos, multas e pagamento dividido 21 de 21; painel e terminal 41 de 41. Funcionou: sim.
 - Nota: um comando meu no servidor foi bloqueado pelas permissões; pode ter ficado lá um processo de teste parado, inofensivo. Desaparece sozinho no próximo reinício do servidor.
+
+
+==================== 27/10/2026 — Venda ao peso (kg, litro, metro) — já no genesismz.com. Fase 15 terminada ====================
+- Cada produto pode agora vender-se por unidade, por kg, por litro ou por metro (na ficha do produto, "Vende-se por"). O preço passa a ser por kg (ou litro/metro).
+- No terminal, ao tocar num produto a peso abre um teclado: o caixista escreve o peso (ex.: 1,25) ou toca em 0,25 / 0,5 / 1 / 2 kg, e vê logo o valor antes de confirmar.
+- Stock, entradas, quebras, lista de compras, relatórios e recibos mostram "1,25 kg" e fazem as contas certas. Por dentro, tudo é guardado em gramas inteiras, sem números com vírgula, para nunca haver erros de arredondamento.
+- Um produto que já tem stock ou vendas não pode mudar de unidade (as contas antigas ficariam erradas): nesse caso cria-se um produto novo.
+- O que falta: as etiquetas das balanças que trazem o peso no código de barras ainda não são lidas.
+- Testes no site real: recibo/peso 26 de 26, painel e terminal 41 de 41, stock 18 de 18. Funcionou: sim.
+- A Fase 15 está completa (recibo profissional, gaveta, imagem para WhatsApp, impostos, multas, pagamento dividido e venda ao peso). Sigo para a Fase 16.
