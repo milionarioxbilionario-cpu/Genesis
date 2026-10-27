@@ -17,6 +17,7 @@ const Sales = lazy(() => import('./pages/owner/Sales'));
 const Products = lazy(() => import('./pages/owner/Products'));
 const Suppliers = lazy(() => import('./pages/owner/Suppliers'));
 const Debts = lazy(() => import('./pages/owner/Debts'));
+const Profile = lazy(() => import('./pages/owner/Profile'));
 const Team = lazy(() => import('./pages/owner/Team'));
 const Reports = lazy(() => import('./pages/owner/Reports'));
 const Settings = lazy(() => import('./pages/owner/Settings'));
@@ -81,6 +82,7 @@ export default function App() {
                 <Route path="equipa" element={<Team />} />
                 <Route path="relatorios" element={<Reports />} />
                 <Route path="definicoes" element={<Settings />} />
+                <Route path="perfil" element={<Profile />} />
               </Route>
 
               {/* Enderecos antigos (marcadores, links ja partilhados). */}

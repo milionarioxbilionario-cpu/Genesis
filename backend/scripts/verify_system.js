@@ -1969,7 +1969,74 @@ async function test38() {
   ok((await owner.req('PATCH', '/api/products/' + fresh.data.id, { unit: 'kg' })).status === 200 && (await prisma.product.findUnique({ where: { id: fresh.data.id } })).unit === 'kg', 'produto sem stock nem vendas: pode passar a kg');
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38 };
+// ---------------------------------------------------------------------------
+async function test39() {
+  section(39, 'Perfil do dono: senha, e-mail com 2 codigos, aniversario uma vez, presente de Premium e plano no admin (Fase 16)');
+  const t = ctx.tenant.id;
+  const original = await prisma.user.findUnique({ where: { id: ctx.owner.id }, select: { email: true, password_hash: true } });
+  const owner = ownerClient();
+  try {
+    const p0 = await owner.req('GET', '/api/profile');
+    ok(p0.status === 200 && p0.data.email === original.email && p0.data.birthday === null && p0.data.plan.plan === 'basic' && p0.data.plan.effective === 'basic', 'perfil: e-mail, sem aniversario, plano Basico', p0.data);
+    ok((await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('GET', '/api/profile')).status === 403, 'caixista nao abre o perfil do dono');
+    // Senha
+    ok((await owner.req('PUT', '/api/profile/password', { current_password: 'errada-123', new_password: 'NovaSenha#2026' })).data?.code === 'WRONG_PASSWORD', 'senha actual errada: recusado');
+    ok((await owner.req('PUT', '/api/profile/password', { current_password: OWNER_PW, new_password: 'curta' })).status === 400, 'senha nova curta: 400');
+    const ch = await owner.req('PUT', '/api/profile/password', { current_password: OWNER_PW, new_password: 'NovaSenha#2026' });
+    ok(ch.status === 200, 'senha mudada', ch);
+    const after = await prisma.user.findUnique({ where: { id: ctx.owner.id } });
+    ok(await bcrypt.compare('NovaSenha#2026', after.password_hash), 'a BD guarda a senha nova (bcrypt)');
+    ok((await owner.req('GET', '/api/profile')).status === 200, 'esta sessao continua (cookies novos)');
+    ok((await client(signAccessToken(ctx.owner)).req('GET', '/api/profile')).status === 401, 'sessoes antigas (senha anterior) deixam de valer');
+    const me = client(signAccessToken(after));
+    // E-mail: sem SMTP neste servidor de teste os codigos vem na resposta (fora de producao).
+    const other = await prisma.user.findFirst({ where: { id: { not: ctx.owner.id } }, select: { email: true } });
+    if (other) ok((await me.req('POST', '/api/profile/email/start', { new_email: other.email, password: 'NovaSenha#2026' })).data?.code === 'EMAIL_IN_USE', 'e-mail de outra conta: 409');
+    const novo = 'novo-' + crypto.randomBytes(4).toString('hex') + '@teste.local';
+    const st = await me.req('POST', '/api/profile/email/start', { new_email: novo, password: 'NovaSenha#2026' });
+    ok(st.status === 200 && st.data.devCodes?.current && st.data.devCodes?.next && st.data.devCodes.current !== st.data.devCodes.next, 'pedido de mudanca: um codigo para o e-mail actual e outro para o novo', st.data);
+    ok((await me.req('POST', '/api/profile/email/confirm', { code_current: st.data.devCodes.next, code_new: st.data.devCodes.current })).data?.code === 'BAD_EMAIL_CODES', 'codigos trocados: recusado');
+    const cf = await me.req('POST', '/api/profile/email/confirm', { code_current: st.data.devCodes.current, code_new: st.data.devCodes.next });
+    ok(cf.status === 200 && (await prisma.user.findUnique({ where: { id: ctx.owner.id } })).email === novo, 'com os dois codigos: e-mail mudado', cf);
+    ok((await me.req('POST', '/api/profile/email/confirm', { code_current: st.data.devCodes.current, code_new: st.data.devCodes.next })).data?.code === 'EMAIL_CHANGE_EXPIRED', 'os codigos so servem uma vez');
+    // WhatsApp dos alertas
+    ok((await me.req('PUT', '/api/profile/alerts-phone', { phone: '84 123 4567' })).status === 200 && (await prisma.tenant.findUnique({ where: { id: t } })).phone === '84 123 4567', 'numero do WhatsApp dos alertas guardado');
+    // Aniversario: uma vez
+    ok((await me.req('PUT', '/api/profile/birthday', { birthday: '2030-01-01' })).status === 400, 'data no futuro: 400');
+    const bd = await me.req('PUT', '/api/profile/birthday', { birthday: '1990-03-15' });
+    ok(bd.status === 200, 'aniversario definido', bd);
+    ok((await me.req('PUT', '/api/profile/birthday', { birthday: '1991-04-16' })).data?.code === 'BIRTHDAY_LOCKED', 'segunda vez: bloqueado (409)');
+    const today = new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10); // dia de Maputo
+    const notToday = today.slice(5) === '03-15' ? '1990-03-16' : '1990-03-15';
+    await prisma.user.update({ where: { id: ctx.owner.id }, data: { birthday: notToday } });
+    ok((await me.req('POST', '/api/profile/birthday/gift')).data?.code === 'GIFT_NOT_AVAILABLE', 'fora do dia: o presente nao se recolhe');
+    // Simula o dia do aniversario (o servidor verifica o dia de Maputo).
+    await prisma.user.update({ where: { id: ctx.owner.id }, data: { birthday: '1990-' + today.slice(5) } });
+    await prisma.tenant.update({ where: { id: t }, data: { plan_period: 'annual' } });
+    const p1 = (await me.req('GET', '/api/profile')).data;
+    ok(p1.gift.available === true && p1.plan.effective === 'basic', 'no dia: presente disponivel, ainda Basico', p1.gift);
+    const g = await me.req('POST', '/api/profile/birthday/gift');
+    ok(g.status === 200 && g.data.rule === 'annual_now', 'anual Basico: Premium comeca hoje', g.data);
+    const p2 = (await me.req('GET', '/api/profile')).data;
+    const until = new Date(p2.plan.premium_until);
+    ok(p2.plan.effective === 'premium' && p2.gift.claimed_this_year === true && p2.gift.available === false && until > new Date(Date.now() + 27 * 86400000) && until < new Date(Date.now() + 32 * 86400000), 'Premium ate ao mesmo dia do mes seguinte; presente recolhido', p2.plan);
+    ok((await me.req('POST', '/api/profile/birthday/gift')).data?.code === 'GIFT_NOT_AVAILABLE', 'segunda recolha no mesmo ano: recusada');
+    ok((await prisma.auditLog.count({ where: { tenant_id: t, action: { in: ['PASSWORD_CHANGED', 'EMAIL_CHANGED', 'BIRTHDAY_SET', 'BIRTHDAY_GIFT_CLAIMED'] } } })) >= 4, 'senha, e-mail, aniversario e presente na auditoria');
+    // Plano no admin
+    const admin = adminClient();
+    const list = (await admin.req('GET', '/api/admin/tenants')).data;
+    const row = list.find((x) => x.id === t);
+    ok(row && row.plan === 'basic' && row.plan_effective === 'premium' && !('logo_data' in row), 'admin: ve o plano e o Premium em curso; a lista ja nao leva o logotipo', row && { plan: row.plan, eff: row.plan_effective });
+    const pl = await admin.req('POST', '/api/admin/tenants/' + t + '/plan', { plan: 'premium', period: 'monthly' });
+    ok(pl.status === 200 && (await prisma.tenant.findUnique({ where: { id: t } })).subscription_price === 800000, 'admin muda para Premium mensal (8 000 MT)', pl);
+    ok((await admin.req('POST', '/api/admin/tenants/' + t + '/plan', { plan: 'gold', period: 'monthly' })).status === 400, 'plano inventado: 400');
+  } finally {
+    await prisma.user.update({ where: { id: ctx.owner.id }, data: { email: original.email, password_hash: original.password_hash, birthday: null, birthday_gift_year: null } });
+    await prisma.tenant.update({ where: { id: t }, data: { plan: 'basic', plan_period: 'monthly', premium_from: null, premium_until: null, subscription_price: 300000 } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39 };
 
 (async () => {
   await prisma.ready();

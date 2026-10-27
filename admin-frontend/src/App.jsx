@@ -292,6 +292,7 @@ function TenantDrawer({ id, onClose, onChanged }) {
   const { data: s, reload } = useLoad('/api/admin/tenants/' + id);
   const [busy, setBusy] = useState('');
   const [supportUrl, setSupportUrl] = useState('');
+  const [plan, setPlan] = useState('');
   async function act(path, label, opts = {}) {
     if (opts.confirm && !(await confirm({ title: label, message: opts.confirm, confirmLabel: label, danger: opts.danger }))) return;
     // O Safari (iPhone) so deixa abrir um separador no proprio toque: um
@@ -318,6 +319,7 @@ function TenantDrawer({ id, onClose, onChanged }) {
             <KeyValue label={t('Dono')} value={s.owner_name} />
             <KeyValue label={t('Telefone')} value={s.phone} />
             <KeyValue label={t('Subscrição')} value={t('{value} / mês', { value: money(s.subscription_price) })} />
+            <KeyValue label={t('Plano')} value={<span>{s.plan === 'premium' ? t('Premium') : t('Básico')} · {s.plan_period === 'annual' ? t('anual') : t('mensal')}{s.plan_effective === 'premium' && s.plan !== 'premium' && s.premium_until ? ' · ' + t('Premium oferecido até {d}', { d: date(new Date(new Date(s.premium_until).getTime() - 1)) }) : ''}</span>} />
             <KeyValue label={t('Produtos')} value={s.products_count} />
             <KeyValue label={t('Vendas (total)')} value={`${s.sales_count} · ${money(s.revenue_total)}`} />
             <KeyValue label={t('Cliente desde')} value={date(s.created_at)} />
@@ -334,6 +336,15 @@ function TenantDrawer({ id, onClose, onChanged }) {
                 <a href={supportUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline" onClick={() => setSupportUrl('')}>{t('Tocar aqui para abrir o modo suporte')}</a> {t('(válido 60 s).')}
               </Alert>
             )}
+            <div className="flex flex-wrap items-end gap-2">
+              <Select label={t('Mudar o plano')} value={plan || `${s.plan}:${s.plan_period}`} onChange={(e) => setPlan(e.target.value)} className="w-56">
+                <option value="basic:monthly">{t('Básico mensal (3 000 MT)')}</option>
+                <option value="basic:annual">{t('Básico anual')}</option>
+                <option value="premium:monthly">{t('Premium mensal (8 000 MT)')}</option>
+                <option value="premium:annual">{t('Premium anual')}</option>
+              </Select>
+              <Button loading={busy === 'plan'} disabled={!plan || plan === `${s.plan}:${s.plan_period}`} onClick={() => { const [p, per] = plan.split(':'); act('plan', t('Mudar o plano'), { body: { plan: p, period: per } }).then(() => setPlan('')); }}>{t('Guardar plano')}</Button>
+            </div>
             {s.status === 'trial' && <Button loading={busy === 'extend-trial'} onClick={() => act('extend-trial', t('Prolongar teste'), { body: { days: 14 } })}>{t('Prolongar teste 14 dias')}</Button>}
             {['trial', 'suspended'].includes(s.status) && <Button variant="primary" loading={busy === 'activate'} onClick={() => act('activate', t('Activar subscrição'), { confirm: t('A loja passa a pagante (activa).') })}>{t('Activar subscrição (pagamento recebido)')}</Button>}
             {['active', 'trial'].includes(s.status) && <Button variant="danger-ghost" loading={busy === 'suspend'} onClick={() => act('suspend', t('Suspender'), { confirm: t('Todas as sessões e terminais da loja deixam de funcionar de imediato.'), danger: true })}>{t('Suspender (pagamento em atraso)')}</Button>}

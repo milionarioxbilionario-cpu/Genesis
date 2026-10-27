@@ -24,6 +24,7 @@ const { createSupportCode } = require('../utils/supportCodes');
 const { iconSchema } = require('../utils/productIcons');
 const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
 const { groupLostRequests } = require('../utils/lostRequests');
+const { PLANS, PERIODS, effectivePlan } = require('../services/plans');
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -86,15 +87,19 @@ router.get('/tenants', asyncHandler(async (req, res) => {
   const since = new Date(Date.now() - 30 * 86400000);
   const activity = await prisma.sale.groupBy({ by: ['tenant_id'], where: { created_at: { gte: since }, status: 'completed' }, _count: true, _sum: { total_amount: true } });
   const act = new Map(activity.map((a) => [a.tenant_id, a]));
-  res.json(tenants.map(({ cancel_pin_hash, ...t }) => ({
+  // O logotipo (ate 300 KB por loja) nao vai na lista: so has_logo.
+  res.json(tenants.map(({ cancel_pin_hash, logo_data, ...t }) => ({
     ...t,
+    has_logo: Boolean(logo_data),
+    plan_effective: effectivePlan(t),
     sales_30d: act.get(t.id)?._count || 0,
     revenue_30d: Number(act.get(t.id)?._sum.total_amount || 0),
   })));
 }));
 
 router.get('/tenants/:tenantId', asyncHandler(async (req, res) => {
-  const { cancel_pin_hash, ...t } = await findTenant(req.params.tenantId);
+  const { cancel_pin_hash, logo_data, ...rest } = await findTenant(req.params.tenantId);
+  const t = { ...rest, has_logo: Boolean(logo_data), plan_effective: effectivePlan(rest) };
   const [users, products, sales] = await Promise.all([
     prisma.user.findMany({ where: { tenant_id: t.id }, select: { id: true, name: true, email: true, role: true, is_active: true, created_at: true } }),
     prisma.product.count({ where: { tenant_id: t.id } }),
@@ -180,6 +185,17 @@ router.post('/tenants/:tenantId/extend-trial', asyncHandler(async (req, res) => 
   await audit(req, 'EXTEND_TRIAL', tenant.id, { trial_ends_at: tenant.trial_ends_at }, { trial_ends_at: base });
   afterStatusChange();
   res.json({ ok: true, trial_ends_at: base });
+}));
+
+// Fase 16: plano Basico (3 000 MT/mes) ou Premium (8 000 MT/mes); mensal ou anual.
+const PLAN_PRICE = { basic: 300000, premium: 800000 };
+router.post('/tenants/:tenantId/plan', asyncHandler(async (req, res) => {
+  const data = z.object({ plan: z.enum(PLANS), period: z.enum(PERIODS) }).parse(req.body);
+  const tenant = await findTenant(req.params.tenantId);
+  const next = { plan: data.plan, plan_period: data.period, subscription_price: PLAN_PRICE[data.plan] };
+  await prisma.tenant.update({ where: { id: tenant.id }, data: next });
+  await audit(req, 'CHANGE_PLAN', tenant.id, { plan: tenant.plan, plan_period: tenant.plan_period, subscription_price: tenant.subscription_price }, next);
+  res.json({ ok: true, ...next });
 }));
 
 router.post('/tenants/:tenantId/activate', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'ACTIVATE_SUBSCRIPTION', to: 'active' })));

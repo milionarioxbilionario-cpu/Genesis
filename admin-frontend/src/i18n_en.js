@@ -4,6 +4,19 @@
 import { addTranslations } from '../../frontend/src/i18n/core.js';
 
 addTranslations('en', {
+  // Fase 16: plano da loja
+  'Plano': 'Plan',
+  'Básico': 'Basic',
+  'Premium': 'Premium',
+  'anual': 'yearly',
+  'mensal': 'monthly',
+  'Premium oferecido até {d}': 'free Premium until {d}',
+  'Mudar o plano': 'Change plan',
+  'Básico mensal (3 000 MT)': 'Basic monthly (3,000 MT)',
+  'Básico anual': 'Basic yearly',
+  'Premium mensal (8 000 MT)': 'Premium monthly (8,000 MT)',
+  'Premium anual': 'Premium yearly',
+  'Guardar plano': 'Save plan',
   // Entrada e menu
   'Esta conta não tem acesso à administração.': 'This account has no access to administration.',
   'Credenciais inválidas.': 'Invalid credentials.',

@@ -9,6 +9,7 @@ import { useI18n } from '../i18n/react';
 import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
 import NotificationBell from '../components/NotificationBell';
+import BirthdayDialog from '../components/BirthdayDialog';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
 // vive num so sitio (ex.: Metas no Inicio; Terminais e Auditoria nas Definicoes).
@@ -71,10 +72,18 @@ function Sidebar({ tenant, onNavigate }) {
         {/* Modo suporte e so leitura: a lingua muda o ecra, nao a conta do dono. */}
         <LanguageSwitch className="mb-2 px-2" onChange={support ? undefined : saveLanguage} />
         <div className="flex items-center justify-between gap-2 rounded px-2 py-1.5">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-ink">{user?.name}</p>
-            <p className="truncate text-xs text-ink-muted">{support ? t('Suporte Genesis') : t('Dono')}</p>
-          </div>
+          {/* Fase 16: o nome abre o Perfil (senha, e-mail, plano, aniversario). */}
+          {support ? (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-ink">{user?.name}</p>
+              <p className="truncate text-xs text-ink-muted">{t('Suporte Genesis')}</p>
+            </div>
+          ) : (
+            <NavLink to="/app/perfil" onClick={onNavigate} className="min-w-0 rounded hover:text-accent" title={t('Perfil')}>
+              <p className="truncate text-sm font-medium text-ink">{user?.name}</p>
+              <p className="truncate text-xs text-ink-muted">{t('Dono')} · {t('Perfil')}</p>
+            </NavLink>
+          )}
           <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
         </div>
       </div>
@@ -155,6 +164,7 @@ export default function AppShell() {
           <Outlet key={privacy.hidden ? 'privado' : 'visivel'} context={{ tenant, reloadTenant: () => api.get('/api/owner/tenant').then((r) => setTenant(r.data)) }} />
         </main>
         {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <MonthCloseDialog />}
+        {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <BirthdayDialog />}
       </div>
     </div>
     </PrivacyContext.Provider>

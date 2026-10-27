@@ -27,6 +27,7 @@ const settingsRoutes = require('./routes/settings');
 const shoppingListRoutes = require('./routes/shoppingLists');
 const posRoutes = require('./routes/pos');
 const panelLockRoutes = require('./routes/panelLock');
+const profileRoutes = require('./routes/profile');
 const posWriteAuth = require('./middleware/posWriteAuth');
 const verifyRoutes = require('./routes/verify');
 const helmet = require('helmet');
@@ -255,6 +256,9 @@ app.use('/api/pos', posRoutes);
 
 // Bloqueio do painel do dono: PIN pessoal + Face ID (Fase 12.4).
 app.use('/api/lock', panelLockRoutes);
+
+// Perfil do dono: senha, e-mail, WhatsApp dos alertas, aniversario e presente (Fase 16).
+app.use('/api/profile', profileRoutes);
 
 // Verificacao publica do QR dos recibos (sem sessao, so leitura).
 app.use('/api/verify', verifyRoutes);

@@ -45,6 +45,11 @@ model Tenant {
   /// Fase 15.2: none | iva | ispc. Fase 15.3: % do INSS do patrao (0 = sem INSS).
   vat_mode              String                @default("none")
   inss_employer_pct     Int                   @default(0)
+  /// Fase 16: plano (basic | premium), periodo (monthly | annual) e Premium temporario.
+  plan                  String                @default("basic")
+  plan_period           String                @default("monthly")
+  premium_from          DateTime?
+  premium_until         DateTime?
   id_document           String?
   status                String                @default("pending")
   trial_ends_at         DateTime?
@@ -102,6 +107,9 @@ model User {
   phone                      String?
   /// Lingua da interface escolhida pela pessoa (Fase 9.3): "pt" ou "en".
   language                   String                @default("pt")
+  /// Fase 16: aniversario do dono (AAAA-MM-DD, so uma vez) e ano do ultimo presente.
+  birthday                   String?
+  birthday_gift_year         Int?
   is_active                  Boolean               @default(true)
   created_at                 DateTime              @default(now())
   audit_logs                 AuditLog[]

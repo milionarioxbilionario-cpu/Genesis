@@ -11,6 +11,11 @@ const pickLang = (v) => (LANGS.includes(String(v || '').toLowerCase()) ? String(
 const reqLang = (req) => pickLang(req && typeof req.get === 'function' ? req.get('x-genesis-lang') : null);
 
 const EN = {
+  // Fase 16: mudar o e-mail da conta
+  '{code} é o código para mudar o e-mail no Genesis': '{code} is the code to change your Genesis email',
+  'Pediu para mudar o e-mail da sua conta Genesis para {email}.': 'You asked to change your Genesis account email to {email}.',
+  'O código é: {code}': 'The code is: {code}',
+  'É válido por 15 minutos. Se não foi você, ignore esta mensagem e mude a sua senha.': 'It is valid for 15 minutes. If this was not you, ignore this message and change your password.',
   // Lista de compras -> fornecedor
   'Olá{name}, daqui fala {store}.': 'Hello{name}, this is {store}.',
   'a loja': 'the store',

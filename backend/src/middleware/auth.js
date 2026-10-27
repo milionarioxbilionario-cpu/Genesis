@@ -20,7 +20,8 @@ const { checkPanelLock } = require('../utils/panelLock');
 //
 // Com o trial expirado so passam escritas que nao criam valor: a lingua da
 // propria conta (Fase 9.3).
-const TRIAL_EXEMPT = /^\/api\/auth\/language\/?$/;
+// Fase 16: senha, e-mail e aniversario (perfil) continuam com o teste terminado — sao a conta, nao vendas.
+const TRIAL_EXEMPT = /^\/api\/(auth\/language|profile(\/[\w/-]*)?)\/?$/;
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
