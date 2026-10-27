@@ -282,7 +282,7 @@ function ReportSchedule({ s, reload }) {
 }
 
 // label em portugues = chave da traducao.
-const COST_TYPES = { rent: 'Renda', utilities: 'Água e luz', transport: 'Transporte', other: 'Outro' };
+const COST_TYPES = { rent: 'Renda', utilities: 'Água e luz', transport: 'Transporte', municipal: 'Taxas do município', other: 'Outro' };
 
 function FixedCosts({ s, reload }) {
   const toast = useToast();
@@ -293,7 +293,7 @@ function FixedCosts({ s, reload }) {
   const [error, setError] = useState('');
   async function save() {
     setBusy(true); setError('');
-    const body = { description: editing.description.trim(), amount: editing.amount, type: editing.type };
+    const body = { description: editing.description.trim(), amount: editing.amount, type: editing.type, period: editing.period || 'monthly' };
     try {
       if (editing.id) await api.put('/api/settings/fixed-costs/' + editing.id, body);
       else await api.post('/api/settings/fixed-costs', body);
@@ -308,13 +308,13 @@ function FixedCosts({ s, reload }) {
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
         <p className="text-base text-ink-2">{t('Total mensal deduzido no lucro:')} <span className="num font-semibold text-ink">{money(s.fixed_costs_monthly_total)}</span></p>
-        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ description: '', amount: 0, type: 'rent' }); }}>{t('Novo custo')}</Button>
+        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ description: '', amount: 0, type: 'rent', period: 'monthly' }); }}>{t('Novo custo')}</Button>
       </div>
       <Table
         columns={[
           { key: 'description', header: t('Descrição') },
           { key: 'type', header: t('Tipo'), render: (c) => <Badge tone={c.type === 'rent' ? 'info' : 'neutral'}>{COST_TYPES[c.type] ? t(COST_TYPES[c.type]) : c.type}</Badge> },
-          { key: 'amount', header: t('Valor mensal'), align: 'right', render: (c) => money(c.amount) },
+          { key: 'amount', header: t('Valor mensal'), align: 'right', render: (c) => (c.period === 'annual' ? <span>{money(Math.round(c.amount / 12))}<span className="block text-xs text-ink-muted">{t('{v} por ano', { v: money(c.amount) })}</span></span> : money(c.amount)) },
         ]}
         rows={s.fixed_costs}
         onRowClick={(c) => { setError(''); setEditing({ ...c }); }}
@@ -328,8 +328,9 @@ function FixedCosts({ s, reload }) {
             <Select label={t('Tipo')} value={editing.type} onChange={(e) => setEditing({ ...editing, type: e.target.value })}>
               {Object.entries(COST_TYPES).map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
             </Select>
-            <Input label={t('Descrição')} placeholder={t('Ex.: Renda do contentor')} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
-            <MoneyInput label={t('Valor por mês')} valueCents={editing.amount} onChangeCents={(v) => setEditing({ ...editing, amount: v })} />
+            <Input label={t('Descrição')} placeholder={editing.type === 'municipal' ? t('Ex.: Licença de actividade') : t('Ex.: Renda do contentor')} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            <Segmented value={editing.period || 'monthly'} onChange={(v) => setEditing({ ...editing, period: v })} options={[{ value: 'monthly', label: t('Paga por mês') }, { value: 'annual', label: t('Paga por ano') }]} />
+            <MoneyInput label={editing.period === 'annual' ? t('Valor por ano') : t('Valor por mês')} valueCents={editing.amount} onChangeCents={(v) => setEditing({ ...editing, amount: v })} hint={editing.period === 'annual' && editing.amount > 0 ? t('Conta {v} em cada mês do relatório.', { v: money(Math.round(editing.amount / 12)) }) : undefined} />
           </div>
         )}
       </Drawer>
@@ -351,10 +352,11 @@ function Expenses() {
   const [error, setError] = useState('');
   const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); return { year: d.getFullYear(), month: d.getMonth() + 1, label: d.toLocaleDateString(locale(), { month: 'long', year: 'numeric' }) }; });
   const categories = list.data?.categories || [];
-  const valid = editing && editing.category.trim().length >= 2 && editing.amount > 0 && editing.date && editing.date <= isoDay();
+  const fine = editing?.kind === 'fine';
+  const valid = editing && (fine ? (editing.entity || '').trim().length >= 2 : editing.category.trim().length >= 2) && editing.amount > 0 && editing.date && editing.date <= isoDay();
   async function save() {
     setBusy(true); setError('');
-    const body = { date: editing.date, category: editing.category.trim(), description: editing.description.trim(), amount: editing.amount };
+    const body = { date: editing.date, kind: editing.kind || 'expense', category: fine ? 'Multa' : editing.category.trim(), entity: fine ? editing.entity.trim() : null, description: editing.description.trim(), amount: editing.amount };
     try {
       if (editing.id) await api.put('/api/settings/expenses/' + editing.id, body);
       else await api.post('/api/settings/expenses', body);
@@ -368,25 +370,25 @@ function Expenses() {
   return (
     <section className="mt-8">
       <h2 className="mb-1 text-lg font-semibold text-ink">{t('Despesas avulsas')}</h2>
-      <p className="mb-3 text-sm text-ink-muted">{t('O que paga uma vez: limpeza, transporte do stock, uma reparação... Entra no lucro líquido do mês da data da despesa.')}</p>
+      <p className="mb-3 text-sm text-ink-muted">{t('O que paga uma vez: limpeza, transporte do stock, uma reparação... Entra no lucro líquido do mês da data da despesa.')} {t('As multas registam-se aqui também, com quem as passou.')}</p>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <Select aria-label={t('Mês das despesas')} value={`${period.year}-${period.month}`} onChange={(e) => { const [y, m] = e.target.value.split('-').map(Number); setPeriod({ year: y, month: m }); }} className="w-52">
           {months.map((m) => <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>{m.label}</option>)}
         </Select>
-        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ date: isoDay(), category: '', description: '', amount: 0 }); }}>{t('Nova despesa')}</Button>
+        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ date: isoDay(), kind: 'expense', category: '', entity: '', description: '', amount: 0 }); }}>{t('Nova despesa')}</Button>
       </div>
       {list.error && <Alert tone="danger" className="mb-3">{list.error}</Alert>}
       {list.data && <p className="mb-2 text-base text-ink-2">{t('Total do mês:')} <span className="num font-semibold text-ink">{money(list.data.total)}</span></p>}
       <Table
         columns={[
           { key: 'date', header: t('Data'), render: (e) => <span className="num text-ink-2">{date(e.date)}</span> },
-          { key: 'category', header: t('Categoria'), render: (e) => <Badge tone="neutral">{e.category}</Badge> },
-          { key: 'description', header: t('Descrição'), render: (e) => <span className="text-ink-2">{e.description || '—'}</span> },
+          { key: 'category', header: t('Categoria'), render: (e) => (e.kind === 'fine' ? <Badge tone="danger">{t('Multa')}</Badge> : <Badge tone="neutral">{e.category}</Badge>) },
+          { key: 'description', header: t('Descrição'), render: (e) => <span className="text-ink-2">{e.kind === 'fine' ? [e.entity, e.description].filter(Boolean).join(' · ') : (e.description || '—')}</span> },
           { key: 'amount', header: t('Valor'), align: 'right', render: (e) => money(e.amount) },
         ]}
         rows={list.data?.rows || []}
         loading={list.loading && !list.data}
-        onRowClick={(e) => { setError(''); setEditing({ id: e.id, date: isoDay(e.date), category: e.category, description: e.description || '', amount: e.amount }); }}
+        onRowClick={(e) => { setError(''); setEditing({ id: e.id, date: isoDay(e.date), kind: e.kind || 'expense', category: e.kind === 'fine' ? '' : e.category, entity: e.entity || '', description: e.description || '', amount: e.amount }); }}
         empty={<p className="py-10 text-center text-ink-muted">{t('Sem despesas neste mês.')}</p>}
       />
       <Drawer open={Boolean(editing)} onClose={() => setEditing(null)} title={editing?.id ? t('Editar despesa') : t('Nova despesa')}
@@ -394,10 +396,15 @@ function Expenses() {
         {editing && (
           <div className="flex flex-col gap-4">
             {error && <Alert tone="danger">{error}</Alert>}
+            <Segmented value={editing.kind || 'expense'} onChange={(v) => setEditing({ ...editing, kind: v })} options={[{ value: 'expense', label: t('Despesa') }, { value: 'fine', label: t('Multa') }]} />
             <Input label={t('Data')} type="date" max={isoDay()} value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} />
+            {fine ? (
+              <Input label={t('Quem passou a multa')} placeholder={t('Ex.: Conselho Municipal, INAE, Polícia')} value={editing.entity} onChange={(e) => setEditing({ ...editing, entity: e.target.value })} />
+            ) : (<>
             <Input label={t('Categoria')} list="expense-categories" placeholder={t('Escolha ou escreva')} value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} hint={t('Pode escrever uma categoria nova.')} />
             <datalist id="expense-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
-            <Input label={t('Descrição (opcional)')} placeholder={t('Ex.: Detergente e vassouras')} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            </>)}
+            <Input label={fine ? t('Motivo (opcional)') : t('Descrição (opcional)')} placeholder={fine ? t('Ex.: Licença fora do prazo') : t('Ex.: Detergente e vassouras')} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
             <MoneyInput label={t('Valor')} valueCents={editing.amount} onChangeCents={(v) => setEditing({ ...editing, amount: v })} />
           </div>
         )}

@@ -132,6 +132,7 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
         </div>
         <div class="pay">
           <div style="display:flex;justify-content:space-between"><span>${esc(t('Pagamento:'))}</span><span>${esc(sale.payment_method || t('Dinheiro'))}</span></div>
+          ${(sale.payments || []).map((p) => `<div style="display:flex;justify-content:space-between;padding-left:8px"><span>${esc(p.method)}</span><span>${formatCurrency(p.amount)}</span></div>`).join('')}
           <div style="display:flex;justify-content:space-between"><span>${esc(t('Recebido'))}</span><span>${formatCurrency(received)}</span></div>
           <div style="display:flex;justify-content:space-between"><span>${esc(t('Troco'))}</span><span>${formatCurrency(change)}</span></div>
         </div>

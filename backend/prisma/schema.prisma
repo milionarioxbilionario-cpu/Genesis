@@ -147,6 +147,8 @@ model Sale {
   cashier         User       @relation("CashierSales", fields: [cashier_user_id], references: [id])
   tenant          Tenant     @relation(fields: [tenant_id], references: [id])
   items           SaleItem[]
+  /// Fase 15.4: partes do pagamento quando payment_method = 'mixed'.
+  payments        SalePayment[]
 
   @@index([tenant_id, created_at], map: "Sale_tenant_created_idx")
 }
@@ -475,5 +477,18 @@ model WebAuthnCredential {
   last_used_at DateTime?
 
   @@index([user_id])
+  @@index([tenant_id])
+}
+
+/// Fase 15.4: parte de um pagamento misto (metodo + valor em centavos).
+model SalePayment {
+  id        String @id @default(uuid())
+  tenant_id String
+  sale_id   String
+  method    String
+  amount    Int
+  sale      Sale   @relation(fields: [sale_id], references: [id])
+
+  @@index([sale_id])
   @@index([tenant_id])
 }

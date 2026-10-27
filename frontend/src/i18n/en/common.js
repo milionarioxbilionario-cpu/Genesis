@@ -220,6 +220,9 @@ addTranslations('en', {
   'RECIBO': 'RECEIPT',
   // Fase 15.2: IVA no recibo
   'IVA incluído': 'VAT included',
+  // Fase 15.4: formas de pagamento novas (painel e terminal)
+  'Transferência': 'Bank transfer',
+  'Pagamento dividido': 'Split payment',
   // Fase 15.1b: imagem do recibo (WhatsApp)
   'Imagem (WhatsApp)': 'Image (WhatsApp)',
   'Imagem pronta': 'Image ready',

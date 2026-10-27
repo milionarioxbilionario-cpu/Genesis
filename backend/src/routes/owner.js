@@ -238,7 +238,7 @@ router.post('/terminals/:id/revoke', asyncHandler(async (req, res) => {
 router.get('/sales', asyncHandler(async (req, res) => {
   const q = z.object({
     from: isoDate.optional(), to: isoDate.optional(), cashier_id: z.string().uuid().optional(),
-    method: z.enum(['cash', 'mpesa', 'emola', 'card', 'mobile_money']).optional(), status: z.enum(['completed', 'cancelled']).optional(),
+    method: z.enum(['cash', 'mpesa', 'emola', 'card', 'transfer', 'mixed', 'mobile_money']).optional(), status: z.enum(['completed', 'cancelled']).optional(),
     page: z.coerce.number().int().min(1).default(1), page_size: z.coerce.number().int().min(1).max(100).default(25),
   }).parse(req.query);
   const where = { tenant_id: tenantOf(req) };
@@ -248,10 +248,12 @@ router.get('/sales', asyncHandler(async (req, res) => {
     if (q.to) { const d = new Date(q.to); d.setHours(23, 59, 59, 999); where.created_at.lte = d; }
   }
   if (q.cashier_id) where.cashier_user_id = q.cashier_id;
-  if (q.method) where.payment_method = q.method;
+  // Fase 15.4: filtrar por um metodo apanha tambem as vendas mistas que o usaram.
+  if (q.method && q.method !== 'mixed') where.OR = [{ payment_method: q.method }, { payment_method: 'mixed', payments: { some: { method: q.method } } }];
+  else if (q.method) where.payment_method = 'mixed';
   if (q.status) where.status = q.status;
   const [rows, total] = await Promise.all([
-    prisma.sale.findMany({ where, include: { items: true, cashier: { select: { id: true, name: true } } }, orderBy: { created_at: 'desc' }, skip: (q.page - 1) * q.page_size, take: q.page_size }),
+    prisma.sale.findMany({ where, include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { id: true, name: true } } }, orderBy: { created_at: 'desc' }, skip: (q.page - 1) * q.page_size, take: q.page_size }),
     prisma.sale.count({ where }),
   ]);
   res.json({ rows, total, page: q.page, page_size: q.page_size });

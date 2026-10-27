@@ -73,6 +73,31 @@ try {
   await shot(owner, '15-produto-iva');
   await owner.keyboard.press('Escape');
 
+  // 15.3: taxa anual do municipio e multa, pelo ecra das Definicoes.
+  await owner.goto(BASE + '/app/definicoes?tab=costs');
+  await owner.getByRole('button', { name: 'Novo custo' }).click();
+  const costDlg = owner.getByRole('dialog');
+  await costDlg.getByLabel('Tipo').selectOption('municipal');
+  await costDlg.getByLabel('Descrição').fill('Licença de actividade');
+  await costDlg.getByRole('radio', { name: 'Paga por ano' }).click();
+  await costDlg.getByLabel('Valor por ano').fill('12000');
+  ok(await costDlg.getByText(/Conta 1.000,00.MT em cada mês do relatório/).isVisible(), 'taxa anual: mostra quanto conta em cada mês (1/12)');
+  await costDlg.getByRole('button', { name: 'Guardar' }).click();
+  await owner.getByText('Custo fixo guardado.').waitFor({ timeout: T });
+  await owner.getByText(/12.000,00.MT por ano/).waitFor({ timeout: T }).catch(() => {});
+  ok(await owner.getByText(/12.000,00.MT por ano/).isVisible(), 'lista dos custos: valor mensal e o anual por baixo');
+  await owner.getByRole('button', { name: 'Nova despesa' }).click();
+  const expDlg = owner.getByRole('dialog');
+  await expDlg.getByRole('radio', { name: 'Multa' }).click();
+  await expDlg.getByLabel('Quem passou a multa').fill('Conselho Municipal');
+  await expDlg.getByLabel('Motivo (opcional)').fill('Licença fora do prazo');
+  await expDlg.getByLabel('Valor', { exact: true }).fill('2500');
+  await expDlg.getByRole('button', { name: 'Guardar' }).click();
+  await owner.getByText('Despesa guardada.').waitFor({ timeout: T });
+  await owner.getByText('Conselho Municipal · Licença fora do prazo').waitFor({ timeout: T }).catch(() => {});
+  ok(await owner.getByText('Conselho Municipal · Licença fora do prazo').isVisible(), 'multa na lista com quem a passou e o motivo');
+  await shot(owner, '15-custos-multa');
+
   // Terminal: a venda imprime o recibo novo (PDF guardado no aparelho).
   await owner.request.post(BASE + '/api/lock/unlock', { data: { pin: fx.lockPin } });
   const code = await (await owner.request.post(BASE + '/api/owner/terminals/pairing-code', { data: { name: 'Balcão recibo' } })).json();
@@ -85,7 +110,7 @@ try {
   await term.getByRole('button', { name: new RegExp(fx.cashier.name) }).click();
   await typePin(term, fx.cashier.pin);
   const skip = term.getByRole('button', { name: 'Não tenho — saltar' });
-  await skip.waitFor({ timeout: 8000 }).catch(() => {});
+  await skip.waitFor({ timeout: 25000 }).catch(() => {});
   if (await skip.count()) await skip.click();
   await term.getByRole('button', { name: /Coca-Cola 500ml/ }).click();
   await term.getByRole('button', { name: /Cobrar 45,00 MT/ }).click();
@@ -115,12 +140,29 @@ try {
     ok(buf.slice(1, 4).toString() === 'PNG' && w === 1176 && h > 1500, 'PNG nítido (1176 px de largura) e com altura do talão', { w, h });
   }
   ok(await term.getByText('Imagem do recibo guardada').isVisible().catch(() => false), 'aviso: enviar a imagem ao cliente pelo WhatsApp');
+
+  // 15.4: pagamento dividido — 20 MT por M-Pesa, o resto (25 MT) em dinheiro, cliente da 50.
+  await term.getByRole('button', { name: 'Nova venda' }).click();
+  await term.getByRole('button', { name: /Coca-Cola 500ml/ }).click();
+  await term.getByRole('button', { name: /Dividir o pagamento/ }).click();
+  await term.getByLabel('Forma de pagamento 1').selectOption('mpesa');
+  await term.getByLabel('Valor 1').fill('20');
+  ok(/25,00/.test(await term.getByText('Resto em dinheiro').locator('..').innerText()), 'dividir: o resto em dinheiro é calculado (25 MT)');
+  await term.locator('#pos-received').fill('50');
+  ok(/25,00/.test(await term.getByText('Troco', { exact: true }).locator('..').innerText()), 'dividir: troco só da parte em dinheiro (25 MT)');
+  await shot(term, '15-terminal-dividir');
+  await term.getByRole('button', { name: /Cobrar 45,00 MT/ }).click();
+  await term.getByText('Venda registada').waitFor({ timeout: T });
+  const rd = await term.getByRole('dialog').innerText();
+  ok(/M-Pesa\s+20,00/.test(rd) && /Dinheiro\s+25,00/.test(rd), 'recibo no ecrã com as duas partes (M-Pesa 20, Dinheiro 25)', rd.slice(0, 300));
+  await shot(term, '15-terminal-recibo-dividido');
   await tctx.close();
   // 15.2: o mensal desconta o IVA a entregar e o INSS do patrao.
   await owner.goto(BASE + '/app/relatorios');
   await owner.getByRole('tab', { name: 'Mensal' }).click();
   await owner.getByText('IVA a entregar ao Estado').first().waitFor({ timeout: T });
   ok(await owner.getByText('IVA a entregar ao Estado').first().isVisible() && await owner.getByText('INSS do patrão (4% dos salários)').first().isVisible() && await owner.getByText('IVA do mês').isVisible(), 'mensal: IVA a entregar, INSS do patrão e o quadro do IVA');
+  ok(await owner.getByText('Multas do mês').isVisible() && await owner.getByText('Conselho Municipal · Licença fora do prazo').isVisible(), 'mensal: linha «Multas» e a lista das multas do mês');
   await owner.getByText('IVA do mês').scrollIntoViewIfNeeded();
   await shot(owner, '15-mensal-impostos');
   await ctx.close();

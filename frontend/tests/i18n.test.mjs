@@ -50,7 +50,7 @@ test('dinheiro, percentagem e pagamentos seguem a lingua (centavos inteiros)', (
   assert.equal(money(-5), '−0.05 MT');
   assert.equal(pct(12.5, 1), '12.5%');
   assert.equal(PAYMENT_LABEL.cash, 'Cash');
-  assert.deepEqual(Object.entries(PAYMENT_LABEL).map(([, l]) => l), ['Cash', 'M-Pesa', 'e-Mola', 'Card / POS', 'M-Pesa/e-Mola (old)']);
+  assert.deepEqual(Object.entries(PAYMENT_LABEL).map(([, l]) => l), ['Cash', 'M-Pesa', 'e-Mola', 'Card / POS', 'Bank transfer', 'Split payment', 'M-Pesa/e-Mola (old)']);
   setLang('pt');
 });
 

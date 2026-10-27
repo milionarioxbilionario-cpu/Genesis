@@ -86,6 +86,7 @@ function render(doc, { shopName, shopLocation, shopPhone, shopNuit, footer, logo
   row(t('Total'), money(total), { bold: true, size: 12 });
   if (Number(sale.vat_amount) > 0) row(t('IVA incluído'), money(sale.vat_amount), { size: 7.5, color: MUTED });
   row(t('Pagamento:'), sale.payment_method || t('Dinheiro'), { size: 7.5, color: MUTED });
+  for (const p of sale.payments || []) row('  ' + p.method, money(p.amount), { size: 7.5, color: MUTED });
   row(t('Recebido'), money(sale.amount_received), { size: 7.5, color: MUTED });
   row(t('Troco'), money(sale.change_given), { size: 7.5, color: MUTED });
   doc.setTextColor(...INK);

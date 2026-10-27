@@ -25,7 +25,7 @@ export function timelineTitle(e) {
     case 'demand':
       if (e.product_name == null) return e.title;
       return t(e.in_catalog ? 'Cliente pediu: {name}{q} (em falta)' : 'Cliente pediu: {name}{q} (fora do catálogo)', { name: e.product_name, q: e.quantity > 1 ? ' ×' + e.quantity : '' });
-    case 'expense': return e.category != null ? t('Despesa: {c}', { c: e.category }) : e.title;
+    case 'expense': if (e.kind === 'fine') return t('Multa: {c}', { c: e.entity || '' }); return e.category != null ? t('Despesa: {c}', { c: e.category }) : e.title;
     default: return e.title;
   }
 }

@@ -108,3 +108,18 @@ test('sem regime de impostos nem INSS: nada muda (lojas antigas)', () => {
   assert.equal(d.total_taxes, 0);
   assert.equal(d.operating_expenses, 1000000);
 });
+
+// Fase 15.3: multas numa linha propria; custos anuais repartidos por 12.
+test('multas: linha propria, descontam no lucro e nao contam como despesas avulsas', () => {
+  const d = computeMonthlyDeductions({ expenses: [{ amount: 50000, kind: 'expense' }, { amount: 250000, kind: 'fine' }, { amount: 1000 }] });
+  assert.equal(d.total_expenses, 51000);
+  assert.equal(d.total_fines, 250000);
+  assert.equal(d.operating_expenses, 301000);
+});
+
+test('taxa anual do municipio: 1/12 por mes, arredondado ao centavo', () => {
+  const d = computeMonthlyDeductions({ fixedCosts: [{ type: 'municipal', amount: 1200000, period: 'annual' }, { type: 'rent', amount: 500000 }, { type: 'other', amount: 100, period: 'annual' }] });
+  assert.equal(d.total_rent, 500000);
+  assert.equal(d.total_other_fixed, 100000 + 8); // 12 000 MT / 12 = 1 000 MT; 1 MT / 12 = 0,08 MT
+  assert.equal(d.total_fixed, 600008);
+});

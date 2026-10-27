@@ -45,7 +45,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   const [sharing, setSharing] = useState(false);
   const receiptInput = () => ({
     shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo: store.logo, cashierName: cashier.name,
-    sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, created_at: sale.created_at || new Date().toISOString() },
+    sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, payments: (sale.payments || []).map((p) => ({ method: PAYMENT_LABEL[p.method] || p.method, amount: p.amount })), created_at: sale.created_at || new Date().toISOString() },
     items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
   });
   async function print() {
@@ -79,7 +79,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
         <div className="my-1 border-t border-border" />
         {sale.discount_amount > 0 && <><KeyValue label={t('Subtotal')} value={money(subtotal)} /><KeyValue label={t('Desconto')} value={'−' + money(sale.discount_amount)} /></>}
         <KeyValue label={t('Total')} value={money(sale.total_amount)} strong />
-        <KeyValue label={PAYMENT_LABEL[sale.payment_method]} value={money(sale.amount_received)} />
+        {sale.payments?.length ? sale.payments.map((p) => <KeyValue key={p.method} label={PAYMENT_LABEL[p.method]} value={money(p.amount)} />) : <KeyValue label={PAYMENT_LABEL[sale.payment_method]} value={money(sale.amount_received)} />}
         {sale.change_given > 0 && <KeyValue label={t('Troco')} value={money(sale.change_given)} strong tone="positive" />}
       </div>
       {qr && <img src={qr} alt={t('QR de verificação da venda')} className="mx-auto mt-3 h-24 w-24" />}

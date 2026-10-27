@@ -27,6 +27,16 @@ addTranslations('en', {
   'PIN incorrecto.': 'Wrong PIN.',
   'Restam {n} tentativa(s).': '{n} attempt(s) left.',
   'A sua língua': 'Your language',
+  // Fase 15.4: pagamento dividido e transferencia
+  'Transf.': 'Transfer',
+  'Cancelar divisão': 'Cancel split',
+  'Forma de pagamento {n}': 'Payment method {n}',
+  'Valor {n}': 'Amount {n}',
+  'Tirar esta parte': 'Remove this part',
+  '+ Outra forma': '+ Another method',
+  'As partes passam do total em {value}.': 'The parts exceed the total by {value}.',
+  'Resto em dinheiro': 'Rest in cash',
+  'Dividir o pagamento (ex.: parte M-Pesa, parte dinheiro)': 'Split the payment (e.g. part M-Pesa, part cash)',
   // Fase 15.1: gaveta e recibo
   'Abrir a gaveta do dinheiro ao cobrar em dinheiro (gaveta ligada à impressora)': 'Open the cash drawer when charging in cash (drawer connected to the printer)',
   // Fase 12.5: telemovel

@@ -13,12 +13,14 @@ const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { VAT_MODES, INSS_EMPLOYER_PCT } = require('../services/tax');
+const { monthlyAmount } = require('../services/monthlyDeductions');
 
 const router = express.Router();
 router.use(auth, requireRole('owner'));
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
-const FIXED_COST_TYPES = ['rent', 'utilities', 'transport', 'other'];
+// Fase 15.3: 'municipal' = taxas do municipio (licenca, publicidade…), muitas vezes anuais.
+const FIXED_COST_TYPES = ['rent', 'utilities', 'transport', 'municipal', 'other'];
 
 const storeSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
@@ -58,6 +60,8 @@ const fixedCostSchema = z.object({
   description: z.string().trim().min(2).max(120),
   amount: z.number().int().positive(), // centavos
   type: z.enum(FIXED_COST_TYPES),
+  // Fase 15.3: anual = repartido por 12 meses no lucro.
+  period: z.enum(['monthly', 'annual']).optional().default('monthly'),
 });
 
 const tenantId = (req) => req.user.tenantId;
@@ -82,7 +86,7 @@ router.get('/', asyncHandler(async (req, res) => {
     status: t.status,
     trial_ends_at: t.trial_ends_at,
     fixed_costs: fixed,
-    fixed_costs_monthly_total: fixed.reduce((s, c) => s + c.amount, 0),
+    fixed_costs_monthly_total: fixed.reduce((s, c) => s + monthlyAmount(c), 0),
   });
 }));
 
@@ -230,12 +234,18 @@ router.delete('/fixed-costs/:id', asyncHandler(async (req, res) => {
 // sugeridas aparecem no ecra, mas o dono pode escrever outra.
 const EXPENSE_CATEGORIES = ['Limpeza', 'Transporte do stock', 'Software', 'Luz', 'Água', 'Manutenção', 'Outros'];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+// Fase 15.3: multa = despesa de tipo proprio, com a entidade que multou (categoria «Multa»).
 const expenseSchema = z.object({
   date: z.string().regex(DAY, 'Data no formato AAAA-MM-DD'),
-  category: z.string().trim().min(2, 'Escolha ou escreva a categoria').max(40),
+  kind: z.enum(['expense', 'fine']).optional().default('expense'),
+  category: z.string().trim().max(40).optional().default(''),
+  entity: z.string().trim().max(80).optional().nullable(),
   description: z.string().trim().max(160).optional().default(''),
   amount: z.number().int().positive(), // centavos
-});
+}).superRefine((d, ctx) => {
+  if (d.kind === 'expense' && d.category.length < 2) ctx.addIssue({ code: 'custom', path: ['category'], message: 'Escolha ou escreva a categoria' });
+  if (d.kind === 'fine' && (d.entity || '').length < 2) ctx.addIssue({ code: 'custom', path: ['entity'], message: 'Indique quem passou a multa (ex.: Conselho Municipal, INAE)' });
+}).transform((d) => (d.kind === 'fine' ? { ...d, category: 'Multa' } : { ...d, entity: null }));
 const pad = (n) => String(n).padStart(2, '0');
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 
@@ -263,6 +273,7 @@ router.get('/expenses', asyncHandler(async (req, res) => {
   res.json({
     year: q.year, month: q.month, rows,
     total: rows.reduce((s, e) => s + e.amount, 0),
+    fines_total: rows.reduce((s, e) => s + (e.kind === 'fine' ? e.amount : 0), 0),
     by_category: Object.entries(byCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount),
     categories: EXPENSE_CATEGORIES,
   });
@@ -271,7 +282,7 @@ router.get('/expenses', asyncHandler(async (req, res) => {
 router.post('/expenses', asyncHandler(async (req, res) => {
   const data = expenseSchema.parse(req.body);
   const expense = await prisma.expense.create({
-    data: { tenant_id: tenantId(req), date: expenseDate(data.date), category: data.category, description: data.description, amount: data.amount, created_by: req.user.userId },
+    data: { tenant_id: tenantId(req), date: expenseDate(data.date), kind: data.kind, entity: data.entity, category: data.category, description: data.description, amount: data.amount, created_by: req.user.userId },
   });
   await writeAudit({ req, action: 'CREATE_EXPENSE', entityType: 'expense', entityId: expense.id, newValue: data });
   res.status(201).json(expense);
@@ -288,7 +299,7 @@ router.put('/expenses/:id', asyncHandler(async (req, res) => {
   const data = expenseSchema.parse(req.body);
   const expense = await prisma.expense.update({
     where: { id: before.id },
-    data: { date: expenseDate(data.date), category: data.category, description: data.description, amount: data.amount },
+    data: { date: expenseDate(data.date), kind: data.kind, entity: data.entity, category: data.category, description: data.description, amount: data.amount },
   });
   await writeAudit({ req, action: 'UPDATE_EXPENSE', entityType: 'expense', entityId: expense.id, oldValue: before, newValue: data });
   res.json(expense);

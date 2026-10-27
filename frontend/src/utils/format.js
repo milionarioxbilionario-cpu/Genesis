@@ -76,7 +76,7 @@ export function isoDay(d = new Date()) {
 // mobile_money = vendas de antes de separar M-Pesa e e-Mola (2.1).
 // Cada leitura passa por t(): PAYMENT_LABEL[m] e Object.entries(PAYMENT_LABEL)
 // saem na lingua actual sem mudar quem os usa.
-const PAYMENT_PT = { cash: 'Dinheiro', mpesa: 'M-Pesa', emola: 'e-Mola', card: 'Cartão / POS', mobile_money: 'M-Pesa/e-Mola (antigo)' };
+const PAYMENT_PT = { cash: 'Dinheiro', mpesa: 'M-Pesa', emola: 'e-Mola', card: 'Cartão / POS', transfer: 'Transferência', mixed: 'Pagamento dividido', mobile_money: 'M-Pesa/e-Mola (antigo)' };
 export const PAYMENT_LABEL = new Proxy(PAYMENT_PT, {
   get: (target, key) => (typeof key === 'string' && Object.prototype.hasOwnProperty.call(target, key) ? t(target[key]) : target[key]),
 });

@@ -10,7 +10,9 @@
 // Genesis 2.1: M-Pesa (Vodacom) e e-Mola (Movitel) separados — a reconciliacao
 // do fecho e feita por conta. 'mobile_money' fica ACEITE como valor antigo: ha
 // vendas offline em terminais com esse valor e recusa-las (4xx) perdia-as.
-const CANONICAL_PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'mobile_money'];
+// Fase 15.4: 'transfer' (transferencia bancaria) deixa de contar como cartao.
+// 'mixed' nunca vem do cliente: e o servidor que o grava quando o pagamento e dividido.
+const CANONICAL_PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'transfer', 'mobile_money'];
 
 const ALIASES = {
   cash: 'cash',
@@ -21,9 +23,9 @@ const ALIASES = {
   'cartão': 'card',
   pos: 'card',
   pos_bank: 'card',
-  transfer: 'card',
-  transferencia: 'card',
-  'transferência': 'card',
+  transfer: 'transfer',
+  transferencia: 'transfer',
+  'transferência': 'transfer',
   mobile_money: 'mobile_money',
   mpesa: 'mpesa',
   'm-pesa': 'mpesa',

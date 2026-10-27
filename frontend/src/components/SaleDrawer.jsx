@@ -29,7 +29,7 @@ export default function SaleDrawer({ sale, onClose }) {
     return {
       shopName: r.name || tenant?.name, shopLocation: r.location || tenant?.location, shopPhone: r.phone, shopNuit: r.nuit, footer: r.receipt_footer, logo: r.logo,
       cashierName: sale.cashier?.name,
-      sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
+      sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method], payments: (sale.payments || []).map((p) => ({ method: PAYMENT_LABEL[p.method] || p.method, amount: p.amount })) }, items: sale.items,
     };
   }
   async function reprint() {
@@ -69,7 +69,7 @@ export default function SaleDrawer({ sale, onClose }) {
           <KeyValue label={t('Total')} value={money(sale.total_amount)} strong />
           <KeyValue label={t('Custo dos produtos')} value={money(sale.total_cost)} />
           <KeyValue label={t('Margem')} value={money(sale.total_amount - sale.total_cost)} tone="positive" />
-          <KeyValue label={PAYMENT_LABEL[sale.payment_method] || sale.payment_method} value={money(sale.amount_received)} />
+          {sale.payments?.length ? sale.payments.map((p) => <KeyValue key={p.method} label={PAYMENT_LABEL[p.method] || p.method} value={money(p.amount)} />) : <KeyValue label={PAYMENT_LABEL[sale.payment_method] || sale.payment_method} value={money(sale.amount_received)} />}
           {sale.change_given > 0 && <KeyValue label={t('Troco')} value={money(sale.change_given)} />}
         </>
       )}

@@ -22,7 +22,10 @@ const PAYMENTS = [
   { value: 'mpesa', label: 'M-Pesa' },
   { value: 'emola', label: 'e-Mola' },
   { value: 'card', label: 'Cartão' },
+  { value: 'transfer', label: 'Transf.' },
 ];
+// Fase 15.4: pagamento dividido — partes por estes metodos; o resto e em dinheiro.
+const SPLIT_METHODS = [['mpesa', 'M-Pesa'], ['emola', 'e-Mola'], ['card', 'Cartão'], ['transfer', 'Transferência']];
 
 // Os label sao a chave em portugues: o ecra mostra t(label) (9.5).
 // Atalhos de teclado (todos com tecla de funcao ou modificador: o leitor de
@@ -49,6 +52,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   const [showDiscount, setShowDiscount] = useState(false);
   const [payment, setPayment] = useState('cash');
   const [received, setReceived] = useState(0);
+  const [parts, setParts] = useState([]); // so com payment === 'split'
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [shift, setShift] = useState(null);
@@ -97,14 +101,18 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   const subtotal = cart.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
   const effectiveDiscount = Math.min(discount, subtotal);
   const total = subtotal - effectiveDiscount;
-  const change = payment === 'cash' ? Math.max(0, received - total) : 0;
+  const split = payment === 'split';
+  const splitPaid = parts.reduce((sum, x) => sum + (x.amount || 0), 0);
+  const cashPart = split ? total - splitPaid : (payment === 'cash' ? total : 0);
+  const change = split ? (cashPart > 0 ? Math.max(0, received - cashPart) : 0) : payment === 'cash' ? Math.max(0, received - total) : 0;
+  const splitOk = !split || (parts.length > 0 && parts.every((x) => x.amount > 0) && cashPart >= 0 && (cashPart === 0 || received === 0 || received >= cashPart));
   const freeLimit = Math.floor(subtotal * (info.store.discount_free_pct ?? 10) / 100);
   const locked = Boolean(shift?.locked);
   // Turno fechado HOJE: so o dono reabre (PIN); amanha abre sozinho. Sem resposta do servidor
   // (offline) o estado anterior mantem-se e a venda nao fica presa.
   const shiftClosed = shift?.open === false;
   const blocked = locked || shiftClosed;
-  const canCharge = cart.length > 0 && total > 0 && !busy && !blocked && (payment !== 'cash' || received === 0 || received >= total);
+  const canCharge = cart.length > 0 && total > 0 && !busy && !blocked && (split ? splitOk : (payment !== 'cash' || received === 0 || received >= total));
 
   function add(p) {
     setError('');
@@ -170,7 +178,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   }
 
   function resetSale() {
-    setCart([]); setDiscount(0); setShowDiscount(false); setReceived(0); setPayment('cash'); setQuery(''); setError('');
+    setCart([]); setDiscount(0); setShowDiscount(false); setReceived(0); setPayment('cash'); setParts([]); setQuery(''); setError('');
   }
 
   // Atalhos globais do terminal (desligados quando ha um dialogo aberto).
@@ -187,12 +195,12 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         setShowDiscount(true); focusById('pos-discount');
       } else if (e.key === 'F3') {
         e.preventDefault();
-        if (s.payment !== 'cash') { setPayment('cash'); setReceived(0); }
+        if (s.payment !== 'cash' && s.payment !== 'split') { setPayment('cash'); setReceived(0); }
         focusById('pos-received');
       } else if (e.key === 'F4') {
         e.preventDefault();
         const i = PAYMENTS.findIndex((p) => p.value === s.payment);
-        setPayment(PAYMENTS[(i + 1) % PAYMENTS.length].value); setReceived(0);
+        setPayment(PAYMENTS[(i + 1) % PAYMENTS.length].value); setReceived(0); setParts([]);
       } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (s.canCharge) chargeRef.current();
@@ -217,16 +225,17 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       items: cart.map((l) => ({ product_id: l.product_id, quantity: l.quantity, unit_sell_price: l.unit_sell_price, unit_cost_price: 0 })),
       discount_amount: effectiveDiscount,
       total_amount: total,
-      payment_method: payment,
-      ...(payment === 'cash' && received > 0 ? { amount_received: received } : {}),
+      payment_method: split ? 'mixed' : payment,
+      ...(split ? { payments: [...parts.map((x) => ({ method: x.method, amount: x.amount })), ...(cashPart > 0 ? [{ method: 'cash', amount: cashPart }] : [])] } : {}),
+      ...((payment === 'cash' || (split && cashPart > 0)) && received > 0 ? { amount_received: received } : {}),
       created_at: new Date().toISOString(),
     };
     const body = authorizationPin ? { ...payload, authorization_pin: authorizationPin } : payload;
     try {
       const res = await api.post('/api/sales', body);
       pendingSale.current = null;
-      if (payment === 'cash') openCashDrawer();
-      setDialog({ receipt: { sale: { ...payload, id: res.data.id, daily_number: res.data.daily_number, vat_amount: res.data.vat_amount || 0, amount_received: payment === 'cash' && received ? received : total, change_given: change }, items: cart } });
+      if (cashPart > 0) openCashDrawer();
+      setDialog({ receipt: { sale: { ...payload, id: res.data.id, daily_number: res.data.daily_number, vat_amount: res.data.vat_amount || 0, amount_received: total + change, change_given: change }, items: cart } });
       resetSale();
       refreshCatalog(); refreshShift();
     } catch (err) {
@@ -240,7 +249,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       } else if (shouldQueueOffline(err)) {
         pendingSale.current = null;
         await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload });
-        if (payment === 'cash') openCashDrawer();
+        if (cashPart > 0) openCashDrawer();
         await decrementCached(payload.items);
         await refreshCounts();
         toast(t('Sem ligação: venda guardada neste terminal. É enviada automaticamente.'));
@@ -425,7 +434,41 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
             {effectiveDiscount > 0 && <div className="flex justify-between py-1 text-base text-ink-2"><span>{t('Desconto')}</span><span className="num">−{money(effectiveDiscount)}</span></div>}
             <div className="flex items-baseline justify-between border-t border-border pt-2 mt-1"><span className="font-semibold text-ink">{t('Total')}</span><span className="num text-xl font-semibold text-ink">{money(total)}</span></div>
 
-            <Segmented className="mt-3 flex w-full" size="lg" options={PAYMENTS.map((p) => ({ ...p, label: t(p.label) }))} value={payment} onChange={(v) => { setPayment(v); setReceived(0); }} />
+            <Segmented className="mt-3 flex w-full" size="lg" options={PAYMENTS.map((p) => ({ ...p, label: t(p.label) }))} value={payment} onChange={(v) => { setPayment(v); setReceived(0); setParts([]); }} />
+            {split ? (
+              <div className="mt-3 rounded border border-border p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-medium text-ink">{t('Pagamento dividido')}</p>
+                  <button type="button" className="text-sm text-ink-muted hover:text-ink" onClick={() => { setPayment('cash'); setParts([]); setReceived(0); }}>{t('Cancelar divisão')}</button>
+                </div>
+                {parts.map((x, i) => (
+                  <div key={i} className="mb-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2">
+                    <select aria-label={t('Forma de pagamento {n}', { n: i + 1 })} className="h-10 rounded border border-border-strong bg-surface px-2 text-base text-ink" value={x.method} onChange={(e) => setParts(parts.map((y, j) => (j === i ? { ...y, method: e.target.value } : y)))}>
+                      {SPLIT_METHODS.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
+                    </select>
+                    <MoneyInput aria-label={t('Valor {n}', { n: i + 1 })} valueCents={x.amount} onChangeCents={(v) => setParts(parts.map((y, j) => (j === i ? { ...y, amount: v } : y)))} />
+                    <IconButton label={t('Tirar esta parte')} icon={X} onClick={() => setParts(parts.filter((_, j) => j !== i))} />
+                  </div>
+                ))}
+                {parts.length < 3 && <button type="button" className="text-sm text-accent hover:text-accent-hover" onClick={() => setParts([...parts, { method: 'mpesa', amount: 0 }])}>{t('+ Outra forma')}</button>}
+                {cashPart < 0 ? (
+                  <p role="alert" className="mt-2 text-sm text-danger">{t('As partes passam do total em {value}.', { value: money(-cashPart) })}</p>
+                ) : (
+                  <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2"><span className="text-base text-ink-2">{t('Resto em dinheiro')}</span><span className="num text-base font-semibold text-ink">{money(cashPart)}</span></div>
+                )}
+                {cashPart > 0 && (
+                  <div className="mt-2 grid grid-cols-2 items-end gap-3">
+                    <MoneyInput id="pos-received" label={t('Recebido')} valueCents={received} onChangeCents={setReceived} placeholder={String(cashPart / 100).replace('.', ',')} />
+                    <div className="pb-1.5 text-right">
+                      <p className="text-xs text-ink-muted">{t('Troco')}</p>
+                      <p className={cx('num text-lg font-semibold', received && received < cashPart ? 'text-danger' : 'text-ink')}>{received && received < cashPart ? t('Falta {value}', { value: money(cashPart - received) }) : money(change)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button type="button" disabled={!cart.length} className="mt-2 text-sm text-accent hover:text-accent-hover disabled:text-ink-faint" onClick={() => { setPayment('split'); setReceived(0); setParts([{ method: 'mpesa', amount: 0 }]); }}>{t('Dividir o pagamento (ex.: parte M-Pesa, parte dinheiro)')}</button>
+            )}
             {payment === 'cash' && (
               <div className="mt-3 grid grid-cols-2 items-end gap-3">
                 <MoneyInput id="pos-received" label={t('Recebido')} valueCents={received} onChangeCents={setReceived} placeholder={total ? String(total / 100).replace('.', ',') : ''} />

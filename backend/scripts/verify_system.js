@@ -89,6 +89,7 @@ async function cleanup() {
   if (ctx.admin) userIds.push(ctx.admin.id);
   const saleIds = (await prisma.sale.findMany({ where: { tenant_id: t }, select: { id: true } })).map((s) => s.id);
   const debtIds = (await prisma.debt.findMany({ where: { tenant_id: t }, select: { id: true } })).map((d) => d.id);
+  await prisma.salePayment.deleteMany({ where: { sale_id: { in: saleIds } } });
   await prisma.saleItem.deleteMany({ where: { sale_id: { in: saleIds } } });
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
@@ -1865,7 +1866,71 @@ async function test35() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35 };
+// ---------------------------------------------------------------------------
+async function test36() {
+  section(36, 'Multas (com quem as passou) e taxas anuais do municipio (1/12 por mes) no lucro (Fase 15.3)');
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  const now = new Date();
+  const day = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const ym = 'year=' + now.getFullYear() + '&month=' + (now.getMonth() + 1);
+  const m0 = (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data;
+  const noEntity = await owner.req('POST', '/api/settings/expenses', { date: day, kind: 'fine', amount: 250000 });
+  ok(noEntity.status === 400, 'multa sem quem a passou: 400', noEntity);
+  const fine = await owner.req('POST', '/api/settings/expenses', { date: day, kind: 'fine', entity: 'Conselho Municipal', description: 'Licença fora do prazo', amount: 250000 });
+  ok(fine.status === 201 && fine.data.kind === 'fine' && fine.data.category === 'Multa' && fine.data.entity === 'Conselho Municipal', 'multa gravada: tipo, categoria «Multa» e entidade', fine.data);
+  ok((await caixa.req('POST', '/api/settings/expenses', { date: day, kind: 'fine', entity: 'X', amount: 1 })).status === 403, 'caixista nao regista multas');
+  const tax = await owner.req('POST', '/api/settings/fixed-costs', { description: 'Licença de actividade', amount: 1200000, type: 'municipal', period: 'annual' });
+  ok(tax.status === 201 && tax.data.period === 'annual', 'taxa anual do municipio registada', tax.data);
+  ok((await owner.req('POST', '/api/settings/fixed-costs', { description: 'X', amount: 100, type: 'rent', period: 'semanal' })).status === 400, 'periodo inventado: 400');
+  const m1 = (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data;
+  ok(m1.deductions.total_fines === (m0.deductions.total_fines || 0) + 250000 && m1.fines.some((f) => f.entity === 'Conselho Municipal'), 'mensal: linha «Multas» com a multa e quem a passou', m1.deductions);
+  ok(m1.deductions.total_other_fixed === m0.deductions.total_other_fixed + 100000, 'taxa anual de 12 000 MT conta 1 000 MT no mes', { antes: m0.deductions.total_other_fixed, depois: m1.deductions.total_other_fixed });
+  ok(m1.net_profit === m0.net_profit - 250000 - 100000, 'lucro liquido desce exactamente multa + 1/12 da taxa', { antes: m0.net_profit, depois: m1.net_profit });
+  ok(!m1.expenses.by_category.some((c) => c.category === 'Multa'), 'multas nao se misturam com as despesas avulsas por categoria');
+  const tl = (await owner.req('GET', '/api/owner/reports/timeline?from=' + day + '&to=' + day + '&types=expense')).data;
+  const ev = (tl.events || tl.rows || tl.items || []).find((e) => e.kind === 'fine');
+  ok(ev && ev.entity === 'Conselho Municipal' && ev.amount === -250000, 'rastreio: a multa aparece com a entidade', ev || tl);
+  await owner.req('DELETE', '/api/settings/expenses/' + fine.data.id);
+  await owner.req('DELETE', '/api/settings/fixed-costs/' + tax.data.id);
+}
+
+// ---------------------------------------------------------------------------
+async function test37() {
+  section(37, 'Pagamento misto (partes + troco so do dinheiro), transferencia propria, fecho e relatorios por metodo (Fase 15.4)');
+  await unlockCashier();
+  const { shiftWindow } = require('../src/utils/shift');
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  const t = ctx.tenant.id;
+  const now = new Date();
+  const day = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const w0 = await prisma.runWithTenant(t, () => shiftWindow(t, ctx.cashier.id));
+  const d0 = (await owner.req('GET', '/api/owner/reports/daily?date=' + day)).data;
+  // 100 MT: 60 por M-Pesa + 40 em dinheiro; o cliente da 50 em dinheiro -> troco 10.
+  const mixed = await caixa.req('POST', '/api/sales', saleBody({ payment_method: 'mixed', payments: [{ method: 'mpesa', amount: 6000 }, { method: 'cash', amount: 4000 }], amount_received: 5000 }));
+  ok(mixed.status === 201, 'venda com pagamento dividido: 201', mixed);
+  const sale = await prisma.sale.findUnique({ where: { id: mixed.data.id }, include: { payments: true } });
+  ok(sale.payment_method === 'mixed' && sale.change_given === 1000 && sale.payments.length === 2 && sale.payments.every((x) => x.tenant_id === t), 'gravada como «mixed», troco 10 MT so do dinheiro, 2 partes da loja', { pm: sale.payment_method, troco: sale.change_given, partes: sale.payments.length });
+  ok((await caixa.req('POST', '/api/sales', saleBody({ payment_method: 'mixed', payments: [{ method: 'mpesa', amount: 6000 }, { method: 'cash', amount: 3000 }] }))).data?.code === 'PAYMENTS_MISMATCH', 'partes que nao somam o total: recusado');
+  ok((await caixa.req('POST', '/api/sales', saleBody({ payment_method: 'mixed', payments: [{ method: 'card', amount: 6000 }, { method: 'cash', amount: 4000 }], amount_received: 3000 }))).data?.code === 'CASH_SHORT', 'dinheiro recebido abaixo da parte em dinheiro: recusado');
+  ok((await caixa.req('POST', '/api/sales', saleBody({ payment_method: 'mixed' }))).status === 400, '«mixed» sem partes: 400');
+  const tr = await caixa.req('POST', '/api/sales', saleBody({ payment_method: 'transferencia' }));
+  ok(tr.status === 201 && (await prisma.sale.findUnique({ where: { id: tr.data.id } })).payment_method === 'transfer', 'transferencia e um metodo proprio (antes contava como cartao)');
+  const again = await caixa.req('POST', '/api/sales', saleBody({ id: mixed.data.id, payment_method: 'mixed', payments: [{ method: 'mpesa', amount: 6000 }, { method: 'cash', amount: 4000 }], amount_received: 5000 }));
+  ok(again.status === 201 && again.data.id === mixed.data.id && (await prisma.salePayment.count({ where: { sale_id: mixed.data.id } })) === 2, 'repetir a mesma venda (fila sem rede): nao duplica as partes');
+  const w1 = await prisma.runWithTenant(t, () => shiftWindow(t, ctx.cashier.id));
+  ok(w1.expectedCash === w0.expectedCash + 4000 && (w1.totals.mpesa || 0) === (w0.totals.mpesa || 0) + 6000 && (w1.totals.transfer || 0) === (w0.totals.transfer || 0) + 10000 && !('mixed' in w1.totals), 'fecho do turno: so os 40 MT em dinheiro entram no esperado; M-Pesa e transferencia a parte', { antes: w0.totals, depois: w1.totals });
+  const d1 = (await owner.req('GET', '/api/owner/reports/daily?date=' + day)).data;
+  ok(d1.by_payment.mpesa === d0.by_payment.mpesa + 6000 && d1.by_payment.cash === d0.by_payment.cash + 4000 && d1.by_payment.transfer === (d0.by_payment.transfer || 0) + 10000, 'relatorio diario: cada parte no seu metodo', d1.by_payment);
+  const list = (await owner.req('GET', '/api/owner/sales?method=mpesa')).data;
+  ok(list.rows.some((r) => r.id === mixed.data.id && r.payments?.length === 2), 'lista de vendas filtrada por M-Pesa inclui a venda dividida, com as partes');
+  // RLS: o papel da aplicacao sem loja no contexto nao ve partes nenhumas.
+  const leak = await prisma.runWithTenant(crypto.randomUUID(), () => prisma.salePayment.count({ where: { sale_id: mixed.data.id } }));
+  ok(leak === 0, 'RLS: outra loja nao ve as partes do pagamento', leak);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37 };
 
 (async () => {
   await prisma.ready();

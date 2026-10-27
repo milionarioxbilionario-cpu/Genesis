@@ -171,6 +171,7 @@ export function buildReportPdf({ kind, shopName, data, timeline: tl, labels }) {
       [t('Outros custos fixos'), '-' + money(d.total_other_fixed)],
       [t('Entregas de fornecedores'), '-' + money(d.total_supplier_delivery)],
       [t('Despesas avulsas'), '-' + money(d.total_expenses || 0)],
+      ...(d.total_fines ? [[t('Multas'), '-' + money(d.total_fines)]] : []),
       ...(data.taxes?.vat_mode === 'iva' ? [[t('IVA a entregar ao Estado'), '-' + money(d.total_vat_due || 0)]] : []),
       ...(data.taxes?.ispc ? [[t('ISPC (estimativa, {pct}%)', { pct: data.taxes.ispc.pct }), '-' + money(d.total_ispc || 0)]] : []),
       ...(data.taxes?.inss_employer_pct ? [[t('INSS do patrão ({pct}% dos salários)', { pct: data.taxes.inss_employer_pct }), '-' + money(d.total_inss || 0)]] : []),

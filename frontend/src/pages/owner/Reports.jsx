@@ -392,6 +392,7 @@ function Monthly() {
     { key: 'fixed', label: t('Outros custos fixos'), value: -data.deductions.total_other_fixed },
     { key: 'delivery', label: t('Entregas de fornecedores'), value: -data.deductions.total_supplier_delivery },
     { key: 'expenses', label: t('Despesas avulsas'), value: -(data.deductions.total_expenses || 0) },
+    ...(data.deductions.total_fines ? [{ key: 'fines', label: t('Multas'), value: -data.deductions.total_fines }] : []),
     // Fase 15.2: impostos so aparecem quando a loja os tem.
     ...(data.taxes?.vat_mode === 'iva' ? [{ key: 'vat', label: t('IVA a entregar ao Estado'), value: -(data.deductions.total_vat_due || 0) }] : []),
     ...(data.taxes?.ispc ? [{ key: 'ispc', label: t('ISPC (estimativa, {pct}%)', { pct: data.taxes.ispc.pct }), value: -(data.deductions.total_ispc || 0) }] : []),
@@ -452,6 +453,12 @@ function Monthly() {
               {data.losses_total > 0 && (
                 <div className="mt-4 rounded border border-border bg-danger-soft p-3 text-sm text-ink-2">
                   {t('Perdas do mês (quebras e validades):')} <span className="num font-medium text-danger">−{money(data.losses_total)}</span>. {t('Depois das perdas ficariam')} <span className="num font-medium text-ink">{money(data.net_profit - data.losses_total)}</span>.
+                </div>
+              )}
+              {data.fines?.length > 0 && (
+                <div className="mt-4 border-t border-border pt-3">
+                  <p className="mb-1 text-sm font-medium text-ink">{t('Multas do mês')}</p>
+                  {data.fines.map((f) => <KeyValue key={f.id} label={[f.entity, f.description].filter(Boolean).join(' · ')} value={'−' + money(f.amount)} />)}
                 </div>
               )}
               {data.expenses?.by_category.length > 0 && (

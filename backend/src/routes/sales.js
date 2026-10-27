@@ -10,6 +10,7 @@ const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
 const { addLot, consumeLots } = require('../utils/stockLots');
 const { productVatRate, saleVat } = require('../services/tax');
+const { splitPayment } = require('../utils/salePayments');
 const rateLimit = require('express-rate-limit');
 
 const saleSchema = z.object({
@@ -33,6 +34,8 @@ const saleSchema = z.object({
  // Desconto acima do limite livre da loja exige o PIN de autorizacao do dono.
  authorization_pin: z.string().regex(/^\d{4,6}$/).optional(),
  payment_method: z.string().min(1),
+ // Fase 15.4: pagamento dividido (as partes somam o total; troco so do dinheiro).
+ payments: z.array(z.object({ method: z.string().min(1), amount: z.number().int() })).max(4).optional(),
  amount_received: z.number().int().nonnegative().optional(),
  change_given: z.number().int().nonnegative().optional(),
  // Uma venda nova nasce sempre concluida: cancelar tem rota propria com PIN do dono.
@@ -96,7 +99,7 @@ router.get('/', async (req, res) => {
     const where = cashierId ? { tenant_id: tenantId, cashier_user_id: cashierId } : { tenant_id: tenantId };
     const sales = await prisma.sale.findMany({
       where,
-      include: { items: true, cashier: { select: { id: true, name: true } } },
+      include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { id: true, name: true } } },
       orderBy: { created_at: 'desc' },
       take: 20
     });
@@ -253,15 +256,28 @@ router.post('/', async (req, res) => {
      // Dinheiro recebido e troco sao derivados, nao aceites do cliente. Sem
      // amount_received assume-se pagamento exato; um valor explicito abaixo do
      // total e recusado (era assim que a gaveta fechava a menos sem rasto).
-     const paymentMethod = normalizePaymentMethod(data.payment_method);
-     let amountReceived = data.amount_received === undefined ? totalAmount : Number(data.amount_received);
-     if (paymentMethod === 'cash') {
+     let paymentMethod;
+     let amountReceived;
+     let paymentParts = [];
+     if (data.payments && data.payments.length) {
+       // Fase 15.4: amount_received = dinheiro que o cliente deu (para o troco).
+       const split = splitPayment({ payments: data.payments, total: totalAmount, cashReceived: data.amount_received });
+       paymentMethod = split.payment_method;
+       amountReceived = split.amount_received;
+       paymentParts = split.parts;
+     } else {
+       paymentMethod = normalizePaymentMethod(data.payment_method);
+       amountReceived = data.amount_received === undefined ? totalAmount : Number(data.amount_received);
+     }
+     // Pagamento dividido: o troco ja vem das partes (so do dinheiro).
+     const single = paymentParts.length === 0;
+     if (single && paymentMethod === 'cash') {
        if (amountReceived < totalAmount) {
          const receivedError = new Error('Valor recebido inferior ao total da venda');
          receivedError.statusCode = 400;
          throw receivedError;
        }
-     } else {
+     } else if (single) {
        amountReceived = totalAmount;
      }
      const changeGiven = Math.max(0, amountReceived - totalAmount);
@@ -320,6 +336,10 @@ router.post('/', async (req, res) => {
          cancel_reason: null,
         }
      });
+
+     if (paymentParts.length) {
+       await tx.salePayment.createMany({ data: paymentParts.map((p) => ({ id: require('crypto').randomUUID(), tenant_id: tenantId, sale_id: sale.id, method: p.method, amount: p.amount })) });
+     }
 
      await tx.saleItem.createMany({
        data: saleItems.map((item) => ({

@@ -124,6 +124,7 @@ async function remove(file) {
   const userIds = (await prisma.user.findMany({ where: { tenant_id: t }, select: { id: true } })).map((u) => u.id);
   const saleIds = (await prisma.sale.findMany({ where: { tenant_id: t }, select: { id: true } })).map((s) => s.id);
   const debtIds = (await prisma.debt.findMany({ where: { tenant_id: t }, select: { id: true } })).map((d) => d.id);
+  await prisma.salePayment.deleteMany({ where: { sale_id: { in: saleIds } } });
   await prisma.saleItem.deleteMany({ where: { sale_id: { in: saleIds } } });
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });

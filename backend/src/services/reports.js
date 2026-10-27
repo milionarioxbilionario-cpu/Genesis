@@ -16,7 +16,8 @@ const SHRINK_REASON = { broken: 'Partido', expired: 'Validade expirada', interna
 const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.abs(before)) * 1000) / 10 : null);
 
 // 'mobile_money' (antes de separar M-Pesa e e-Mola) so aparece se houver vendas.
-const PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card'];
+const PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'transfer'];
+const { totalsByMethod } = require('../utils/salePayments');
 const dayKey = (d) => {
   const x = new Date(d);
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
@@ -33,7 +34,7 @@ function dayRange(dateStr) {
 async function summarize(tenantId, start, end) {
   const range = { gte: start, lte: end };
   const [sales, cancelled, closings, demand, shrinkage] = await Promise.all([
-    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: range }, include: { items: true, cashier: { select: { name: true } } } }),
+    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: range }, include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { name: true } } } }),
     prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'cancelled', created_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { created_at: 'desc' } }),
     prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' } }),
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true, sell_price: true } } }, orderBy: { requested_at: 'asc' } }),
@@ -50,7 +51,7 @@ async function summarize(tenantId, start, end) {
   for (const s of sales) {
     gross += s.total_amount;
     discounts += s.discount_amount || 0;
-    byPayment[s.payment_method] = (byPayment[s.payment_method] || 0) + s.total_amount;
+    for (const [m, v] of Object.entries(totalsByMethod([s]))) byPayment[m] = (byPayment[m] || 0) + v;
     const k = dayKey(s.created_at);
     const d = byDay.get(k) || { date: k, revenue: 0, sales: 0, gross_profit: 0, losses: 0 };
     d.revenue += s.total_amount; d.sales += 1; byDay.set(k, d);
@@ -263,7 +264,7 @@ async function monthlyReport(tenantId, year, month) {
     debtsSummary(tenantId, start, end),
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     restockFor(tenantId, end < new Date() ? end : new Date(), 30),
-    prisma.expense.findMany({ where: { tenant_id: tenantId, date: { gte: start, lte: end } }, orderBy: { date: "asc" }, select: { id: true, date: true, category: true, description: true, amount: true } }),
+    prisma.expense.findMany({ where: { tenant_id: tenantId, date: { gte: start, lte: end } }, orderBy: { date: "asc" }, select: { id: true, date: true, kind: true, entity: true, category: true, description: true, amount: true } }),
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { vat_mode: true, inss_employer_pct: true } }),
     // ISPC: o escalao depende do volume de negocios do ano (projectado a partir de Janeiro).
     prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: new Date(year, 0, 1), lte: end } }, _sum: { total_amount: true } }),
@@ -303,7 +304,7 @@ async function monthlyReport(tenantId, year, month) {
   const taxes = { vat_due: vatMode === 'iva' ? report.vat.due : 0, ispc: ispc ? ispc.amount : 0 };
   const deductions = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries, expenses, taxes, inssPct: tenantTax?.inss_employer_pct || 0 });
   const expensesByCategory = {};
-  for (const e of expenses) expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
+  for (const e of expenses) if (e.kind !== 'fine') expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
   const months = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(year, month - 1 - i, 1);
@@ -320,6 +321,7 @@ async function monthlyReport(tenantId, year, month) {
     ...report,
     deductions,
     taxes: { vat_mode: vatMode, vat: vatMode === 'iva' ? report.vat : null, ispc, inss_employer_pct: tenantTax?.inss_employer_pct || 0 },
+    fines: expenses.filter((e) => e.kind === 'fine'),
     expenses: { rows: expenses, by_category: Object.entries(expensesByCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount) },
     net_profit: netProfit,
     revenue_history: months,
@@ -413,7 +415,7 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
   // Despesa: sai do lucro liquido do MES (nao do lucro bruto do dia), por isso profit 0.
   // A data e o dia escolhido pelo dono (meio-dia), nao a hora em que foi escrita.
   const expenseBy = expenses.length ? new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: [...new Set(expenses.map((e) => e.created_by))] } }, select: { id: true, name: true } })).map((u) => [u.id, u.name])) : new Map();
-  for (const e of expenses) events.push({ id: 'expense-' + e.id, type: 'expense', at: e.date, effect: 'expense', amount: -e.amount, profit: 0, title: `Despesa: ${e.category}`, who: expenseBy.get(e.created_by) || '—', detail: e.description || '', day_only: true, category: e.category });
+  for (const e of expenses) events.push({ id: 'expense-' + e.id, type: 'expense', at: e.date, effect: 'expense', amount: -e.amount, profit: 0, title: e.kind === 'fine' ? `Multa: ${e.entity || ''}` : `Despesa: ${e.category}`, who: expenseBy.get(e.created_by) || '—', detail: e.description || '', day_only: true, category: e.category, kind: e.kind || 'expense', entity: e.entity || null });
 
   events.sort((a, b) => new Date(b.at) - new Date(a.at));
   const totals = {

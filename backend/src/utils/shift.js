@@ -42,8 +42,13 @@ async function shiftStatus(db, tenantId, cashierId, now = new Date()) {
 async function shiftWindow(tenantId, cashierId) {
   const status = await shiftStatus(prisma, tenantId, cashierId);
   const base = { tenant_id: tenantId, cashier_user_id: cashierId, status: 'completed', ...(status.since ? { created_at: { gt: status.since } } : {}) };
-  const byMethod = await prisma.sale.groupBy({ by: ['payment_method'], where: base, _sum: { total_amount: true }, _count: true });
-  const totals = Object.fromEntries(byMethod.map((g) => [g.payment_method, Number(g._sum.total_amount || 0)]));
+  const [byMethod, mixedParts] = await Promise.all([
+    prisma.sale.groupBy({ by: ['payment_method'], where: base, _sum: { total_amount: true }, _count: true }),
+    // Fase 15.4: vendas mistas contam cada parte no seu metodo (o dinheiro entra no esperado).
+    prisma.salePayment.groupBy({ by: ['method'], where: { tenant_id: tenantId, sale: { ...base, payment_method: 'mixed' } }, _sum: { amount: true } }),
+  ]);
+  const totals = Object.fromEntries(byMethod.filter((g) => g.payment_method !== 'mixed').map((g) => [g.payment_method, Number(g._sum.total_amount || 0)]));
+  for (const g of mixedParts) totals[g.method] = (totals[g.method] || 0) + Number(g._sum.amount || 0);
   const openSales = byMethod.reduce((n, g) => n + g._count, 0);
   return { ...status, expectedCash: totals.cash || 0, totals, openSales };
 }
@@ -77,7 +82,7 @@ async function getShiftState(tenantId, cashierId) {
   };
 }
 
-const NON_CASH = ['mpesa', 'emola', 'card', 'mobile_money'];
+const NON_CASH = ['mpesa', 'emola', 'card', 'transfer', 'mobile_money'];
 
 async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   if (!Number.isInteger(declared) || declared < 0) throw httpError(400, 'Valor inválido', 'INVALID_AMOUNT');
@@ -132,4 +137,4 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
   };
 }
 
-module.exports = { getShiftState, closeShiftBlind, shiftStatus, firstActivityAt };
+module.exports = { getShiftState, closeShiftBlind, shiftStatus, shiftWindow, firstActivityAt };

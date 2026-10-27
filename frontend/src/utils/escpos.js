@@ -128,6 +128,7 @@ export function buildEscPosReceipt({ shopName, shopLocation, shopPhone, shopNuit
   bold(true); text(twoCols(t('TOTAL MT'), mzn(total))); bold(false);
   if (Number(sale.vat_amount) > 0) text(twoCols(t('IVA incluído'), mzn(sale.vat_amount)));
   if (sale.payment_method) text(twoCols(t('Pagamento:'), sale.payment_method));
+  for (const p of sale.payments || []) text(twoCols('  ' + p.method, mzn(p.amount)));
   if (sale.amount_received != null) text(twoCols(t('Recebido'), mzn(sale.amount_received)));
   if (sale.change_given != null) text(twoCols(t('Troco'), mzn(sale.change_given)));
   line();
