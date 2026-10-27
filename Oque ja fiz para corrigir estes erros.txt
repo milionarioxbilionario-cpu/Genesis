@@ -2179,3 +2179,11 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - O que falta: as etiquetas das balanças que trazem o peso no código de barras ainda não são lidas.
 - Testes no site real: recibo/peso 26 de 26, painel e terminal 41 de 41, stock 18 de 18. Funcionou: sim.
 - A Fase 15 está completa (recibo profissional, gaveta, imagem para WhatsApp, impostos, multas, pagamento dividido e venda ao peso). Sigo para a Fase 16.
+
+
+==================== 27/10/2026 — Fase 16: Perfil, planos e aniversário — publicada (falta o teste no site real) ====================
+- Ao tocar no teu nome, no fundo do menu, abre o "Perfil": mudar a senha, mudar o e-mail (com um código no e-mail actual e outro no novo), o número de WhatsApp dos alertas, atalhos para o PIN/Face ID e para o logótipo, o teu plano e o aniversário.
+- Aniversário: escolhe-se a data uma única vez. No dia, ao entrar, aparece uma janela de parabéns e o presente (1 mês de Premium) recolhe-se no Perfil. Plano mensal: o mês começa no próximo ciclo; plano anual: começa logo. Depois de recolhido, o ícone fica esbatido até ao ano seguinte.
+- No painel de administração vês o plano de cada loja e podes mudá-lo (Básico 3 000 MT / Premium 8 000 MT, mensal ou anual).
+- ATENÇÃO: mudar o e-mail só funciona depois de configurarmos o envio de e-mails (ainda não está).
+- Testado neste computador contra a base de dados real: tudo passou. Falta repetir os testes no site real (o meu limite de uso acabou).

@@ -1279,3 +1279,10 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Decisões (registadas):** quantidades em milésimos inteiros (nunca floats); um pedido de cliente de um produto a peso conta 1 kg; a unidade fica bloqueada com stock/vendas.
 - **Fase 15 completa:** 15.1 recibo + gaveta, 15.1b imagem para WhatsApp, 15.2 impostos, 15.3 multas e taxas anuais, 15.4 pagamento dividido, 15.5 venda ao peso.
 - Segue-se: Fase 16 (perfil, planos e aniversário).
+
+### [2026-10-27] — Fase 16: perfil, planos e aniversário — publicada SEM teste de browser em produção
+- **Ficheiros:** novos `backend/src/routes/profile.js`, `backend/src/services/plans.js`, `backend/tests/plans.test.js`, `frontend/src/pages/owner/Profile.jsx`, `frontend/src/components/BirthdayDialog.jsx`, `frontend/tests/e2e/fase16.mjs`; alterados `index.js`, `middleware/auth.js` (perfil isento do «teste terminado»), `routes/admin.js` (plano, `/plan`, lista sem o logótipo), `utils/lang.js`, `App.jsx`, `AppShell.jsx` (nome → Perfil), `admin-frontend/src/App.jsx` + `i18n_en.js`, traduções; migração `20261027_perfil_planos` 6/6 aplicada com cópia antes (`genesis-bd-2026-10-27T13-34…`).
+- **Prova (local, contra o Supabase):** `plans.test.js` 6/6; unitários backend 112/112 e frontend 61/61; `verify_system 39` 26/26; `fase16.mjs` todos os passos (Perfil, senha, e-mail com 2 códigos, aniversário uma vez, janela de parabéns, presente agendado no plano mensal, ícone transparente); builds frontend e admin OK. Publicado `d9438a9`.
+- **⚠️ Por fazer na próxima sessão:** correr `fase16.mjs`, `flows.mjs` e `admin_flows.mjs` contra genesismz.com (o limite de uso acabou antes). Em produção a mudança de e-mail responde «envio de e-mails ainda não configurado» até haver SMTP.
+- **Decisões (registadas):** ciclo mensal = dia do mês em que a loja foi criada; Premium oferecido a decorrer → presente soma 1 mês; o dono não muda de plano (só o admin).
+- Segue-se: verificação em produção da 16; depois Fase 17 (vários estabelecimentos, gerente, mapa).
