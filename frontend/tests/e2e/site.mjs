@@ -107,8 +107,11 @@ try {
     await p.goto(BASE + '/?site');
     await p.waitForLoadState('networkidle');
     ok(await p.locator('header').getByRole('link', { name: 'Entrar', exact: true }).isVisible(), 'telemóvel: «Entrar» visível no topo sem abrir o menu');
+    // 27/10 (fundador): o branco e o destaque; o verde so acompanha.
+    const heroBg = await p.locator('main > section').first().evaluate((s) => getComputedStyle(s).backgroundColor);
+    ok(heroBg === 'rgb(255, 255, 255)', 'herói com fundo branco (verde só nos botões e destaques)', heroBg);
     ok(await p.getByRole('link', { name: /Entrar no painel/ }).isVisible() && await p.getByRole('link', { name: /Abrir o terminal/ }).isVisible(), 'herói: «Entrar no painel» e «Abrir o terminal» à vista');
-    ok(await p.getByText('O Genesis controla as validades').isVisible().catch(() => false) || (await p.content()).includes('O Genesis controla as validades'), 'validades escritas como solução («O Genesis controla as validades»)');
+    ok(await p.getByText('O Genesis avisa antes de o produto vencer').isVisible().catch(() => false) || (await p.content()).includes('O Genesis avisa antes de o produto vencer'), 'validades escritas como solução («O Genesis avisa antes de o produto vencer»)');
     const first = p.locator('details.more').first();
     await first.scrollIntoViewIfNeeded();
     await first.locator('summary').click();

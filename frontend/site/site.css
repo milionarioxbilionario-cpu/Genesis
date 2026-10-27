@@ -65,24 +65,9 @@
   .frame { @apply overflow-hidden rounded-lg border border-border-strong bg-surface shadow-pop; }
   .phone { @apply overflow-hidden rounded-lg border-4 border-ink bg-surface shadow-pop; border-radius: 18px; }
 
-  /* Fase 14: heroi e chamada final no verde da marca, com o dourado so nos destaques. */
-  .hero {
-    background-color: var(--brand);
-    background-image: radial-gradient(900px 420px at 85% -10%, #17694F 0%, transparent 60%), radial-gradient(700px 380px at -10% 110%, #083A2C 0%, transparent 60%);
-  }
-  .eyebrow-dark { @apply text-sm font-semibold uppercase tracking-wider; color: var(--brand-gold); }
-  .text-brand-gold { color: var(--brand-gold); }
-  .btn-gold, .btn-on-dark {
-    @apply inline-flex items-center gap-2 rounded px-4 py-2 text-base font-semibold transition-colors;
-    min-height: 40px;
-  }
-  .btn-gold { background: var(--brand-gold); color: #1C1917; }
-  .btn-gold:hover { background: #FFC529; }
-  .btn-on-dark { border: 1px solid #4F8C79; color: #FFFFFF; }
-  .btn-on-dark:hover { background: #12604A; }
-  .access-card { @apply flex flex-col gap-0.5 rounded-lg px-4 py-3 transition-colors; border: 1px solid #2F7461; background: #0E553F; }
-  .access-card:hover { background: #12604A; border-color: #4F8C79; }
-  .band-soft { background: var(--accent-soft); }
+  /* Fase 14, revisto a 27/10 a pedido do fundador: o branco e o destaque e o verde
+     so acompanha (botoes, icones, o fim do titulo e a faixa da seguranca). */
+  .access-card { @apply flex flex-col gap-0.5 rounded-lg border border-border bg-bg px-4 py-3 text-ink transition-colors hover:border-accent; }
   .label-muted { @apply text-xs font-semibold uppercase tracking-wider text-ink-muted; }
   .label-accent { @apply flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent; }
   .solution { border-left: 3px solid var(--accent); }

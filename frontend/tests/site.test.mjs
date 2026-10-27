@@ -116,3 +116,17 @@ test('sitemap: 4 paginas com alternativas', () => {
   assert.equal((xml.match(/<loc>/g) || []).length, 4);
   assert.equal((xml.match(/hreflang=/g) || []).length, 12);
 });
+
+// 27/10 (pedido do fundador): os textos sao para o cliente, nao para quem fez o
+// sistema. Palavras tecnicas ou de bastidores nao aparecem no site.
+test('textos para o cliente: sem palavras tecnicas', () => {
+  const text = (html) => html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').toLowerCase();
+  const banned = {
+    pt: ['base de dados', 'servidor', 'auditoria', 'sincroniz', 'lote', 'sessão', 'sessões', 'camadas', 'browser', 'emparelh', 'às cegas'],
+    en: ['database', 'server', 'audit', 'sync', 'batch', 'session', 'layers', 'browser', 'pair the', 'blind'],
+  };
+  for (const [rel, lang] of [['index.html', 'pt'], ['planos.html', 'pt'], ['en/index.html', 'en'], ['en/pricing.html', 'en']]) {
+    const t = text(pages[rel]);
+    for (const w of banned[lang]) assert.ok(!t.includes(w), rel + ' diz «' + w + '»');
+  }
+});

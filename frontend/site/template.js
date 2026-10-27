@@ -186,20 +186,20 @@ export function renderHome(t, ctx) {
   return `${head(t, 'home', ctx)}
   <body class="bg-bg text-ink">${header(t, 'home', ctx)}
     <main id="conteudo">
-      <section class="hero text-white">
+      <section class="border-b border-border bg-surface">
         <div class="mx-auto grid max-w-content items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:py-20">
           <div class="rv">
-            <p class="eyebrow-dark">${esc(t.hero.eyebrow)}</p>
-            <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">${esc(h1a)} <span class="text-brand-gold">— ${esc(h1b)}</span></h1>
-            <p class="mt-5 max-w-xl text-md text-brand-tint">${esc(t.hero.lead)}</p>
+            <p class="eyebrow">${esc(t.hero.eyebrow)}</p>
+            <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">${esc(h1a)} <span class="text-brand">— ${esc(h1b)}</span></h1>
+            <p class="mt-5 max-w-xl text-md text-ink-2">${esc(t.hero.lead)}</p>
             <div class="mt-8 flex flex-wrap gap-3">
-              <a data-app href="/pedir-conta" class="btn-gold btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
-              <a ${waAttrs(t, 'contact')} class="btn-on-dark btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
+              <a data-app href="/pedir-conta" class="btn-primary btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
+              <a ${waAttrs(t, 'contact')} class="btn-secondary btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
             </div>
-            <p class="mt-4 text-sm text-brand-tint">${esc(fill(t, t.hero.note))}</p>
+            <p class="mt-4 text-sm text-ink-muted">${esc(fill(t, t.hero.note))}</p>
             <div class="mt-6 grid gap-2 sm:grid-cols-2">
-              <a data-app href="/inicio" class="access-card"><span class="text-sm text-brand-tint">${esc(t.hero.already)}</span><span class="flex items-center gap-2 font-semibold">${icon('log-in', 'h-4 w-4')}${esc(t.nav.signInLong)}</span></a>
-              <a data-app href="/terminal" class="access-card"><span class="text-sm text-brand-tint">${esc(t.hero.counter)}</span><span class="flex items-center gap-2 font-semibold">${icon('monitor', 'h-4 w-4')}${esc(t.nav.terminalLong)}</span></a>
+              <a data-app href="/inicio" class="access-card"><span class="text-sm text-ink-muted">${esc(t.hero.already)}</span><span class="flex items-center gap-2 font-semibold">${icon('log-in', 'h-4 w-4 text-accent')}${esc(t.nav.signInLong)}</span></a>
+              <a data-app href="/terminal" class="access-card"><span class="text-sm text-ink-muted">${esc(t.hero.counter)}</span><span class="flex items-center gap-2 font-semibold">${icon('monitor', 'h-4 w-4 text-accent')}${esc(t.nav.terminalLong)}</span></a>
             </div>
           </div>
           <div class="rv relative pb-6 sm:pb-10">
@@ -210,9 +210,9 @@ export function renderHome(t, ctx) {
             </div>
           </div>
         </div>
-        <div class="border-t border-[#1F6450]">
-          <ul class="mx-auto grid max-w-content grid-cols-2 gap-x-6 gap-y-3 px-4 py-5 text-sm font-medium sm:px-6 lg:grid-cols-4">
-            ${t.hero.trust.map((x) => `<li class="flex items-center gap-2">${icon('circle-check', 'h-4 w-4 shrink-0 text-brand-gold')}<span>${esc(x)}</span></li>`).join('\n            ')}
+        <div class="border-t border-border">
+          <ul class="mx-auto grid max-w-content grid-cols-2 gap-x-6 gap-y-3 px-4 py-5 text-sm font-medium text-ink-2 sm:px-6 lg:grid-cols-4">
+            ${t.hero.trust.map((x) => `<li class="flex items-center gap-2">${icon('circle-check', 'h-4 w-4 shrink-0 text-accent')}<span>${esc(x)}</span></li>`).join('\n            ')}
           </ul>
         </div>
       </section>
@@ -246,7 +246,7 @@ export function renderHome(t, ctx) {
         </div>
       </section>
 
-      <section class="section band-soft" aria-labelledby="relatorios-titulo">
+      <section class="section" aria-labelledby="relatorios-titulo">
         <div class="mx-auto max-w-content px-4 sm:px-6">${sectionHead(t.reports.title, t.reports.lead, 'relatorios')}
           <div class="mt-10 grid gap-4 lg:grid-cols-3">
             ${t.reports.items.map((r) => `<article class="card rv">
@@ -335,13 +335,13 @@ function faqList(t, items, icon) {
 }
 
 function finalCta(t, icon) {
-  return `<section class="section hero text-white" aria-labelledby="final-titulo">
+  return `<section class="section border-t border-border bg-surface" aria-labelledby="final-titulo">
         <div class="rv mx-auto max-w-content px-4 text-center sm:px-6">
-          <h2 id="final-titulo" class="text-2xl font-bold tracking-tight sm:text-3xl">${esc(t.final.title)}</h2>
-          <p class="mx-auto mt-4 max-w-xl text-md text-brand-tint">${esc(t.final.lead)}</p>
+          <h2 id="final-titulo" class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">${esc(t.final.title)}</h2>
+          <p class="mx-auto mt-4 max-w-xl text-md text-ink-2">${esc(t.final.lead)}</p>
           <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <a data-app href="/pedir-conta" class="btn-gold btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
-            <a ${waAttrs(t, 'contact')} class="btn-on-dark btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
+            <a data-app href="/pedir-conta" class="btn-primary btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
+            <a ${waAttrs(t, 'contact')} class="btn-secondary btn-lg">${icon('message-circle', 'h-4 w-4')}${esc(t.hero.secondary)}</a>
           </div>
         </div>
       </section>`;
