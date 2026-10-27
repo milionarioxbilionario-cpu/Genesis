@@ -5,6 +5,15 @@ import { preloadReceiptPdf, printReceipt } from '../utils/receiptPrinter';
 import PdfReadyDialog from './PdfReadyDialog';
 import { money, dateTime, timeSec, PAYMENT_LABEL } from '../utils/format';
 import { useI18n } from '../i18n/react';
+import api from '../utils/api';
+
+// Dados do recibo (logotipo, NUIT, telefone, mensagem): pedidos uma vez por sessao.
+let receiptInfo = null;
+const loadReceiptInfo = () => {
+  if (!receiptInfo) receiptInfo = api.get('/api/settings/receipt', { silent: true }).then((r) => r.data).catch(() => { receiptInfo = null; return null; });
+  return receiptInfo;
+};
+export const forgetReceiptInfo = () => { receiptInfo = null; };
 import { Button, Drawer, KeyValue, useToast } from './ui';
 
 // Detalhe de uma venda no painel do dono (Vendas e Relatorios): itens,
@@ -16,8 +25,10 @@ export default function SaleDrawer({ sale, onClose }) {
   const toast = useToast();
   useEffect(() => { if (sale) preloadReceiptPdf(); }, [sale]);
   async function reprint() {
+    const r = (await loadReceiptInfo()) || {};
     const res = await printReceipt({
-      shopName: tenant?.name, shopLocation: tenant?.location, cashierName: sale.cashier?.name,
+      shopName: r.name || tenant?.name, shopLocation: r.location || tenant?.location, shopPhone: r.phone, shopNuit: r.nuit, footer: r.receipt_footer, logo: r.logo,
+      cashierName: sale.cashier?.name,
       sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
     });
     if (res?.needsTap) setPdfFile(res.file);

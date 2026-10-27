@@ -1784,7 +1784,41 @@ async function test33() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33 };
+// ---------------------------------------------------------------------------
+async function test34() {
+  section(34, 'Recibo: logotipo, NUIT, mensagem final; o terminal recebe-os (Fase 15.1)');
+  const owner = ownerClient();
+  const t = ctx.tenant.id;
+  const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  try {
+    const st = await owner.req('PUT', '/api/settings/store', { nuit: '400123456', receipt_footer: 'Volte sempre!' });
+    ok(st.status === 200, 'NUIT e mensagem do recibo guardados', st);
+    ok((await owner.req('PUT', '/api/settings/store', { nuit: '1234' })).status === 400, 'NUIT com menos de 9 dígitos: 400');
+    ok((await owner.req('PUT', '/api/settings/store', { receipt_footer: 'x'.repeat(161) })).status === 400, 'mensagem com mais de 160 caracteres: 400');
+    const lg = await owner.req('PUT', '/api/settings/logo', { logo: PNG });
+    ok(lg.status === 200 && lg.data.has_logo === true, 'logotipo PNG guardado', lg);
+    ok((await owner.req('PUT', '/api/settings/logo', { logo: 'data:text/html;base64,PHNjcmlwdD4=' })).data?.code === 'INVALID_LOGO', 'HTML disfarçado de imagem: recusado');
+    ok((await owner.req('PUT', '/api/settings/logo', { logo: 'javascript:alert(1)' })).status === 400, 'endereço javascript: recusado');
+    const big = 'data:image/png;base64,' + 'A'.repeat(450 * 1024);
+    ok((await owner.req('PUT', '/api/settings/logo', { logo: big })).data?.code === 'LOGO_TOO_LARGE', 'logotipo acima de 300 KB: 413');
+    const g = (await owner.req('GET', '/api/settings')).data;
+    ok(g.store.nuit === '400123456' && g.store.receipt_footer === 'Volte sempre!' && g.store.has_logo === true && !JSON.stringify(g).includes('iVBORw0'), 'Definições: NUIT, mensagem e has_logo, sem a imagem (não pesa)');
+    const r = (await owner.req('GET', '/api/settings/receipt')).data;
+    ok(r.logo === PNG && r.nuit === '400123456', 'dados do recibo para reimprimir: com o logotipo');
+    const term = await cashierTerminal();
+    const info = (await term.req('GET', '/api/pos/terminal')).data;
+    ok(info.store.logo === PNG && info.store.nuit === '400123456' && info.store.receipt_footer === 'Volte sempre!' && 'phone' in info.store, 'o terminal recebe logotipo, NUIT, telefone e mensagem (ficam para usar sem rede)', info.store && { ...info.store, logo: Boolean(info.store.logo) });
+    ok((await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('PUT', '/api/settings/logo', { logo: PNG })).status === 403, 'caixista não muda o logotipo');
+    ok((await client(signAccessToken(ctx.owner, { scope: 'support' })).req('PUT', '/api/settings/logo', { logo: null })).status === 403, 'modo suporte não muda o logotipo');
+    ok((await owner.req('PUT', '/api/settings/logo', { logo: null })).data?.has_logo === false, 'remover o logotipo');
+    const audits = await prisma.auditLog.count({ where: { tenant_id: t, action: { in: ['UPDATE_LOGO', 'REMOVE_LOGO'] } } });
+    ok(audits >= 2, 'trocas de logotipo ficam na auditoria', audits);
+  } finally {
+    await prisma.tenant.update({ where: { id: t }, data: { logo_data: null, nuit: null, receipt_footer: null } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34 };
 
 (async () => {
   await prisma.ready();

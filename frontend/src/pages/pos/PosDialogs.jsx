@@ -46,7 +46,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
     setPrinting(true);
     try {
       const res = await printReceipt({
-        shopName: store.name, shopLocation: store.location, cashierName: cashier.name,
+        shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo: store.logo, cashierName: cashier.name,
         sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, created_at: sale.created_at || new Date().toISOString() },
         items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
       });

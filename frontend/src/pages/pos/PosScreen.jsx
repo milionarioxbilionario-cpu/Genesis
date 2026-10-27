@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Camera, ChevronUp, CircleAlert, ClipboardCheck, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Settings2, ShoppingBasket, Trash2, WifiOff, X } from 'lucide-react';
 import BarcodeScanner from '../../components/BarcodeScanner';
 import DevicesDialog from './DevicesDialog';
-import { wasAsked } from '../../utils/devices';
+import { openCashDrawer, wasAsked } from '../../utils/devices';
 import api, { saveLanguage } from '../../utils/api';
 import db from '../../db/localDb';
 import useOfflineSync from '../../hooks/useOfflineSync';
@@ -225,6 +225,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
     try {
       const res = await api.post('/api/sales', body);
       pendingSale.current = null;
+      if (payment === 'cash') openCashDrawer();
       setDialog({ receipt: { sale: { ...payload, id: res.data.id, daily_number: res.data.daily_number, amount_received: payment === 'cash' && received ? received : total, change_given: change }, items: cart } });
       resetSale();
       refreshCatalog(); refreshShift();
@@ -239,6 +240,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       } else if (shouldQueueOffline(err)) {
         pendingSale.current = null;
         await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload });
+        if (payment === 'cash') openCashDrawer();
         await decrementCached(payload.items);
         await refreshCounts();
         toast(t('Sem ligação: venda guardada neste terminal. É enviada automaticamente.'));

@@ -10,6 +10,7 @@
 // Nada disto vai para o servidor: e do aparelho, nao da loja.
 import { prefersShare } from './pdf/deliver';
 import { t } from '../i18n/core.js';
+import { DRAWER_PULSE } from './escpos.js';
 
 const PREFS_KEY = 'genesis_devices';
 const ASKED_KEY = 'genesis_devices_asked';
@@ -32,7 +33,8 @@ export function capabilities() {
 // scanner: 'usb' | 'camera' | 'none'
 export function getDevicePrefs() {
   const p = read(PREFS_KEY, {});
-  return { printer: p.printer || (capabilities().desktop ? 'system' : 'none'), scanner: p.scanner || (capabilities().desktop ? 'usb' : 'camera'), printerName: p.printerName || '' };
+  // drawer (Fase 15.1): abrir a gaveta ligada a impressora termica ao cobrar em dinheiro.
+  return { printer: p.printer || (capabilities().desktop ? 'system' : 'none'), scanner: p.scanner || (capabilities().desktop ? 'usb' : 'camera'), printerName: p.printerName || '', drawer: p.drawer !== false };
 }
 export function setDevicePrefs(p) { write(PREFS_KEY, { ...read(PREFS_KEY, {}), ...p }); }
 
@@ -109,6 +111,13 @@ async function writeBluetooth(bytes) {
 }
 
 // Envia bytes ESC/POS para a impressora escolhida neste aparelho.
+// Fase 15.1: abre a gaveta (so com impressora termica USB/Bluetooth e a opcao ligada). Nunca falha a venda.
+export async function openCashDrawer() {
+  const { printer, drawer } = getDevicePrefs();
+  if (!drawer || (printer !== 'usb' && printer !== 'bluetooth')) return false;
+  try { await sendToPrinter(new Uint8Array(DRAWER_PULSE), printer); return true; } catch { return false; }
+}
+
 export async function sendToPrinter(bytes, printer = getDevicePrefs().printer) {
   if (printer === 'usb') { await writeUsb(bytes); return 'usb'; }
   if (printer === 'bluetooth') { await writeBluetooth(bytes); return 'bluetooth'; }

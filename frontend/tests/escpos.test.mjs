@@ -37,3 +37,46 @@ test('QR verdadeiro (GS ( k) com o endereco de verificacao', () => {
   assert.strictEqual(Buffer.from(bytes.slice(i + store.length, i + store.length + url.length)).toString(), url);
   assert.ok(Buffer.from(bytes).indexOf(Buffer.from([0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x51, 0x30])) > i, 'imprime o QR depois de o guardar');
 });
+
+// Fase 15.1: logotipo, codigo de barras, gaveta e dados fiscais.
+import { ditherToRaster, rasterBytes, barcodeBytes, DRAWER_PULSE } from '../src/utils/escpos.js';
+
+test('logotipo: preto/branco com 384 pontos no maximo; transparente = papel', () => {
+  const w = 800; const h = 200;
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    if (x < w / 2) { data[i] = 0; data[i + 1] = 0; data[i + 2] = 0; data[i + 3] = 255; } // metade preta
+    else data[i + 3] = 0; // metade transparente
+  }
+  const r = ditherToRaster({ data, width: w, height: h });
+  assert.strictEqual(r.width, 384);
+  assert.strictEqual(r.height, 96);
+  assert.strictEqual(r.widthBytes, 48);
+  assert.strictEqual(r.bytes[0], 0xff, 'lado preto = pontos pretos');
+  assert.strictEqual(r.bytes[47], 0x00, 'lado transparente = papel');
+  const cmd = rasterBytes(r);
+  assert.deepStrictEqual(cmd.slice(0, 8), [0x1d, 0x76, 0x30, 0x00, 48, 0, 96, 0]);
+  assert.strictEqual(cmd.length, 8 + 48 * 96);
+});
+
+test('codigo de barras CODE128 C nativo; texto que nao e de algarismos aos pares fica de fora', () => {
+  const b = barcodeBytes('202610250007');
+  const k = b.indexOf(0x6b);
+  assert.deepStrictEqual(b.slice(k - 1, k + 5), [0x1d, 0x6b, 73, 8, 0x7b, 0x43]);
+  assert.deepStrictEqual(b.slice(k + 5), [20, 26, 10, 25, 0, 7]);
+  assert.deepStrictEqual(barcodeBytes('123'), []);
+});
+
+test('recibo completo: gaveta logo a seguir ao ESC @, NUIT, telefone, numero do documento e mensagem final', () => {
+  const r = buildEscPosReceipt({
+    shopName: 'Bottle Store Central', shopLocation: 'Polana', shopPhone: '841234567', shopNuit: '400123456', footer: 'Volte sempre!',
+    cashierName: 'Carlos', docNumber: '20261025-007', barcode: '202610250007', openDrawer: true,
+    sale: { daily_number: 7, total_amount: 1000, payment_method: 'Dinheiro', amount_received: 1000, change_given: 0 }, items: [],
+  });
+  assert.deepStrictEqual([...r.slice(2, 7)], DRAWER_PULSE);
+  const a = Buffer.from(r).toString('latin1');
+  for (const s of ['NUIT 400123456', 'Tel. 841234567', '20261025-007', 'Volte sempre!', 'Genesis MZ']) assert.ok(a.includes(s), s);
+  const semGaveta = buildEscPosReceipt({ shopName: 'X', sale: { total_amount: 1 }, items: [] });
+  assert.ok(Buffer.from(semGaveta).indexOf(Buffer.from(DRAWER_PULSE)) < 0, 'sem openDrawer nao abre a gaveta');
+});

@@ -154,10 +154,11 @@ test('recibo na lingua de quem o gera (ESC/POS); em portugues fica igual', async
   const txt = () => Buffer.from(buildEscPosReceipt(input)).toString('latin1');
   setLang('pt');
   const pt = txt();
-  assert.ok(pt.includes('Venda n.o 007') && pt.includes('Caixista: Carlos') && pt.includes('195,00') && pt.includes('Obrigado pela preferencia!'));
+  // 15.1: o recibo diz RECIBO e o numero do documento (antes: «Venda n.o 007»).
+  assert.ok(pt.includes('RECIBO') && pt.includes('007') && pt.includes('Caixista: Carlos') && pt.includes('195,00') && pt.includes('Obrigado pela preferencia!'));
   setLang('en');
   const en = txt();
-  assert.ok(en.includes('Sale no. 007') && en.includes('Cashier: Carlos') && en.includes('195.00') && en.includes('Change') && en.includes('Thank you'), en);
+  assert.ok(en.includes('RECEIPT') && en.includes('007') && en.includes('Cashier: Carlos') && en.includes('195.00') && en.includes('Change') && en.includes('Thank you'), en);
   assert.ok(!/Caixista|Troco|Obrigado/.test(en));
   setLang('pt');
 });

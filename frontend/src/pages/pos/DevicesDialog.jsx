@@ -20,6 +20,7 @@ export default function DevicesDialog({ cashier, onClose }) {
   const [scanner, setScanner] = useState(start.scanner === 'camera' && !caps.camera ? 'usb' : start.scanner);
   const [printer, setPrinter] = useState(start.printer);
   const [printerName, setPrinterName] = useState(start.printerName);
+  const [drawer, setDrawer] = useState(start.drawer);
   const [test, setTest] = useState('');
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
@@ -51,7 +52,7 @@ export default function DevicesDialog({ cashier, onClose }) {
   }
 
   function finish(save) {
-    if (save) setDevicePrefs({ scanner, printer, printerName });
+    if (save) setDevicePrefs({ scanner, printer, printerName, drawer });
     else setDevicePrefs({ printer: 'none' }); // "Não tenho": só o PDF, sem janelas de impressão
     if (cashier?.id) markAsked(cashier.id);
     onClose?.();
@@ -88,6 +89,12 @@ export default function DevicesDialog({ cashier, onClose }) {
               <Button icon={Bluetooth} loading={busy === 'bluetooth'} onClick={() => connect('bluetooth')}>{printerName ? t('Procurar outra impressora') : t('Procurar impressora Bluetooth')}</Button>
               <p className="text-sm text-ink-muted">{t('Ligue a impressora e o Bluetooth do aparelho. Funciona com impressoras Bluetooth BLE; as que só têm Bluetooth «clássico» não são acessíveis pelo browser.')}</p>
             </>
+          )}
+          {(printer === 'usb' || printer === 'bluetooth') && (
+            <label className="flex items-start gap-2.5 text-sm text-ink-2">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--accent)]" checked={drawer} onChange={(e) => setDrawer(e.target.checked)} />
+              <span>{t('Abrir a gaveta do dinheiro ao cobrar em dinheiro (gaveta ligada à impressora)')}</span>
+            </label>
           )}
           {printer === 'system' && <p className="text-sm text-ink-muted">{t('Abre a janela de impressão do computador (impressora instalada no Windows).')}</p>}
           {!caps.usb && !caps.bluetooth && <p className="text-sm text-ink-muted">{t('Este aparelho não liga impressoras pelo browser (por exemplo, o iPhone). O recibo sai em PDF para partilhar com a app da impressora.')}</p>}

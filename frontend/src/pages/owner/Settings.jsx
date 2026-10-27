@@ -5,6 +5,8 @@ import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/brow
 import { useSession } from '../../utils/session';
 import { passkeyFlag } from '../../components/PanelLock';
 import { rememberPin } from '../../utils/offlinePin';
+import { receiptPreviewHtml } from '../../utils/receiptPrinter';
+import { forgetReceiptInfo } from '../../components/SaleDrawer';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import AuditLogPage from './AuditLogPage';
@@ -65,11 +67,12 @@ function Store({ s, reload }) {
   async function save(kind) {
     setBusy(kind); setError('');
     try {
-      if (kind === 'store') await api.put('/api/settings/store', { name: store.name, location: store.location, phone: store.phone, email: store.email || null });
+      if (kind === 'store') await api.put('/api/settings/store', { name: store.name, location: store.location, phone: store.phone, email: store.email || null, nuit: store.nuit || null, receipt_footer: store.receipt_footer || null });
       else if (kind === 'expiry') await api.put('/api/settings/expiry-alert', { expiry_alert_days: Number(alertDays) });
       else if (kind === 'close') await api.put('/api/settings/month-close', { month_close_day: Number(closeDay) });
       else await api.put('/api/settings/hours', hours);
       toast(t('Alterações guardadas.'));
+      forgetReceiptInfo();
       reload(); reloadTenant?.();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(''); }
   }
@@ -82,10 +85,13 @@ function Store({ s, reload }) {
           <Input label={t('Nome')} value={store.name} onChange={(e) => setStore({ ...store, name: e.target.value })} className="sm:col-span-2" />
           <Input label={t('Localização')} value={store.location} onChange={(e) => setStore({ ...store, location: e.target.value })} />
           <Input label={t('Telefone (WhatsApp)')} value={store.phone} onChange={(e) => setStore({ ...store, phone: e.target.value })} />
-          <Input label={t('Email')} type="email" value={store.email || ''} onChange={(e) => setStore({ ...store, email: e.target.value })} className="sm:col-span-2" />
+          <Input label={t('Email')} type="email" value={store.email || ''} onChange={(e) => setStore({ ...store, email: e.target.value })} />
+          <Input label={t('NUIT (opcional)')} inputMode="numeric" maxLength={9} value={store.nuit || ''} onChange={(e) => setStore({ ...store, nuit: e.target.value.replace(/\D/g, '') })} hint={t('9 dígitos. Aparece no recibo.')} />
+          <Input label={t('Mensagem no fim do recibo')} maxLength={160} value={store.receipt_footer || ''} onChange={(e) => setStore({ ...store, receipt_footer: e.target.value })} placeholder={t('Obrigado pela preferência!')} className="sm:col-span-2" />
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'store'} onClick={() => save('store')}>{t('Guardar')}</Button></div>
       </Card>
+      <LogoCard s={s} store={store} reload={reload} />
       <Card>
         <CardHeader title={t('Horário')} description={t('Usado no fecho do dia.')} />
         <div className="grid max-w-sm grid-cols-2 gap-4">
@@ -120,6 +126,78 @@ function Store({ s, reload }) {
 // aprovado (decisao 11/10): as preferencias ficam guardadas.
 const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Fase 15.1: logotipo do estabelecimento no recibo, com pre-visualizacao do recibo.
+// A imagem e reduzida no aparelho (maximo 600 px) antes de ir para o servidor.
+async function shrinkImage(file, max = 600) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/png');
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function LogoCard({ s, store, reload }) {
+  const toast = useToast();
+  const { t } = useI18n();
+  const [logo, setLogo] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => { api.get('/api/settings/receipt', { silent: true }).then((r) => setLogo(r.data.logo || null)).catch(() => {}); }, [s.store.has_logo]);
+  async function save(value) {
+    setBusy(true); setError('');
+    try {
+      await api.put('/api/settings/logo', { logo: value });
+      setLogo(value); forgetReceiptInfo(); reload();
+      toast(value ? t('Logótipo guardado. Já aparece nos recibos.') : t('Logótipo removido.'));
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+  async function pick(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { setError(t('Escolha uma imagem PNG, JPEG ou WebP.')); return; }
+    try { await save(await shrinkImage(file)); } catch { setError(t('Não foi possível ler esta imagem.')); }
+  }
+  const sample = {
+    id: 'exemplo', daily_number: 7, created_at: new Date().toISOString(), total_amount: 19500, discount_amount: 0,
+    amount_received: 20000, change_given: 500, payment_method: t('Dinheiro'),
+  };
+  const html = receiptPreviewHtml({
+    shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo,
+    cashierName: t('Caixista'), sale: sample, items: [{ product_name: t('Produto de exemplo'), quantity: 3, unit_sell_price: 6500 }],
+  });
+  return (
+    <Card>
+      <CardHeader title={t('Logótipo e recibo')} description={t('O logótipo do estabelecimento aparece no topo de cada recibo.')} />
+      <Alert tone="warning" className="mb-4">{t('Use o logótipo ou o símbolo do estabelecimento — não uma fotografia sua. Esta imagem é impressa nos recibos que os clientes levam.')}</Alert>
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <div className="grid gap-5 md:grid-cols-[1fr_300px]">
+        <div className="flex flex-col items-start gap-3">
+          {logo ? <img src={logo} alt={t('Logótipo do estabelecimento')} className="max-h-28 max-w-[220px] rounded border border-border bg-white object-contain p-2" /> : <p className="text-sm text-ink-muted">{t('Sem logótipo: o recibo mostra o nome do estabelecimento em destaque.')}</p>}
+          <div className="flex flex-wrap gap-2">
+            <label className={'inline-flex cursor-pointer items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-base font-medium text-ink hover:bg-subtle' + (busy ? ' pointer-events-none opacity-60' : '')}>
+              <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={pick} aria-label={t('Escolher logótipo')} />
+              {logo ? t('Trocar logótipo') : t('Escolher logótipo')}
+            </label>
+            {logo && <Button variant="ghost" disabled={busy} onClick={() => save(null)}>{t('Remover')}</Button>}
+          </div>
+          <p className="text-xs text-ink-muted">{t('PNG, JPEG ou WebP. Fica melhor com fundo branco ou transparente. Na impressora térmica sai a preto e branco.')}</p>
+        </div>
+        <div>
+          <p className="mb-2 text-sm font-medium text-ink-2">{t('Pré-visualização do recibo')}</p>
+          <iframe title={t('Pré-visualização do recibo')} srcDoc={html} sandbox="" className="h-[560px] w-full rounded border border-border bg-white" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function ReportSchedule({ s, reload }) {
   const toast = useToast();
   const { t } = useI18n();

@@ -215,6 +215,9 @@ addTranslations('en', {
   'TOTAL MT': 'TOTAL MT',
   'Verifique este recibo': 'Check this receipt',
   'Leia o código para confirmar o recibo': 'Scan the code to confirm the receipt',
+  // Fase 15.1: recibo
+  'Tel.': 'Tel.',
+  'RECIBO': 'RECEIPT',
   'Escaneie para ver detalhes': 'Scan to see the details',
   'Sem código': 'No code',
   'Obrigado pela preferência!': 'Thank you for your custom!',
