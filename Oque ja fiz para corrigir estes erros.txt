@@ -2158,3 +2158,14 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Recibo em imagem: no fim da venda (e em qualquer venda no painel) há o botão "Imagem (WhatsApp)". No telemóvel abre a partilha e escolhes o WhatsApp do cliente; no computador guarda a imagem para a enviares.
 - Testes no site real: recibo 10 de 10, painel e terminal 41 de 41. Funcionou: sim.
 - A seguir: IVA opcional por loja (primeiro confirmo as taxas em fontes oficiais de Moçambique).
+
+
+==================== 27/10/2026 — Impostos, multas, taxas do município e pagamento dividido — já no genesismz.com ====================
+- Impostos (Definições > Loja > "Impostos"): cada negócio escolhe "Sem imposto", "IVA" (16%, já incluído no preço) ou "ISPC" (o imposto simplificado de 3%, 4% ou 5%). Com IVA, o recibo mostra o IVA de cada venda e pode marcar produtos isentos (arroz, pão, farinha de milho). O relatório do mês mostra quanto IVA tem de entregar ao Estado e tira-o do lucro. Com ISPC, mostra a estimativa do mês.
+- INSS: se os trabalhadores estão inscritos, marca a caixa e o relatório do mês tira os 4% que o patrão paga.
+- As taxas foram confirmadas em resumos de consultoras (RSM, DLA Piper, PwC), não no Boletim da República. Antes de usar a sério, confirma com o teu contabilista.
+- Multas: em "Custos e despesas" escolhe "Multa", escreve quem a passou (ex.: Conselho Municipal) e o motivo. Aparece numa linha própria no relatório do mês.
+- Taxas do município pagas uma vez por ano: regista-as como custo fixo "Paga por ano" e o relatório conta 1/12 em cada mês.
+- Pagamento dividido no terminal: "Dividir o pagamento" deixa o cliente pagar parte por M-Pesa, e-Mola, cartão ou transferência e o resto em dinheiro, com o troco certo. O fecho do turno só conta o dinheiro vivo. A transferência passou a ser uma forma de pagamento própria.
+- Testes no site real: recibo, impostos, multas e pagamento dividido 21 de 21; painel e terminal 41 de 41. Funcionou: sim.
+- Nota: um comando meu no servidor foi bloqueado pelas permissões; pode ter ficado lá um processo de teste parado, inofensivo. Desaparece sozinho no próximo reinício do servidor.
