@@ -124,6 +124,7 @@ export function drawReceipt(ctx, input, images = {}, cardHeight = 4000) {
   rule(y - 6, { color: INK, width: 1.5 }); y += 22;
   text(t('Total'), L, y, { size: 22, weight: 800 });
   text(money(total), R, y, { size: 22, weight: 800, align: 'right', color: BRAND }); y += 26;
+  if (Number(sale.vat_amount) > 0) { row(t('IVA incluído'), money(sale.vat_amount), y, { size: 12, color: MUTED }); y += 17; }
   row(t('Pagamento:'), sale.payment_method || t('Dinheiro'), y, { size: 12, color: MUTED }); y += 17;
   row(t('Recebido'), money(sale.amount_received), y, { size: 12, color: MUTED }); y += 17;
   row(t('Troco'), money(sale.change_given), y, { size: 12, color: MUTED }); y += 22;

@@ -13,7 +13,7 @@ import AuditLogPage from './AuditLogPage';
 import { money, date, dateTime, isoDay, errorMessage } from '../../utils/format';
 import { locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
-import { Alert, Badge, Button, Card, CardHeader, Dialog, Drawer, Input, MoneyInput, PageHeader, Select, Skeleton, Table, Tabs, useConfirm, useToast } from '../../components/ui';
+import { Alert, Badge, Button, Card, CardHeader, Dialog, Drawer, Input, MoneyInput, PageHeader, Segmented, Select, Skeleton, Table, Tabs, useConfirm, useToast } from '../../components/ui';
 
 // label em portugues = chave da traducao.
 const TABS = [
@@ -92,6 +92,7 @@ function Store({ s, reload }) {
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'store'} onClick={() => save('store')}>{t('Guardar')}</Button></div>
       </Card>
       <LogoCard s={s} store={store} reload={reload} />
+      <TaxesCard s={s} reload={reload} />
       <Card>
         <CardHeader title={t('Horário')} description={t('Usado no fecho do dia.')} />
         <div className="grid max-w-sm grid-cols-2 gap-4">
@@ -194,6 +195,43 @@ function LogoCard({ s, store, reload }) {
           <iframe title={t('Pré-visualização do recibo')} srcDoc={html} sandbox="" className="h-[560px] w-full rounded border border-border bg-white" />
         </div>
       </div>
+    </Card>
+  );
+}
+
+// Fase 15.2/15.3: regime de impostos das vendas e INSS do patrao.
+const TAX_HELP = {
+  none: 'As vendas não levam imposto. O recibo e os relatórios ficam como até aqui.',
+  iva: 'Os preços já incluem o IVA de 16%. O recibo mostra o IVA de cada venda e o relatório do mês mostra quanto tem de entregar ao Estado. Pode marcar produtos isentos (arroz, pão, farinha de milho…) na ficha de cada produto.',
+  ispc: 'Imposto simplificado para quem vende até 4 000 000 MT por ano: 3%, 4% ou 5% do que vende, conforme o escalão, pago por trimestre. O relatório do mês mostra a estimativa.',
+};
+function TaxesCard({ s, reload }) {
+  const toast = useToast();
+  const { t } = useI18n();
+  const { reloadTenant } = useOutletContext() || {};
+  const [mode, setMode] = useState(s.taxes?.vat_mode || 'none');
+  const [inss, setInss] = useState((s.taxes?.inss_employer_pct || 0) > 0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function save() {
+    setBusy(true); setError('');
+    try {
+      await api.put('/api/settings/taxes', { vat_mode: mode, inss_employer_pct: inss ? 4 : 0 });
+      toast(t('Alterações guardadas.'));
+      reload(); reloadTenant?.();
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader title={t('Impostos')} description={t('Escolha como o seu negócio paga impostos. Na dúvida, confirme com o seu contabilista.')} />
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      <Segmented value={mode} onChange={setMode} options={[{ value: 'none', label: t('Sem imposto') }, { value: 'iva', label: t('IVA') }, { value: 'ispc', label: t('ISPC') }]} />
+      <p className="mt-3 max-w-2xl text-sm text-ink-2">{t(TAX_HELP[mode])}</p>
+      <label className="mt-5 flex max-w-2xl items-start gap-2.5 text-sm text-ink-2">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--accent)]" checked={inss} onChange={(e) => setInss(e.target.checked)} />
+        <span>{t('Os trabalhadores estão inscritos no INSS. O patrão paga 4% dos salários e isso entra no lucro real do mês.')}</span>
+      </label>
+      <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy} onClick={save}>{t('Guardar')}</Button></div>
     </Card>
   );
 }

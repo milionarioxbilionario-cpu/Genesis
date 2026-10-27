@@ -26,7 +26,9 @@ const productSchema = z.object({
   min_stock: z.number().int().nonnegative().default(5),
   has_expiry: z.boolean().optional().default(false),
   expiry_date: z.string().optional().nullable(),
-  is_active: z.boolean().optional().default(true)
+  is_active: z.boolean().optional().default(true),
+  // Fase 15.2: null = taxa normal do IVA (16%), 0 = isento (arroz, pao, farinha de milho…).
+  vat_rate: z.union([z.literal(0), z.literal(16)]).nullable().optional()
 });
 
 const updateProductSchema = productSchema.partial();
@@ -100,6 +102,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
           stock_qty: stockQty,
           min_stock: data.min_stock,
           has_expiry: hasExpiry,
+          vat_rate: data.vat_rate === 0 ? 0 : null,
           is_active: true
         }
       });
@@ -213,6 +216,7 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.barcode !== 'undefined') updateData.barcode = (data.barcode || '').trim() || null;
     if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
     if (typeof data.icon !== 'undefined') updateData.icon = data.icon || null;
+    if (typeof data.vat_rate !== 'undefined') updateData.vat_rate = data.vat_rate === 0 ? 0 : null;
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
     if (typeof data.sell_price !== 'undefined') updateData.sell_price = data.sell_price;
     if (typeof data.min_stock !== 'undefined') updateData.min_stock = data.min_stock;

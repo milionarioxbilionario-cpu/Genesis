@@ -65,7 +65,7 @@ function currentPosSession(req, terminalId) {
 router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   const { tenantId, id } = req.terminal;
   const [tenant, cashiers] = await Promise.all([
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true, discount_free_pct: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true, discount_free_pct: true, vat_mode: true } }),
     prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true, language: true } }),
   ]);
   const profiles = await Promise.all(cashiers.map(async (c) => {
@@ -78,7 +78,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   res.json({
     terminal: { id, name: req.terminal.name },
     // 15.1: o recibo leva o logotipo, o telefone, o NUIT e a mensagem final (tambem sem rede).
-    store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10 },
+    store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none' },
     cashiers: profiles,
     session_cashier_id: profiles.some((p) => p.id === sessionUserId) ? sessionUserId : null,
   });

@@ -11,7 +11,9 @@ const visitKey = (supplierId, createdAt) => {
 };
 
 // expenses: despesas avulsas JA filtradas pelo mes (limpeza, transporte, luz...).
-function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers = [], stockEntries = [], expenses = [] } = {}) {
+// Fase 15.2: taxes = { vat_due, ispc } ja calculados (services/tax.js) e inssPct = %
+// do INSS do patrao sobre os salarios (0 = trabalhadores nao inscritos).
+function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers = [], stockEntries = [], expenses = [], taxes = {}, inssPct = 0 } = {}) {
   const total_salaries = employees.reduce((sum, emp) => sum + money(emp.monthly_salary), 0);
   const total_rent = fixedCosts.reduce((sum, fc) => sum + (isRent(fc.type) ? money(fc.amount) : 0), 0);
   const total_other_fixed = fixedCosts.reduce((sum, fc) => sum + (isRent(fc.type) ? 0 : money(fc.amount)), 0);
@@ -35,7 +37,12 @@ function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers =
 
   const total_expenses = expenses.reduce((sum, e) => sum + money(e.amount), 0);
 
-  const operating_expenses = total_salaries + total_fixed + total_supplier_delivery + total_expenses;
+  const total_vat_due = money(taxes.vat_due);
+  const total_ispc = money(taxes.ispc);
+  const total_inss = Math.round((total_salaries * money(inssPct)) / 100);
+  const total_taxes = total_vat_due + total_ispc + total_inss;
+
+  const operating_expenses = total_salaries + total_fixed + total_supplier_delivery + total_expenses + total_taxes;
 
   return {
     total_salaries,
@@ -44,6 +51,10 @@ function computeMonthlyDeductions({ employees = [], fixedCosts = [], suppliers =
     total_fixed,
     total_supplier_delivery,
     total_expenses,
+    total_vat_due,
+    total_ispc,
+    total_inss,
+    total_taxes,
     operating_expenses,
   };
 }

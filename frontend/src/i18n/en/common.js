@@ -218,6 +218,8 @@ addTranslations('en', {
   // Fase 15.1: recibo
   'Tel.': 'Tel.',
   'RECIBO': 'RECEIPT',
+  // Fase 15.2: IVA no recibo
+  'IVA incluído': 'VAT included',
   // Fase 15.1b: imagem do recibo (WhatsApp)
   'Imagem (WhatsApp)': 'Image (WhatsApp)',
   'Imagem pronta': 'Image ready',

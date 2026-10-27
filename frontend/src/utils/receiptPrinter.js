@@ -128,6 +128,7 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
           <div><span>${esc(t('Subtotal'))}</span><span>${formatCurrency(subtotal)}</span></div>
           ${discount > 0 ? `<div><span>${esc(t('Desconto'))}</span><span>−${formatCurrency(discount)}</span></div>` : ''}
           <div class="total"><span>${esc(t('Total'))}</span><span>${formatCurrency(total)}</span></div>
+          ${Number(sale.vat_amount) > 0 ? `<div style="font-size:10px;color:#444"><span>${esc(t('IVA incluído'))}</span><span>${formatCurrency(sale.vat_amount)}</span></div>` : ''}
         </div>
         <div class="pay">
           <div style="display:flex;justify-content:space-between"><span>${esc(t('Pagamento:'))}</span><span>${esc(sale.payment_method || t('Dinheiro'))}</span></div>

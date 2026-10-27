@@ -7,6 +7,7 @@
 //    entregas de fornecedores (services/monthlyDeductions.js, ja testado).
 const prisma = require('../utils/prisma');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('./monthlyDeductions');
+const { monthVat, ispcEstimate } = require('./tax');
 const { recommendRestock } = require('./restock');
 const { rankByTiers } = require('./ranking');
 const { groupLostDemand } = require('../utils/lostRequests');
@@ -102,6 +103,8 @@ async function summarize(tenantId, start, end) {
     gross_profit: gross - cogs,
     average_ticket: sales.length ? Math.round(gross / sales.length) : 0,
     discounts_total: discounts,
+    // Fase 15.2: IVA das vendas do periodo (cobrado, incluido no custo, a entregar).
+    vat: monthVat({ sales, items: sales.flatMap((s) => s.items) }),
     by_payment: byPayment,
     by_day: [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date)),
     // Ranking por niveis (services/ranking.js). "Mais vendido" (quantidade) e
@@ -249,7 +252,7 @@ async function monthlyReport(tenantId, year, month) {
   const historyStart = new Date(year, month - 6, 1, 0, 0, 0, 0);
   const prevStart = new Date(year, month - 2, 1, 0, 0, 0, 0);
   const prevEnd = new Date(year, month - 1, 0, 23, 59, 59, 999);
-  const [report, employees, fixedCosts, suppliers, stockEntries, history, prevItems, debts, goal, restock, expenses] = await Promise.all([
+  const [report, employees, fixedCosts, suppliers, stockEntries, history, prevItems, debts, goal, restock, expenses, tenantTax, ytd] = await Promise.all([
     summarize(tenantId, start, end),
     prisma.employee.findMany({ where: { tenant_id: tenantId, is_active: true } }),
     prisma.fixedCost.findMany({ where: { tenant_id: tenantId } }),
@@ -261,6 +264,9 @@ async function monthlyReport(tenantId, year, month) {
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     restockFor(tenantId, end < new Date() ? end : new Date(), 30),
     prisma.expense.findMany({ where: { tenant_id: tenantId, date: { gte: start, lte: end } }, orderBy: { date: "asc" }, select: { id: true, date: true, category: true, description: true, amount: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { vat_mode: true, inss_employer_pct: true } }),
+    // ISPC: o escalao depende do volume de negocios do ano (projectado a partir de Janeiro).
+    prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: new Date(year, 0, 1), lte: end } }, _sum: { total_amount: true } }),
   ]);
 
   // Mes anterior: receita e lucro bruto, para comparar.
@@ -290,7 +296,12 @@ async function monthlyReport(tenantId, year, month) {
     trends.push({ product_id: id, name, quantity: now, previous_quantity: before, change: now - before, change_pct: pctChange(now, before) });
   }
   trends.sort((a, b) => b.change - a.change);
-  const deductions = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries, expenses });
+  // Fase 15.2: impostos conforme o regime da loja. IVA: so o que fica para entregar
+  // (cobrado - incluido no custo do que se vendeu). ISPC: estimativa pelo escalao.
+  const vatMode = tenantTax?.vat_mode || 'none';
+  const ispc = vatMode === 'ispc' ? ispcEstimate({ monthTurnover: report.gross_revenue, yearToDateTurnover: ytd?._sum?.total_amount || 0, monthsElapsed: month }) : null;
+  const taxes = { vat_due: vatMode === 'iva' ? report.vat.due : 0, ispc: ispc ? ispc.amount : 0 };
+  const deductions = computeMonthlyDeductions({ employees, fixedCosts, suppliers, stockEntries, expenses, taxes, inssPct: tenantTax?.inss_employer_pct || 0 });
   const expensesByCategory = {};
   for (const e of expenses) expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
   const months = [];
@@ -308,6 +319,7 @@ async function monthlyReport(tenantId, year, month) {
     period: { year, month },
     ...report,
     deductions,
+    taxes: { vat_mode: vatMode, vat: vatMode === 'iva' ? report.vat : null, ispc, inss_employer_pct: tenantTax?.inss_employer_pct || 0 },
     expenses: { rows: expenses, by_category: Object.entries(expensesByCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount) },
     net_profit: netProfit,
     revenue_history: months,

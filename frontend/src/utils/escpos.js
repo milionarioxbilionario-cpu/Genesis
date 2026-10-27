@@ -126,6 +126,7 @@ export function buildEscPosReceipt({ shopName, shopLocation, shopPhone, shopNuit
   const discount = Number(sale.discount_amount || 0);
   if (discount > 0) { text(twoCols(t('Subtotal'), mzn(total + discount))); text(twoCols(t('Desconto'), '-' + mzn(discount))); }
   bold(true); text(twoCols(t('TOTAL MT'), mzn(total))); bold(false);
+  if (Number(sale.vat_amount) > 0) text(twoCols(t('IVA incluído'), mzn(sale.vat_amount)));
   if (sale.payment_method) text(twoCols(t('Pagamento:'), sale.payment_method));
   if (sale.amount_received != null) text(twoCols(t('Recebido'), mzn(sale.amount_received)));
   if (sale.change_given != null) text(twoCols(t('Troco'), mzn(sale.change_given)));

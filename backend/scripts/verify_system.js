@@ -1818,7 +1818,54 @@ async function test34() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34 };
+// ---------------------------------------------------------------------------
+async function test35() {
+  section(35, 'Impostos: IVA 16% incluido (isentos a 0), ISPC por escalao e INSS do patrao no lucro (Fase 15.2)');
+  await unlockCashier();
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  const t = ctx.tenant.id;
+  const now = new Date();
+  const ym = 'year=' + now.getFullYear() + '&month=' + (now.getMonth() + 1);
+  try {
+    ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'xyz' })).status === 400, 'regime inventado: 400');
+    ok((await owner.req('PUT', '/api/settings/taxes', { inss_employer_pct: 7 })).status === 400, 'INSS so 0 ou 4%: 400');
+    ok((await caixa.req('PUT', '/api/settings/taxes', { vat_mode: 'iva' })).status === 403, 'caixista nao muda os impostos');
+    ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'iva' })).status === 200, 'dono escolhe o IVA');
+    ok((await owner.req('GET', '/api/settings')).data?.taxes?.vat_mode === 'iva', 'definicoes mostram o regime');
+    const arroz = await prisma.product.create({ data: { tenant_id: t, name: 'Arroz Teste', category: 'Mercearia', sell_price: 5000, cost_price: 4000, stock_qty: 20, is_active: true } });
+    const pa = await owner.req('PATCH', '/api/products/' + arroz.id, { vat_rate: 0 });
+    ok(pa.status === 200 && (await prisma.product.findUnique({ where: { id: arroz.id } })).vat_rate === 0, 'produto marcado como isento (0%)', pa);
+    ok((await owner.req('PATCH', '/api/products/' + arroz.id, { vat_rate: 5 })).status === 400, 'taxa inventada (5%): 400');
+    const term = await cashierTerminal();
+    ok((await term.req('GET', '/api/pos/terminal')).data?.store?.vat_mode === 'iva', 'o terminal sabe que a loja cobra IVA');
+    // 100 MT (16%) + 50 MT (isento), desconto de 15 MT repartido 10/5: IVA = 90 x 16/116 = 12,41 MT.
+    const sale = await caixa.req('POST', '/api/sales', {
+      items: [{ product_id: ctx.product.id, quantity: 1, unit_sell_price: 10000, unit_cost_price: 6000 }, { product_id: arroz.id, quantity: 1, unit_sell_price: 5000, unit_cost_price: 4000 }],
+      discount_amount: 1500, total_amount: 13500, payment_method: 'cash', amount_received: 13500 });
+    ok(sale.status === 201 && sale.data.vat_amount === 1241, 'venda com IVA: 12,41 MT incluidos (depois do desconto, arroz isento)', sale);
+    const items = await prisma.saleItem.findMany({ where: { sale_id: sale.data.id } });
+    ok(items.find((i) => i.product_id === ctx.product.id)?.vat_rate === 16 && items.find((i) => i.product_id === arroz.id)?.vat_rate === 0, 'cada linha guarda a taxa do momento (16 e 0)');
+    const m = (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data;
+    ok(m.taxes?.vat_mode === 'iva' && m.vat.collected >= 1241 && m.deductions.total_vat_due === m.vat.due && m.vat.due === Math.max(0, m.vat.collected - m.vat.on_cost), 'mensal: IVA cobrado, no custo e a entregar', m.vat);
+    ok(m.net_profit === m.gross_profit - m.deductions.operating_expenses && m.deductions.operating_expenses >= m.deductions.total_taxes, 'o IVA a entregar desconta no lucro liquido', m.deductions);
+    ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'ispc' })).status === 200, 'dono muda para ISPC');
+    const s2 = await caixa.req('POST', '/api/sales', saleBody());
+    ok(s2.status === 201 && s2.data.vat_amount === 0, 'com ISPC a venda nao leva IVA', s2.data);
+    const m2 = (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data;
+    ok([3, 4, 5].includes(m2.taxes?.ispc?.pct) && m2.deductions.total_ispc === Math.round((m2.gross_revenue * m2.taxes.ispc.pct) / 100) && m2.deductions.total_vat_due === 0, 'mensal: ISPC estimado pelo escalao e sem IVA', m2.taxes);
+    await prisma.employee.create({ data: { tenant_id: t, name: 'Trabalhador INSS', role: 'Ajudante', monthly_salary: 1000000, is_active: true } });
+    const salaries = (await prisma.employee.findMany({ where: { tenant_id: t, is_active: true } })).reduce((a, e) => a + e.monthly_salary, 0);
+    await owner.req('PUT', '/api/settings/taxes', { inss_employer_pct: 4 });
+    const m3 = (await owner.req('GET', '/api/owner/reports/monthly?' + ym)).data;
+    ok(salaries >= 1000000 && m3.deductions.total_inss === Math.round((salaries * 4) / 100) && m3.taxes.inss_employer_pct === 4, 'INSS do patrao: 4% dos salarios no lucro', { salaries, inss: m3.deductions.total_inss });
+    ok((await prisma.auditLog.count({ where: { tenant_id: t, action: 'UPDATE_TAXES' } })) >= 3, 'mudancas de impostos na auditoria');
+  } finally {
+    await prisma.tenant.update({ where: { id: t }, data: { vat_mode: 'none', inss_employer_pct: 0 } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35 };
 
 (async () => {
   await prisma.ready();

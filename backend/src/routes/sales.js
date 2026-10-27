@@ -9,6 +9,7 @@ const { AUTH_PIN_FAIL_ACTIONS } = require('../utils/authPin');
 const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
 const { addLot, consumeLots } = require('../utils/stockLots');
+const { productVatRate, saleVat } = require('../services/tax');
 const rateLimit = require('express-rate-limit');
 
 const saleSchema = z.object({
@@ -159,10 +160,10 @@ router.post('/', async (req, res) => {
      if (data.id) {
        const existing = await tx.sale.findFirst({
          where: { id: data.id, tenant_id: tenantId },
-         select: { id: true, daily_number: true }
+         select: { id: true, daily_number: true, vat_amount: true }
        });
        if (existing) {
-         return { id: existing.id, daily_number: existing.daily_number };
+         return { id: existing.id, daily_number: existing.daily_number, vat_amount: existing.vat_amount };
        }
      }
      const productIds = [...new Set(data.items.map((item) => item.product_id))];
@@ -196,7 +197,8 @@ router.post('/', async (req, res) => {
          product_name: product.name,
          quantity: item.quantity,
          unit_sell_price: item.unit_sell_price,
-         unit_cost_price: product.cost_price
+         unit_cost_price: product.cost_price,
+         product_vat_rate: product.vat_rate
        };
      });
 
@@ -212,7 +214,7 @@ router.post('/', async (req, res) => {
 
      // POLITICA DE DESCONTOS: ate discount_free_pct% do subtotal e livre; acima
      // disso exige o PIN de autorizacao do dono (o mesmo dos cancelamentos).
-     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true } });
+     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true, vat_mode: true } });
      const freeLimit = Math.floor(subtotal * (tenantPolicy?.discount_free_pct ?? 10) / 100);
      let discountAuthorized = false;
      if (discountAmount > freeLimit) {
@@ -231,6 +233,12 @@ router.post('/', async (req, res) => {
      }
 
      const totalAmount = subtotal - discountAmount;
+     // Fase 15.2: com IVA, guarda-se o IVA incluido (depois do desconto) e a taxa de
+     // cada linha no momento da venda; sem IVA (ou ISPC) fica 0 e a taxa vazia.
+     const withVat = tenantPolicy?.vat_mode === 'iva';
+     const vatRates = saleItems.map((item) => (withVat ? productVatRate(item.product_vat_rate) : null));
+     const vat = withVat ? saleVat(saleItems.map((item, i) => ({ gross: item.quantity * item.unit_sell_price, rate: vatRates[i] })), discountAmount) : { vat_amount: 0 };
+     saleItems.forEach((item, i) => { delete item.product_vat_rate; item.vat_rate = vatRates[i]; });
      if (totalAmount !== Number(data.total_amount)) {
        const totalError = new Error(`Total da venda inconsistente (esperado ${totalAmount})`);
        totalError.statusCode = 400;
@@ -302,6 +310,7 @@ router.post('/', async (req, res) => {
          total_amount: totalAmount,
          total_cost: totalCost,
          discount_amount: discountAmount,
+         vat_amount: vat.vat_amount,
          daily_number: dailyNumber,
          payment_method: paymentMethod,
          amount_received: amountReceived,
@@ -367,10 +376,10 @@ router.post('/', async (req, res) => {
        } });
      }
 
-     return { id: sale.id, daily_number: sale.daily_number };
+     return { id: sale.id, daily_number: sale.daily_number, vat_amount: sale.vat_amount };
    });
 
-   return res.status(201).json({ id: result.id, daily_number: result.daily_number });
+   return res.status(201).json({ id: result.id, daily_number: result.daily_number, vat_amount: result.vat_amount || 0 });
  } catch (err) {
    if (err instanceof z.ZodError) {
      return res.status(400).json({ error: err.errors });

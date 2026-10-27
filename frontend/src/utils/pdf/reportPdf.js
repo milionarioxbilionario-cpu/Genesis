@@ -171,8 +171,12 @@ export function buildReportPdf({ kind, shopName, data, timeline: tl, labels }) {
       [t('Outros custos fixos'), '-' + money(d.total_other_fixed)],
       [t('Entregas de fornecedores'), '-' + money(d.total_supplier_delivery)],
       [t('Despesas avulsas'), '-' + money(d.total_expenses || 0)],
+      ...(data.taxes?.vat_mode === 'iva' ? [[t('IVA a entregar ao Estado'), '-' + money(d.total_vat_due || 0)]] : []),
+      ...(data.taxes?.ispc ? [[t('ISPC (estimativa, {pct}%)', { pct: data.taxes.ispc.pct }), '-' + money(d.total_ispc || 0)]] : []),
+      ...(data.taxes?.inss_employer_pct ? [[t('INSS do patrão ({pct}% dos salários)', { pct: data.taxes.inss_employer_pct }), '-' + money(d.total_inss || 0)]] : []),
       [t('Lucro líquido real'), money(data.net_profit)],
     ], { right: [1], widths: { 0: 80 } });
+    if (data.taxes?.vat) pdf.note(t('IVA do mês: cobrado {a}; já pago nas compras do que vendeu (estimativa) {b}; a entregar {c}.', { a: money(data.taxes.vat.collected), b: money(data.taxes.vat.on_cost), c: money(data.taxes.vat.due) }));
     if (data.losses_total > 0) pdf.note(t('Perdas do mês (quebras e validades): -{losses}. Depois das perdas ficariam {after}.', { losses: money(data.losses_total), after: money(data.net_profit - data.losses_total) }));
     pdf.note(data.goal ? t('Meta: {pct} ({achieved} de {target}).', { pct: pctText(data.goal.pct), achieved: money(data.goal.achieved), target: money(data.goal.target) }) : t('Sem meta neste mês.'));
     pdf.note(t('Mês anterior: receita {revenue}, lucro bruto {profit}.', { revenue: money(data.compare.previous_revenue), profit: money(data.compare.previous_gross_profit) }));

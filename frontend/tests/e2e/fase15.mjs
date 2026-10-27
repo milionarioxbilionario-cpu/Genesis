@@ -58,6 +58,21 @@ try {
   await owner.locator('iframe[title="Pré-visualização do recibo"]').scrollIntoViewIfNeeded();
   await shot(owner, '15-definicoes-recibo');
 
+  // 15.2: impostos — IVA e INSS escolhidos nas Definicoes; o produto mostra o IVA.
+  const taxCard = owner.locator('div').filter({ hasText: 'Escolha como o seu negócio paga impostos' }).filter({ has: owner.getByRole('button', { name: 'Guardar' }) }).last();
+  await taxCard.getByRole('radio', { name: 'IVA' }).click();
+  ok(await taxCard.getByText('Os preços já incluem o IVA de 16%').isVisible(), 'impostos: explicação do IVA em linguagem simples');
+  await taxCard.getByLabel(/inscritos no INSS/).check();
+  await taxCard.getByRole('button', { name: 'Guardar' }).click();
+  await owner.getByText('Alterações guardadas.').last().waitFor({ timeout: T });
+  await owner.goto(BASE + '/app/produtos');
+  await owner.getByText('Coca-Cola 500ml').first().click();
+  const vatSel = owner.getByLabel('IVA', { exact: true });
+  await vatSel.waitFor({ timeout: T });
+  ok(await vatSel.isVisible() && (await vatSel.inputValue()) === '16', 'produto: campo do IVA (taxa normal 16%) aparece com a loja no IVA');
+  await shot(owner, '15-produto-iva');
+  await owner.keyboard.press('Escape');
+
   // Terminal: a venda imprime o recibo novo (PDF guardado no aparelho).
   await owner.request.post(BASE + '/api/lock/unlock', { data: { pin: fx.lockPin } });
   const code = await (await owner.request.post(BASE + '/api/owner/terminals/pairing-code', { data: { name: 'Balcão recibo' } })).json();
@@ -84,6 +99,7 @@ try {
     await file.saveAs(out);
     const pdf = fs.readFileSync(out);
     ok(pdf.length > 3000 && pdf.toString('latin1').includes('/Subtype /Image'), 'o PDF leva imagens (logótipo e QR)', pdf.length);
+    ok(pdf.toString('latin1').includes('IVA inclu') && pdf.toString('latin1').includes('6,21 MT'), 'recibo com «IVA incluído 6,21 MT» (45 MT a 16%)');
   }
   await shot(term, '15-terminal-recibo');
   // 15.1b: imagem do recibo para o WhatsApp (no computador descarrega o PNG).
@@ -100,6 +116,13 @@ try {
   }
   ok(await term.getByText('Imagem do recibo guardada').isVisible().catch(() => false), 'aviso: enviar a imagem ao cliente pelo WhatsApp');
   await tctx.close();
+  // 15.2: o mensal desconta o IVA a entregar e o INSS do patrao.
+  await owner.goto(BASE + '/app/relatorios');
+  await owner.getByRole('tab', { name: 'Mensal' }).click();
+  await owner.getByText('IVA a entregar ao Estado').first().waitFor({ timeout: T });
+  ok(await owner.getByText('IVA a entregar ao Estado').first().isVisible() && await owner.getByText('INSS do patrão (4% dos salários)').first().isVisible() && await owner.getByText('IVA do mês').isVisible(), 'mensal: IVA a entregar, INSS do patrão e o quadro do IVA');
+  await owner.getByText('IVA do mês').scrollIntoViewIfNeeded();
+  await shot(owner, '15-mensal-impostos');
   await ctx.close();
 } catch (e) {
   failures++;

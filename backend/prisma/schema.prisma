@@ -25,6 +25,9 @@ model Tenant {
   /// Fase 15.1: logotipo do estabelecimento (data URL, <= 300 KB) e mensagem no fim do recibo.
   logo_data             String?
   receipt_footer        String?
+  /// Fase 15.2: none | iva | ispc. Fase 15.3: % do INSS do patrao (0 = sem INSS).
+  vat_mode              String                @default("none")
+  inss_employer_pct     Int                   @default(0)
   id_document           String?
   status                String                @default("pending")
   trial_ends_at         DateTime?
@@ -107,6 +110,8 @@ model Product {
   icon                  String?
   cost_price            Int                   @default(0)
   sell_price            Int                   @default(0)
+  /// Fase 15.2: taxa do IVA em %; null = taxa normal (16), 0 = isento.
+  vat_rate              Int?
   stock_qty             Int                   @default(0)
   min_stock             Int                   @default(5)
   has_expiry            Boolean               @default(false)
@@ -137,6 +142,8 @@ model Sale {
   created_at      DateTime   @default(now())
   discount_amount Int        @default(0)
   daily_number    Int?
+  /// Fase 15.2: IVA incluido no total (centavos, depois do desconto).
+  vat_amount      Int        @default(0)
   cashier         User       @relation("CashierSales", fields: [cashier_user_id], references: [id])
   tenant          Tenant     @relation(fields: [tenant_id], references: [id])
   items           SaleItem[]
@@ -152,6 +159,7 @@ model SaleItem {
   quantity        Int
   unit_sell_price Int
   unit_cost_price Int
+  vat_rate        Int?
   product         Product @relation(fields: [product_id], references: [id])
   sale            Sale    @relation(fields: [sale_id], references: [id])
 }
@@ -198,6 +206,8 @@ model FixedCost {
   description String
   amount      Int
   type        String
+  /// Fase 15.3: monthly | annual (anual = repartido por 12).
+  period      String @default("monthly")
   tenant      Tenant @relation(fields: [tenant_id], references: [id])
 }
 
@@ -383,6 +393,9 @@ model Expense {
   category    String
   description String
   amount      Int
+  /// Fase 15.3: expense | fine (multa); entity = quem multou.
+  kind        String   @default("expense")
+  entity      String?
   created_by  String
   created_at  DateTime @default(now())
   tenant      Tenant   @relation(fields: [tenant_id], references: [id])

@@ -226,7 +226,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       const res = await api.post('/api/sales', body);
       pendingSale.current = null;
       if (payment === 'cash') openCashDrawer();
-      setDialog({ receipt: { sale: { ...payload, id: res.data.id, daily_number: res.data.daily_number, amount_received: payment === 'cash' && received ? received : total, change_given: change }, items: cart } });
+      setDialog({ receipt: { sale: { ...payload, id: res.data.id, daily_number: res.data.daily_number, vat_amount: res.data.vat_amount || 0, amount_received: payment === 'cash' && received ? received : total, change_given: change }, items: cart } });
       resetSale();
       refreshCatalog(); refreshShift();
     } catch (err) {

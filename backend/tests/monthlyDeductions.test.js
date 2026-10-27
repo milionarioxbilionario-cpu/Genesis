@@ -88,3 +88,23 @@ test('sem despesas avulsas a linha é zero e a fórmula não muda', () => {
   assert.equal(d.total_expenses, 0);
   assert.equal(d.operating_expenses, 40);
 });
+
+// Fase 15.2: impostos e INSS do patrao descontam no lucro liquido.
+test('impostos: IVA a entregar, ISPC e INSS do patrao (4% dos salarios) entram nas deducoes', () => {
+  const d = computeMonthlyDeductions({
+    employees: [{ monthly_salary: 1000000 }, { monthly_salary: 750000 }],
+    taxes: { vat_due: 12345, ispc: 0 },
+    inssPct: 4,
+  });
+  assert.equal(d.total_inss, 70000); // 4% de 17 500 MT = 700 MT
+  assert.equal(d.total_vat_due, 12345);
+  assert.equal(d.total_taxes, 82345);
+  assert.equal(d.operating_expenses, 1750000 + 82345);
+  assert.equal(computeMonthlyNetProfit(5000000, d), 5000000 - 1750000 - 82345);
+});
+
+test('sem regime de impostos nem INSS: nada muda (lojas antigas)', () => {
+  const d = computeMonthlyDeductions({ employees: [{ monthly_salary: 1000000 }] });
+  assert.equal(d.total_taxes, 0);
+  assert.equal(d.operating_expenses, 1000000);
+});

@@ -12,6 +12,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
+const { VAT_MODES, INSS_EMPLOYER_PCT } = require('../services/tax');
 
 const router = express.Router();
 router.use(auth, requireRole('owner'));
@@ -76,6 +77,8 @@ router.get('/', asyncHandler(async (req, res) => {
     // Envio automatico desligado ate haver numero WhatsApp Business aprovado (decisao 11/10).
     reports_whatsapp_enabled: reportsWhatsappEnabled(),
     authorization_pin_configured: Boolean(t.cancel_pin_hash),
+    // Fase 15.2/15.3: regime de impostos das vendas e INSS do patrao.
+    taxes: { vat_mode: t.vat_mode || 'none', inss_employer_pct: t.inss_employer_pct || 0 },
     status: t.status,
     trial_ends_at: t.trial_ends_at,
     fixed_costs: fixed,
@@ -88,6 +91,19 @@ router.put('/store', asyncHandler(async (req, res) => {
   const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, email: true, nuit: true, receipt_footer: true } });
   const t = await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_STORE', entityType: 'tenant', entityId: t.id, oldValue: before, newValue: data });
+  res.json({ ok: true });
+}));
+
+// Fase 15.2/15.3: regime de impostos (sem / IVA / ISPC) e INSS do patrao (0 ou 4%).
+const taxesSchema = z.object({
+  vat_mode: z.enum(VAT_MODES).optional(),
+  inss_employer_pct: z.union([z.literal(0), z.literal(INSS_EMPLOYER_PCT)]).optional(),
+});
+router.put('/taxes', asyncHandler(async (req, res) => {
+  const data = taxesSchema.parse(req.body);
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { vat_mode: true, inss_employer_pct: true } });
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data });
+  await writeAudit({ req, action: 'UPDATE_TAXES', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true });
 }));
 

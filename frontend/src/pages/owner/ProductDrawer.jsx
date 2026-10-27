@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { Boxes, Camera, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
@@ -48,6 +48,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
   const { t } = useI18n();
   const [, setParams] = useSearchParams();
   const suppliers = useApi('/api/inventory/suppliers');
+  const withVat = (useOutletContext() || {}).tenant?.vat_mode === 'iva';
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -74,6 +75,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
       image_url: editing.image_url || null, icon: editing.icon || null,
       sell_price: editing.sell_price, cost_price: editing.cost_price, min_stock: Number(editing.min_stock) || 0,
       has_expiry: editing.has_expiry,
+      ...(withVat ? { vat_rate: editing.vat_rate === 0 ? 0 : null } : {}),
     };
     try {
       let id = editing.id;
@@ -141,6 +143,12 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
             <MoneyInput label={t('Preço de venda')} hint={t('Quanto cobra ao cliente')} valueCents={editing.sell_price} onChangeCents={set('sell_price')} />
           </div>
           {editing.sell_price > 0 && editing.sell_price <= editing.cost_price && <Alert tone="warning">{t('O preço de venda não cobre o custo.')}</Alert>}
+          {withVat && (
+            <Select label={t('IVA')} hint={t('O preço de venda já inclui o IVA.')} value={editing.vat_rate === 0 ? '0' : '16'} onChange={(e) => set('vat_rate')(e.target.value === '0' ? 0 : null)}>
+              <option value="16">{t('Taxa normal (16%)')}</option>
+              <option value="0">{t('Isento (arroz, pão, farinha de milho…)')}</option>
+            </Select>
+          )}
           <Input label={t('Stock mínimo')} hint={t('Alerta abaixo deste valor')} inputMode="numeric" value={editing.min_stock} onChange={(e) => set('min_stock')(e.target.value.replace(/\D/g, ''))} />
           <label className="flex items-center gap-2 text-base text-ink-2">
             <input type="checkbox" className="h-4 w-4 accent-[color:var(--accent)]" checked={editing.has_expiry} onChange={(e) => set('has_expiry')(e.target.checked)} />

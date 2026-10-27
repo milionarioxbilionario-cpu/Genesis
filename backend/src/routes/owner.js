@@ -60,6 +60,7 @@ router.get('/tenant', asyncHandler(async (req, res) => {
     id: t.id, name: t.name, owner_name: t.owner_name, business_type: t.business_type, location: t.location,
     phone: t.phone, email: t.email, status: t.status, trial_ends_at: t.trial_ends_at,
     subscription_price: t.subscription_price, onboarding_completed: t.onboarding_completed, created_at: t.created_at,
+    vat_mode: t.vat_mode || 'none', // Fase 15.2: o formulario do produto mostra o IVA so quando a loja o cobra
   });
 }));
 
