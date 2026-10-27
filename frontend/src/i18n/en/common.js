@@ -218,6 +218,11 @@ addTranslations('en', {
   // Fase 15.1: recibo
   'Tel.': 'Tel.',
   'RECIBO': 'RECEIPT',
+  // Fase 15.1b: imagem do recibo (WhatsApp)
+  'Imagem (WhatsApp)': 'Image (WhatsApp)',
+  'Imagem pronta': 'Image ready',
+  'Imagem do recibo guardada. Envie-a ao cliente pelo WhatsApp.': 'Receipt image saved. Send it to the customer on WhatsApp.',
+  'Não foi possível criar a imagem do recibo.': 'Could not create the receipt image.',
   'Escaneie para ver detalhes': 'Scan to see the details',
   'Sem código': 'No code',
   'Obrigado pela preferência!': 'Thank you for your custom!',

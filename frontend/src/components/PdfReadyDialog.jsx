@@ -22,7 +22,7 @@ export default function PdfReadyDialog({ file, onClose }) {
     <Dialog
       open
       size="sm"
-      title={t('PDF pronto')}
+      title={file.type === 'image/png' ? t('Imagem pronta') : t('PDF pronto')}
       description={file.name}
       onClose={onClose}
       footer={<><Button onClick={onClose}>{t('Fechar')}</Button><Button variant="primary" icon={Share2} onClick={share} autoFocus>{t('Partilhar / imprimir')}</Button></>}

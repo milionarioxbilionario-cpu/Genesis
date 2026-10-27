@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Printer } from 'lucide-react';
+import { ImageDown, Printer } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import { preloadReceiptPdf, printReceipt } from '../utils/receiptPrinter';
+import { preloadReceiptPdf, printReceipt, shareReceiptImage } from '../utils/receiptPrinter';
 import PdfReadyDialog from './PdfReadyDialog';
 import { money, dateTime, timeSec, PAYMENT_LABEL } from '../utils/format';
 import { useI18n } from '../i18n/react';
@@ -24,15 +24,26 @@ export default function SaleDrawer({ sale, onClose }) {
   const [pdfFile, setPdfFile] = useState(null);
   const toast = useToast();
   useEffect(() => { if (sale) preloadReceiptPdf(); }, [sale]);
-  async function reprint() {
+  async function receiptInput() {
     const r = (await loadReceiptInfo()) || {};
-    const res = await printReceipt({
+    return {
       shopName: r.name || tenant?.name, shopLocation: r.location || tenant?.location, shopPhone: r.phone, shopNuit: r.nuit, footer: r.receipt_footer, logo: r.logo,
       cashierName: sale.cashier?.name,
       sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] }, items: sale.items,
-    });
+    };
+  }
+  async function reprint() {
+    const res = await printReceipt(await receiptInput());
     if (res?.needsTap) setPdfFile(res.file);
     if (res?.printError) toast(t('Recibo guardado em PDF. A impressora falhou: {e}', { e: res.printError }), 'danger');
+  }
+  // Fase 15.1b: imagem do recibo para enviar ao cliente por WhatsApp.
+  async function sendImage() {
+    try {
+      const res = await shareReceiptImage(await receiptInput());
+      if (res?.needsTap) setPdfFile(res.file);
+      else if (res?.via === 'download') toast(t('Imagem do recibo guardada. Envie-a ao cliente pelo WhatsApp.'));
+    } catch { toast(t('Não foi possível criar a imagem do recibo.'), 'danger'); }
   }
   return (
     <Drawer
@@ -41,7 +52,7 @@ export default function SaleDrawer({ sale, onClose }) {
       title={sale ? t('Venda n.º {n}', { n: String(sale.daily_number || '').padStart(3, '0') }) : ''}
       description={sale ? `${dateTime(sale.created_at)} (${timeSec(sale.created_at)}) · ${sale.cashier?.name || ''}` : ''}
       footer={sale && sale.status !== 'cancelled' && (
-        <Button icon={Printer} onClick={reprint}>{t('Reimprimir recibo')}</Button>
+        <div className="flex flex-wrap justify-end gap-2"><Button icon={ImageDown} onClick={sendImage}>{t('Imagem (WhatsApp)')}</Button><Button icon={Printer} onClick={reprint}>{t('Reimprimir recibo')}</Button></div>
       )}
     >
       {sale && (

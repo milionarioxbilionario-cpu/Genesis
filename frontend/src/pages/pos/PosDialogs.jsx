@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
-import { CheckCircle2, Printer } from 'lucide-react';
+import { CheckCircle2, ImageDown, Printer } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import { newUuid, SYNC_STATE } from '../../utils/syncPolicy';
-import { preloadReceiptPdf, printReceipt, saleVerifyUrl } from '../../utils/receiptPrinter';
+import { preloadReceiptPdf, printReceipt, saleVerifyUrl, shareReceiptImage } from '../../utils/receiptPrinter';
 import PdfReadyDialog from '../../components/PdfReadyDialog';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
@@ -42,17 +42,28 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
     QRCode.toDataURL(saleVerifyUrl(sale.id), { width: 120, margin: 1 }).then(setQr).catch(() => setQr(''));
   }, [sale.id]);
   const subtotal = items.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
+  const [sharing, setSharing] = useState(false);
+  const receiptInput = () => ({
+    shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo: store.logo, cashierName: cashier.name,
+    sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, created_at: sale.created_at || new Date().toISOString() },
+    items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
+  });
   async function print() {
     setPrinting(true);
     try {
-      const res = await printReceipt({
-        shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo: store.logo, cashierName: cashier.name,
-        sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, created_at: sale.created_at || new Date().toISOString() },
-        items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
-      });
+      const res = await printReceipt(receiptInput());
       if (res?.needsTap) setPdfFile(res.file);
       if (res?.printError) toast(t('Recibo guardado em PDF. A impressora falhou: {e}', { e: res.printError }), 'danger');
     } finally { setPrinting(false); }
+  }
+  // Fase 15.1b: imagem do recibo para o cliente (WhatsApp).
+  async function sendImage() {
+    setSharing(true);
+    try {
+      const res = await shareReceiptImage(receiptInput());
+      if (res?.needsTap) setPdfFile(res.file);
+      else if (res?.via === 'download') toast(t('Imagem do recibo guardada. Envie-a ao cliente pelo WhatsApp.'));
+    } catch { toast(t('Não foi possível criar a imagem do recibo.'), 'danger'); } finally { setSharing(false); }
   }
   return (
     <Dialog
@@ -60,7 +71,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
       size="sm"
       title={t('Venda registada')}
       onClose={onClose}
-      footer={<><Button icon={Printer} loading={printing} onClick={print}>{t('Imprimir recibo')}</Button><Button variant="primary" onClick={onClose} autoFocus>{t('Nova venda')}</Button></>}
+      footer={<><Button icon={ImageDown} loading={sharing} onClick={sendImage}>{t('Imagem (WhatsApp)')}</Button><Button icon={Printer} loading={printing} onClick={print}>{t('Imprimir recibo')}</Button><Button variant="primary" onClick={onClose} autoFocus>{t('Nova venda')}</Button></>}
     >
       <div className="mb-3 flex items-center gap-2 text-positive"><CheckCircle2 size={18} /><span className="font-medium">{t('Venda n.º {n}', { n: String(sale.daily_number || '').padStart(3, '0') })}</span></div>
       <div className="rounded border border-border p-3">

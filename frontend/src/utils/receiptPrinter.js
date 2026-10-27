@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { deliverPdf, downloadBlob, prefersShare } from './pdf/deliver';
+import { deliverPdf, downloadBlob, prefersShare, sharePdf } from './pdf/deliver';
 import { buildEscPosReceipt, ditherToRaster } from './escpos';
 import { code128Svg, documentBarcode, documentNumber } from './code128';
 import { getDevicePrefs, sendToPrinter } from './devices';
@@ -262,6 +262,19 @@ export function getPendingReceipts() {
 export function clearPendingReceipts() {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem(LS_KEY);
+}
+
+// Fase 15.1b: recibo em imagem (PNG) para o cliente, por WhatsApp. Telemovel/tablet:
+// folha de partilha (escolhe-se o WhatsApp); computador: descarrega a imagem.
+// Devolve como printReceipt: { ok, via } ou { needsTap, file } (iPhone).
+export async function shareReceiptImage({ shopName = 'Genesis', shopLocation, shopPhone, shopNuit, footer, logo, cashierName, sale = {}, items = [] }) {
+  const qrDataUrl = await generateQrDataUrl(sale.id);
+  const { buildReceiptImage } = await import('./receiptImage');
+  const { blob, filename } = await buildReceiptImage({ shopName, shopLocation, shopPhone, shopNuit, footer, logo, cashierName, sale, items, qrDataUrl });
+  const file = new File([blob], filename, { type: 'image/png' });
+  if (prefersShare() && navigator.canShare?.({ files: [file] })) return sharePdf(file);
+  downloadBlob(blob, filename);
+  return { ok: true, via: 'download' };
 }
 
 // Pre-visualizacao nas Definicoes (e testes): o HTML do recibo sem o imprimir.

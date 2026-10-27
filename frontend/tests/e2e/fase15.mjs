@@ -86,6 +86,19 @@ try {
     ok(pdf.length > 3000 && pdf.toString('latin1').includes('/Subtype /Image'), 'o PDF leva imagens (logótipo e QR)', pdf.length);
   }
   await shot(term, '15-terminal-recibo');
+  // 15.1b: imagem do recibo para o WhatsApp (no computador descarrega o PNG).
+  const dlImg = term.waitForEvent('download', { timeout: T }).catch(() => null);
+  await term.getByRole('button', { name: /Imagem \(WhatsApp\)/ }).click();
+  const img = await dlImg;
+  ok(Boolean(img) && /^Recibo_\d{3} - Bottle Store Central .*\.png$/.test(img.suggestedFilename()), 'imagem do recibo (PNG) com o nome do recibo', img?.suggestedFilename());
+  if (img) {
+    const out = path.join(SHOTS, 'recibo.png');
+    await img.saveAs(out);
+    const buf = fs.readFileSync(out);
+    const w = buf.readUInt32BE(16); const h = buf.readUInt32BE(20);
+    ok(buf.slice(1, 4).toString() === 'PNG' && w === 1176 && h > 1500, 'PNG nítido (1176 px de largura) e com altura do talão', { w, h });
+  }
+  ok(await term.getByText('Imagem do recibo guardada').isVisible().catch(() => false), 'aviso: enviar a imagem ao cliente pelo WhatsApp');
   await tctx.close();
   await ctx.close();
 } catch (e) {

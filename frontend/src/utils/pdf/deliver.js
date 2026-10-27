@@ -35,7 +35,7 @@ export function downloadBlob(blob, filename) {
 // { needsTap: true, file } e o ecra mostra um botao para partilhar com novo toque.
 export async function sharePdf(file) {
   try {
-    await navigator.share({ files: [file], title: file.name.replace(/\.pdf$/i, '') });
+    await navigator.share({ files: [file], title: file.name.replace(/\.(pdf|png)$/i, '') });
     return { ok: true, via: 'share' };
   } catch (err) {
     if (err?.name === 'AbortError') return { ok: true, via: 'cancelled' };
