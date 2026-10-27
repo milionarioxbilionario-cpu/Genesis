@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-25",
+  "updatedAt": "2026-10-27",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -354,10 +354,10 @@
     },
     "frontend/src/utils/receiptPrinter.js": {
       "status": "ok",
-      "summary": "Recibo: telemovel/tablet -> PDF de talao pela folha de partilha; computador -> impressora serie (se houver) ou impressao numa moldura escondida na propria pagina. Nunca abre janela nova.",
+      "summary": "Recibo nos 3 formatos (HTML para imprimir, PDF de talao, ESC/POS) com logotipo, NUIT, telefone, n.o do documento com codigo de barras, QR e mensagem do dono; imagem PNG para WhatsApp (shareReceiptImage). Nunca abre janela nova.",
       "role": "Recibo (impressao).",
       "security": "Corrigido a 27/09: todo o texto (nome do produto, loja, caixista) passa por esc() e o src do QR e validado como data URL de imagem. Antes, um produto chamado <img onerror=...> executava dentro do documento do dialogo de impressao.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou. | 27/10/2026 Fase 15.1/15.1b publicadas (9207f9d, 8ae2ab4): verify_system 34 14/14; fase15.mjs 10/10 e flows.mjs 41/41 em genesismz.com; unitarios frontend 58/58."
     },
     "frontend/src/db/localDb.js": {
       "status": "ok",
@@ -1202,7 +1202,7 @@
       "status": "ok",
       "summary": "Recibo em PDF no formato de talao (80 mm), com QR.",
       "role": "PDF.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou. | 27/10/2026 Fase 15.1/15.1b publicadas (9207f9d, 8ae2ab4): verify_system 34 14/14; fase15.mjs 10/10 e flows.mjs 41/41 em genesismz.com; unitarios frontend 58/58."
     },
     "frontend/src/utils/pdf/reportPdf.js": {
       "status": "ok",
@@ -1372,9 +1372,9 @@
     },
     "frontend/src/utils/escpos.js": {
       "status": "ok",
-      "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte).",
+      "summary": "Puro: recibo ESC/POS (sem acentos, 32 colunas, QR GS ( k, corte). Fase 15.1: logotipo a preto e branco (raster com difusao), codigo de barras CODE128 e impulso da gaveta.",
       "role": "Impressora de recibos.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou. | 27/10/2026 Fase 15.1/15.1b publicadas (9207f9d, 8ae2ab4): verify_system 34 14/14; fase15.mjs 10/10 e flows.mjs 41/41 em genesismz.com; unitarios frontend 58/58."
     },
     "frontend/src/utils/devices.js": {
       "status": "ok",
@@ -1672,6 +1672,12 @@
     "frontend/site/textos.en.js": {
       "status": "ok",
       "notes": "25/10 Fase 14: site novo; site.mjs 54/54 em producao."
+    },
+    "frontend/src/utils/receiptImage.js": {
+      "status": "ok",
+      "summary": "Recibo em imagem PNG (1176 px) para enviar ao cliente por WhatsApp: logotipo, NUIT, n.o do documento com codigo de barras, QR e mensagem do dono. Desenho testavel com canvas falso.",
+      "role": "Recibo (imagem para WhatsApp).",
+      "notes": "27/10/2026 Fase 15.1/15.1b publicadas (9207f9d, 8ae2ab4): verify_system 34 14/14; fase15.mjs 10/10 e flows.mjs 41/41 em genesismz.com; unitarios frontend 58/58."
     }
   }
 }

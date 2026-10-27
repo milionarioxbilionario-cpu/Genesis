@@ -2149,3 +2149,12 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Pus um teste automático que falha se alguma destas palavras técnicas voltar a aparecer no site (confirmei que ele apanhava 11 no site antigo), e outro que confirma que o topo do site é branco.
 - Testes no site real: 55 de 55. Avisei o Bing de que as páginas mudaram.
 - Funcionou: sim. A seguir continuo o recibo profissional (Fase 15.1).
+
+
+==================== 27/10/2026 — Recibo profissional, gaveta e recibo em imagem para WhatsApp — já no genesismz.com ====================
+- O recibo ficou com ar profissional nos 3 sítios onde sai (PDF, impressão no computador e impressora de talões): logótipo do teu negócio, nome, morada, telefone, NUIT, número do recibo com código de barras, o que se comprou, total, troco, o QR para o cliente confirmar que é verdadeiro e uma mensagem final escrita por ti (por exemplo "Volte sempre!").
+- O logótipo põe-se em Definições > Loja > "Logótipo e recibo". Há um aviso a dizer que é o logótipo do negócio, não uma fotografia pessoal, e vês logo como fica o recibo.
+- Gaveta do dinheiro: quando o caixista cobra em dinheiro, a gaveta ligada à impressora de talões abre sozinha. Pode-se desligar em "Dispositivos". ATENÇÃO: ainda não foi experimentada com uma impressora e uma gaveta verdadeiras (não há aqui); quando tiveres uma, é a primeira coisa a testar.
+- Recibo em imagem: no fim da venda (e em qualquer venda no painel) há o botão "Imagem (WhatsApp)". No telemóvel abre a partilha e escolhes o WhatsApp do cliente; no computador guarda a imagem para a enviares.
+- Testes no site real: recibo 10 de 10, painel e terminal 41 de 41. Funcionou: sim.
+- A seguir: IVA opcional por loja (primeiro confirmo as taxas em fontes oficiais de Moçambique).
