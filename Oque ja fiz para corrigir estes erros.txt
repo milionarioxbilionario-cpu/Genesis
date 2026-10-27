@@ -2140,3 +2140,12 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
   2) A lista de Vendas usava a data do aparelho. Se o relógio do telemóvel/PC estiver atrasado, as vendas de agora não apareciam. Corrigido.
 - IMPORTANTE: o relógio deste computador está 63 minutos atrasado. Acerta-o: Definições do Windows > Hora e idioma > Data e hora > "Sincronizar agora".
 - Testes no site real: painel e terminal 41 de 41, site 54 de 54.
+
+
+==================== 27/10/2026 — Site de volta ao branco e textos reescritos para os clientes — já no genesismz.com ====================
+- Cores: a parte de cima do site e o convite final voltaram a ser brancos, como gostavas. O verde agora só acompanha: nos botões, nos ícones, no fim do título e na faixa da segurança. Dentro do Genesis não mexi (o verde continua a marcar o saldo).
+- Textos: reescrevi tudo (português e inglês) a pensar no dono do negócio que lê, não em ti. Tirei as palavras técnicas e de bastidores ("base de dados", "servidor", "camadas", "lotes", "auditoria", "sessões", "sincronizar", "fecho às cegas"...). Agora as frases são curtas e mostram o benefício. Exemplos: "A internet caiu? Continue a vender", "Os seus números, só para os seus olhos", "Os números do negócio são só seus: mais ninguém tem acesso a eles".
+- Não prometi nada que o Genesis ainda não faça.
+- Pus um teste automático que falha se alguma destas palavras técnicas voltar a aparecer no site (confirmei que ele apanhava 11 no site antigo), e outro que confirma que o topo do site é branco.
+- Testes no site real: 55 de 55. Avisei o Bing de que as páginas mudaram.
+- Funcionou: sim. A seguir continuo o recibo profissional (Fase 15.1).
