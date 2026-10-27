@@ -9,6 +9,8 @@
 
 // `now` serve para so julgar "nao reforcar" produtos que ja existiam durante
 // toda a janela (uma loja ou um produto novo ainda nao teve tempo de vender).
+const { lineAmount } = require('../utils/units');
+
 function recommendRestock({ products, soldByProduct = {}, lostByProduct = {}, windowDays = 28, coverDays = 30, now = new Date() }) {
   if (!(windowDays > 0) || !(coverDays > 0)) throw new Error('janela e cobertura tem de ser > 0');
   const items = [];
@@ -23,12 +25,12 @@ function recommendRestock({ products, soldByProduct = {}, lostByProduct = {}, wi
       items.push({
         product_id: p.id, name: p.name, stock: p.stock_qty || 0, sold, lost,
         per_day: Math.round(perDay * 100) / 100, quantity,
-        unit_cost: p.cost_price || 0, investment: quantity * (p.cost_price || 0),
+        unit: p.unit || 'un', unit_cost: p.cost_price || 0, investment: lineAmount(quantity, p.cost_price || 0, p.unit),
         reason: lost > 0 && sold === 0 ? 'pedido por clientes sem stock' : 'ritmo de vendas',
       });
     } else if ((p.stock_qty || 0) > 0 && sold <= 1 && lost === 0
       && (!p.created_at || now - new Date(p.created_at) >= windowDays * 86400000)) {
-      slowMovers.push({ product_id: p.id, name: p.name, stock: p.stock_qty, sold, stock_value: (p.stock_qty || 0) * (p.cost_price || 0) });
+      slowMovers.push({ product_id: p.id, name: p.name, stock: p.stock_qty, sold, stock_value: lineAmount(p.stock_qty || 0, p.cost_price || 0, p.unit), unit: p.unit || 'un' });
     }
   }
   items.sort((a, b) => b.investment - a.investment || b.quantity - a.quantity);

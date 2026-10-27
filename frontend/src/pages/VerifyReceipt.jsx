@@ -5,6 +5,7 @@ import { money, dateTime, errorMessage, PAYMENT_LABEL } from '../utils/format';
 import { Alert, KeyValue } from '../components/ui';
 import { FullPageSpinner } from '../utils/session';
 import AuthLayout from './auth/AuthLayout';
+import { formatQty, lineAmount } from '../utils/units';
 
 // Pagina publica aberta pelo QR do recibo (especificacao 6.9): confirma que a
 // venda existe e se continua valida. Sem sessao; so o que ja esta no recibo.
@@ -35,7 +36,7 @@ export default function VerifyReceipt() {
 
   const { store, sale } = state.data;
   const cancelled = sale.status !== 'completed';
-  const subtotal = sale.items.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
+  const subtotal = sale.items.reduce((s, l) => s + lineAmount(l.quantity, l.unit_sell_price, l.unit), 0);
   return (
     <AuthLayout title="Verificação de recibo" description={store.name + (store.location ? ' · ' + store.location : '')}>
       {cancelled
@@ -45,7 +46,7 @@ export default function VerifyReceipt() {
         <KeyValue label="Venda n.º" value={String(sale.daily_number || '').padStart(3, '0')} />
         <KeyValue label="Data" value={dateTime(sale.created_at)} />
         <div className="my-1 border-t border-border" />
-        {sale.items.map((l, i) => <KeyValue key={i} label={`${l.quantity} × ${l.product_name}`} value={money(l.quantity * l.unit_sell_price)} />)}
+        {sale.items.map((l, i) => <KeyValue key={i} label={`${formatQty(l.quantity, l.unit)} × ${l.product_name}`} value={money(lineAmount(l.quantity, l.unit_sell_price, l.unit))} />)}
         <div className="my-1 border-t border-border" />
         {sale.discount_amount > 0 && <><KeyValue label="Subtotal" value={money(subtotal)} /><KeyValue label="Desconto" value={'−' + money(sale.discount_amount)} /></>}
         <KeyValue label="Total" value={money(sale.total_amount)} strong />

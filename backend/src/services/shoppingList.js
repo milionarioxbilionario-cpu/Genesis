@@ -3,12 +3,14 @@
 // sao do dono e o total e combinado com o fornecedor.
 // 9.6: a mensagem sai na lingua de quem a gera (lang).
 const { tr } = require('../utils/lang');
+const { lineAmount, humanQty, qtyText } = require('../utils/units');
 
 // Total do investimento + entrega do fornecedor escolhido.
 function listTotals(items = [], supplier = null) {
-  const investment = items.reduce((s, it) => s + (it.quantity || 0) * (it.unit_cost || 0), 0);
+  // Fase 15.5: it.unit (kg/l/m) -> quantidade em milesimos e custo por kg/l/m.
+  const investment = items.reduce((s, it) => s + lineAmount(it.quantity || 0, it.unit_cost || 0, it.unit), 0);
   const delivery = supplier ? (supplier.delivery_cost_per_visit || 0) : 0;
-  return { units: items.reduce((s, it) => s + (it.quantity || 0), 0), investment, delivery, total: investment + delivery };
+  return { units: Math.round(items.reduce((s, it) => s + humanQty(it.quantity || 0, it.unit), 0) * 1000) / 1000, investment, delivery, total: investment + delivery };
 }
 
 // Telefone para o wa.me: so digitos, com o indicativo de Mocambique (258)
@@ -23,7 +25,7 @@ function waPhone(phone) {
 }
 
 function orderMessage({ storeName, supplierName, items, lang = 'pt' }) {
-  const lines = items.map((it) => `- ${it.quantity} × ${it.product_name}`);
+  const lines = items.map((it) => `- ${qtyText(it.quantity, it.unit)} × ${it.product_name}`);
   return [
     tr(lang, 'Olá{name}, daqui fala {store}.', { name: supplierName ? ' ' + supplierName : '', store: storeName || tr(lang, 'a loja') }),
     tr(lang, 'Gostaria de encomendar:'),

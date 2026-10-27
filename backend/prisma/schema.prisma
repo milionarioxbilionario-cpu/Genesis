@@ -112,6 +112,8 @@ model Product {
   sell_price            Int                   @default(0)
   /// Fase 15.2: taxa do IVA em %; null = taxa normal (16), 0 = isento.
   vat_rate              Int?
+  /// Fase 15.5: un | kg | l | m (kg/l/m: quantidades em milesimos inteiros; preco por kg/l/m).
+  unit                  String                @default("un")
   stock_qty             Int                   @default(0)
   min_stock             Int                   @default(5)
   has_expiry            Boolean               @default(false)
@@ -162,6 +164,7 @@ model SaleItem {
   unit_sell_price Int
   unit_cost_price Int
   vat_rate        Int?
+  unit            String  @default("un")
   product         Product @relation(fields: [product_id], references: [id])
   sale            Sale    @relation(fields: [sale_id], references: [id])
 }

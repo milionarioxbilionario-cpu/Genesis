@@ -9,6 +9,8 @@
 // INSS: o patrao paga 4% dos salarios (o trabalhador 3%, descontado no salario).
 // Fontes no Mapa Mental (Parte A, 15.2).
 
+const { lineAmount } = require('../utils/units');
+
 const VAT_STANDARD = 16;
 const VAT_MODES = ['none', 'iva', 'ispc'];
 const ISPC_BRACKETS = [
@@ -76,7 +78,7 @@ function ispcEstimate({ monthTurnover, yearToDateTurnover, monthsElapsed }) {
 // mesma taxa da linha) e a entregar = cobrado - custo, nunca negativo.
 function monthVat({ sales = [], items = [] }) {
   const collected = sales.reduce((s, x) => s + int(x.vat_amount), 0);
-  const onCost = items.reduce((s, it) => s + vatIncluded(int(it.quantity) * int(it.unit_cost_price), it.vat_rate == null ? 0 : int(it.vat_rate)), 0);
+  const onCost = items.reduce((s, it) => s + vatIncluded(lineAmount(it.quantity, it.unit_cost_price, it.unit), it.vat_rate == null ? 0 : int(it.vat_rate)), 0);
   return { collected, on_cost: onCost, due: Math.max(0, collected - onCost) };
 }
 

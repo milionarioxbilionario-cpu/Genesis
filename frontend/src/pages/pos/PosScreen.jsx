@@ -12,7 +12,8 @@ import { money, errorMessage } from '../../utils/format';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { BrandMark, Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
-import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog } from './PosDialogs';
+import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog, WeightDialog } from './PosDialogs';
+import { formatQty, isMeasured, lineAmount } from '../../utils/units';
 
 // Ecra de toque (telemovel/tablet): decide o foco automatico da pesquisa.
 const TOUCH = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
@@ -98,7 +99,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       && (productMatches(p, q) || (p.barcode || '').toLowerCase() === q));
   }, [products, query, category]);
 
-  const subtotal = cart.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
+  const subtotal = cart.reduce((s, l) => s + lineAmount(l.quantity, l.unit_sell_price, l.unit), 0);
   const effectiveDiscount = Math.min(discount, subtotal);
   const total = subtotal - effectiveDiscount;
   const split = payment === 'split';
@@ -116,12 +117,24 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
 
   function add(p) {
     setError('');
+    // Fase 15.5: produto a peso/medida abre o teclado de peso.
+    if (isMeasured(p.unit)) { setDialog({ weight: { product: p, quantity: cart.find((l) => l.product_id === p.id)?.quantity || 0 } }); return; }
     setCart((c) => {
       const line = c.find((l) => l.product_id === p.id);
       const inCart = line ? line.quantity : 0;
       if (inCart + 1 > (p.stock_qty || 0)) { setError(t('Sem stock suficiente de {name}.', { name: p.name })); return c; }
       if (line) return c.map((l) => (l.product_id === p.id ? { ...l, quantity: l.quantity + 1 } : l));
-      return [...c, { product_id: p.id, product_name: p.name, unit_sell_price: p.sell_price, quantity: 1, stock: p.stock_qty }];
+      return [...c, { product_id: p.id, product_name: p.name, unit_sell_price: p.sell_price, unit: p.unit || 'un', quantity: 1, stock: p.stock_qty }];
+    });
+  }
+  // Peso escolhido no teclado: substitui a quantidade da linha (0 = tira do cesto).
+  function setWeight(p, q) {
+    setDialog(null);
+    setCart((c) => {
+      const rest = c.filter((l) => l.product_id !== p.id);
+      if (q <= 0) return rest;
+      const line = { product_id: p.id, product_name: p.name, unit_sell_price: p.sell_price, unit: p.unit, quantity: Math.min(q, p.stock_qty || 0), stock: p.stock_qty };
+      return c.some((l) => l.product_id === p.id) ? c.map((l) => (l.product_id === p.id ? line : l)) : [...rest, line];
     });
   }
   const setQty = (id, q) => setCart((c) => c.flatMap((l) => (l.product_id !== id ? [l] : q <= 0 ? [] : [{ ...l, quantity: Math.min(q, l.stock) }])));
@@ -361,7 +374,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
                   <span className="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-ink">{p.name}</span>
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="num text-base font-semibold text-ink">{money(p.sell_price)}</span>
-                    <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? t('Esgotado') : t('{n} un.', { n: p.stock_qty })}</span>
+                    <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? t('Esgotado') : isMeasured(p.unit) ? formatQty(p.stock_qty, p.unit) : t('{n} un.', { n: p.stock_qty })}</span>
                   </span>
                 </button>
               );
@@ -384,7 +397,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
           >
             <ShoppingBasket size={20} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate text-base font-medium">
-              {cart.length ? t('{n} artigo(s)', { n: cart.reduce((n, l) => n + l.quantity, 0) }) : t('Toque num produto para começar')}
+              {cart.length ? t('{n} artigo(s)', { n: cart.reduce((n, l) => n + (isMeasured(l.unit) ? 1 : l.quantity), 0) }) : t('Toque num produto para começar')}
             </span>
             {cart.length > 0 && <span className="num shrink-0 text-lg font-semibold">{money(total)}</span>}
             {cart.length > 0 && <ChevronUp size={18} className="shrink-0" />}
@@ -410,14 +423,18 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
               <div key={l.product_id} className="flex items-center gap-3 border-b border-border px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-base text-ink">{l.product_name}</p>
-                  <p className="num text-xs text-ink-muted">{t('{price} / un.', { price: money(l.unit_sell_price) })}</p>
+                  <p className="num text-xs text-ink-muted">{isMeasured(l.unit) ? t('{price} / {unit}', { price: money(l.unit_sell_price), unit: l.unit }) : t('{price} / un.', { price: money(l.unit_sell_price) })}</p>
                 </div>
+                {isMeasured(l.unit) ? (
+                  <button type="button" className="num rounded border border-border-strong px-3 py-1 text-base text-ink hover:bg-subtle" aria-label={t('Mudar o peso de {name}', { name: l.product_name })} onClick={() => { const p = products.find((x) => x.id === l.product_id); if (p) setDialog({ weight: { product: p, quantity: l.quantity } }); }}>{formatQty(l.quantity, l.unit)}</button>
+                ) : (
                 <div className="flex items-center rounded border border-border-strong">
                   <button type="button" aria-label={t('Menos')} className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle" onClick={() => setQty(l.product_id, l.quantity - 1)}>{l.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button>
                   <span className="num w-8 text-center text-base">{l.quantity}</span>
                   <button type="button" aria-label={t('Mais')} className="flex h-8 w-8 items-center justify-center text-ink-2 hover:bg-subtle disabled:opacity-40" disabled={l.quantity >= l.stock} onClick={() => setQty(l.product_id, l.quantity + 1)}><Plus size={14} /></button>
                 </div>
-                <span className="num w-24 text-right font-medium text-ink">{money(l.quantity * l.unit_sell_price)}</span>
+                )}
+                <span className="num w-24 text-right font-medium text-ink">{money(lineAmount(l.quantity, l.unit_sell_price, l.unit))}</span>
               </div>
             ))}
           </div>
@@ -489,6 +506,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         </aside>
       </div>
 
+      {dialog?.weight && <WeightDialog product={dialog.weight.product} quantity={dialog.weight.quantity} onConfirm={(q) => setWeight(dialog.weight.product, q)} onClose={() => setDialog(null)} />}
       {dialog?.pin && (
         <AuthorizationPinDialog
           error={dialog.error}

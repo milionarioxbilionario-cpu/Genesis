@@ -35,7 +35,7 @@ router.get('/:saleId', verifyLimiter, asyncHandler(async (req, res) => {
       daily_number: true, created_at: true, total_amount: true, discount_amount: true,
       payment_method: true, status: true,
       tenant: { select: { name: true, location: true } },
-      items: { select: { product_name: true, quantity: true, unit_sell_price: true } },
+      items: { select: { product_name: true, quantity: true, unit_sell_price: true, unit: true } },
     },
   });
   if (!sale) throw httpError(404, 'Recibo não encontrado.', 'RECEIPT_NOT_FOUND');

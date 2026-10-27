@@ -107,9 +107,13 @@ try {
   ok(/10 de 10 un\./.test((await page.locator('tr', { hasText: NOVO }).first().textContent()) || ''), 'Validades: produto novo aparece (10 de 10 un.)');
   await page.screenshot({ path: path.join(SHOTS, 's4-validades.png'), fullPage: true });
 
+  // Desde a Fase 13 os avisos estao no sino (o Inicio nao repete alertas).
   await page.goto(BASE + '/app');
-  await page.getByText(/lote\(s\) perto da validade/).waitFor({ timeout: T });
-  ok(true, 'Início avisa os lotes perto da validade');
+  await page.getByRole('button', { name: /^Notificações/ }).click();
+  const bellDlg = page.getByRole('dialog', { name: 'Notificações' });
+  await bellDlg.getByText(/validade/i).first().waitFor({ timeout: T });
+  ok(true, 'o sino avisa os lotes perto da validade');
+  await page.keyboard.press('Escape');
 
   await page.goto(BASE + '/app/definicoes?tab=store');
   await page.getByLabel('Avisar com').fill('2');

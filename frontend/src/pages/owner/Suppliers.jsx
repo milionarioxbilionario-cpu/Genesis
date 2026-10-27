@@ -5,6 +5,7 @@ import useApi from '../../utils/useApi';
 import { money, dateTime, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
 import { Alert, Button, Drawer, Input, MoneyInput, PageHeader, Table, useToast } from '../../components/ui';
+import { formatQty, lineAmount } from '../../utils/units';
 
 // Especificacao 6.6: fornecedores, custo de entrega por visita (entra no
 // relatorio mensal) e historico de compras.
@@ -65,8 +66,8 @@ export default function Suppliers() {
           <ul className="divide-y divide-border">
             {entries.data.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 py-2.5">
-                <div><p className="text-ink">{e.quantity} × {e.product?.name}</p><p className="text-xs text-ink-muted">{dateTime(e.created_at)}</p></div>
-                <span className="num font-medium">{money(e.quantity * e.unit_cost)}</span>
+                <div><p className="text-ink">{formatQty(e.quantity, e.product?.unit)} × {e.product?.name}</p><p className="text-xs text-ink-muted">{dateTime(e.created_at)}</p></div>
+                <span className="num font-medium">{money(lineAmount(e.quantity, e.unit_cost, e.product?.unit))}</span>
               </li>
             ))}
           </ul>

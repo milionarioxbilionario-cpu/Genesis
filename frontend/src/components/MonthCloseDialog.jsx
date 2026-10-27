@@ -6,6 +6,7 @@ import { money, int, monthName, errorMessage } from '../utils/format';
 import { getLang } from '../i18n/core';
 import { useI18n } from '../i18n/react';
 import { Alert, Button, Dialog, KeyValue, Select, Stat, useToast } from './ui';
+import { formatQty, isMeasured } from '../utils/units';
 
 // Fecho do mes (Genesis 2.1, Fase 5.3): a partir do dia do fecho
 // (Definicoes -> Loja), o 1.o acesso do dono mostra o relatorio do mes anterior
@@ -116,7 +117,7 @@ export default function MonthCloseDialog() {
               <p className="mb-2 text-sm text-ink-muted">{t('{n} produto(s), {v} ao custo', { n: int(items.length), v: money(suggestion.total_investment) })}{supplier ? ' ' + t('+ entrega {v}', { v: money(supplier.delivery_cost_per_visit) }) : ''}.</p>
               <ul className="mb-3 divide-y divide-border rounded border border-border text-sm">
                 {items.slice(0, 6).map((i) => (
-                  <li key={i.product_id} className="flex justify-between gap-3 px-3 py-1.5"><span className="truncate text-ink-2">{i.name}</span><span className="num text-ink">{int(i.quantity)} {t('un.')}</span></li>
+                  <li key={i.product_id} className="flex justify-between gap-3 px-3 py-1.5"><span className="truncate text-ink-2">{i.name}</span><span className="num text-ink">{isMeasured(i.unit) ? formatQty(i.quantity, i.unit) : `${int(i.quantity)} ${t('un.')}`}</span></li>
                 ))}
                 {items.length > 6 && <li className="px-3 py-1.5 text-ink-muted">{t('e mais {n}…', { n: items.length - 6 })}</li>}
               </ul>

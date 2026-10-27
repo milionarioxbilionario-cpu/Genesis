@@ -4,6 +4,7 @@ import { buildEscPosReceipt, ditherToRaster } from './escpos';
 import { code128Svg, documentBarcode, documentNumber } from './code128';
 import { getDevicePrefs, sendToPrinter } from './devices';
 import { getLang, locale, t } from '../i18n/core.js';
+import { formatQty, lineAmount } from './units.js';
 
 // 9.5: recibo na lingua de quem o gera; em portugues fica igual.
 const formatCurrency = (value) => {
@@ -69,8 +70,8 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
     const unit = item.unit_sell_price || item.sell_price || 0;
     return `
     <tr>
-      <td class="name">${esc(item.product_name || t('Produto'))}<div class="sub">${esc(q)} × ${formatCurrency(unit)}</div></td>
-      <td class="amt">${formatCurrency(q * unit)}</td>
+      <td class="name">${esc(item.product_name || t('Produto'))}<div class="sub">${esc(formatQty(q, item.unit))} × ${formatCurrency(unit)}</div></td>
+      <td class="amt">${formatCurrency(lineAmount(q, unit, item.unit))}</td>
     </tr>`;
   }).join('');
 

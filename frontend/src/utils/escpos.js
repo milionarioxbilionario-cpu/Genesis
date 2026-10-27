@@ -5,6 +5,7 @@
 // Largura de 32 colunas: cabe em 58 mm e em 80 mm.
 // 9.5: na lingua de quem imprime (t do i18n); em portugues fica igual.
 import { getLang, locale, t } from '../i18n/core.js';
+import { formatQty, lineAmount } from './units.js';
 
 const ESC = 0x1b;
 const GS = 0x1d;
@@ -119,7 +120,7 @@ export function buildEscPosReceipt({ shopName, shopLocation, shopPhone, shopNuit
     const q = Number(it.quantity || 1);
     const unit = Number(it.unit_sell_price ?? it.sell_price ?? 0);
     text(it.product_name || t('Produto'));
-    text(twoCols(`  ${q} x ${mzn(unit)}`, mzn(q * unit)));
+    text(twoCols(`  ${formatQty(q, it.unit)} x ${mzn(unit)}`, mzn(lineAmount(q, unit, it.unit))));
   }
   line();
   const total = Number(sale.total_amount || 0);

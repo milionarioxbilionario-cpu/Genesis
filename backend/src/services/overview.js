@@ -16,7 +16,8 @@ const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
 
 const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.abs(before)) * 1000) / 10 : null);
-const saleProfit = (s) => s.total_amount - s.items.reduce((sum, it) => sum + it.quantity * it.unit_cost_price, 0);
+const { lineAmount } = require('../utils/units');
+const saleProfit = (s) => s.total_amount - s.items.reduce((sum, it) => sum + lineAmount(it.quantity, it.unit_cost_price, it.unit), 0);
 
 // Estado puro (testado em tests/overview.test.js).
 function cashierState({ locked, open, activityToday, lastClosing, today }) {

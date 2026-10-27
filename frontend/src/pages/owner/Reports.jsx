@@ -10,6 +10,7 @@ import { getLang, locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import SaleDrawer from '../../components/SaleDrawer';
 import { Alert, Badge, Button, Card, CardHeader, Input, KeyValue, PageHeader, Pagination, ProgressBar, Select, Skeleton, Stat, Table, Tabs, Toolbar, cx } from '../../components/ui';
+import { formatHuman, formatQty } from '../../utils/units';
 
 // Grafico sem dados: mensagem em vez de um eixo "0, 0, 0".
 function NoData() {
@@ -66,7 +67,7 @@ function ProductRanking({ title, description, rows, valueKey }) {
           columns={[
             { key: 'rank', header: '#', render: (p) => <span className="num text-ink-muted">{t('{n}.º', { n: p.rank })}</span> },
             { key: 'name', header: t('Produto') },
-            { key: 'quantity', header: t('Qtd.'), align: 'right', render: (p) => <span className={valueKey === 'quantity' ? 'font-medium' : ''}>{int(p.quantity)}</span> },
+            { key: 'quantity', header: t('Qtd.'), align: 'right', render: (p) => <span className={valueKey === 'quantity' ? 'font-medium' : ''}>{formatHuman(p.quantity, p.unit)}</span> },
             { key: 'revenue', header: t('Receita'), align: 'right', render: (p) => money(p.revenue) },
             { key: 'profit', header: t('Lucro'), align: 'right', render: (p) => <span className={valueKey === 'profit' ? 'font-medium' : ''}>{money(p.profit)}</span> },
           ]}
@@ -97,7 +98,7 @@ function Breakdown({ r }) {
       <Card>
         <CardHeader title={t('Perdas')} description={r.losses.length ? t('{n} registo(s) · {v} ao custo', { n: r.losses.length, v: money(r.losses_total) }) : undefined} />
         {r.losses.length === 0 ? <p className="text-ink-muted">{t('Nenhuma perda registada.')}</p> : r.losses.slice(0, 8).map((l) => (
-          <KeyValue key={l.id} label={`${l.quantity} × ${l.name} · ${lossReason(l.reason)}`} value={'−' + money(l.value)} tone="danger" />
+          <KeyValue key={l.id} label={`${formatQty(l.quantity, l.unit)} × ${l.name} · ${lossReason(l.reason)}`} value={'−' + money(l.value)} tone="danger" />
         ))}
       </Card>
       {r.by_category.length > 0 && (
@@ -149,7 +150,7 @@ function Restock({ data, title }) {
             { key: 'name', header: t('Produto') },
             { key: 'stock', header: t('Stock'), align: 'right', render: (i) => int(i.stock) },
             { key: 'per_day', header: t('Vende/dia'), align: 'right', render: (i) => dec(i.per_day) },
-            { key: 'quantity', header: t('Comprar'), align: 'right', render: (i) => <span className="font-medium">{int(i.quantity)}</span> },
+            { key: 'quantity', header: t('Comprar'), align: 'right', render: (i) => <span className="font-medium">{formatQty(i.quantity, i.unit)}</span> },
             { key: 'investment', header: t('Investimento'), align: 'right', render: (i) => money(i.investment) },
           ]}
           rows={data.items.slice(0, 12)}
@@ -522,11 +523,11 @@ function Monthly() {
             </Card>
             <Card>
               <CardHeader title={t('A crescer')} description={t('Mais vendidos do que no mês anterior.')} />
-              {data.trends.growing.length === 0 ? <p className="text-ink-muted">{t('Nada a crescer.')}</p> : data.trends.growing.map((x) => <KeyValue key={x.product_id} label={x.name} value={`${int(x.previous_quantity)} → ${int(x.quantity)}${x.change_pct != null ? ` (+${Math.round(x.change_pct)}%)` : ''}`} tone="positive" />)}
+              {data.trends.growing.length === 0 ? <p className="text-ink-muted">{t('Nada a crescer.')}</p> : data.trends.growing.map((x) => <KeyValue key={x.product_id} label={x.name} value={`${formatQty(x.previous_quantity, x.unit)} → ${formatQty(x.quantity, x.unit)}${x.change_pct != null ? ` (+${Math.round(x.change_pct)}%)` : ''}`} tone="positive" />)}
             </Card>
             <Card>
               <CardHeader title={t('A cair')} description={t('Menos vendidos do que no mês anterior.')} />
-              {data.trends.declining.length === 0 ? <p className="text-ink-muted">{t('Nada a cair.')}</p> : data.trends.declining.map((x) => <KeyValue key={x.product_id} label={x.name} value={`${int(x.previous_quantity)} → ${int(x.quantity)}${x.change_pct != null ? ` (${Math.round(x.change_pct)}%)` : ''}`} tone="danger" />)}
+              {data.trends.declining.length === 0 ? <p className="text-ink-muted">{t('Nada a cair.')}</p> : data.trends.declining.map((x) => <KeyValue key={x.product_id} label={x.name} value={`${formatQty(x.previous_quantity, x.unit)} → ${formatQty(x.quantity, x.unit)}${x.change_pct != null ? ` (${Math.round(x.change_pct)}%)` : ''}`} tone="danger" />)}
             </Card>
             <Card className="lg:col-span-2">
               <CardHeader title={t('Txenekas')} description={t('Novas {a} · recebidas {b} · em aberto {c}', { a: money(data.debts.new_total), b: money(data.debts.received_total), c: money(data.debts.outstanding_total) })} />

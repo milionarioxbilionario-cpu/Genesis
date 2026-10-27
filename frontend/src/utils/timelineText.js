@@ -4,6 +4,7 @@
 // antigo), fica o titulo/detalhe que o servidor mandou em portugues.
 import { money, date, timeSec } from './format.js';
 import { t } from '../i18n/core.js';
+import { formatQty } from './units.js';
 
 // Motivos das perdas (codigos do servidor; label em portugues = chave).
 export const LOSS_REASON = { broken: 'Partido', expired: 'Validade expirada', internal_consumption: 'Consumo interno', other: 'Outro' };
@@ -35,7 +36,7 @@ export function timelineDetail(e) {
     case 'sale':
     case 'cancelled': {
       if (!e.sale?.items) return e.detail;
-      const items = e.sale.items.map((it) => `${it.quantity} × ${it.product_name}`).join(', ');
+      const items = e.sale.items.map((it) => `${formatQty(it.quantity, it.unit)} × ${it.product_name}`).join(', ');
       return e.type === 'cancelled' && e.sale.cancel_reason ? items + ' · ' + t('motivo: {r}', { r: e.sale.cancel_reason }) : items;
     }
     case 'loss': return [lossReason(e.reason), e.barcode ? t('código {c}', { c: e.barcode }) : null].filter(Boolean).join(' · ');

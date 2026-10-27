@@ -27,6 +27,18 @@ addTranslations('en', {
   'PIN incorrecto.': 'Wrong PIN.',
   'Restam {n} tentativa(s).': '{n} attempt(s) left.',
   'A sua língua': 'Your language',
+  // Fase 15.5: venda ao peso
+  '{price} / {unit}': '{price} / {unit}',
+  'Mudar o peso de {name}': 'Change the weight of {name}',
+  '{price} por {unit}': '{price} per {unit}',
+  'Tirar do cesto': 'Remove from basket',
+  'Escreva um número, até 3 casas decimais (ex.: 1,250).': 'Type a number, up to 3 decimal places (e.g. 1.250).',
+  'Só há {n} em stock.': 'Only {n} in stock.',
+  'Valor': 'Amount',
+  'Peso (kg)': 'Weight (kg)',
+  'Quantidade (litros)': 'Quantity (litres)',
+  'Comprimento (metros)': 'Length (metres)',
+  'Quantidade': 'Quantity',
   // Fase 15.4: pagamento dividido e transferencia
   'Transf.': 'Transfer',
   'Cancelar divisão': 'Cancel split',

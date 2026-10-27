@@ -1930,7 +1930,46 @@ async function test37() {
   ok(leak === 0, 'RLS: outra loja nao ve as partes do pagamento', leak);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37 };
+// ---------------------------------------------------------------------------
+async function test38() {
+  section(38, 'Venda ao peso: gramas inteiras, preco por kg, stock, perdas, relatorios e recibo publico (Fase 15.5)');
+  await unlockCashier();
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  const t = ctx.tenant.id;
+  const now = new Date();
+  const day = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const created = await owner.req('POST', '/api/products', { name: 'Carne de vaca Teste', category: 'Talho', unit: 'kg', sell_price: 35000, cost_price: 25000, min_stock: 2000, lots: [{ quantity: 10000, expiry_date: null }] });
+  ok(created.status === 201, 'produto ao kg criado com 10 kg (10 000 g) de stock', created);
+  const pid = created.data.id;
+  const p0 = await prisma.product.findUnique({ where: { id: pid } });
+  ok(p0.unit === 'kg' && p0.stock_qty === 10000 && p0.min_stock === 2000, 'gravado: unidade kg, stock em gramas, minimo 2 kg', { unit: p0.unit, stock: p0.stock_qty });
+  ok((await owner.req('POST', '/api/products', { name: 'X', unit: 'saco', sell_price: 1 })).status === 400, 'unidade inventada: 400');
+  // 1,250 kg a 350 MT/kg = 437,50 MT.
+  const sale = await caixa.req('POST', '/api/sales', { items: [{ product_id: pid, quantity: 1250, unit_sell_price: 35000, unit_cost_price: 0 }], total_amount: 43750, payment_method: 'cash', amount_received: 50000 });
+  ok(sale.status === 201, 'venda de 1,250 kg por 437,50 MT: 201', sale);
+  ok((await caixa.req('POST', '/api/sales', { items: [{ product_id: pid, quantity: 1250, unit_sell_price: 35000, unit_cost_price: 0 }], total_amount: 43750000, payment_method: 'cash' })).status === 400, 'total calculado como unidades (x1000): recusado');
+  const row = await prisma.sale.findUnique({ where: { id: sale.data.id }, include: { items: true } });
+  ok(row.total_amount === 43750 && row.total_cost === 31250 && row.change_given === 6250 && row.items[0].unit === 'kg' && row.items[0].quantity === 1250, 'venda gravada: total 437,50, custo 312,50, troco 62,50, linha em kg', { total: row.total_amount, custo: row.total_cost });
+  ok((await prisma.product.findUnique({ where: { id: pid } })).stock_qty === 8750, 'stock desce 1 250 g (fica 8,75 kg)');
+  ok((await caixa.req('POST', '/api/sales', { items: [{ product_id: pid, quantity: 9000, unit_sell_price: 35000, unit_cost_price: 0 }], total_amount: 315000, payment_method: 'cash' })).status === 409, 'mais peso do que ha em stock: 409');
+  const term = await cashierTerminal();
+  const sh = await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: pid, quantity: 250, reason: 'broken' });
+  ok(sh.status === 201 || sh.status === 200, 'perda de 250 g registada', sh);
+  const d = (await owner.req('GET', '/api/owner/reports/daily?date=' + day)).data;
+  const top = (d.top_products || []).flatMap((x) => x.items || [x]).find((x) => x.product_id === pid);
+  const loss = (d.losses || []).find((l) => l.product_id === pid);
+  ok(d.gross_revenue >= 43750 && loss && loss.value === 6250 && loss.unit === 'kg', 'diario: receita conta 437,50 e a perda vale 62,50 (250 g a 250 MT/kg)', { loss });
+  ok(!top || (top.unit === 'kg' && top.quantity === 1.25), 'ranking: 1,25 kg (nao 1 250 unidades)', top);
+  const v = (await client(null).req('GET', '/api/verify/' + sale.data.id)).data;
+  ok(v.sale?.items?.[0]?.unit === 'kg' && v.sale.items[0].quantity === 1250, 'pagina publica do recibo leva a unidade (o cliente ve 1,25 kg)', v);
+  const lock = await owner.req('PATCH', '/api/products/' + pid, { unit: 'un' });
+  ok(lock.status === 409 && lock.data.code === 'UNIT_LOCKED', 'mudar a unidade com stock/vendas: 409 UNIT_LOCKED', lock);
+  const fresh = await owner.req('POST', '/api/products', { name: 'Acucar granel Teste', category: 'Mercearia', sell_price: 9000, cost_price: 7000 });
+  ok((await owner.req('PATCH', '/api/products/' + fresh.data.id, { unit: 'kg' })).status === 200 && (await prisma.product.findUnique({ where: { id: fresh.data.id } })).unit === 'kg', 'produto sem stock nem vendas: pode passar a kg');
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38 };
 
 (async () => {
   await prisma.ready();

@@ -10,6 +10,7 @@ import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
 import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Segmented, Select, Spinner, useToast } from '../../components/ui';
+import { formatQty, isMeasured, lineAmount, parseQty, qtyInput } from '../../utils/units';
 
 export function AuthorizationPinDialog({ title, description, error, onCancel, onSubmit }) {
   const { t } = useI18n();
@@ -31,6 +32,8 @@ export function AuthorizationPinDialog({ title, description, error, onCancel, on
   );
 }
 
+const MEASURE_LABEL = { kg: 'Peso (kg)', l: 'Quantidade (litros)', m: 'Comprimento (metros)' };
+
 export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   const toast = useToast();
   const { t } = useI18n();
@@ -41,12 +44,12 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
   useEffect(() => {
     QRCode.toDataURL(saleVerifyUrl(sale.id), { width: 120, margin: 1 }).then(setQr).catch(() => setQr(''));
   }, [sale.id]);
-  const subtotal = items.reduce((s, l) => s + l.quantity * l.unit_sell_price, 0);
+  const subtotal = items.reduce((s, l) => s + lineAmount(l.quantity, l.unit_sell_price, l.unit), 0);
   const [sharing, setSharing] = useState(false);
   const receiptInput = () => ({
     shopName: store.name, shopLocation: store.location, shopPhone: store.phone, shopNuit: store.nuit, footer: store.receipt_footer, logo: store.logo, cashierName: cashier.name,
     sale: { ...sale, payment_method: PAYMENT_LABEL[sale.payment_method] || sale.payment_method, payments: (sale.payments || []).map((p) => ({ method: PAYMENT_LABEL[p.method] || p.method, amount: p.amount })), created_at: sale.created_at || new Date().toISOString() },
-    items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price })),
+    items: items.map((l) => ({ product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price, unit: l.unit || 'un' })),
   });
   async function print() {
     setPrinting(true);
@@ -75,7 +78,7 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
     >
       <div className="mb-3 flex items-center gap-2 text-positive"><CheckCircle2 size={18} /><span className="font-medium">{t('Venda n.º {n}', { n: String(sale.daily_number || '').padStart(3, '0') })}</span></div>
       <div className="rounded border border-border p-3">
-        {items.map((l) => <KeyValue key={l.product_id} label={`${l.quantity} × ${l.product_name}`} value={money(l.quantity * l.unit_sell_price)} />)}
+        {items.map((l) => <KeyValue key={l.product_id} label={`${formatQty(l.quantity, l.unit)} × ${l.product_name}`} value={money(lineAmount(l.quantity, l.unit_sell_price, l.unit))} />)}
         <div className="my-1 border-t border-border" />
         {sale.discount_amount > 0 && <><KeyValue label={t('Subtotal')} value={money(subtotal)} /><KeyValue label={t('Desconto')} value={'−' + money(sale.discount_amount)} /></>}
         <KeyValue label={t('Total')} value={money(sale.total_amount)} strong />
@@ -271,7 +274,7 @@ function ProductPicker({ products, value, onChange }) {
     <div className="flex flex-col gap-2">
       <Input label={t('Produto')} placeholder={t('Pesquisar…')} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       <Select aria-label={t('Escolher produto')} value={value} onChange={(e) => onChange(e.target.value)} size={6} selectClassName="h-auto py-1">
-        {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {t('{n} un.', { n: p.stock_qty })}</option>)}
+        {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {isMeasured(p.unit) ? formatQty(p.stock_qty, p.unit) : t('{n} un.', { n: p.stock_qty })}</option>)}
       </Select>
     </div>
   );
@@ -286,12 +289,13 @@ export function ShrinkageDialog({ products, cashier, onClose, onSaved }) {
   const [quantity, setQuantity] = useState('1');
   const [reason, setReason] = useState('broken');
   const p = products.find((x) => x.id === productId);
-  const qty = Number(quantity);
+  const unit = p?.unit || 'un';
+  const qty = parseQty(quantity, unit) ?? NaN;
   async function save() {
     // seller_user_id: a fila envia-o para o caso de a sessao do caixista ja ter
     // expirado quando houver rede (caminho do cookie do terminal, posWriteAuth).
     await db.shrinkage_records.add({ id: newUuid(), product_id: productId, quantity: qty, reason, seller_user_id: cashier?.id, recorded_at: new Date().toISOString(), sync_state: SYNC_STATE.PENDING });
-    toast(t('Quebra registada: {n} × {name}.', { n: qty, name: p.name }));
+    toast(t('Quebra registada: {n} × {name}.', { n: formatQty(qty, unit), name: p.name }));
     onSaved(); onClose();
   }
   return (
@@ -300,7 +304,7 @@ export function ShrinkageDialog({ products, cashier, onClose, onSaved }) {
       <div className="flex flex-col gap-3">
         <ProductPicker products={products} value={productId} onChange={setProductId} />
         <div className="grid grid-cols-2 gap-3">
-          <Input label={t('Quantidade')} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ''))} />
+          <Input label={isMeasured(unit) ? t(MEASURE_LABEL[unit]) : t('Quantidade')} inputMode={isMeasured(unit) ? 'decimal' : 'numeric'} value={quantity} onChange={(e) => setQuantity(isMeasured(unit) ? e.target.value.replace(/[^\d.,]/g, '') : e.target.value.replace(/\D/g, ''))} />
           <Select label={t('Motivo')} value={reason} onChange={(e) => setReason(e.target.value)}>
             <option value="broken">{t('Partido')}</option>
             <option value="expired">{t('Vencido')}</option>
@@ -317,6 +321,31 @@ export function ShrinkageDialog({ products, cashier, onClose, onSaved }) {
 // perdida. Do catalogo da loja ou escrito a mao (fora do catalogo), com
 // quantidade e, se souber, o preco unitario. Guardado no terminal e enviado
 // pela fila (funciona offline).
+// Fase 15.5: teclado de peso/medida. O caixista escreve 1,25 (kg); o terminal guarda
+// 1250 gramas (inteiro) e mostra o valor da linha antes de confirmar.
+export function WeightDialog({ product, quantity = 0, onConfirm, onClose }) {
+  const { t } = useI18n();
+  const [text, setText] = useState(qtyInput(quantity, product.unit));
+  const q = parseQty(text, product.unit);
+  const over = q != null && q > (product.stock_qty || 0);
+  const valid = q != null && q > 0 && !over;
+  const submit = (e) => { e?.preventDefault(); if (valid) onConfirm(q); };
+  return (
+    <Dialog open size="sm" title={product.name} description={t('{price} por {unit}', { price: money(product.sell_price), unit: product.unit })} onClose={onClose}
+      footer={<>{quantity > 0 && <Button variant="danger-ghost" className="mr-auto" onClick={() => onConfirm(0)}>{t('Tirar do cesto')}</Button>}<Button onClick={onClose}>{t('Cancelar')}</Button><Button variant="primary" disabled={!valid} onClick={submit}>{t('Confirmar')}</Button></>}>
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        <Input autoFocus label={t(MEASURE_LABEL[product.unit] || 'Quantidade')} inputMode="decimal" value={text} onChange={(e) => setText(e.target.value)} placeholder={product.unit === 'kg' ? '0,500' : '1'} inputClassName="num text-xl" />
+        <div className="grid grid-cols-4 gap-2">
+          {[250, 500, 1000, 2000].map((v) => <Button key={v} variant="secondary" onClick={() => setText(qtyInput(v, product.unit))}>{formatQty(v, product.unit)}</Button>)}
+        </div>
+        {text && q == null && <p className="text-sm text-danger">{t('Escreva um número, até 3 casas decimais (ex.: 1,250).')}</p>}
+        {over && <p className="text-sm text-danger">{t('Só há {n} em stock.', { n: formatQty(product.stock_qty, product.unit) })}</p>}
+        <div className="flex items-baseline justify-between border-t border-border pt-3"><span className="text-base text-ink-2">{t('Valor')}</span><span className="num text-xl font-semibold text-ink">{money(lineAmount(q || 0, product.sell_price, product.unit))}</span></div>
+      </form>
+    </Dialog>
+  );
+}
+
 export function DemandDialog({ products, cashier, onClose, onSaved }) {
   const toast = useToast();
   const { t } = useI18n();
@@ -326,7 +355,8 @@ export function DemandDialog({ products, cashier, onClose, onSaved }) {
   const [quantity, setQuantity] = useState('1');
   const [unitPrice, setUnitPrice] = useState(null);
   const p = products.find((x) => x.id === productId);
-  const qty = Number(quantity);
+  const unit = p?.unit || 'un';
+  const qty = parseQty(quantity, unit) ?? NaN;
   const qtyOk = Number.isInteger(qty) && qty >= 1 && qty <= 1000;
   const nameOk = name.trim().length >= 2 && name.trim().length <= 80;
   const canSave = qtyOk && (mode === 'catalog' ? Boolean(p) : nameOk);

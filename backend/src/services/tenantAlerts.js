@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const { lineAmount } = require('../utils/units');
 const { daysUntilExpiry } = require('../utils/fefo');
 const { tr } = require('../utils/lang');
 
@@ -10,7 +11,7 @@ async function getTenantAlertSnapshot(tenantId, now = new Date()) {
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { expiry_alert_days: true } }),
     prisma.stockLot.findMany({
       where: { tenant_id: tenantId, quantity_remaining: { gt: 0 }, expiry_date: { not: null } },
-      include: { product: { select: { name: true, barcode: true, stock_qty: true, is_active: true } } },
+      include: { product: { select: { name: true, barcode: true, stock_qty: true, is_active: true, unit: true } } },
       orderBy: { expiry_date: 'asc' },
     }),
   ]);
@@ -28,7 +29,8 @@ async function getTenantAlertSnapshot(tenantId, now = new Date()) {
       product_stock: l.product?.stock_qty ?? null,
       expiry_date: l.expiry_date,
       days_left: daysUntilExpiry(l.expiry_date, now),
-      value: l.quantity_remaining * l.unit_cost,
+      unit: l.product?.unit || 'un',
+      value: lineAmount(l.quantity_remaining, l.unit_cost, l.product?.unit),
     }))
     .filter((l) => l.days_left <= alertDays);
   const expiredProducts = expiringLots.filter((l) => l.days_left < 0);

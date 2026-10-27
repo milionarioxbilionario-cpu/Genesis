@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { preloadReceiptPdf, printReceipt, shareReceiptImage } from '../utils/receiptPrinter';
 import PdfReadyDialog from './PdfReadyDialog';
 import { money, dateTime, timeSec, PAYMENT_LABEL } from '../utils/format';
+import { formatQty, lineAmount } from '../utils/units';
 import { useI18n } from '../i18n/react';
 import api from '../utils/api';
 
@@ -63,7 +64,7 @@ export default function SaleDrawer({ sale, onClose }) {
               <p>{t('Motivo:')} {sale.cancel_reason || '—'}</p>
             </div>
           )}
-          {sale.items.map((it) => <KeyValue key={it.id} label={`${it.quantity} × ${it.product_name}`} value={money(it.quantity * it.unit_sell_price)} />)}
+          {sale.items.map((it) => <KeyValue key={it.id} label={`${formatQty(it.quantity, it.unit)} × ${it.product_name}`} value={money(lineAmount(it.quantity, it.unit_sell_price, it.unit))} />)}
           <div className="my-2 border-t border-border" />
           {sale.discount_amount > 0 && <KeyValue label={t('Desconto')} value={'−' + money(sale.discount_amount)} />}
           <KeyValue label={t('Total')} value={money(sale.total_amount)} strong />

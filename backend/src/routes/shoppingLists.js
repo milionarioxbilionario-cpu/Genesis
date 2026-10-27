@@ -38,6 +38,14 @@ async function supplierOf(tid, supplierId) {
   return s;
 }
 
+// Fase 15.5: junta a unidade do produto a cada linha (kg/l/m = quantidade em milesimos).
+async function withUnits(tid, items) {
+  const ids = [...new Set(items.map((i) => i.product_id))];
+  const units = ids.length ? await prisma.product.findMany({ where: { tenant_id: tid, id: { in: ids } }, select: { id: true, unit: true } }) : [];
+  const byId = new Map(units.map((p) => [p.id, p.unit || 'un']));
+  return items.map((i) => ({ ...i, unit: byId.get(i.product_id) || 'un' }));
+}
+
 // Valida os produtos (todos desta loja e activos) e fixa nome e custo.
 async function resolveItems(tid, items) {
   const ids = [...new Set(items.map((i) => i.product_id))];
@@ -53,7 +61,8 @@ async function resolveItems(tid, items) {
 
 async function withTotals(tid, list) {
   const supplier = list.supplier_id ? await prisma.supplier.findFirst({ where: { id: list.supplier_id, tenant_id: tid } }) : null;
-  return { ...list, supplier: supplier ? { id: supplier.id, name: supplier.name, phone: supplier.phone, delivery_cost_per_visit: supplier.delivery_cost_per_visit } : null, totals: listTotals(list.items, supplier) };
+  const items = await withUnits(tid, list.items);
+  return { ...list, items, supplier: supplier ? { id: supplier.id, name: supplier.name, phone: supplier.phone, delivery_cost_per_visit: supplier.delivery_cost_per_visit } : null, totals: listTotals(items, supplier) };
 }
 
 async function ownList(req) {
@@ -75,9 +84,12 @@ router.get('/', asyncHandler(async (req, res) => {
     prisma.supplier.findMany({ where: { tenant_id: tid } }),
   ]);
   const byId = new Map(suppliers.map((s) => [s.id, s]));
+  const unitItems = await withUnits(tid, lists.flatMap((l) => l.items));
+  const unitOf = new Map(unitItems.map((i) => [i.product_id, i.unit]));
   res.json(lists.map((l) => {
     const s = l.supplier_id ? byId.get(l.supplier_id) : null;
-    return { id: l.id, name: l.name, status: l.status, supplier_id: l.supplier_id, supplier_name: s?.name || null, created_at: l.created_at, updated_at: l.updated_at, item_count: l.items.length, totals: listTotals(l.items, s) };
+    const items = l.items.map((i) => ({ ...i, unit: unitOf.get(i.product_id) || 'un' }));
+    return { id: l.id, name: l.name, status: l.status, supplier_id: l.supplier_id, supplier_name: s?.name || null, created_at: l.created_at, updated_at: l.updated_at, item_count: l.items.length, totals: listTotals(items, s) };
   }));
 }));
 
@@ -134,7 +146,7 @@ router.get('/:id/whatsapp', asyncHandler(async (req, res) => {
     prisma.tenant.findUnique({ where: { id: tid }, select: { name: true } }),
     list.supplier_id ? prisma.supplier.findFirst({ where: { id: list.supplier_id, tenant_id: tid } }) : null,
   ]);
-  const text = orderMessage({ storeName: tenant?.name, supplierName: supplier?.name, items: list.items, lang: reqLang(req) });
+  const text = orderMessage({ storeName: tenant?.name, supplierName: supplier?.name, items: await withUnits(tid, list.items), lang: reqLang(req) });
   res.json({ text, url: whatsappLink(supplier?.phone, text), has_phone: Boolean(waPhone(supplier?.phone)) });
 }));
 

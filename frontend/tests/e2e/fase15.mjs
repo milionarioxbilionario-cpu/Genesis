@@ -100,6 +100,9 @@ try {
 
   // Terminal: a venda imprime o recibo novo (PDF guardado no aparelho).
   await owner.request.post(BASE + '/api/lock/unlock', { data: { pin: fx.lockPin } });
+  // 15.5: produto ao kg (antes de o terminal carregar o catálogo).
+  const kg = await owner.request.post(BASE + '/api/products', { data: { name: 'Carne de vaca', category: 'Talho', unit: 'kg', sell_price: 35000, cost_price: 25000, min_stock: 2000, lots: [{ quantity: 10000, expiry_date: null }] } });
+  ok(kg.status() === 201, 'produto ao kg criado (10 kg)', kg.status());
   const code = await (await owner.request.post(BASE + '/api/owner/terminals/pairing-code', { data: { name: 'Balcão recibo' } })).json();
   const tctx = await browser.newContext({ locale: 'pt-PT', viewport: { width: 1280, height: 800 }, acceptDownloads: true });
   const term = await tctx.newPage();
@@ -140,6 +143,21 @@ try {
     ok(buf.slice(1, 4).toString() === 'PNG' && w === 1176 && h > 1500, 'PNG nítido (1176 px de largura) e com altura do talão', { w, h });
   }
   ok(await term.getByText('Imagem do recibo guardada').isVisible().catch(() => false), 'aviso: enviar a imagem ao cliente pelo WhatsApp');
+
+  // 15.5: venda ao peso — 1,25 kg de carne a 350 MT/kg = 437,50 MT.
+  await term.getByRole('button', { name: 'Nova venda' }).click();
+  const meat = term.getByRole('button', { name: /Carne de vaca/ });
+  ok(/10 kg/.test(await meat.innerText()), 'cartão do produto mostra o stock em kg', await meat.innerText());
+  await meat.click();
+  const wd = term.getByRole('dialog');
+  await wd.getByLabel('Peso (kg)').fill('1,25');
+  ok(/437,50/.test(await wd.innerText()), 'teclado de peso: mostra o valor (437,50 MT) antes de confirmar');
+  await shot(term, '15-terminal-peso');
+  await wd.getByRole('button', { name: 'Confirmar' }).click();
+  ok(await term.getByRole('button', { name: /Mudar o peso de Carne de vaca/ }).innerText() === '1,25 kg', 'cesto: linha com 1,25 kg');
+  await term.getByRole('button', { name: /Cobrar 437,50 MT/ }).click();
+  await term.getByText('Venda registada').waitFor({ timeout: T });
+  ok(/1,25 kg × Carne de vaca\s+437,50/.test(await term.getByRole('dialog').innerText()), 'recibo no ecrã: «1,25 kg × Carne de vaca 437,50 MT»');
 
   // 15.4: pagamento dividido — 20 MT por M-Pesa, o resto (25 MT) em dinheiro, cliente da 50.
   await term.getByRole('button', { name: 'Nova venda' }).click();

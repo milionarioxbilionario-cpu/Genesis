@@ -6,6 +6,7 @@ import { money, int, date, errorMessage } from '../../utils/format';
 import { locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import { Alert, Badge, Button, Drawer, IconButton, Input, KeyValue, Select, Table, Toolbar, useConfirm, useToast } from '../../components/ui';
+import { formatQty, isMeasured, lineAmount, parseQty, qtyInput } from '../../utils/units';
 
 // Lista de compras (Produtos -> Lista de compras): gerada da recomendacao de
 // restock ou feita a mao, guardada e enviada ao fornecedor por WhatsApp.
@@ -27,14 +28,14 @@ export default function ShoppingLists({ products }) {
   const [addId, setAddId] = useState('');
   const active = (products.data || []).filter((p) => p.is_active);
   const supplier = (suppliers.data || []).find((s) => s.id === editing?.supplier_id);
-  const investment = (editing?.items || []).reduce((s, it) => s + it.quantity * it.unit_cost, 0);
+  const investment = (editing?.items || []).reduce((s, it) => s + lineAmount(it.quantity, it.unit_cost, it.unit), 0);
   const delivery = supplier?.delivery_cost_per_visit || 0;
   const readOnly = editing?.status === 'received';
   const statusLabel = (s) => (STATUS[s] ? t(STATUS[s].label) : s);
 
   async function suggestion(d) {
     const r = await api.get('/api/shopping-lists/suggestion?days=' + d);
-    return r.data.items.map((i) => ({ product_id: i.product_id, product_name: i.name, quantity: i.quantity, unit_cost: i.unit_cost, reason: i.reason }));
+    return r.data.items.map((i) => ({ product_id: i.product_id, product_name: i.name, quantity: i.quantity, unit: i.unit || 'un', unit_cost: i.unit_cost, reason: i.reason }));
   }
   async function openNew(fromSuggestion) {
     setError(''); setAddId('');
@@ -51,7 +52,7 @@ export default function ShoppingLists({ products }) {
     setError(''); setAddId('');
     try {
       const r = await api.get('/api/shopping-lists/' + row.id);
-      setEditing({ ...r.data, supplier_id: r.data.supplier_id || '', items: r.data.items.map(({ product_id, product_name, quantity, unit_cost }) => ({ product_id, product_name, quantity, unit_cost })) });
+      setEditing({ ...r.data, supplier_id: r.data.supplier_id || '', items: r.data.items.map(({ product_id, product_name, quantity, unit_cost, unit }) => ({ product_id, product_name, quantity, unit_cost, unit: unit || 'un' })) });
     } catch (err) { setError(errorMessage(err)); }
   }
   const setItem = (id, patch) => setEditing((e) => ({ ...e, items: e.items.map((it) => (it.product_id === id ? { ...it, ...patch } : it)) }));
@@ -162,10 +163,10 @@ export default function ShoppingLists({ products }) {
                     <li key={it.product_id} className="flex items-center gap-3 px-3 py-2">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-ink">{it.product_name}</p>
-                        <p className="num text-xs text-ink-muted">{money(it.unit_cost)} × {int(it.quantity)} = {money(it.unit_cost * it.quantity)}{it.reason === 'pedido por clientes sem stock' ? ' · ' + t('pedido por clientes') : ''}</p>
+                        <p className="num text-xs text-ink-muted">{money(it.unit_cost)} × {formatQty(it.quantity, it.unit)} = {money(lineAmount(it.quantity, it.unit_cost, it.unit))}{it.reason === 'pedido por clientes sem stock' ? ' · ' + t('pedido por clientes') : ''}</p>
                       </div>
                       <Input aria-label={t('Quantidade de {name}', { name: it.product_name })} inputMode="numeric" className="w-20" inputClassName="num text-right" disabled={readOnly}
-                        value={it.quantity ? String(it.quantity) : ''} onChange={(e) => setItem(it.product_id, { quantity: Number(e.target.value.replace(/\D/g, '').slice(0, 5)) || 0 })} />
+                        value={it.qty_text ?? qtyInput(it.quantity, it.unit)} onChange={(e) => { const v = isMeasured(it.unit) ? e.target.value.replace(/[^\d.,]/g, '').slice(0, 9) : e.target.value.replace(/\D/g, '').slice(0, 5); setItem(it.product_id, { qty_text: v, quantity: parseQty(v, it.unit) || 0 }); }} />
                       {!readOnly && <IconButton label={t('Tirar {name}', { name: it.product_name })} icon={X} size="sm" onClick={() => setEditing((e) => ({ ...e, items: e.items.filter((x) => x.product_id !== it.product_id) }))} />}
                     </li>
                   ))}

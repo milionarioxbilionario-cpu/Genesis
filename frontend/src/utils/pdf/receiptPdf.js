@@ -10,6 +10,7 @@ import { moneyExact as money } from '../format';
 import { code128Bars, documentBarcode, documentNumber } from '../code128';
 import { pdfText, safeFileName, dmy, hms } from './text';
 import { getLang, locale, t } from '../../i18n/core.js';
+import { formatQty, lineAmount } from '../units.js';
 
 // 9.5: na lingua de quem gera o recibo; em portugues fica igual (data pt-MZ).
 const receiptLocale = () => (getLang() === 'pt' ? 'pt-MZ' : locale());
@@ -67,7 +68,7 @@ function render(doc, { shopName, shopLocation, shopPhone, shopNuit, footer, logo
     body: (items || []).map((i) => {
       const unit = Number(i.unit_sell_price || i.sell_price || 0);
       const q = Number(i.quantity || 1);
-      return [`${pdfText(i.product_name || t('Produto'))}\n${q} x ${pdfText(money(unit))}`, pdfText(money(q * unit))];
+      return [`${pdfText(i.product_name || t('Produto'))}\n${pdfText(formatQty(q, i.unit))} x ${pdfText(money(unit))}`, pdfText(money(lineAmount(q, unit, i.unit)))];
     }),
     theme: 'plain',
     styles: { fontSize: 8, cellPadding: { top: 1.2, bottom: 1.2, left: 0, right: 0 }, textColor: INK, lineColor: [200, 200, 200], lineWidth: { bottom: 0.15 } },

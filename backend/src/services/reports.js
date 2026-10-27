@@ -18,6 +18,7 @@ const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.a
 // 'mobile_money' (antes de separar M-Pesa e e-Mola) so aparece se houver vendas.
 const PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'transfer'];
 const { totalsByMethod } = require('../utils/salePayments');
+const { lineAmount, humanQty, qtyText, scaleOf } = require('../utils/units');
 const dayKey = (d) => {
   const x = new Date(d);
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
@@ -38,7 +39,7 @@ async function summarize(tenantId, start, end) {
     prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'cancelled', created_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { created_at: 'desc' } }),
     prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' } }),
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true, sell_price: true } } }, orderBy: { requested_at: 'asc' } }),
-    prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true } } }, orderBy: { recorded_at: 'desc' } }),
+    prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } } }, orderBy: { recorded_at: 'desc' } }),
   ]);
 
   const byPayment = Object.fromEntries(PAYMENT_METHODS.map((m) => [m, 0]));
@@ -56,15 +57,16 @@ async function summarize(tenantId, start, end) {
     const d = byDay.get(k) || { date: k, revenue: 0, sales: 0, gross_profit: 0, losses: 0 };
     d.revenue += s.total_amount; d.sales += 1; byDay.set(k, d);
     // Lucro bruto por venda = total (ja com desconto) - custo gravado na venda.
-    d.gross_profit += s.total_amount - s.items.reduce((sum, it) => sum + it.quantity * it.unit_cost_price, 0);
+    d.gross_profit += s.total_amount - s.items.reduce((sum, it) => sum + lineAmount(it.quantity, it.unit_cost_price, it.unit), 0);
     const c = cashiers.get(s.cashier_user_id) || { cashier_id: s.cashier_user_id, name: s.cashier?.name || '—', sales: 0, revenue: 0 };
     c.sales += 1; c.revenue += s.total_amount; cashiers.set(s.cashier_user_id, c);
     for (const it of s.items) {
-      const line = it.quantity * it.unit_sell_price;
-      const lineCost = it.quantity * it.unit_cost_price;
+      const line = lineAmount(it.quantity, it.unit_sell_price, it.unit);
+      const lineCost = lineAmount(it.quantity, it.unit_cost_price, it.unit);
       cogs += lineCost;
-      const p = products.get(it.product_id) || { product_id: it.product_id, name: it.product_name, quantity: 0, revenue: 0, profit: 0 };
-      p.quantity += it.quantity; p.revenue += line; p.profit += line - lineCost; products.set(it.product_id, p);
+      // Fase 15.5: quantidade «humana» (unidades ou kg/l/m) para o ranking nao misturar gramas com unidades.
+      const p = products.get(it.product_id) || { product_id: it.product_id, name: it.product_name, unit: it.unit || 'un', quantity: 0, revenue: 0, profit: 0 };
+      p.quantity = Math.round((p.quantity + humanQty(it.quantity, it.unit)) * 1000) / 1000; p.revenue += line; p.profit += line - lineCost; products.set(it.product_id, p);
     }
   }
 
@@ -84,7 +86,7 @@ async function summarize(tenantId, start, end) {
   // antigos sem custo usam o custo actual do produto.
   const losses = shrinkage.map((r) => {
     const unit = r.unit_cost ?? r.product?.cost_price ?? 0;
-    return { id: r.id, product_id: r.product_id, name: r.product?.name || '—', barcode: r.product?.barcode || null, quantity: r.quantity, reason: r.reason, reason_label: SHRINK_REASON[r.reason] || r.reason, value: r.quantity * unit, recorded_at: r.recorded_at, lot_id: r.lot_id || null };
+    return { id: r.id, product_id: r.product_id, name: r.product?.name || '—', barcode: r.product?.barcode || null, quantity: r.quantity, reason: r.reason, reason_label: SHRINK_REASON[r.reason] || r.reason, unit: r.product?.unit || 'un', value: lineAmount(r.quantity, unit, r.product?.unit), recorded_at: r.recorded_at, lot_id: r.lot_id || null };
   });
   for (const l of losses) {
     const k = dayKey(l.recorded_at);
@@ -139,7 +141,7 @@ async function revenueBetween(tenantId, start, end) {
 async function restockFor(tenantId, end, coverDays, windowDays = 28) {
   const from = new Date(end.getTime() - windowDays * 86400000);
   const [products, items, demand] = await Promise.all([
-    prisma.product.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, stock_qty: true, cost_price: true, created_at: true } }),
+    prisma.product.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, stock_qty: true, cost_price: true, unit: true, created_at: true } }),
     prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: from, lte: end } } }, select: { product_id: true, quantity: true } }),
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: { gte: from, lte: end } }, select: { product_id: true, quantity: true } }),
   ]);
@@ -147,7 +149,9 @@ async function restockFor(tenantId, end, coverDays, windowDays = 28) {
   for (const it of items) soldByProduct[it.product_id] = (soldByProduct[it.product_id] || 0) + it.quantity;
   const lostByProduct = {};
   // Unidades pedidas (registos antigos = 1). Fora do catalogo nao entra: nao ha produto para comprar.
-  for (const d of demand) if (d.product_id) lostByProduct[d.product_id] = (lostByProduct[d.product_id] || 0) + (d.quantity || 1);
+  // Fase 15.5: um pedido de um produto a peso conta 1 kg/l/m (na escala do produto).
+  const scaleById = new Map(products.map((p) => [p.id, scaleOf(p.unit)]));
+  for (const d of demand) if (d.product_id) lostByProduct[d.product_id] = (lostByProduct[d.product_id] || 0) + (d.quantity || 1) * (scaleById.get(d.product_id) || 1);
   return recommendRestock({ products, soldByProduct, lostByProduct, windowDays, coverDays, now: end });
 }
 
@@ -260,7 +264,7 @@ async function monthlyReport(tenantId, year, month) {
     prisma.supplier.findMany({ where: { tenant_id: tenantId } }),
     prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: { gte: start, lte: end } }, select: { supplier_id: true, created_at: true } }),
     prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: historyStart, lte: end } }, select: { total_amount: true, created_at: true } }),
-    prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: prevStart, lte: prevEnd } } }, select: { product_id: true, product_name: true, quantity: true, unit_sell_price: true, unit_cost_price: true } }),
+    prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: prevStart, lte: prevEnd } } }, select: { product_id: true, product_name: true, quantity: true, unit_sell_price: true, unit_cost_price: true, unit: true } }),
     debtsSummary(tenantId, start, end),
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     restockFor(tenantId, end < new Date() ? end : new Date(), 30),
@@ -272,7 +276,7 @@ async function monthlyReport(tenantId, year, month) {
 
   // Mes anterior: receita e lucro bruto, para comparar.
   const prevRevenue = history.filter((s) => s.created_at >= prevStart && s.created_at <= prevEnd).reduce((s, x) => s + x.total_amount, 0);
-  const prevGross = prevRevenue - prevItems.reduce((s, it) => s + it.quantity * it.unit_cost_price, 0);
+  const prevGross = prevRevenue - prevItems.reduce((s, it) => s + lineAmount(it.quantity, it.unit_cost_price, it.unit), 0);
 
   // Semanas do mes (1-7, 8-14, 15-21, 22-28, 29-fim).
   const days = fillDays(report.by_day, start, end);
@@ -287,14 +291,14 @@ async function monthlyReport(tenantId, year, month) {
   // Tendencias: quantidade vendida por produto vs mes anterior.
   const prevQty = new Map();
   for (const it of prevItems) prevQty.set(it.product_id, (prevQty.get(it.product_id) || 0) + it.quantity);
-  const allNow = await prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: start, lte: end } } }, select: { product_id: true, product_name: true, quantity: true } });
+  const allNow = await prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: start, lte: end } } }, select: { product_id: true, product_name: true, quantity: true, unit: true } });
   const nowQty = new Map();
-  for (const it of allNow) { const e = nowQty.get(it.product_id) || { name: it.product_name, qty: 0 }; e.qty += it.quantity; nowQty.set(it.product_id, e); }
+  for (const it of allNow) { const e = nowQty.get(it.product_id) || { name: it.product_name, unit: it.unit || 'un', qty: 0 }; e.qty += it.quantity; nowQty.set(it.product_id, e); }
   const trends = [];
   for (const id of new Set([...nowQty.keys(), ...prevQty.keys()])) {
     const now = nowQty.get(id)?.qty || 0; const before = prevQty.get(id) || 0;
     const name = nowQty.get(id)?.name || prevItems.find((x) => x.product_id === id)?.product_name || '—';
-    trends.push({ product_id: id, name, quantity: now, previous_quantity: before, change: now - before, change_pct: pctChange(now, before) });
+    trends.push({ product_id: id, name, unit: nowQty.get(id)?.unit || prevItems.find((x) => x.product_id === id)?.unit || 'un', quantity: now, previous_quantity: before, change: now - before, change_pct: pctChange(now, before) });
   }
   trends.sort((a, b) => b.change - a.change);
   // Fase 15.2: impostos conforme o regime da loja. IVA: so o que fica para entregar
@@ -354,8 +358,8 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
     want('sale') || want('cancelled')
       ? prisma.sale.findMany({ where: { tenant_id: tenantId, created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true, cashier: { select: { id: true, name: true } } } })
       : none,
-    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true } }, recordedBy: { select: { name: true } } } }) : none,
-    want('stock') ? prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: range }, include: { product: { select: { name: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('stock') ? prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: range }, include: { product: { select: { name: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
     want('debt') ? prisma.debt.findMany({ where: { tenant_id: tenantId, created_at: range } }) : none,
     want('debt_payment') ? prisma.debtPayment.findMany({ where: { paid_at: range, debt: { tenant_id: tenantId } }, include: { debt: { select: { debtor_name: true } } } }) : none,
     want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } } }) : none,
@@ -371,14 +375,14 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
 
   const events = [];
   for (const s of sales) {
-    const cost = s.items.reduce((sum, it) => sum + it.quantity * it.unit_cost_price, 0);
+    const cost = s.items.reduce((sum, it) => sum + lineAmount(it.quantity, it.unit_cost_price, it.unit), 0);
     const cancelled = s.status === 'cancelled';
     events.push({
       id: 'sale-' + s.id, type: cancelled ? 'cancelled' : 'sale', at: s.created_at,
       effect: cancelled ? 'info' : 'gain', amount: cancelled ? 0 : s.total_amount, profit: cancelled ? 0 : s.total_amount - cost,
       title: (cancelled ? 'Venda cancelada n.º ' : 'Venda n.º ') + String(s.daily_number || '').padStart(3, '0'),
       who: s.cashier?.name || '—',
-      detail: s.items.map((it) => `${it.quantity} × ${it.product_name}`).join(', ') + (cancelled && s.cancel_reason ? ` · motivo: ${s.cancel_reason}` : ''),
+      detail: s.items.map((it) => `${qtyText(it.quantity, it.unit)} × ${it.product_name}`).join(', ') + (cancelled && s.cancel_reason ? ` · motivo: ${s.cancel_reason}` : ''),
       discount: s.discount_amount || 0,
       sale: { ...s, cashier: s.cashier },
     });
@@ -387,20 +391,20 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
     const unit = l.unit_cost ?? l.product?.cost_price ?? 0;
     const expiry = l.lot_id ? lotExpiry.get(l.lot_id) : null;
     events.push({
-      id: 'loss-' + l.id, type: 'loss', at: l.recorded_at, effect: 'loss', amount: -(l.quantity * unit), profit: -(l.quantity * unit),
-      title: `Perda: ${l.quantity} × ${l.product?.name || '—'}`,
+      id: 'loss-' + l.id, type: 'loss', at: l.recorded_at, effect: 'loss', amount: -lineAmount(l.quantity, unit, l.product?.unit), profit: -lineAmount(l.quantity, unit, l.product?.unit),
+      title: `Perda: ${qtyText(l.quantity, l.product?.unit)} × ${l.product?.name || '—'}`,
       who: l.reason === 'expired' ? 'Genesis (automático)' : (l.recordedBy?.name || '—'),
       detail: [SHRINK_REASON[l.reason] || l.reason, l.product?.barcode ? `código ${l.product.barcode}` : null].filter(Boolean).join(' · '),
       unit_cost: unit,
       reason: l.reason, barcode: l.product?.barcode || null, expiry_date: expiry || null,
       // Dados para o ecra montar o texto na lingua de quem ve (Fase 9.4).
-      quantity: l.quantity, product_name: l.product?.name || null, auto: l.reason === 'expired',
+      quantity: l.quantity, unit: l.product?.unit || 'un', product_name: l.product?.name || null, auto: l.reason === 'expired',
     });
   }
   for (const e of entries) {
     events.push({
-      id: 'stock-' + e.id, type: 'stock', at: e.created_at, effect: 'info', amount: e.quantity * e.unit_cost, profit: 0,
-      title: (e.quantity >= 0 ? 'Entrada de stock: ' : 'Ajuste de stock: ') + `${e.quantity > 0 ? '+' : ''}${e.quantity} × ${e.product?.name || '—'}`,
+      id: 'stock-' + e.id, type: 'stock', at: e.created_at, effect: 'info', amount: lineAmount(e.quantity, e.unit_cost, e.product?.unit), profit: 0, unit: e.product?.unit || 'un',
+      title: (e.quantity >= 0 ? 'Entrada de stock: ' : 'Ajuste de stock: ') + `${e.quantity > 0 ? '+' : ''}${qtyText(e.quantity, e.product?.unit)} × ${e.product?.name || '—'}`,
       who: e.recordedBy?.name || '—',
       detail: e.supplier_id ? `fornecedor ${supplierName.get(e.supplier_id) || '—'}` : (e.quantity >= 0 ? 'sem fornecedor' : 'ajuste do dono'),
       unit_cost: e.unit_cost,

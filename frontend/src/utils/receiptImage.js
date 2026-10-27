@@ -8,6 +8,7 @@ import { moneyExact as money } from './format.js';
 import { code128Bars, documentBarcode, documentNumber } from './code128.js';
 import { safeFileName, dmy, hms } from './pdf/text.js';
 import { getLang, locale, t } from '../i18n/core.js';
+import { formatQty, lineAmount } from './units.js';
 
 export const CARD_W = 360; // largura do talao em px de desenho
 const PAD = 22; // margem interior do talao
@@ -113,9 +114,9 @@ export function drawReceipt(ctx, input, images = {}, cardHeight = 4000) {
     const unit = Number(it.unit_sell_price || it.sell_price || 0);
     ctx.font = `500 14px ${FONT}`;
     const lines = wrapText(ctx, it.product_name || t('Produto'), inner - 110);
-    text(money(q * unit), R, y, { size: 14, weight: 700, align: 'right' });
+    text(money(lineAmount(q, unit, it.unit)), R, y, { size: 14, weight: 700, align: 'right' });
     for (const ln of lines) { text(ln, L, y, { size: 14, weight: 500 }); y += 18; }
-    text(`${q} × ${money(unit)}`, L, y - 2, { size: 12, color: MUTED }); y += 12;
+    text(`${formatQty(q, it.unit)} × ${money(unit)}`, L, y - 2, { size: 12, color: MUTED }); y += 12;
     rule(y, { dashed: true }); y += 22;
   }
 

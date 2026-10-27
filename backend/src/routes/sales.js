@@ -11,6 +11,7 @@ const { normalizePaymentMethod } = require('../utils/paymentMethods');
 const { addLot, consumeLots } = require('../utils/stockLots');
 const { productVatRate, saleVat } = require('../services/tax');
 const { splitPayment } = require('../utils/salePayments');
+const { lineAmount } = require('../utils/units');
 const rateLimit = require('express-rate-limit');
 
 const saleSchema = z.object({
@@ -201,12 +202,14 @@ router.post('/', async (req, res) => {
          quantity: item.quantity,
          unit_sell_price: item.unit_sell_price,
          unit_cost_price: product.cost_price,
+         // Fase 15.5: unidade no momento da venda (kg/l/m: quantidade em milesimos).
+         unit: product.unit || 'un',
          product_vat_rate: product.vat_rate
        };
      });
 
-     const subtotal = saleItems.reduce((sum, item) => sum + item.quantity * item.unit_sell_price, 0);
-     const totalCost = saleItems.reduce((sum, item) => sum + item.quantity * item.unit_cost_price, 0);
+     const subtotal = saleItems.reduce((sum, item) => sum + lineAmount(item.quantity, item.unit_sell_price, item.unit), 0);
+     const totalCost = saleItems.reduce((sum, item) => sum + lineAmount(item.quantity, item.unit_cost_price, item.unit), 0);
 
      const discountAmount = Number(data.discount_amount || 0);
      if (discountAmount > subtotal) {
@@ -240,7 +243,7 @@ router.post('/', async (req, res) => {
      // cada linha no momento da venda; sem IVA (ou ISPC) fica 0 e a taxa vazia.
      const withVat = tenantPolicy?.vat_mode === 'iva';
      const vatRates = saleItems.map((item) => (withVat ? productVatRate(item.product_vat_rate) : null));
-     const vat = withVat ? saleVat(saleItems.map((item, i) => ({ gross: item.quantity * item.unit_sell_price, rate: vatRates[i] })), discountAmount) : { vat_amount: 0 };
+     const vat = withVat ? saleVat(saleItems.map((item, i) => ({ gross: lineAmount(item.quantity, item.unit_sell_price, item.unit), rate: vatRates[i] })), discountAmount) : { vat_amount: 0 };
      saleItems.forEach((item, i) => { delete item.product_vat_rate; item.vat_rate = vatRates[i]; });
      if (totalAmount !== Number(data.total_amount)) {
        const totalError = new Error(`Total da venda inconsistente (esperado ${totalAmount})`);

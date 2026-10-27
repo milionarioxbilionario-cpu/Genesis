@@ -7,7 +7,8 @@ import { money, int, date, dateTime, errorMessage } from '../../utils/format';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import ShoppingLists from './ShoppingLists';
-import ProductDrawer, { EMPTY_PRODUCT, LotRows, emptyLot, filledLots } from './ProductDrawer';
+import ProductDrawer, { EMPTY_PRODUCT, LotRows, emptyLot, filledLots, lotQty, qtyLabel } from './ProductDrawer';
+import { formatQty, isMeasured, parseQty } from '../../utils/units';
 import { Alert, Badge, Button, Drawer, Input, MoneyInput, PageHeader, ProductImage, Segmented, Select, Table, Tabs, Toolbar, useToast } from '../../components/ui';
 
 const stockTone = (p) => (p.stock_qty <= 0 ? 'danger' : p.stock_qty <= 10 ? 'danger' : p.stock_qty <= 20 ? 'warning' : p.stock_qty <= (p.min_stock || 0) ? 'warning' : 'neutral');
@@ -43,10 +44,10 @@ function Catalog({ products }) {
   const columns = [
     { key: 'name', header: t('Produto'), render: (p) => <div className="flex items-center gap-3"><ProductImage product={p} size={36} /><div><p className="text-ink">{p.name}</p>{p.barcode && <p className="num text-xs text-ink-muted">{p.barcode}</p>}</div></div> },
     { key: 'category', header: t('Categoria'), render: (p) => <span className="text-ink-2">{p.category}</span> },
-    { key: 'sell', header: t('Preço'), align: 'right', render: (p) => money(p.sell_price) },
+    { key: 'sell', header: t('Preço'), align: 'right', render: (p) => (isMeasured(p.unit) ? `${money(p.sell_price)} / ${p.unit}` : money(p.sell_price)) },
     { key: 'cost', header: t('Custo'), align: 'right', render: (p) => <span className="text-ink-2">{money(p.cost_price)}</span> },
     { key: 'margin', header: t('Margem'), align: 'right', render: (p) => (p.sell_price > 0 ? <span className={p.sell_price <= p.cost_price ? 'text-danger' : 'text-ink-2'}>{Math.round(((p.sell_price - p.cost_price) / p.sell_price) * 100)}%</span> : '—') },
-    { key: 'stock', header: t('Stock'), align: 'right', render: (p) => <Badge tone={stockTone(p)}>{int(p.stock_qty)}</Badge> },
+    { key: 'stock', header: t('Stock'), align: 'right', render: (p) => <Badge tone={stockTone(p)}>{isMeasured(p.unit) ? qtyLabel(p.stock_qty, p.unit, t) : int(p.stock_qty)}</Badge> },
   ];
 
   return (
@@ -89,9 +90,10 @@ function Stock({ products }) {
   const product = active.find((p) => p.id === form.product_id);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const addLots = filledLots(form.lots);
-  const addTotal = addLots.reduce((s, l) => s + Number(l.quantity), 0);
-  const removeQty = Number(form.quantity) || 0;
+  const unit = product?.unit || 'un';
+  const addLots = filledLots(form.lots, unit);
+  const addTotal = addLots.reduce((s, l) => s + lotQty(l, unit), 0);
+  const removeQty = parseQty(form.quantity, unit) || 0;
   const canSave = product && (form.op === 'add'
     ? addTotal > 0 && (!product.has_expiry || addLots.every((l) => l.expiry_date))
     : removeQty > 0 && removeQty <= product.stock_qty && form.reason.trim().length >= 3);
@@ -114,12 +116,12 @@ function Stock({ products }) {
       if (form.op === 'add') {
         await api.post('/api/inventory/stock', {
           product_id: product.id, unit_cost: form.unit_cost, supplier_id: form.supplier_id || null,
-          lots: addLots.map((l) => ({ quantity: Number(l.quantity), expiry_date: l.expiry_date || null })),
+          lots: addLots.map((l) => ({ quantity: lotQty(l, unit), expiry_date: l.expiry_date || null })),
         });
-        toast(t('{n} un. de {name} adicionadas.', { n: int(addTotal), name: product.name }));
+        toast(t('{n} de {name} adicionadas.', { n: qtyLabel(addTotal, unit, t), name: product.name }));
       } else {
         await api.patch(`/api/products/${product.id}/stock`, { delta: -removeQty, reason: form.reason.trim() });
-        toast(t('{n} un. de {name} retiradas. Fica na auditoria com o motivo.', { n: int(removeQty), name: product.name }));
+        toast(t('{n} de {name} retiradas. Fica na auditoria com o motivo.', { n: qtyLabel(removeQty, unit, t), name: product.name }));
       }
       setAdjusting(false); products.reload(); entries.reload(); alerts.reload();
     } catch (err) { setError(errorMessage(err)); } finally { setSaving(false); }
@@ -138,7 +140,7 @@ function Stock({ products }) {
           <Table
             columns={[
               { key: 'name', header: t('Produto'), render: (l) => <div><p className="text-ink">{l.name}</p>{l.barcode && <p className="num text-xs text-ink-muted">{l.barcode}</p>}</div> },
-              { key: 'qty', header: t('Deste lote'), align: 'right', render: (l) => <span>{t('{a} de {b} un.', { a: int(l.quantity), b: int(l.product_stock ?? l.quantity) })}</span> },
+              { key: 'qty', header: t('Deste lote'), align: 'right', render: (l) => <span>{isMeasured(l.unit) ? `${formatQty(l.quantity, l.unit)} / ${formatQty(l.product_stock ?? l.quantity, l.unit)}` : t('{a} de {b} un.', { a: int(l.quantity), b: int(l.product_stock ?? l.quantity) })}</span> },
               { key: 'expiry', header: t('Validade'), render: (l) => date(l.expiry_date) },
               { key: 'left', header: '', align: 'right', render: (l) => <Badge tone={l.days_left < 0 ? 'danger' : l.days_left <= 2 ? 'danger' : 'warning'}>{l.days_left < 0 ? t('Expirado') : l.days_left === 0 ? t('Expira hoje') : t('{n} dia(s)', { n: l.days_left })}</Badge> },
               { key: 'value', header: t('Valor (custo)'), align: 'right', render: (l) => money(l.value) },
@@ -167,7 +169,7 @@ function Stock({ products }) {
             columns={[
               { key: 'created_at', header: t('Data'), render: (e) => dateTime(e.created_at) },
               { key: 'product', header: t('Produto'), render: (e) => e.product?.name },
-              { key: 'quantity', header: t('Qtd.'), align: 'right', render: (e) => <span className={e.quantity < 0 ? 'text-danger' : 'text-positive'}>{e.quantity > 0 ? '+' : ''}{e.quantity}</span> },
+              { key: 'quantity', header: t('Qtd.'), align: 'right', render: (e) => <span className={e.quantity < 0 ? 'text-danger' : 'text-positive'}>{e.quantity > 0 ? '+' : ''}{formatQty(e.quantity, e.product?.unit)}</span> },
               { key: 'unit_cost', header: t('Custo un.'), align: 'right', render: (e) => money(e.unit_cost) },
             ]}
             rows={entries.data || []}
@@ -184,24 +186,24 @@ function Stock({ products }) {
         title={t('Ajuste manual')}
         description={t('Para um produto que já tem: mais unidades (compra ou contagem) ou unidades que saem. Fica registado na auditoria.')}
         footer={<><Button onClick={() => setAdjusting(false)}>{t('Cancelar')}</Button><Button variant="primary" loading={saving} disabled={!canSave} onClick={save}>
-          {form.op === 'add' ? (addTotal > 0 ? t('Adicionar {n} un.', { n: int(addTotal) }) : t('Adicionar')) : (removeQty > 0 ? t('Retirar {n} un.', { n: int(removeQty) }) : t('Retirar'))}
+          {form.op === 'add' ? (addTotal > 0 ? t('Adicionar {n}', { n: qtyLabel(addTotal, unit, t) }) : t('Adicionar')) : (removeQty > 0 ? t('Retirar {n}', { n: qtyLabel(removeQty, unit, t) }) : t('Retirar'))}
         </Button></>}
       >
         <div className="flex flex-col gap-4">
           {error && <Alert tone="danger">{error}</Alert>}
           <Select label={t('Produto')} value={form.product_id} onChange={(e) => { const p = active.find((x) => x.id === e.target.value); setForm((f) => ({ ...emptyAdjust(p), op: f.op })); }}>
             <option value="">{t('Escolher…')}</option>
-            {active.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.stock_qty} {t('un.')})</option>)}
+            {active.map((p) => <option key={p.id} value={p.id}>{p.name} ({qtyLabel(p.stock_qty, p.unit, t)})</option>)}
           </Select>
-          {product && <p className="text-sm text-ink-2">{t('Stock actual:')} <span className="num font-medium text-ink">{int(product.stock_qty)} {t('un.')}</span></p>}
+          {product && <p className="text-sm text-ink-2">{t('Stock actual:')} <span className="num font-medium text-ink">{qtyLabel(product.stock_qty, unit, t)}</span></p>}
           <Segmented size="lg" className="w-full" value={form.op} onChange={set('op')} options={[{ value: 'add', label: t('Adicionar') }, { value: 'remove', label: t('Retirar') }]} />
           {form.op === 'add' ? (
             <>
               <section className="rounded-lg border border-border p-3">
                 <h3 className="font-medium text-ink">{t('Unidades que entram')}</h3>
                 <p className="mb-3 text-sm text-ink-muted">{product?.has_expiry ? t('Se não expiram todas no mesmo dia, separe-as (ex.: 50 a 17/10 e 50 a 20/10).') : t('Com validade, o Genesis avisa antes e regista a perda se não vender.')}</p>
-                <LotRows lots={form.lots} onChange={set('lots')} withExpiry expiryRequired={Boolean(product?.has_expiry)} />
-                {addTotal > 0 && product && <p className="mt-2 text-sm text-ink-2">{t('Fica com')} <span className="num font-medium text-ink">{int(product.stock_qty + addTotal)} {t('un.')}</span></p>}
+                <LotRows lots={form.lots} onChange={set('lots')} withExpiry expiryRequired={Boolean(product?.has_expiry)} unit={unit} />
+                {addTotal > 0 && product && <p className="mt-2 text-sm text-ink-2">{t('Fica com')} <span className="num font-medium text-ink">{qtyLabel(product.stock_qty + addTotal, unit, t)}</span></p>}
               </section>
               <MoneyInput label={t('Custo unitário')} hint={t('Quanto pagou por unidade. Se mudou, o custo do produto é actualizado.')} valueCents={form.unit_cost} onChangeCents={set('unit_cost')} />
               <Select label={t('Fornecedor (opcional)')} hint={t('Se comprou a um fornecedor, o custo de entrega dele entra no relatório mensal.')} value={form.supplier_id} onChange={(e) => set('supplier_id')(e.target.value)}>
@@ -211,8 +213,8 @@ function Stock({ products }) {
             </>
           ) : (
             <>
-              <Input label={t('Quantidade a retirar')} inputMode="numeric" value={form.quantity} onChange={(e) => set('quantity')(e.target.value.replace(/\D/g, ''))} inputClassName="num"
-                hint={product ? t('Saem primeiro as que expiram antes. Fica com {n} un.', { n: int(Math.max(0, product.stock_qty - removeQty)) }) : undefined} />
+              <Input label={isMeasured(unit) ? t('Quantidade a retirar ({unit})', { unit }) : t('Quantidade a retirar')} inputMode={isMeasured(unit) ? 'decimal' : 'numeric'} value={form.quantity} onChange={(e) => set('quantity')(isMeasured(unit) ? e.target.value.replace(/[^\d.,]/g, '') : e.target.value.replace(/\D/g, ''))} inputClassName="num"
+                hint={product ? t('Saem primeiro as que expiram antes. Fica com {n}.', { n: qtyLabel(Math.max(0, product.stock_qty - removeQty), unit, t) }) : undefined} />
               {product && removeQty > product.stock_qty && <p className="text-sm text-danger">{t('Só há {n} un. em stock.', { n: int(product.stock_qty) })}</p>}
               <Input label={t('Motivo')} placeholder={t('Ex.: contagem física de fim de mês')} value={form.reason} onChange={(e) => set('reason')(e.target.value)} />
             </>

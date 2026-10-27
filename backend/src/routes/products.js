@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { z } = require('zod');
+const { UNITS } = require('../utils/units');
 const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
@@ -28,7 +29,9 @@ const productSchema = z.object({
   expiry_date: z.string().optional().nullable(),
   is_active: z.boolean().optional().default(true),
   // Fase 15.2: null = taxa normal do IVA (16%), 0 = isento (arroz, pao, farinha de milho…).
-  vat_rate: z.union([z.literal(0), z.literal(16)]).nullable().optional()
+  vat_rate: z.union([z.literal(0), z.literal(16)]).nullable().optional(),
+  // Fase 15.5: un | kg | l | m (kg/l/m: stock e quantidades em milesimos; preco por kg/l/m).
+  unit: z.enum(UNITS).optional()
 });
 
 const updateProductSchema = productSchema.partial();
@@ -103,6 +106,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
           min_stock: data.min_stock,
           has_expiry: hasExpiry,
           vat_rate: data.vat_rate === 0 ? 0 : null,
+          unit: data.unit || 'un',
           is_active: true
         }
       });
@@ -217,6 +221,12 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     if (typeof data.image_url !== 'undefined') updateData.image_url = data.image_url || null;
     if (typeof data.icon !== 'undefined') updateData.icon = data.icon || null;
     if (typeof data.vat_rate !== 'undefined') updateData.vat_rate = data.vat_rate === 0 ? 0 : null;
+    // Fase 15.5: mudar a unidade com stock ou vendas deixava as quantidades antigas na escala errada.
+    if (typeof data.unit !== 'undefined' && data.unit !== (existing.unit || 'un')) {
+      const sold = await prisma.saleItem.count({ where: { product_id: id, sale: { tenant_id: tenantId } } });
+      if (existing.stock_qty !== 0 || sold > 0) return res.status(409).json({ error: 'Não pode mudar a unidade de um produto que já tem stock ou vendas. Crie um produto novo.', code: 'UNIT_LOCKED' });
+      updateData.unit = data.unit;
+    }
     if (typeof data.cost_price !== 'undefined') updateData.cost_price = data.cost_price;
     if (typeof data.sell_price !== 'undefined') updateData.sell_price = data.sell_price;
     if (typeof data.min_stock !== 'undefined') updateData.min_stock = data.min_stock;
