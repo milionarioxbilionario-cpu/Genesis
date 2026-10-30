@@ -8,7 +8,7 @@ const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
 
 const LEVELS = ['critical', 'warning', 'info', 'success'];
-const TYPES = ['cashier_locked', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed'];
+const TYPES = ['cashier_locked', 'shift_attempt_fail', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed'];
 const DEBT_DAYS = 7; // txenekas: 7 dias antes, 1 dia antes e no dia (especificacao 6.5)
 const SHIFT_DAYS = 7; // diferencas de caixa dos ultimos 7 dias
 
@@ -21,13 +21,23 @@ const minutesOf = (hhmm) => { const [h, m] = String(hhmm).split(':').map(Number)
 // de Maputo; dinheiro em centavos. O texto e montado no ecra (lingua de quem ve).
 function buildNotifications({
   now = new Date(), lowStock = [], expiringLots = [], debts = [], closings = [],
-  lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00',
+  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00',
 }) {
   const today = dayInMaputo(now);
   const items = [];
 
   for (const c of lockedCashiers) {
     items.push({ id: `cashier_locked:${c.id}`, type: 'cashier_locked', level: 'critical', link: '/app/equipa', params: { cashier: c.name } });
+  }
+
+  // Etapa A8: cada fecho recusado (contou menos do que o esperado). So o dono ve o esperado.
+  for (const f of failedAttempts) {
+    const day = dayInMaputo(f.at);
+    if (daysBetween(day, today) >= SHIFT_DAYS) continue;
+    items.push({
+      id: `shift_attempt_fail:${f.id}`, type: 'shift_attempt_fail', level: f.attempt >= 3 ? 'critical' : 'warning',
+      link: '/app/relatorios?tab=timeline', params: { cashier: f.cashier, declared: f.declared, expected: f.expected, attempt: f.attempt, max: 3, day },
+    });
   }
 
   for (const d of debts) {
@@ -79,7 +89,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
   const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
-  const [snapshot, tenant, debts, closings, cashiers, goalRow, monthAgg, todayAgg] = await Promise.all([
+  const [snapshot, tenant, debts, closings, cashiers, goalRow, monthAgg, todayAgg, fails] = await Promise.all([
     getTenantAlertSnapshot(tenantId, now),
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { closing_time: true } }),
     prisma.debt.findMany({ where: { tenant_id: tenantId, status: { not: 'paid' }, due_date: { lte: new Date(now.getTime() + (DEBT_DAYS + 1) * 86400000) } } }),
@@ -91,7 +101,12 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: new Date(year, month - 1, 1), lte: new Date(year, month, 0, 23, 59, 59, 999) } }, _sum: { total_amount: true } }),
     prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: dayStart, lte: now } }, _sum: { total_amount: true }, _count: true }),
+    prisma.auditLog.findMany({ where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', created_at: { gte: new Date(now.getTime() - (SHIFT_DAYS + 1) * 86400000) } }, orderBy: { created_at: 'desc' }, take: 20 }),
   ]);
+  const failedAttempts = fails.map((f) => {
+    let v = {}; try { v = JSON.parse(f.new_value || '{}'); } catch { v = {}; }
+    return { id: f.id, at: f.created_at, cashier: v.cashierName || '—', declared: v.declared ?? 0, expected: v.expected ?? 0, attempt: v.attempt || 1 };
+  });
   const locks = await Promise.all(cashiers.map((c) => getShiftLock(prisma, tenantId, c.id)));
   return buildNotifications({
     now,
@@ -99,6 +114,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     expiringLots: snapshot.expiringLots,
     debts,
     closings: closings.map((s) => ({ ...s, cashier_name: s.cashier?.name || '—' })),
+    failedAttempts,
     lockedCashiers: cashiers.filter((_, i) => locks[i].locked),
     goal: goalRow ? { target: goalRow.target_amount, current: Number(monthAgg._sum.total_amount || 0), month, year } : null,
     todaySales: { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) },

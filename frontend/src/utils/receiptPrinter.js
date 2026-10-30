@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { deliverPdf, downloadBlob, prefersShare, sharePdf } from './pdf/deliver';
 import { buildEscPosReceipt, ditherToRaster } from './escpos';
-import { code128Svg, documentBarcode, documentNumber } from './code128';
+import { code128Svg, documentBarcode, documentNumber, receiptTitle } from './code128';
 import { getDevicePrefs, sendToPrinter } from './devices';
 import { getLang, locale, t } from '../i18n/core.js';
 import { formatQty, lineAmount } from './units.js';
@@ -63,7 +63,7 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
   const subtotal = total + discount;
   const doc = documentNumber(sale);
   let barcodeSvg = '';
-  try { barcodeSvg = code128Svg(documentBarcode(sale), { module: 1.2, height: 34 }); } catch { barcodeSvg = ''; }
+  try { barcodeSvg = documentBarcode(sale) ? code128Svg(documentBarcode(sale), { module: 1.2, height: 34 }) : ''; } catch { barcodeSvg = ''; }
 
   const rows = (items || []).map((item) => {
     const q = item.quantity || 1;
@@ -122,7 +122,7 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
           ${shopLocation ? `<div class="meta">${esc(shopLocation)}</div>` : ''}
           ${shopPhone || shopNuit ? `<div class="meta">${shopPhone ? esc(t('Tel.')) + ' ' + esc(shopPhone) : ''}${shopPhone && shopNuit ? ' · ' : ''}${shopNuit ? 'NUIT ' + esc(shopNuit) : ''}</div>` : ''}
         </div>
-        <div class="doc"><span class="label">${esc(t('RECIBO'))}</span><span class="num">${esc(doc)}</span></div>
+        <div class="doc"><span class="label">${esc(receiptTitle(sale, t))}</span><span class="num">${esc(doc)}</span></div>
         <div class="info"><span>${esc(timestamp)}</span><span>${esc(t('Caixista:'))} ${esc(cashierName || '—')}</span></div>
         <table><tbody>${rows}</tbody></table>
         <div class="sum">
@@ -138,7 +138,7 @@ function buildReceiptHtml({ shopName, shopLocation, shopPhone, shopNuit, footer,
           <div style="display:flex;justify-content:space-between"><span>${esc(t('Troco'))}</span><span>${formatCurrency(change)}</span></div>
         </div>
         <div class="codes">
-          ${barcodeSvg}
+          ${barcodeSvg || (sale.offline && !sale.daily_number ? `<div class="sub">${esc(t('Venda feita sem ligação: fica confirmada quando o terminal voltar à rede.'))}</div>` : '')}
           <div class="docnum">${esc(doc)}</div>
           ${safeQr ? `<div class="qr"><img src="${safeQr}" alt="QR" /><p>${esc(t('Leia o código para confirmar o recibo'))}</p></div>` : ''}
         </div>

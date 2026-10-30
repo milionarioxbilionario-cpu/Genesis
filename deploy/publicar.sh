@@ -34,7 +34,7 @@ if [ "$MODE" = "--primeira-vez" ]; then
     ssh $SSH_OPTS "${DEPLOY_USER}@${IP}" "sudo install -d -m 700 /root/.ssh && sudo install -m 600 \$HOME/.ssh/authorized_keys /root/.ssh/authorized_keys"
   fi
   $SSH "rm -rf /tmp/genesis-deploy && mkdir -p /tmp/genesis-deploy"
-  tar -C deploy -cz setup_servidor.sh genesis-backend.service nginx.conf | $SSH "tar -xz -C /tmp/genesis-deploy"
+  tar -C deploy -cz setup_servidor.sh genesis-backend.service nginx.conf genesis-seguranca.conf | $SSH "tar -xz -C /tmp/genesis-deploy"
   $SSH "bash /tmp/genesis-deploy/setup_servidor.sh '$APP_HOST' '$ADMIN_HOST' '$EMAIL'"
   echo "== .env de producao (gerado aqui, enviado cifrado pelo SSH, nunca mostrado)"
   TMPENV="$(mktemp)"

@@ -54,7 +54,9 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
   const { t } = useI18n();
   const [, setParams] = useSearchParams();
   const suppliers = useApi('/api/inventory/suppliers');
-  const withVat = (useOutletContext() || {}).tenant?.vat_mode === 'iva';
+  const outletTenant = (useOutletContext() || {}).tenant;
+  const withVat = outletTenant?.vat_mode === 'iva';
+  const vatStd = outletTenant?.vat_rate_std ?? 16;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -155,7 +157,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
           {editing.sell_price > 0 && editing.sell_price <= editing.cost_price && <Alert tone="warning">{t('O preço de venda não cobre o custo.')}</Alert>}
           {withVat && (
             <Select label={t('IVA')} hint={t('O preço de venda já inclui o IVA.')} value={editing.vat_rate === 0 ? '0' : '16'} onChange={(e) => set('vat_rate')(e.target.value === '0' ? 0 : null)}>
-              <option value="16">{t('Taxa normal (16%)')}</option>
+              <option value="16">{t('Taxa normal ({pct}%)', { pct: vatStd })}</option>
               <option value="0">{t('Isento (arroz, pão, farinha de milho…)')}</option>
             </Select>
           )}

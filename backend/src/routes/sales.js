@@ -21,12 +21,17 @@ const saleSchema = z.object({
   // So aceite se o chamador for owner do mesmo tenant; se for cashier, ignorado (anti-forja).
   seller_user_id: z.string().uuid().optional(),
  items: z.array(z.object({
-   product_id: z.string().uuid(),
-   product_name: z.string().optional(),
+   // Etapa A: artigo personalizado (custom) nao tem produto: descricao, quantidade e preco escritos.
+   product_id: z.string().uuid().optional(),
+   custom: z.boolean().optional(),
+   product_name: z.string().max(120).optional(),
    quantity: z.number().int().positive(),
    unit_sell_price: z.number().int().nonnegative(),
-   unit_cost_price: z.number().int().nonnegative()
- })).min(1),
+   unit_cost_price: z.number().int().nonnegative().optional(),
+   // So para custom: criar o produto no catalogo para a proxima vez.
+   add_to_catalog: z.boolean().optional(),
+   category: z.string().trim().max(60).optional(),
+ }).refine((i) => (i.custom ? Boolean(i.product_name && i.product_name.trim()) : Boolean(i.product_id)), { message: 'Artigo sem produto nem descrição' })).min(1),
  total_amount: z.number().int().nonnegative(),
  // Recalculado no servidor a partir do custo em BD; o valor do cliente e ignorado.
  total_cost: z.number().int().nonnegative().optional(),
@@ -170,7 +175,12 @@ router.post('/', async (req, res) => {
          return { id: existing.id, daily_number: existing.daily_number, vat_amount: existing.vat_amount };
        }
      }
-     const productIds = [...new Set(data.items.map((item) => item.product_id))];
+     const productIds = [...new Set(data.items.filter((item) => !item.custom).map((item) => item.product_id))];
+     // Etapa A: o dono pode desligar a venda personalizada nas Definicoes.
+     const hasCustom = data.items.some((item) => item.custom);
+     const customAllowed = hasCustom
+       ? (await tx.tenant.findUnique({ where: { id: tenantId }, select: { custom_items_enabled: true } }))?.custom_items_enabled !== false
+       : true;
      const products = await tx.product.findMany({
        where: { id: { in: productIds }, tenant_id: tenantId }
      });
@@ -180,6 +190,23 @@ router.post('/', async (req, res) => {
      // Precos, totais e estado da venda decidem-se aqui: o POS envia o carrinho,
      // nao decide quanto custou nem se a venda ficou concluida.
      const saleItems = data.items.map((item) => {
+       if (item.custom) {
+         // Preco escrito pelo caixista (sem o 409 do catalogo), sem stock, sempre
+         // auditado (CUSTOM_ITEM_SOLD). O desconto continua com a regra normal.
+         if (!customAllowed) throw httpError(403, 'A venda personalizada está desligada neste estabelecimento.', 'CUSTOM_ITEMS_DISABLED');
+         if (!(item.unit_sell_price > 0)) throw httpError(400, 'Escreva o preço do pedido personalizado.', 'CUSTOM_ITEM_PRICE');
+         return {
+           id: require('crypto').randomUUID(),
+           product_id: null,
+           product_name: item.product_name.trim().slice(0, 120),
+           quantity: item.quantity,
+           unit_sell_price: item.unit_sell_price,
+           unit_cost_price: 0,
+           unit: 'un',
+           custom: true,
+           product_vat_rate: null,
+         };
+       }
        const product = productMap.get(item.product_id);
        if (!product) throw httpError(400, `Produto não encontrado: ${item.product_id}`, 'PRODUCT_NOT_FOUND');
        if (!product.is_active) throw httpError(400, `Produto inativo: ${product.name}`, 'PRODUCT_INACTIVE', { name: product.name });
@@ -220,7 +247,7 @@ router.post('/', async (req, res) => {
 
      // POLITICA DE DESCONTOS: ate discount_free_pct% do subtotal e livre; acima
      // disso exige o PIN de autorizacao do dono (o mesmo dos cancelamentos).
-     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true, vat_mode: true } });
+     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true, vat_mode: true, vat_rate_std: true } });
      const freeLimit = Math.floor(subtotal * (tenantPolicy?.discount_free_pct ?? 10) / 100);
      let discountAuthorized = false;
      if (discountAmount > freeLimit) {
@@ -242,7 +269,7 @@ router.post('/', async (req, res) => {
      // Fase 15.2: com IVA, guarda-se o IVA incluido (depois do desconto) e a taxa de
      // cada linha no momento da venda; sem IVA (ou ISPC) fica 0 e a taxa vazia.
      const withVat = tenantPolicy?.vat_mode === 'iva';
-     const vatRates = saleItems.map((item) => (withVat ? productVatRate(item.product_vat_rate) : null));
+     const vatRates = saleItems.map((item) => (withVat ? productVatRate(item.product_vat_rate, tenantPolicy.vat_rate_std ?? 16) : null));
      const vat = withVat ? saleVat(saleItems.map((item, i) => ({ gross: lineAmount(item.quantity, item.unit_sell_price, item.unit), rate: vatRates[i] })), discountAmount) : { vat_amount: 0 };
      saleItems.forEach((item, i) => { delete item.product_vat_rate; item.vat_rate = vatRates[i]; });
      if (totalAmount !== Number(data.total_amount)) {
@@ -352,6 +379,7 @@ router.post('/', async (req, res) => {
      });
 
      for (const item of saleItems) {
+       if (item.custom) continue; // personalizado: sem stock
        // Guarda atomica: o UPDATE so passa se ainda houver stock. A verificacao
        // anterior pode ter sido invalidada por uma venda em paralelo e, sem isto,
        // o stock fica negativo.
@@ -391,6 +419,29 @@ router.post('/', async (req, res) => {
          ip_address: req.ip || '0.0.0.0'
        }
      });
+
+     // Etapa A: personalizados — quem vendeu, o que escreveu e a que preco; e,
+     // se pedido, o produto novo no catalogo (sem stock; o dono completa depois).
+     if (hasCustom) {
+       const customs = saleItems.filter((item) => item.custom);
+       const addedToCatalog = [];
+       for (const [i, item] of data.items.entries()) {
+         if (!item.custom || !item.add_to_catalog) continue;
+         const name = item.product_name.trim().slice(0, 120);
+         const same = await tx.product.findFirst({ where: { tenant_id: tenantId, name: { equals: name, mode: isSqliteUrl() ? undefined : 'insensitive' } }, select: { id: true } });
+         if (same) continue;
+         const product = await tx.product.create({ data: { id: require('crypto').randomUUID(), tenant_id: tenantId, name, category: item.category || 'Geral', sell_price: item.unit_sell_price, cost_price: 0, stock_qty: 0, unit: 'un', is_active: true } });
+         addedToCatalog.push({ id: product.id, name, sell_price: item.unit_sell_price, line: i });
+         await tx.auditLog.create({ data: {
+           tenant_id: tenantId, user_id: callerUserId, action: 'CREATE_PRODUCT', entity_type: 'product', entity_id: product.id,
+           new_value: JSON.stringify({ name, sell_price: item.unit_sell_price, category: product.category, source: 'pos_custom', sale_id: sale.id }), ip_address: req.ip || '0.0.0.0',
+         } });
+       }
+       await tx.auditLog.create({ data: {
+         tenant_id: tenantId, user_id: callerUserId, action: 'CUSTOM_ITEM_SOLD', entity_type: 'sale', entity_id: sale.id,
+         new_value: JSON.stringify({ cashier_user_id: sellerUserId, items: customs.map((c) => ({ name: c.product_name, quantity: c.quantity, unit_sell_price: c.unit_sell_price })), added_to_catalog: addedToCatalog.map((p) => p.name) }), ip_address: req.ip || '0.0.0.0',
+       } });
+     }
 
      if (discountAuthorized) {
        await tx.auditLog.create({ data: {
@@ -511,6 +562,7 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
 
       const items = await tx.saleItem.findMany({ where: { sale_id: id } });
       for (const it of items) {
+        if (!it.product_id) continue; // personalizado: nao ha stock a repor
         await tx.product.updateMany({
           where: { id: it.product_id, tenant_id: tenantId },
           data: { stock_qty: { increment: it.quantity } },

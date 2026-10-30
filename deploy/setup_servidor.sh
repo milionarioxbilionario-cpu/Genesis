@@ -42,6 +42,7 @@ systemctl daemon-reload
 systemctl enable genesis-backend
 
 echo "== nginx"
+install -D -m 644 /tmp/genesis-deploy/genesis-seguranca.conf /etc/nginx/snippets/genesis-seguranca.conf
 sed -e "s/__APP_HOST__/${APP_HOST}/g" -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" /tmp/genesis-deploy/nginx.conf > /etc/nginx/sites-available/genesis
 ln -sf /etc/nginx/sites-available/genesis /etc/nginx/sites-enabled/genesis
 rm -f /etc/nginx/sites-enabled/default

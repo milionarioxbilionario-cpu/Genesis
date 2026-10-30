@@ -19,6 +19,23 @@ const pctChange = (now, before) => (before ? Math.round(((now - before) / Math.a
 const PAYMENT_METHODS = ['cash', 'mpesa', 'emola', 'card', 'transfer'];
 const { totalsByMethod } = require('../utils/salePayments');
 const { lineAmount, humanQty, qtyText, scaleOf } = require('../utils/units');
+const { firstActivityAt } = require('../utils/shift');
+
+// Etapa A7: horas de cada turno fechado no periodo. Inicio = primeira entrada (PIN)
+// ou venda depois do fecho anterior (no maximo 24 h antes); fim = hora do fecho.
+async function cashierShiftHours(tenantId, closings) {
+  const out = new Map();
+  for (const c of closings.slice(0, 300)) {
+    const prev = await prisma.shiftClosing.findFirst({ where: { tenant_id: tenantId, cashier_user_id: c.cashier_user_id, closed_at: { lt: c.closed_at } }, orderBy: { closed_at: 'desc' }, select: { closed_at: true } });
+    const floor = new Date(c.closed_at.getTime() - 24 * 3600000);
+    const since = prev && prev.closed_at > floor ? prev.closed_at : floor;
+    const start = await firstActivityAt(tenantId, c.cashier_user_id, since);
+    const secs = start && start < c.closed_at ? Math.round((c.closed_at - start) / 1000) : 0;
+    const e = out.get(c.cashier_user_id) || { name: c.cashier?.name || '—', seconds: 0, shifts: 0 };
+    e.seconds += secs; e.shifts += 1; out.set(c.cashier_user_id, e);
+  }
+  return out;
+}
 const dayKey = (d) => {
   const x = new Date(d);
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
@@ -58,24 +75,28 @@ async function summarize(tenantId, start, end) {
     d.revenue += s.total_amount; d.sales += 1; byDay.set(k, d);
     // Lucro bruto por venda = total (ja com desconto) - custo gravado na venda.
     d.gross_profit += s.total_amount - s.items.reduce((sum, it) => sum + lineAmount(it.quantity, it.unit_cost_price, it.unit), 0);
-    const c = cashiers.get(s.cashier_user_id) || { cashier_id: s.cashier_user_id, name: s.cashier?.name || '—', sales: 0, revenue: 0 };
-    c.sales += 1; c.revenue += s.total_amount; cashiers.set(s.cashier_user_id, c);
+    const c = cashiers.get(s.cashier_user_id) || { cashier_id: s.cashier_user_id, name: s.cashier?.name || '—', sales: 0, revenue: 0, items: 0, worked_seconds: 0, shifts: 0 };
+    c.sales += 1; c.revenue += s.total_amount;
+    c.items = Math.round((c.items + s.items.reduce((n, it) => n + humanQty(it.quantity, it.unit), 0)) * 1000) / 1000;
+    cashiers.set(s.cashier_user_id, c);
     for (const it of s.items) {
       const line = lineAmount(it.quantity, it.unit_sell_price, it.unit);
       const lineCost = lineAmount(it.quantity, it.unit_cost_price, it.unit);
       cogs += lineCost;
       // Fase 15.5: quantidade «humana» (unidades ou kg/l/m) para o ranking nao misturar gramas com unidades.
-      const p = products.get(it.product_id) || { product_id: it.product_id, name: it.product_name, unit: it.unit || 'un', quantity: 0, revenue: 0, profit: 0 };
-      p.quantity = Math.round((p.quantity + humanQty(it.quantity, it.unit)) * 1000) / 1000; p.revenue += line; p.profit += line - lineCost; products.set(it.product_id, p);
+      // Etapa A: personalizados (sem produto) agrupados pela descricao.
+      const key = it.product_id || 'custom:' + String(it.product_name).toLowerCase();
+      const p = products.get(key) || { product_id: it.product_id, name: it.product_name, custom: Boolean(it.custom), unit: it.unit || 'un', quantity: 0, revenue: 0, profit: 0 };
+      p.quantity = Math.round((p.quantity + humanQty(it.quantity, it.unit)) * 1000) / 1000; p.revenue += line; p.profit += line - lineCost; products.set(key, p);
     }
   }
 
   // Categoria vem do produto actual (a venda nao guarda categoria).
   if (products.size) {
-    const cats = await prisma.product.findMany({ where: { tenant_id: tenantId, id: { in: [...products.keys()] } }, select: { id: true, category: true } });
+    const cats = await prisma.product.findMany({ where: { tenant_id: tenantId, id: { in: [...products.values()].map((p) => p.product_id).filter(Boolean) } }, select: { id: true, category: true } });
     const catOf = new Map(cats.map((p) => [p.id, p.category || 'Geral']));
     for (const p of products.values()) {
-      const name = catOf.get(p.product_id) || 'Geral';
+      const name = p.custom ? 'Personalizado' : (catOf.get(p.product_id) || 'Geral');
       const c = categories.get(name) || { category: name, revenue: 0, quantity: 0 };
       c.revenue += p.revenue; c.quantity += p.quantity; categories.set(name, c);
     }
@@ -97,6 +118,11 @@ async function summarize(tenantId, start, end) {
   for (const l of losses) lossesByReason[l.reason] = (lossesByReason[l.reason] || 0) + l.value;
   const lossesTotal = losses.reduce((s, l) => s + l.value, 0);
 
+  // Etapa A7: horas de turno por caixista (mesmo quem fechou sem vender).
+  for (const [id, h] of await cashierShiftHours(tenantId, closings)) {
+    const c = cashiers.get(id) || { cashier_id: id, name: h.name, sales: 0, revenue: 0, items: 0, worked_seconds: 0, shifts: 0 };
+    c.worked_seconds += h.seconds; c.shifts += h.shifts; cashiers.set(id, c);
+  }
   const productList = [...products.values()];
   return {
     period: { start, end },
@@ -146,7 +172,7 @@ async function restockFor(tenantId, end, coverDays, windowDays = 28) {
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: { gte: from, lte: end } }, select: { product_id: true, quantity: true } }),
   ]);
   const soldByProduct = {};
-  for (const it of items) soldByProduct[it.product_id] = (soldByProduct[it.product_id] || 0) + it.quantity;
+  for (const it of items) if (it.product_id) soldByProduct[it.product_id] = (soldByProduct[it.product_id] || 0) + it.quantity;
   const lostByProduct = {};
   // Unidades pedidas (registos antigos = 1). Fora do catalogo nao entra: nao ha produto para comprar.
   // Fase 15.5: um pedido de um produto a peso conta 1 kg/l/m (na escala do produto).
@@ -269,7 +295,7 @@ async function monthlyReport(tenantId, year, month) {
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
     restockFor(tenantId, end < new Date() ? end : new Date(), 30),
     prisma.expense.findMany({ where: { tenant_id: tenantId, date: { gte: start, lte: end } }, orderBy: { date: "asc" }, select: { id: true, date: true, kind: true, entity: true, category: true, description: true, amount: true } }),
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { vat_mode: true, inss_employer_pct: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { vat_mode: true, vat_rate_std: true, inss_employer_pct: true } }),
     // ISPC: o escalao depende do volume de negocios do ano (projectado a partir de Janeiro).
     prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: new Date(year, 0, 1), lte: end } }, _sum: { total_amount: true } }),
   ]);
@@ -290,10 +316,10 @@ async function monthlyReport(tenantId, year, month) {
 
   // Tendencias: quantidade vendida por produto vs mes anterior.
   const prevQty = new Map();
-  for (const it of prevItems) prevQty.set(it.product_id, (prevQty.get(it.product_id) || 0) + it.quantity);
+  for (const it of prevItems) if (it.product_id) prevQty.set(it.product_id, (prevQty.get(it.product_id) || 0) + it.quantity);
   const allNow = await prisma.saleItem.findMany({ where: { sale: { tenant_id: tenantId, status: 'completed', created_at: { gte: start, lte: end } } }, select: { product_id: true, product_name: true, quantity: true, unit: true } });
   const nowQty = new Map();
-  for (const it of allNow) { const e = nowQty.get(it.product_id) || { name: it.product_name, unit: it.unit || 'un', qty: 0 }; e.qty += it.quantity; nowQty.set(it.product_id, e); }
+  for (const it of allNow) { if (!it.product_id) continue; const e = nowQty.get(it.product_id) || { name: it.product_name, unit: it.unit || 'un', qty: 0 }; e.qty += it.quantity; nowQty.set(it.product_id, e); }
   const trends = [];
   for (const id of new Set([...nowQty.keys(), ...prevQty.keys()])) {
     const now = nowQty.get(id)?.qty || 0; const before = prevQty.get(id) || 0;
@@ -324,7 +350,7 @@ async function monthlyReport(tenantId, year, month) {
     period: { year, month },
     ...report,
     deductions,
-    taxes: { vat_mode: vatMode, vat: vatMode === 'iva' ? report.vat : null, ispc, inss_employer_pct: tenantTax?.inss_employer_pct || 0 },
+    taxes: { vat_mode: vatMode, vat_rate_std: tenantTax?.vat_rate_std ?? 16, vat: vatMode === 'iva' ? report.vat : null, ispc, inss_employer_pct: tenantTax?.inss_employer_pct || 0 },
     fines: expenses.filter((e) => e.kind === 'fine'),
     expenses: { rows: expenses, by_category: Object.entries(expensesByCategory).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount) },
     net_profit: netProfit,
@@ -350,20 +376,23 @@ async function monthlyReport(tenantId, year, month) {
 // Vendas trazem os itens e o caixista, para abrir o recibo.
 const TIMELINE_TYPES = ['sale', 'cancelled', 'loss', 'stock', 'debt', 'debt_payment', 'shift', 'demand', 'expense'];
 
-async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1, pageSize = 50 } = {}) {
+async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1, pageSize = 50, cashierId = null } = {}) {
   const range = { gte: start, lte: end };
-  const want = (t) => types.includes(t);
+  // Etapa A7: com caixista escolhido, so o que ele fez (vendas, perdas, pedidos, turnos).
+  const OWNER_ONLY = ['stock', 'debt', 'debt_payment', 'expense'];
+  const want = (t) => types.includes(t) && !(cashierId && OWNER_ONLY.includes(t));
+  const byCashier = (field) => (cashierId ? { [field]: cashierId } : {});
   const none = Promise.resolve([]);
   const [sales, losses, entries, debts, payments, shifts, demand, suppliers, expenses] = await Promise.all([
     want('sale') || want('cancelled')
-      ? prisma.sale.findMany({ where: { tenant_id: tenantId, created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true, cashier: { select: { id: true, name: true } } } })
+      ? prisma.sale.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true, cashier: { select: { id: true, name: true } } } })
       : none,
-    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
     want('stock') ? prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: range }, include: { product: { select: { name: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
     want('debt') ? prisma.debt.findMany({ where: { tenant_id: tenantId, created_at: range } }) : none,
     want('debt_payment') ? prisma.debtPayment.findMany({ where: { paid_at: range, debt: { tenant_id: tenantId } }, include: { debt: { select: { debtor_name: true } } } }) : none,
-    want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } } }) : none,
-    want('demand') ? prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), closed_at: range }, include: { cashier: { select: { name: true } } } }) : none,
+    want('demand') ? prisma.demandCapture.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), requested_at: range }, include: { product: { select: { name: true } }, recordedBy: { select: { name: true } } } }) : none,
     want('stock') ? prisma.supplier.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } }) : none,
     want('expense') ? prisma.expense.findMany({ where: { tenant_id: tenantId, date: range } }) : none,
   ]);
@@ -414,6 +443,21 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
   for (const d of debts) events.push({ id: 'debt-' + d.id, type: 'debt', at: d.created_at, effect: 'info', amount: d.total_amount, profit: 0, title: `Txeneka nova: ${d.debtor_name}`, who: '—', detail: '', due_date: d.due_date, debtor: d.debtor_name });
   for (const p of payments) events.push({ id: 'pay-' + p.id, type: 'debt_payment', at: p.paid_at, effect: 'info', amount: p.amount, profit: 0, title: `Txeneka paga: ${p.debt?.debtor_name || '—'}`, who: '—', detail: 'pagamento recebido', debtor: p.debt?.debtor_name || null });
   for (const s of shifts) events.push({ id: 'shift-' + s.id, type: 'shift', at: s.closed_at, effect: 'info', amount: s.difference, profit: 0, title: 'Fecho de turno', who: s.cashier?.name || '—', detail: s.difference === 0 ? 'contagem certa' : 'contagem com diferença', counted: s.counted_amount, expected: s.expected_amount });
+  // Etapa A8: cada tentativa falhada do fecho, com o que escreveu e o que se esperava (so o dono ve).
+  if (want('shift')) {
+    const fails = await prisma.auditLog.findMany({ where: { tenant_id: tenantId, action: { in: ['SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED'] }, created_at: range, ...(cashierId ? { entity_id: cashierId } : {}) }, orderBy: { created_at: 'desc' }, take: 500 });
+    for (const f of fails) {
+      let v = {}; try { v = JSON.parse(f.new_value || '{}'); } catch { v = {}; }
+      const locked = f.action === 'CASHIER_LOCKED';
+      events.push({
+        id: 'shiftfail-' + f.id, type: 'shift', at: f.created_at, effect: 'info', amount: -(Math.max(0, (v.expected || 0) - (v.declared || 0))), profit: 0,
+        title: locked ? 'Perfil bloqueado no fecho' : `Fecho recusado: tentativa ${v.attempt || '?'}/3`,
+        who: v.cashierName || '—',
+        detail: `escreveu ${((v.declared || 0) / 100).toFixed(2)} MT, esperado ${((v.expected || 0) / 100).toFixed(2)} MT`,
+        shift_fail: true, locked, attempt: v.attempt || null, declared: v.declared ?? null, expected: v.expected ?? null,
+      });
+    }
+  }
   for (const d of demand) events.push({ id: 'demand-' + d.id, type: 'demand', at: d.requested_at, effect: 'info', amount: 0, profit: 0, title: `Cliente pediu: ${d.product?.name || d.product_name || '—'}${(d.quantity || 1) > 1 ? ` ×${d.quantity}` : ''} (${d.product_id ? 'em falta' : 'fora do catálogo'})`, who: d.recordedBy?.name || '—', detail: 'oportunidade perdida', quantity: d.quantity || 1, unit_price: d.unit_price ?? null, product_name: d.product?.name || d.product_name || null, in_catalog: Boolean(d.product_id) });
 
   // Despesa: sai do lucro liquido do MES (nao do lucro bruto do dia), por isso profit 0.

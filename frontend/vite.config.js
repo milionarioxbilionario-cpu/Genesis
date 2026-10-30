@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 // (app.html = SPA React: entrar, painel do dono, terminal) saem do mesmo build.
 // Em producao o nginx decide qual servir (deploy/nginx.conf); aqui o plugin
 // faz o mesmo no `vite` e no `vite preview` (testes e2e).
-const SITE_PAGES = { '/': '/index.html', '/planos': '/planos.html', '/en': '/en/index.html', '/en/': '/en/index.html', '/en/pricing': '/en/pricing.html' };
+const SITE_PAGES = { '/': '/index.html', '/planos': '/planos.html', '/en': '/en/index.html', '/en/': '/en/index.html', '/en/pricing': '/en/pricing.html', '/privacidade': '/privacidade.html', '/termos': '/termos.html', '/en/privacy': '/en/privacy.html', '/en/terms': '/en/terms.html' };
 // Rotas da SPA: tudo o que nao e pagina do site, ficheiro, API ou interno do Vite.
 const isSpaRoute = (p) => !(p in SITE_PAGES) && !/\.[a-z0-9]+$/i.test(p) && !/^\/(api|@|src\/|node_modules\/)/.test(p);
 
@@ -57,7 +57,7 @@ export default defineConfig({
         // Offline, qualquer rota da app abre a app (terminal incluido). As
         // paginas do site estao pre-guardadas e respondem por si.
         navigateFallback: 'app.html',
-        navigateFallbackDenylist: [/^\/$/, /^\/planos\/?$/, /^\/en(\/|$)/, /^\/api\//, /\.[a-z0-9]+$/i],
+        navigateFallbackDenylist: [/^\/$/, /^\/planos\/?$/, /^\/(privacidade|termos)\/?$/, /^\/en(\/|$)/, /^\/api\//, /\.[a-z0-9]+$/i],
       },
       manifest: {
         // id fixo = o calculado antes (start_url '/'): a app ja instalada
@@ -89,6 +89,10 @@ export default defineConfig({
         planos: fileURLToPath(new URL('./planos.html', import.meta.url)),
         'en/index': fileURLToPath(new URL('./en/index.html', import.meta.url)),
         'en/pricing': fileURLToPath(new URL('./en/pricing.html', import.meta.url)),
+        privacidade: fileURLToPath(new URL('./privacidade.html', import.meta.url)),
+        termos: fileURLToPath(new URL('./termos.html', import.meta.url)),
+        'en/privacy': fileURLToPath(new URL('./en/privacy.html', import.meta.url)),
+        'en/terms': fileURLToPath(new URL('./en/terms.html', import.meta.url)),
         app: fileURLToPath(new URL('./app.html', import.meta.url)),
       }
     }

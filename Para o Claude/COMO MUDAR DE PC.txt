@@ -8,7 +8,7 @@ O QUE ESTÁ NESTA PASTA
 - planos/ .......... os planos de trabalho aprovados.
 - restaurar.mjs .... o programa que põe tudo isto no sítio certo do PC novo.
 
-O Mapa Mental (pasta "Mapa Mental") e o "Oque ja fiz para corrigir estes erros.txt" já estão no
+O Mapa Mental (pasta "Mapa Mental") e o "Diario do Genesis - o que foi feito e se funcionou.txt" já estão no
 GitHub. São eles que dizem ao Claude onde parámos.
 
 PASSOS NO PC NOVO

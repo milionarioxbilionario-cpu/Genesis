@@ -28,6 +28,10 @@ model Tenant {
   /// Fase 15.2: none | iva | ispc. Fase 15.3: % do INSS do patrao (0 = sem INSS).
   vat_mode              String                @default("none")
   inss_employer_pct     Int                   @default(0)
+  /// Etapa A: taxa normal do IVA (%), fim da subscricao e venda personalizada.
+  vat_rate_std          Int                   @default(16)
+  subscription_until    DateTime?
+  custom_items_enabled  Boolean               @default(true)
   /// Fase 16: plano (basic | premium), periodo (monthly | annual) e Premium temporario.
   plan                  String                @default("basic")
   plan_period           String                @default("monthly")
@@ -37,7 +41,10 @@ model Tenant {
   status                String                @default("pending")
   trial_ends_at         DateTime?
   onboarding_completed  Boolean               @default(false)
-  subscription_price    Int                   @default(300000)
+  subscription_price    Int                   @default(800000)
+  /// 30/10/2026: maior de 18 anos + Termos e Privacidade aceites no pedido de conta.
+  terms_accepted_at     DateTime?
+  terms_version         String?
   created_at            DateTime              @default(now())
   cancel_pin_hash       String?
   // Genesis 2.0: politica de descontos e horario persistidos (antes num Map em memoria).
@@ -166,14 +173,16 @@ model Sale {
 model SaleItem {
   id              String  @id @default(uuid())
   sale_id         String
-  product_id      String
+  product_id      String?
   product_name    String
   quantity        Int
   unit_sell_price Int
   unit_cost_price Int
   vat_rate        Int?
   unit            String  @default("un")
-  product         Product @relation(fields: [product_id], references: [id])
+  /// Etapa A: artigo fora do catalogo (sem produto, sem stock).
+  custom          Boolean @default(false)
+  product         Product? @relation(fields: [product_id], references: [id])
   sale            Sale    @relation(fields: [sale_id], references: [id])
 }
 
@@ -502,4 +511,31 @@ model SalePayment {
 
   @@index([sale_id])
   @@index([tenant_id])
+}
+
+/// Etapa A: perfis que trabalham em cada terminal (sem linhas = todos os caixistas).
+model PosTerminalMember {
+  id          String @id @default(uuid())
+  tenant_id   String
+  terminal_id String
+  user_id     String
+
+  @@unique([terminal_id, user_id])
+  @@index([tenant_id])
+}
+
+/// Etapa A: «Avise-me quando estiver pronto» (modos de negocio por construir). Sem tenant: vem do site publico.
+model ModeWaitlist {
+  id            String    @id @default(uuid())
+  business_type String
+  name          String
+  phone         String
+  email         String?
+  /// whatsapp | email | both
+  channel       String    @default("whatsapp")
+  notified_at   DateTime?
+  created_at    DateTime  @default(now())
+
+  @@index([business_type])
+  @@index([phone])
 }

@@ -91,7 +91,12 @@ async function addDemoData(tenantId, ownerId, cashierId) {
   const sales = []; const items = [];
   let monthTotal = 0;
   for (let d = 1; d <= now.getDate(); d++) {
-    const n = 7 + Math.floor(rnd() * 8) + (new Date(now.getFullYear(), now.getMonth(), d).getDay() >= 5 ? 5 : 0);
+    // 27/10 (fundador): numeros de um estabelecimento movimentado para as capturas do site
+    // (~180 000 MT por dia: vendas por grade/caixa, como numa bottle store grossista).
+    // Hoje com mais vendas do que qualquer outro dia (~184 000 MT): o «vs ontem a mesma
+    // hora» do Inicio sai sempre positivo na captura do site (29/10).
+    const n = d === now.getDate() ? 54 + Math.floor(rnd() * 4)
+      : 32 + Math.floor(rnd() * 14) + (new Date(now.getFullYear(), now.getMonth(), d).getDay() >= 5 ? 8 : 0);
     let num = 0;
     for (let i = 0; i < n; i++) {
       const at = new Date(now.getFullYear(), now.getMonth(), d, 9 + Math.floor(rnd() * 12), Math.floor(rnd() * 60));
@@ -100,7 +105,7 @@ async function addDemoData(tenantId, ownerId, cashierId) {
       const lines = []; let total = 0; let cost = 0;
       const k = 1 + Math.floor(rnd() * 3);
       for (let j = 0; j < k; j++) {
-        const p = pick(products); const q = 1 + Math.floor(rnd() * (p.sell_price < 6000 ? 6 : 3));
+        const p = pick(products); const q = (1 + Math.floor(rnd() * (p.sell_price < 6000 ? 6 : 3))) * (p.sell_price < 20000 ? 12 : 2);
         lines.push({ id: crypto.randomUUID(), sale_id: id, product_id: p.id, product_name: p.name, quantity: q, unit_sell_price: p.sell_price, unit_cost_price: p.cost_price });
         total += q * p.sell_price; cost += q * p.cost_price;
       }

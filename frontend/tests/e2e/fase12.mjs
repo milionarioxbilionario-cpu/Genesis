@@ -20,7 +20,7 @@ const SHOTS = path.resolve(process.env.SHOTS || 'shots-fase12');
 const ENGINE = process.env.ENGINE === 'webkit' ? webkit : chromium;
 const IS_WEBKIT = process.env.ENGINE === 'webkit';
 fs.mkdirSync(SHOTS, { recursive: true });
-const T = 30000; // BD em Frankfurt a partir de Maputo: pedidos de varios segundos
+const T = Number(process.env.T_MS || 30000); // BD em Frankfurt a partir de Maputo: pedidos de varios segundos
 let failures = 0;
 const errors = [];
 const ok = (c, m, extra) => { if (c) console.log('  OK    ' + m); else { failures++; console.log('  FALHA ' + m + (extra !== undefined ? '  -> ' + JSON.stringify(extra) : '')); } };
@@ -124,7 +124,7 @@ try {
       if (alertText.length) console.log('  (aviso no ecra: ' + alertText.join(' | ') + ')');
       await shot(page, '12-4-face-id-depois');
     }
-    await page.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+    await page.getByText('Hoje até agora').first().waitFor({ timeout: T });
     ok(true, 'PIN criado: entra no Início');
     if (!IS_WEBKIT) {
       // Reabrir a app = sessionStorage vazio (no mesmo separador: o autenticador virtual e por separador).
@@ -133,7 +133,7 @@ try {
       await page.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
       ok(await page.getByRole('button', { name: 'Usar Face ID / impressão digital' }).isVisible(), 'reabrir: painel bloqueado com o botão do Face ID');
       await page.getByRole('button', { name: 'Usar Face ID / impressão digital' }).click();
-      await page.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+      await page.getByText('Hoje até agora').first().waitFor({ timeout: T });
       ok(true, 'Face ID (autenticador virtual): desbloqueia');
     }
     await ctx.close();
@@ -144,7 +144,7 @@ try {
   const owner = await ownerCtx.newPage();
   watch(owner);
   await login(owner, fx);
-  await owner.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').first().waitFor({ timeout: T });
   ok(true, 'login com email e senha: o painel abre sem pedir o PIN');
   // Separador novo = app reaberta: o cookie da sessao continua la, mas o painel pede o PIN.
   const again = await ownerCtx.newPage();
@@ -157,7 +157,7 @@ try {
   await again.getByText(/Restam 4 tentativa/).waitFor({ timeout: T });
   ok(true, 'PIN errado: «Restam 4 tentativa(s)»');
   await typePin(again, fx.lockPin);
-  await again.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+  await again.getByText('Hoje até agora').first().waitFor({ timeout: T });
   ok(true, 'PIN certo: desbloqueia');
   await again.close();
 
@@ -167,7 +167,7 @@ try {
   watch(idle);
   await idle.clock.install();
   await login(idle, fx);
-  await idle.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+  await idle.getByText('Hoje até agora').first().waitFor({ timeout: T });
   await idle.clock.fastForward('05:30');
   await idle.getByRole('heading', { name: 'Painel bloqueado' }).waitFor({ timeout: T });
   ok(true, '5 minutos sem tocar: o painel volta a bloquear');
@@ -232,7 +232,7 @@ try {
   await term.getByRole('button', { name: /Coca-Cola 500ml/ }).click();
   await term.getByRole('button', { name: /1 artigo\(s\)/ }).click();
   await term.getByRole('button', { name: /Cobrar 45,00 MT/ }).click();
-  await term.getByText('Sem ligação: venda guardada neste terminal').waitFor({ timeout: T });
+  await term.getByText('Venda guardada neste terminal').waitFor({ timeout: T }); // 30/10: recibo provisorio
   ok(true, 'sem rede: venda guardada no aparelho');
   await shot(term, '12-2-offline-venda');
   await term.getByRole('button', { name: 'Nova venda' }).click().catch(() => {});
@@ -266,9 +266,9 @@ try {
 
   // ------------------------------------------------------- 12.3 dono sem rede
   await owner.goto(BASE + '/app');
-  await owner.getByRole('heading', { name: /^(Início|Painel bloqueado)$/ }).first().waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').first().or(owner.getByRole('heading', { name: 'Painel bloqueado' })).first().waitFor({ timeout: T });
   if (await owner.getByRole('heading', { name: 'Painel bloqueado' }).isVisible()) await typePin(owner, fx.lockPin);
-  await owner.getByRole('heading', { name: 'Início' }).first().waitFor({ timeout: T });
+  await owner.getByText('Hoje até agora').first().waitFor({ timeout: T });
   await owner.goto(BASE + '/app/produtos');
   await owner.getByText('2M 340ml').first().waitFor({ timeout: T });
   await ownerCtx.setOffline(true);

@@ -40,6 +40,12 @@
 @keyframes reveal-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .reveal { animation: none; } }
 
+/* Terminal (30/10/2026): o stock que acabou de mudar (venda enviada, outro
+   terminal) pisca uma vez — so o numero, para o caixista perceber. */
+.stock-flash { animation: stock-flash 1500ms ease-out both; }
+@keyframes stock-flash { 0%, 35% { background: var(--warning-soft); box-shadow: 0 0 0 2px var(--warning); } 100% { background: transparent; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .stock-flash { animation: none; font-weight: 700; } }
+
 /* POS (12.5): altura real do ecra visivel. No Safari do iPhone 100vh inclui a
    area atras das barras do browser e o botao Cobrar ficava escondido. */
 .pos-root { height: 100vh; height: 100dvh; }

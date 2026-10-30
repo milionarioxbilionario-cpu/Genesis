@@ -47,7 +47,7 @@ test('JSON-LD: organizacao, aplicacao com o preco em MZN e perguntas', () => {
     assert.equal(org.name, 'Genesis MZ');
     assert.equal(org.contactPoint.telephone, '+' + WHATSAPP);
     const app = graph.find((g) => g['@type'] === 'SoftwareApplication');
-    assert.equal(app.offers.price, '3000');
+    assert.equal(app.offers.price, '8000');
     assert.equal(app.offers.priceCurrency, 'MZN');
     const faq = graph.find((g) => g['@type'] === 'FAQPage');
     assert.equal(faq.mainEntity.length, p.faq, rel + ': perguntas');
@@ -70,7 +70,7 @@ test('WhatsApp: sempre o numero da configuracao, mensagem escrita e saudacao por
   for (const f of ['site/textos.pt.js', 'site/textos.en.js', 'site/template.js', 'site/site.js']) {
     assert.ok(!fs.readFileSync(path.join(SITE_ROOT, f), 'utf8').includes('870150055'), f + ' nao tem o numero escrito');
   }
-  assert.ok(pages['planos.html'].includes(encodeURIComponent('Quero aderir ao plano Genesis MZ de 3')), 'Aderir leva o plano na mensagem');
+  assert.ok(pages['planos.html'].includes(encodeURIComponent('Quero aderir ao plano Genesis MZ de 8')), 'Aderir leva o plano na mensagem');
   assert.ok(pages['planos.html'].includes('plano anual'), 'plano anual pelo WhatsApp');
   assert.ok(pages['planos.html'].includes(encodeURIComponent('Já paguei')), 'Já paguei pelo WhatsApp');
 });
@@ -85,7 +85,7 @@ test('acesso a app: Entrar, Terminal e Pedir conta levam data-app', () => {
 
 test('so o que esta decidido e verificado', () => {
   const all = Object.keys(PAGES).map((r) => pages[r]).join('\n').toLowerCase();
-  for (const bad of ['ilimitad', 'unlimited', 'testemunh', 'testimonial', 'lucrocerto', 'gestão inteligente', 'relatórios automáticos', 'automatic reports', '8.000', '8 000', 'premium']) {
+  for (const bad of ['ilimitad', 'unlimited', 'testemunh', 'testimonial', 'lucrocerto', 'gestão inteligente', 'relatórios automáticos', 'automatic reports', '3.000', '3 000', '14 000', 'premium']) {
     assert.ok(!all.includes(bad), 'nao pode dizer: ' + bad);
   }
   // Sem contas de pagamento na configuracao, a seccao nao aparece (nada inventado).
@@ -111,10 +111,10 @@ test('imagens: todas existem com as dimensoes do manifesto', () => {
   }
 });
 
-test('sitemap: 4 paginas com alternativas', () => {
+test('sitemap: 8 paginas (site + legais) com alternativas', () => {
   const xml = pages['public/sitemap.xml'];
-  assert.equal((xml.match(/<loc>/g) || []).length, 4);
-  assert.equal((xml.match(/hreflang=/g) || []).length, 12);
+  assert.equal((xml.match(/<loc>/g) || []).length, 8);
+  assert.equal((xml.match(/hreflang=/g) || []).length, 24);
 });
 
 // 27/10 (pedido do fundador): os textos sao para o cliente, nao para quem fez o
@@ -128,5 +128,29 @@ test('textos para o cliente: sem palavras tecnicas', () => {
   for (const [rel, lang] of [['index.html', 'pt'], ['planos.html', 'pt'], ['en/index.html', 'en'], ['en/pricing.html', 'en']]) {
     const t = text(pages[rel]);
     for (const w of banned[lang]) assert.ok(!t.includes(w), rel + ' diz «' + w + '»');
+  }
+});
+
+// 30/10/2026 (pedido do fundador): paginas legais, maiores de 18 anos e o texto
+// sem os sinais tipicos de site feito a pressa (travessoes, contadores falsos).
+test('paginas legais: existem, ligadas em todas as paginas, com os 18 anos', () => {
+  const legal = { 'privacidade.html': '/privacidade', 'termos.html': '/termos', 'en/privacy.html': '/en/privacy', 'en/terms.html': '/en/terms' };
+  for (const [rel, p] of Object.entries(legal)) {
+    assert.ok(pages[rel], 'falta ' + rel);
+    assert.ok(pages[rel].includes(`<link rel="canonical" href="https://genesismz.com${p}" />`), rel + ' canonical');
+    assert.ok(/18 anos|18 or older/.test(pages[rel]), rel + ' fala dos 18 anos');
+  }
+  for (const rel of [...Object.keys(PAGES), ...Object.keys(legal)]) {
+    const isEn = rel.startsWith('en/');
+    assert.ok(pages[rel].includes(`href="${isEn ? '/en/privacy' : '/privacidade'}"`) && pages[rel].includes(`href="${isEn ? '/en/terms' : '/termos'}"`), rel + ': rodape sem ligacoes legais');
+  }
+});
+
+test('texto visivel sem travessoes (—)', () => {
+  const text = (html) => html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ');
+  for (const [rel, html] of Object.entries(pages)) {
+    if (!rel.endsWith('.html')) continue;
+    const t = text(html);
+    assert.ok(!t.includes('—'), rel + ': ' + (t.match(/.{0,40}—.{0,40}/) || [''])[0]);
   }
 });

@@ -5,7 +5,12 @@
 // site.js so trata do menu, do encaminhamento e da saudacao do WhatsApp.
 
 import { markSvg } from '../src/ui/marca.js';
-import { SITE_URL, SITE_UPDATED, WHATSAPP, WHATSAPP_DISPLAY, PLAN_PRICE_CENTS, PAYMENT } from './config.js';
+import { SITE_URL, SITE_UPDATED, WHATSAPP, WHATSAPP_DISPLAY, PLAN_PRICE_CENTS, PAYMENT, PREMIUM } from './config.js';
+import { LEGAL, LEGAL_UPDATED } from './legal.js';
+
+// Paginas do site: caminho PT e EN de cada uma (hreflang, sitemap, troca de lingua).
+const PAIRS = { home: ['/', '/en/'], pricing: ['/planos', '/en/pricing'], privacy: [LEGAL.pt.privacy.path, LEGAL.en.privacy.path], terms: [LEGAL.pt.terms.path, LEGAL.en.terms.path] };
+const otherPath = (t, page) => PAIRS[page][t.lang === 'pt' ? 1 : 0];
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Ancoras da landing em cada lingua.
@@ -33,8 +38,7 @@ function head(t, page, ctx) {
   const title = fill(t, m.title);
   const desc = fill(t, m.description);
   const here = t.paths[page];
-  const pt = page === 'home' ? '/' : '/planos';
-  const en = page === 'home' ? '/en/' : '/en/pricing';
+  const [pt, en] = PAIRS[page];
   const ogImg = SITE_URL + t.og;
   return `<!DOCTYPE html>
 <html lang="${t.htmlLang}" data-wa-greet="${esc(t.wa.greet.join('|'))}">
@@ -50,6 +54,7 @@ function head(t, page, ctx) {
     <meta name="theme-color" content="#0B4D3B" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Genesis MZ" />
@@ -73,6 +78,7 @@ function head(t, page, ctx) {
 }
 
 function jsonLd(t, page) {
+  const legal = LEGAL[t.lang][page];
   const org = {
     '@type': 'Organization', '@id': SITE_URL + '/#org', name: 'Genesis MZ', alternateName: ['Genesis', 'genesismz'],
     url: SITE_URL + '/', logo: SITE_URL + '/icons/icon-512.png',
@@ -90,6 +96,9 @@ function jsonLd(t, page) {
       eligibleRegion: { '@type': 'Country', name: 'Mozambique' },
     },
   };
+  if (legal) {
+    return { '@context': 'https://schema.org', '@graph': [org, { '@type': 'WebPage', '@id': SITE_URL + legal.path, url: SITE_URL + legal.path, name: legal.title, inLanguage: t.htmlLang, dateModified: LEGAL_UPDATED, publisher: { '@id': SITE_URL + '/#org' } }] };
+  }
   const faqItems = page === 'home' ? t.faq.items : t.pricing.faq;
   const faq = { '@type': 'FAQPage', mainEntity: faqItems.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: fill(t, f.a) } })) };
   const graph = [org, app, faq];
@@ -106,13 +115,13 @@ function header(t, page, { icon }) {
     [t.nav.features, anchor('features')], [t.nav.who, anchor('who')], [t.nav.how, anchor('how')],
     [t.nav.pricing, t.paths.pricing], [t.nav.faq, anchor('faq')],
   ];
-  const other = page === 'home' ? t.other.home : t.other.pricing;
+  const other = otherPath(t, page);
   const navLink = ([label, href]) => `<a href="${href}" class="nav-link"${href === t.paths[page] ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
   return `
     <a href="#conteudo" class="skip">${t.lang === 'pt' ? 'Saltar para o conteúdo' : 'Skip to content'}</a>
     <header class="sticky top-0 z-30 border-b border-border bg-surface">
       <div class="mx-auto flex h-16 max-w-content items-center gap-6 px-4 sm:px-6">
-        <a href="${home}" class="flex shrink-0 items-center gap-2.5" aria-label="Genesis MZ — ${esc(t.nav.home)}">
+        <a href="${home}" class="flex shrink-0 items-center gap-2.5" aria-label="Genesis MZ: ${esc(t.nav.home)}">
           ${logo(32, 'h-8 w-8')}
           <span class="text-md font-semibold tracking-tight text-ink">Genesis <span class="text-brand">MZ</span></span>
         </a>
@@ -140,7 +149,7 @@ function header(t, page, { icon }) {
 function footer(t, page, { icon }) {
   const id = IDS[t.lang];
   const home = t.paths.home;
-  const other = page === 'home' ? t.other.home : t.other.pricing;
+  const other = otherPath(t, page);
   const col = (title, items) => `<div><p class="text-sm font-semibold text-ink">${esc(title)}</p><ul class="mt-3 space-y-2">${items.join('')}</ul></div>`;
   const li = (label, href, extra = '') => `<li><a href="${href}" class="footer-link"${extra}>${esc(label)}</a></li>`;
   return `
@@ -156,7 +165,7 @@ function footer(t, page, { icon }) {
       </div>
       <div class="border-t border-border">
         <div class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-ink-muted sm:px-6">
-          <span>${esc(t.footer.rights)}</span>
+          <span class="flex flex-wrap items-center gap-x-4 gap-y-1"><span>${esc(t.footer.rights)}</span><a href="${LEGAL[t.lang].privacy.path}" class="footer-link">${esc(LEGAL[t.lang].privacy.title)}</a><a href="${LEGAL[t.lang].terms.path}" class="footer-link">${esc(LEGAL[t.lang].terms.title)}</a></span>
           <a href="${other}" hreflang="${t.other.lang}" lang="${t.other.lang}" class="footer-link inline-flex items-center gap-1.5">${icon('languages', 'h-4 w-4')}${esc(t.other.label)}</a>
         </div>
       </div>
@@ -181,7 +190,8 @@ const sectionHead = (title, lead, id) => `
 export function renderHome(t, ctx) {
   const { icon } = ctx;
   const id = IDS[t.lang];
-  const [h1a, h1b] = t.hero.title.split(' — ');
+  // '|' separa a parte que fica a verde (sem travessoes: pedido do fundador 30/10).
+  const [h1a, h1b] = t.hero.title.split('|');
   const shotLang = (k) => `${k}-${t.lang}`;
   return `${head(t, 'home', ctx)}
   <body class="bg-bg text-ink">${header(t, 'home', ctx)}
@@ -190,7 +200,7 @@ export function renderHome(t, ctx) {
         <div class="mx-auto grid max-w-content items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:py-20">
           <div class="rv">
             <p class="eyebrow">${esc(t.hero.eyebrow)}</p>
-            <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">${esc(h1a)} <span class="text-brand">— ${esc(h1b)}</span></h1>
+            <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">${esc(h1a)} <span class="text-brand">${esc(h1b)}</span></h1>
             <p class="mt-5 max-w-xl text-md text-ink-2">${esc(t.hero.lead)}</p>
             <div class="mt-8 flex flex-wrap gap-3">
               <a data-app href="/pedir-conta" class="btn-primary btn-lg">${esc(t.hero.primary)}${icon('arrow-right', 'h-4 w-4')}</a>
@@ -206,7 +216,7 @@ export function renderHome(t, ctx) {
             <div class="mx-auto w-[62%] max-w-[300px] sm:hidden"><div class="phone">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { eager: true, cls: 'block w-full' })}</div></div>
             <div class="hidden sm:block">
               <div class="frame">${shot(ctx, shotLang('terminal'), t.hero.shotAlt, { eager: true, cls: 'block w-full' })}</div>
-              <div class="phone absolute -bottom-2 right-3 w-[24%]">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { cls: 'block w-full' })}</div>
+              <div class="phone absolute -bottom-2 right-[29%] w-[24%]">${shot(ctx, shotLang('telemovel'), t.hero.phoneAlt, { cls: 'block w-full' })}</div>
             </div>
           </div>
         </div>
@@ -225,6 +235,10 @@ export function renderHome(t, ctx) {
               <h3 class="mt-3 text-lg font-semibold text-ink">${esc(p.q)}</h3>
               <p class="label-accent mt-4">${icon('check', 'h-4 w-4')}${esc(t.pains.solution)}</p>
               <p class="mt-1.5 text-md text-ink-2">${esc(p.a)}</p>
+              ${p.more ? `<details class="more mt-3">
+                <summary>${esc(t.features.more)}${icon('chevron-down', 'more-chevron h-4 w-4')}</summary>
+                <ul>${p.more.map((m) => `<li>${icon('check', 'mt-1 h-4 w-4 shrink-0 text-accent')}<span>${esc(m)}</span></li>`).join('')}</ul>
+              </details>` : ''}
             </article>`).join('\n            ')}
           </div>
         </div>
@@ -275,6 +289,14 @@ export function renderHome(t, ctx) {
             ${t.who.items.map((w) => `<li class="card rv flex flex-col items-center gap-3 py-6 text-center"><span class="icon-tile">${icon(w.icon, 'h-5 w-5')}</span><span class="text-md font-medium text-ink">${esc(w.t)}</span></li>`).join('\n            ')}
           </ul>
           <p class="mt-6 text-base text-ink-2"><a ${waAttrs(t, 'contact')} class="text-link">${esc(t.who.other)}</a></p>
+          <div class="mt-12 rv">
+            <h3 class="text-lg font-semibold text-ink">${esc(t.who.soon.title)}</h3>
+            <p class="mt-2 max-w-2xl text-base text-ink-2">${esc(t.who.soon.lead)}</p>
+            <ul class="mt-5 flex flex-wrap gap-2">
+              ${t.who.soon.items.map((w) => `<li><a data-app href="/avise-me?tipo=${w.type}" class="inline-flex items-center gap-2 rounded-md border border-border bg-bg px-3.5 py-2 text-sm text-ink-2 hover:border-accent hover:text-accent">${icon(w.icon, 'h-4 w-4')}${esc(w.t)}</a></li>`).join('\n              ')}
+            </ul>
+            <p class="mt-5"><a data-app href="/avise-me" class="btn-secondary">${icon('bell-ring', 'h-4 w-4')}${esc(t.who.soon.cta)}</a></p>
+          </div>
         </div>
       </section>
 
@@ -396,6 +418,17 @@ export function renderPricing(t, ctx) {
             </ul>
           </div>
         </div>
+${PREMIUM.items.length ? `
+        <div class="mx-auto mt-6 max-w-content px-4 sm:px-6">
+          <div class="card plan p-8">
+            <h2 class="text-xl font-bold text-ink">${esc(p.premiumName)}</h2>
+            <p class="mt-6"><span class="num text-4xl font-bold tracking-tight text-ink">${esc(t.price(PREMIUM.price_cents / 100))}</span><span class="text-md text-ink-muted">${esc(t.perMonth)}</span></p>
+            <ul class="mt-6 space-y-3">
+              ${PREMIUM.items.map((x) => `<li class="flex gap-3 text-base text-ink-2">${icon('check', 'mt-0.5 h-5 w-5 shrink-0 text-brand')}<span>${esc(x[t.lang] || x.pt || x)}</span></li>`).join('')}
+            </ul>
+            <a ${waAttrs(t, 'premium')} class="btn-secondary btn-lg mt-8 justify-center">${icon('message-circle', 'h-4 w-4')}${esc(p.premiumJoin)}</a>
+          </div>
+        </div>` : ''}
         <div class="mx-auto mt-6 max-w-content px-4 sm:px-6">
           <div class="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div><h2 class="text-md font-semibold text-ink">${esc(p.annualTitle)}</h2><p class="mt-1 text-base text-ink-2">${esc(p.annualText)}</p></div>
@@ -424,15 +457,36 @@ export function renderPricing(t, ctx) {
     </main>${footer(t, 'pricing', ctx)}`;
 }
 
-// Sitemap das 4 paginas com as alternativas de lingua.
+// Paginas legais (30/10/2026): texto em site/legal.js.
+export function renderLegal(t, kind, ctx) {
+  const L = LEGAL[t.lang][kind];
+  const tl = { ...t, meta: { ...t.meta, [kind]: { title: L.metaTitle, description: L.description } }, paths: { ...t.paths, [kind]: L.path } };
+  const para = (x) => `<p class="mt-3 text-base leading-relaxed text-ink-2">${esc(fill(tl, x).replace('{wa}', WHATSAPP_DISPLAY))}</p>`;
+  const body = L.sections.map((sec) => `
+          <section class="mt-10">
+            <h2 class="text-lg font-semibold text-ink">${esc(sec.h)}</h2>
+            ${(sec.p || []).map(para).join('')}
+            ${sec.list ? `<ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-relaxed text-ink-2">${sec.list.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+            ${(sec.after || []).map(para).join('')}
+          </section>`).join('');
+  return `${head(tl, kind, ctx)}
+  <body class="bg-bg text-ink">${header(tl, kind, ctx)}
+    <main id="conteudo">
+      <article class="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:py-16">
+        <h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">${esc(L.title)}</h1>
+        <p class="mt-3 text-sm text-ink-muted">${esc(L.updated)}</p>${body}
+      </article>
+    </main>${footer(tl, kind, ctx)}`;
+}
+
+// Sitemap das paginas com as alternativas de lingua.
 export function renderSitemap() {
-  const pairs = [['/', '/en/'], ['/planos', '/en/pricing']];
   const urls = [];
-  for (const [pt, en] of pairs) {
+  for (const [page, [pt, en]] of Object.entries(PAIRS)) {
     for (const loc of [pt, en]) {
       urls.push(`  <url>
     <loc>${SITE_URL}${loc}</loc>
-    <lastmod>${SITE_UPDATED}</lastmod>
+    <lastmod>${page === 'privacy' || page === 'terms' ? LEGAL_UPDATED : SITE_UPDATED}</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-MZ" href="${SITE_URL}${pt}"/>
     <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${en}"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${pt}"/>

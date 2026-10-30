@@ -5,7 +5,7 @@
 // altura usada; `buildReceiptImage` (so no browser) desenha e corta a imagem.
 // Valores sempre por extenso (moneyExact), mesmo no modo privado.
 import { moneyExact as money } from './format.js';
-import { code128Bars, documentBarcode, documentNumber } from './code128.js';
+import { code128Bars, documentBarcode, documentNumber, isProvisional, receiptTitle } from './code128.js';
 import { safeFileName, dmy, hms } from './pdf/text.js';
 import { getLang, locale, t } from '../i18n/core.js';
 import { formatQty, lineAmount } from './units.js';
@@ -102,7 +102,7 @@ export function drawReceipt(ctx, input, images = {}, cardHeight = 4000) {
   y += 6;
   rule(y, { color: INK, width: 1.5 }); y += 24;
 
-  text(t('RECIBO'), L, y, { size: 12, weight: 700 });
+  text(receiptTitle(sale, t), L, y, { size: 12, weight: 700 });
   text(documentNumber(sale), R, y, { size: 14, weight: 700, align: 'right', font: MONO }); y += 18;
   const when = new Date(sale.created_at || Date.now()).toLocaleString(receiptLocale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   text(when, L, y, { size: 11.5, color: MUTED });
@@ -132,7 +132,9 @@ export function drawReceipt(ctx, input, images = {}, cardHeight = 4000) {
   row(t('Troco'), money(sale.change_given), y, { size: 12, color: MUTED }); y += 22;
 
   // Codigo de barras do documento (Code 128): o mesmo do talao impresso.
-  try {
+  if (isProvisional(sale)) {
+    text(t('Venda feita sem ligação: fica confirmada quando o terminal voltar à rede.'), mid, y, { size: 11, color: MUTED, align: 'center' }); y += 24;
+  } else try {
     const { bars, modules } = code128Bars(documentBarcode(sale));
     const mod = Math.min(2, (inner - 20) / modules);
     const x0 = mid - (modules * mod) / 2;

@@ -12,7 +12,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
-const { VAT_MODES, INSS_EMPLOYER_PCT } = require('../services/tax');
+const { VAT_MODES, RATE_MIN, RATE_MAX } = require('../services/tax');
 const { monthlyAmount } = require('../services/monthlyDeductions');
 
 const router = express.Router();
@@ -74,6 +74,7 @@ router.get('/', asyncHandler(async (req, res) => {
     store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type, nuit: t.nuit || null, receipt_footer: t.receipt_footer || null, has_logo: Boolean(t.logo_data) },
     hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00' },
     discount_free_pct: t.discount_free_pct,
+    custom_items_enabled: t.custom_items_enabled !== false,
     expiry_alert_days: t.expiry_alert_days,
     month_close_day: t.month_close_day,
     audit_retention_months: t.audit_retention_months,
@@ -82,7 +83,7 @@ router.get('/', asyncHandler(async (req, res) => {
     reports_whatsapp_enabled: reportsWhatsappEnabled(),
     authorization_pin_configured: Boolean(t.cancel_pin_hash),
     // Fase 15.2/15.3: regime de impostos das vendas e INSS do patrao.
-    taxes: { vat_mode: t.vat_mode || 'none', inss_employer_pct: t.inss_employer_pct || 0 },
+    taxes: { vat_mode: t.vat_mode || 'none', vat_rate_std: t.vat_rate_std ?? 16, inss_employer_pct: t.inss_employer_pct || 0 },
     status: t.status,
     trial_ends_at: t.trial_ends_at,
     fixed_costs: fixed,
@@ -101,11 +102,13 @@ router.put('/store', asyncHandler(async (req, res) => {
 // Fase 15.2/15.3: regime de impostos (sem / IVA / ISPC) e INSS do patrao (0 ou 4%).
 const taxesSchema = z.object({
   vat_mode: z.enum(VAT_MODES).optional(),
-  inss_employer_pct: z.union([z.literal(0), z.literal(INSS_EMPLOYER_PCT)]).optional(),
+  // Etapa A: taxas escritas pelo dono (ex.: IVA 15%, INSS 2%), inteiros de 0 a 30.
+  vat_rate_std: z.number().int().min(RATE_MIN, 'A taxa do IVA vai de 0 a 30%').max(RATE_MAX, 'A taxa do IVA vai de 0 a 30%').optional(),
+  inss_employer_pct: z.number().int().min(RATE_MIN, 'O INSS vai de 0 a 30%').max(RATE_MAX, 'O INSS vai de 0 a 30%').optional(),
 });
 router.put('/taxes', asyncHandler(async (req, res) => {
   const data = taxesSchema.parse(req.body);
-  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { vat_mode: true, inss_employer_pct: true } });
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { vat_mode: true, vat_rate_std: true, inss_employer_pct: true } });
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_TAXES', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true });
@@ -142,6 +145,14 @@ router.put('/discount', asyncHandler(async (req, res) => {
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_DISCOUNT_POLICY', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: data });
   res.json({ ok: true, ...data });
+}));
+
+// Etapa A: venda personalizada (artigo fora do catalogo) no terminal, ligada ou nao.
+router.put('/custom-items', asyncHandler(async (req, res) => {
+  const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body);
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data: { custom_items_enabled: enabled } });
+  await writeAudit({ req, action: 'UPDATE_CUSTOM_ITEMS', entityType: 'tenant', entityId: tenantId(req), newValue: { custom_items_enabled: enabled } });
+  res.json({ ok: true, custom_items_enabled: enabled });
 }));
 
 // Quantos dias antes da validade um lote aparece nos alertas.

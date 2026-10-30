@@ -7,7 +7,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 // PDF sai sempre com os valores, mesmo no modo privado.
 import { moneyExact as money } from '../format';
-import { code128Bars, documentBarcode, documentNumber } from '../code128';
+import { code128Bars, documentBarcode, documentNumber, isProvisional, receiptTitle } from '../code128';
 import { pdfText, safeFileName, dmy, hms } from './text';
 import { getLang, locale, t } from '../../i18n/core.js';
 import { formatQty, lineAmount } from '../units.js';
@@ -54,7 +54,7 @@ function render(doc, { shopName, shopLocation, shopPhone, shopNuit, footer, logo
   doc.setDrawColor(...INK); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 5;
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
-  doc.text(pdfText(t('RECIBO')), M, y);
+  doc.text(pdfText(receiptTitle(sale, t)), M, y);
   doc.setFont('courier', 'bold'); doc.setFontSize(9.5);
   doc.text(documentNumber(sale), W - M, y, { align: 'right' }); y += 4;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
@@ -93,7 +93,13 @@ function render(doc, { shopName, shopLocation, shopPhone, shopNuit, footer, logo
   doc.setTextColor(...INK);
 
   // Codigo de barras do documento (Code 128, desenhado com rectangulos).
-  try {
+  if (isProvisional(sale)) {
+    y += 2;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+    const note = doc.splitTextToSize(pdfText(t('Venda feita sem ligação: fica confirmada quando o terminal voltar à rede.')), W - 2 * M);
+    doc.text(note, W / 2, y + 2, { align: 'center' }); y += note.length * 3.4 + 2;
+    doc.setTextColor(...INK);
+  } else try {
     const { bars, modules } = code128Bars(documentBarcode(sale));
     const mod = Math.min(0.42, (W - 2 * M - 8) / modules);
     const x0 = (W - modules * mod) / 2;

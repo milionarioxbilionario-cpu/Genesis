@@ -44,6 +44,17 @@ function refreshOnce() {
   return refreshing;
 }
 
+// Fase 16: a senha mudada NESTE aparelho invalida os pedidos que ja iam a caminho
+// com a sessao antiga (ex.: o sino). Esses esperam pelos cookies novos e repetem-se,
+// em vez de fecharem a sessao (em producao, com a rede mais lenta, acontecia).
+let ownChange = null;
+let ownChangeAt = 0;
+export function trackOwnCredentialChange(promise) {
+  ownChange = Promise.resolve(promise).catch(() => {});
+  ownChangeAt = Date.now();
+  return promise;
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -52,6 +63,11 @@ api.interceptors.response.use(
     const code = error.response?.data?.code;
     const url = cfg.url || '';
 
+    if (status === 401 && code === 'PASSWORD_CHANGED' && ownChange && !cfg.__ownRetry && Date.now() - ownChangeAt < 30000) {
+      cfg.__ownRetry = true;
+      await ownChange;
+      return api(cfg);
+    }
     if (status === 401 && !cfg.__retried && !NO_REFRESH.some((p) => url.startsWith(p))) {
       cfg.__retried = true;
       // Conta desactivada / senha mudada: o refresh tambem falharia.

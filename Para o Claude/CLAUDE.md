@@ -16,7 +16,7 @@ Genesis is a multi-tenant SaaS POS / store-management system for small Mozambica
 1. **Before any work:** read `Mapa Mental/Mapa_Mental.md` in full. Part A = current verified state per file; Part B = append-only dated journal. It overrides anything in `Prompt_Mestre.txt` about current state.
 2. **After any modification, before ending the reply:**
    - Update `Mapa_Mental.md` Part A (states: `✅ CONFIRMADO FUNCIONAL` | `⚠️ NÃO VERIFICADO` | `🔴 CONHECIDO COMO QUEBRADO` | `❌ NÃO EXISTE AINDA`, with when/how verified) and append a Part B entry (`### [AAAA-MM-DD] — título`: ficheiros alterados, porquê, prova real, resultado, segue-se). Never delete old journal entries.
-   - Append (never overwrite) a dated plain-language entry to `Oque ja fiz para corrigir estes erros.txt` (root): what was done, why, what it fixed, whether it worked — written for a non-technical founder.
+   - Append (never overwrite) a dated plain-language entry to `Diario do Genesis - o que foi feito e se funcionou.txt` (root): what was done, why, what it fixed, whether it worked — written for a non-technical founder.
    - If file states changed, update `Mapa Mental/mapa_mental_status.json` and run `node scripts/gen_mindmap_data.js` (regenerates the 3D map data).
 3. **Before every commit:** run `node scripts/backup_claude.mjs` (copies this file, `.claude/skills/`, the Claude Code memory and the Genesis plans into `Para o Claude/`, which IS versioned; root `CLAUDE.md` and `.claude/` are git-ignored). New PC: `node "Para o Claude/restaurar.mjs"`.
 

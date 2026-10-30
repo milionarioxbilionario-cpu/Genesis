@@ -94,7 +94,7 @@ async function cleanup() {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
+  for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminalMember', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
@@ -541,15 +541,22 @@ async function test11() {
   }
   // Fase 9.1: email obrigatorio no pedido de conta; pedido antigo sem email nao
   // e aprovado com um email inventado.
-  const reqBody = { businessName: ctx.tenant.name + '-PEDIDO', ownerName: 'Dono Pedido', businessType: 'bottle_store', location: 'Teste', phone: '840000004' };
+  const reqBody = { businessName: ctx.tenant.name + '-PEDIDO', ownerName: 'Dono Pedido', businessType: 'bottle_store', location: 'Teste', phone: '840000004', acceptTerms: true };
   const noEmail = await client().req('POST', '/api/auth/request-account', reqBody);
   ok(noEmail.status === 400, 'pedido de conta sem email: 400', noEmail);
   ok((await prisma.tenant.count({ where: { name: reqBody.businessName } })) === 0, 'pedido sem email nao foi gravado');
   const mixed = ' Pedido.' + ctx.tenant.id.slice(0, 8) + '@Teste.Local ';
+  // 30/10/2026: sem a confirmacao de 18+ e dos Termos, nada e gravado.
+  const { acceptTerms: _a, ...noTerms } = reqBody;
+  const minor = await client().req('POST', '/api/auth/request-account', { ...noTerms, email: mixed });
+  ok(minor.status === 400 && minor.data?.code === 'TERMS_REQUIRED', 'pedido sem confirmar 18+ e Termos: 400 TERMS_REQUIRED', minor);
+  ok((await prisma.tenant.count({ where: { name: reqBody.businessName } })) === 0, 'pedido sem confirmar 18+ nao foi gravado');
   const withEmail = await client().req('POST', '/api/auth/request-account', { ...reqBody, email: mixed });
-  const saved = await prisma.tenant.findFirst({ where: { name: reqBody.businessName }, select: { id: true, email: true, status: true } });
+  const saved = await prisma.tenant.findFirst({ where: { name: reqBody.businessName }, select: { id: true, email: true, status: true, terms_accepted_at: true, terms_version: true, subscription_price: true } });
   try {
     ok(withEmail.status === 201 && saved?.status === 'pending' && saved?.email === mixed.trim().toLowerCase(), 'pedido com email: 201, gravado sem espacos e em minusculas', { withEmail, saved });
+    ok(Boolean(saved?.terms_accepted_at) && saved?.terms_version === '2026-10-30', 'aceitacao dos Termos (18+) guardada com a data e a versao', saved);
+    ok(saved?.subscription_price === 800000, 'conta nova: preco por omissao 8 000 MT', saved);
   } finally {
     if (saved) await prisma.tenant.delete({ where: { id: saved.id } });
   }
@@ -1830,7 +1837,7 @@ async function test35() {
   const ym = 'year=' + now.getFullYear() + '&month=' + (now.getMonth() + 1);
   try {
     ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'xyz' })).status === 400, 'regime inventado: 400');
-    ok((await owner.req('PUT', '/api/settings/taxes', { inss_employer_pct: 7 })).status === 400, 'INSS so 0 ou 4%: 400');
+    ok((await owner.req('PUT', '/api/settings/taxes', { inss_employer_pct: 31 })).status === 400, 'INSS acima de 30%: 400');
     ok((await caixa.req('PUT', '/api/settings/taxes', { vat_mode: 'iva' })).status === 403, 'caixista nao muda os impostos');
     ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'iva' })).status === 200, 'dono escolhe o IVA');
     ok((await owner.req('GET', '/api/settings')).data?.taxes?.vat_mode === 'iva', 'definicoes mostram o regime');
@@ -1990,8 +1997,10 @@ async function test39() {
     ok((await client(signAccessToken(ctx.owner)).req('GET', '/api/profile')).status === 401, 'sessoes antigas (senha anterior) deixam de valer');
     const me = client(signAccessToken(after));
     // E-mail: sem SMTP neste servidor de teste os codigos vem na resposta (fora de producao).
-    const other = await prisma.user.findFirst({ where: { id: { not: ctx.owner.id } }, select: { email: true } });
-    if (other) ok((await me.req('POST', '/api/profile/email/start', { new_email: other.email, password: 'NovaSenha#2026' })).data?.code === 'EMAIL_IN_USE', 'e-mail de outra conta: 409');
+    // Conta de outra pessoa com e-mail valido (o admin de teste desta corrida).
+    const other = { email: ctx.admin.email };
+    const inUse = await me.req('POST', '/api/profile/email/start', { new_email: other.email, password: 'NovaSenha#2026' });
+    ok(inUse.data?.code === 'EMAIL_IN_USE', 'e-mail de outra conta: 409', inUse);
     const novo = 'novo-' + crypto.randomBytes(4).toString('hex') + '@teste.local';
     const st = await me.req('POST', '/api/profile/email/start', { new_email: novo, password: 'NovaSenha#2026' });
     ok(st.status === 200 && st.data.devCodes?.current && st.data.devCodes?.next && st.data.devCodes.current !== st.data.devCodes.next, 'pedido de mudanca: um codigo para o e-mail actual e outro para o novo', st.data);
@@ -2028,7 +2037,7 @@ async function test39() {
     const row = list.find((x) => x.id === t);
     ok(row && row.plan === 'basic' && row.plan_effective === 'premium' && !('logo_data' in row), 'admin: ve o plano e o Premium em curso; a lista ja nao leva o logotipo', row && { plan: row.plan, eff: row.plan_effective });
     const pl = await admin.req('POST', '/api/admin/tenants/' + t + '/plan', { plan: 'premium', period: 'monthly' });
-    ok(pl.status === 200 && (await prisma.tenant.findUnique({ where: { id: t } })).subscription_price === 800000, 'admin muda para Premium mensal (8 000 MT)', pl);
+    ok(pl.status === 200 && (await prisma.tenant.findUnique({ where: { id: t } })).subscription_price === 1400000, 'admin muda para Premium mensal (14 000 MT)', pl);
     ok((await admin.req('POST', '/api/admin/tenants/' + t + '/plan', { plan: 'gold', period: 'monthly' })).status === 400, 'plano inventado: 400');
   } finally {
     await prisma.user.update({ where: { id: ctx.owner.id }, data: { email: original.email, password_hash: original.password_hash, birthday: null, birthday_gift_year: null } });
@@ -2036,7 +2045,231 @@ async function test39() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39 };
+async function test40() {
+  section(40, 'Etapa A: terminais (mesmo terminal, perfis, reactivar, eliminar), taxas livres, subscricao ate, fecho recusado com detalhe, caixistas, venda personalizada, sugestoes em varios tipos');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  const admin = adminClient();
+  await unlockCashier().catch(() => {});
+  const other = await prisma.user.create({ data: {
+    tenant_id: t, role: 'cashier', name: 'Caixa Cafetaria', email: 'cafe-' + crypto.randomBytes(4).toString('hex') + '@teste.local',
+    password_hash: await bcrypt.hash(crypto.randomBytes(12).toString('hex'), 10), pin_hash: await bcrypt.hash('8642', 10), is_active: true } });
+  try {
+    // --- A6: terminais
+    const term = await pairedTerminal('Balcao A40');
+    const list0 = (await owner.req('GET', '/api/owner/terminals')).data;
+    const tA = list0.find((x) => x.name === 'Balcao A40');
+    ok(tA && Array.isArray(tA.member_ids) && tA.member_ids.length === 0, 'terminal novo: sem lista de perfis (= todos)', tA);
+    const prof0 = (await term.req('GET', '/api/pos/terminal')).data;
+    ok(prof0?.cashiers?.some((c) => c.id === other.id) && prof0.cashiers.some((c) => c.id === ctx.cashier.id), 'sem lista: aparecem todos os caixistas');
+    const mem = await owner.req('PUT', '/api/owner/terminals/' + tA.id + '/members', { user_ids: [other.id] });
+    ok(mem.status === 200 && mem.data.member_ids.length === 1, 'dono escolhe so a Caixa Cafetaria para este terminal', mem);
+    ok((await owner.req('PUT', '/api/owner/terminals/' + tA.id + '/members', { user_ids: [ctx.owner.id] })).data?.code === 'BAD_MEMBERS', 'o dono (nao caixista) nao entra na lista: 400');
+    const prof1 = (await term.req('GET', '/api/pos/terminal')).data;
+    ok(prof1.cashiers.length === 1 && prof1.cashiers[0].id === other.id, 'terminal mostra so o perfil escolhido', prof1.cashiers);
+    const notHere = await term.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+    ok(notHere.status === 403 && notHere.data?.code === 'NOT_ON_TERMINAL', 'caixista fora da lista nao entra neste terminal: 403', notHere);
+    // RLS: a tabela nova so mostra linhas da loja do contexto.
+    const otherTenant = await prisma.tenant.findFirst({ where: { id: { not: t } }, select: { id: true } });
+    if (otherTenant) ok((await prisma.runWithTenant(otherTenant.id, () => prisma.posTerminalMember.count({ where: { terminal_id: tA.id } }))) === 0, 'RLS: outra loja nao ve os perfis deste terminal');
+    ok((await prisma.runWithTenant(t, () => prisma.posTerminalMember.count({ where: { terminal_id: tA.id } }))) === 1, 'RLS: a propria loja ve a sua linha');
+    // Novo codigo para o MESMO terminal (o browser perdeu o cookie).
+    const rc = await owner.req('POST', '/api/owner/terminals/' + tA.id + '/pairing-code');
+    ok(rc.status === 201 && /^\d{6}$/.test(rc.data.code), 'codigo novo para o mesmo terminal', rc);
+    const lost = client();
+    const re = await lost.req('POST', '/api/pos/pair', { code: rc.data.code });
+    ok(re.status === 201, 'aparelho que perdeu a ligacao volta a emparelhar', re);
+    const list1 = (await owner.req('GET', '/api/owner/terminals')).data;
+    ok(list1.filter((x) => x.name === 'Balcao A40').length === 1 && list1.find((x) => x.id === tA.id).member_ids.length === 1, 'continua UM terminal, com os mesmos perfis');
+    ok((await term.req('GET', '/api/pos/terminal')).status === 401, 'o cookie antigo desse terminal deixa de valer');
+    ok((await lost.req('GET', '/api/pos/terminal')).data?.cashiers?.length === 1, 'o aparelho novo ve os mesmos perfis');
+    ok((await prisma.auditLog.count({ where: { tenant_id: t, action: 'TERMINAL_REPAIRED', entity_id: tA.id } })) === 1, 'auditoria TERMINAL_REPAIRED');
+    // Eliminar so revogado; reactivar.
+    ok((await owner.req('DELETE', '/api/owner/terminals/' + tA.id)).data?.code === 'TERMINAL_ACTIVE', 'eliminar terminal activo: 409');
+    ok((await owner.req('POST', '/api/owner/terminals/' + tA.id + '/revoke')).status === 200, 'dono revoga');
+    ok((await lost.req('GET', '/api/pos/terminal')).status === 401, 'revogado: o terminal deixa de funcionar');
+    ok((await owner.req('POST', '/api/owner/terminals/' + tA.id + '/reactivate')).status === 200, 'dono reactiva');
+    ok((await lost.req('GET', '/api/pos/terminal')).status === 200, 'reactivado: o mesmo aparelho volta a funcionar');
+    await owner.req('POST', '/api/owner/terminals/' + tA.id + '/revoke');
+    const del = await owner.req('DELETE', '/api/owner/terminals/' + tA.id);
+    ok(del.status === 200 && (await prisma.posTerminal.count({ where: { id: tA.id } })) === 0 && (await prisma.posTerminalMember.count({ where: { terminal_id: tA.id } })) === 0, 'revogado: eliminado, com a lista de perfis', del);
+
+    // --- A5: taxas escritas pelo dono
+    ok((await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'iva', vat_rate_std: 31 })).status === 400, 'IVA 31%: 400');
+    ok((await owner.req('PUT', '/api/settings/taxes', { inss_employer_pct: 31 })).status === 400, 'INSS 31%: 400');
+    const tx = await owner.req('PUT', '/api/settings/taxes', { vat_mode: 'iva', vat_rate_std: 15, inss_employer_pct: 2 });
+    ok(tx.status === 200, 'dono escreve IVA 15% e INSS 2%', tx);
+    const s0 = (await owner.req('GET', '/api/settings')).data;
+    ok(s0.taxes.vat_rate_std === 15 && s0.taxes.inss_employer_pct === 2, 'Definicoes devolvem 15% e 2%', s0.taxes);
+    await prisma.product.update({ where: { id: ctx.product.id }, data: { vat_rate: null, stock_qty: 50 } });
+    const sale15 = await owner.req('POST', '/api/sales', saleBody());
+    ok(sale15.status === 201 && sale15.data.vat_amount === 1304, 'venda de 100 MT com IVA 15% incluido: 13,04 MT de IVA', sale15.data);
+    await prisma.tenant.update({ where: { id: t }, data: { vat_mode: 'none', vat_rate_std: 16, inss_employer_pct: 0 } });
+
+    // --- A11: venda personalizada
+    const stock0 = (await prisma.product.findUnique({ where: { id: ctx.product.id } })).stock_qty;
+    const customName = 'Xarope meia dose ' + crypto.randomBytes(2).toString('hex');
+    const cs = await owner.req('POST', '/api/sales', {
+      items: [
+        { product_id: ctx.product.id, quantity: 1, unit_sell_price: 10000, unit_cost_price: 0 },
+        { custom: true, product_name: customName, quantity: 2, unit_sell_price: 7500, add_to_catalog: true },
+      ],
+      total_amount: 25000, payment_method: 'cash', amount_received: 25000,
+    });
+    ok(cs.status === 201, 'venda com artigo do catalogo + pedido personalizado (2 x 75 MT)', cs);
+    const items = await prisma.saleItem.findMany({ where: { sale_id: cs.data?.id } });
+    const ci = items.find((i) => i.custom);
+    ok(ci && ci.product_id === null && ci.product_name === customName && ci.unit_sell_price === 7500 && ci.unit_cost_price === 0, 'personalizado gravado sem produto, com a descricao e o preco escritos', ci);
+    ok((await prisma.product.findUnique({ where: { id: ctx.product.id } })).stock_qty === stock0 - 1, 'so o artigo do catalogo baixa o stock');
+    const newP = await prisma.product.findFirst({ where: { tenant_id: t, name: customName } });
+    ok(newP && newP.sell_price === 7500 && newP.stock_qty === 0 && newP.cost_price === 0, '«acrescentar ao catalogo»: produto criado com o preco, sem stock', newP);
+    const aud = await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'CUSTOM_ITEM_SOLD', entity_id: cs.data?.id } });
+    ok(aud && JSON.parse(aud.new_value).items[0].unit_sell_price === 7500, 'auditoria CUSTOM_ITEM_SOLD com o que foi escrito e o preco');
+    ok((await owner.req('POST', '/api/sales', { items: [{ custom: true, product_name: 'Sem preco', quantity: 1, unit_sell_price: 0 }], total_amount: 0, payment_method: 'cash' })).data?.code === 'CUSTOM_ITEM_PRICE', 'personalizado sem preco: 400');
+    ok((await owner.req('POST', '/api/sales', { items: [{ custom: true, quantity: 1, unit_sell_price: 500 }], total_amount: 500, payment_method: 'cash' })).status === 400, 'personalizado sem descricao: 400');
+    // Desconto acima do limite continua a pedir o PIN.
+    ok((await owner.req('POST', '/api/sales', { items: [{ custom: true, product_name: 'Prato do dia', quantity: 1, unit_sell_price: 10000 }], discount_amount: 5000, total_amount: 5000, payment_method: 'cash' })).data?.code === 'DISCOUNT_NEEDS_PIN', 'desconto de 50% num personalizado: pede o PIN do dono');
+    const day = (await owner.req('GET', '/api/owner/reports/daily')).data;
+    ok(day.top_products.some((p) => p.name === customName) || (day.by_category || []).some((c) => c.category === 'Personalizado'), 'relatorio: o personalizado aparece (categoria «Personalizado»)', day.by_category);
+    const cancel = await owner.req('POST', '/api/sales/' + cs.data.id + '/cancel', { pin: PIN, reason: 'teste A11' });
+    ok(cancel.status === 200 && (await prisma.product.findUnique({ where: { id: ctx.product.id } })).stock_qty === stock0, 'cancelar: repoe so o stock do artigo do catalogo', cancel);
+    ok((await owner.req('PUT', '/api/settings/custom-items', { enabled: false })).status === 200, 'dono desliga a venda personalizada');
+    ok((await owner.req('POST', '/api/sales', { items: [{ custom: true, product_name: 'Avulso', quantity: 1, unit_sell_price: 500 }], total_amount: 500, payment_method: 'cash' })).data?.code === 'CUSTOM_ITEMS_DISABLED', 'desligada: 403 CUSTOM_ITEMS_DISABLED');
+    await owner.req('PUT', '/api/settings/custom-items', { enabled: true });
+
+    // --- A8 + A7: fecho recusado com o escrito e o esperado; estatisticas por caixista
+    const caixa = await cashierTerminal();
+    const login = await caixa.req('POST', '/api/pos/login', { cashier_id: ctx.cashier.id, pin: CASHIER_PIN });
+    const sold = await caixa.req('POST', '/api/sales', saleBody());
+    ok(sold.status === 201, 'caixista vende 100 MT', sold.status === 201 ? undefined : { login, sold });
+    const low = await caixa.req('POST', '/api/pos/shift/close', { declared_amount: 1000 });
+    ok(low.status === 400 && low.data.code === 'COUNT_BELOW_EXPECTED' && low.data.expected === undefined, 'fecho abaixo do esperado: recusado e o caixista NAO ve o esperado', low.data);
+    const today = new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10);
+    const tl = (await owner.req('GET', '/api/owner/reports/timeline?from=' + today + '&to=' + today + '&types=shift&cashier_id=' + ctx.cashier.id)).data;
+    const fail = tl.rows.find((e) => e.shift_fail);
+    ok(fail && fail.declared === 1000 && fail.expected >= 10000 && fail.attempt >= 1, 'rastreio do dono: «escreveu 10 MT, esperado …, tentativa n/3»', fail);
+    ok(tl.totals.losses === 0 || tl.rows.every((e) => e.effect !== 'loss' || !e.shift_fail), 'tentativa recusada nao conta como perda nos totais');
+    const bell = (await owner.req('GET', '/api/owner/notifications')).data;
+    const bf = bell.items.find((n) => n.type === 'shift_attempt_fail');
+    ok(bf && bf.params.declared === 1000 && bf.params.expected >= 10000, 'sino do dono: fecho recusado com o escrito e o esperado', bf);
+    const tlOther = (await owner.req('GET', '/api/owner/reports/timeline?from=' + today + '&to=' + today + '&cashier_id=' + other.id)).data;
+    ok(tlOther.rows.length === 0, 'rastreio filtrado por outro caixista: nada deste caixista');
+    const exp = (await prisma.shiftClosing.findMany({ where: { tenant_id: t } })).length;
+    const good = await caixa.req('POST', '/api/pos/shift/close', { declared_amount: fail ? fail.expected : 999999 });
+    ok(good.data?.accepted === true && (await prisma.shiftClosing.count({ where: { tenant_id: t } })) === exp + 1, 'fecho certo aceite', good.data);
+    const rep = (await owner.req('GET', '/api/owner/reports/daily')).data;
+    const me = rep.by_cashier.find((c) => c.cashier_id === ctx.cashier.id);
+    ok(me && me.sales >= 1 && me.items >= 1 && me.shifts >= 1 && typeof me.worked_seconds === 'number', 'relatorio por caixista: vendas, artigos, turnos e horas', me);
+
+    // --- A9: subscricao ate uma data
+    const act = await admin.req('POST', '/api/admin/tenants/' + t + '/activate');
+    const until = new Date(act.data?.subscription_until);
+    ok(act.status === 200 && until > new Date(Date.now() + 27 * 86400000) && until < new Date(Date.now() + 32 * 86400000), 'admin activa: activa ate daqui a 1 mes (plano mensal)', act.data);
+    const act2 = await admin.req('POST', '/api/admin/tenants/' + t + '/activate', { months: 12 });
+    ok(act2.status === 200 && new Date(act2.data.subscription_until) > new Date(until.getTime() + 330 * 86400000), 'renovar antes do fim soma a partir da data que havia (+12 meses)', act2.data);
+    ok((await owner.req('GET', '/api/owner/tenant')).data.subscription_until, 'o painel do dono recebe a data');
+    await prisma.tenant.update({ where: { id: t }, data: { subscription_until: new Date(Date.now() - 60000) } });
+    await sleep(STATUS_CACHE_MS + 200);
+    const blocked = await owner.req('POST', '/api/sales', saleBody());
+    ok(blocked.status === 402 && blocked.data?.code === 'SUBSCRIPTION_OVERDUE', 'subscricao vencida: vender = 402 SUBSCRIPTION_OVERDUE', blocked);
+    ok((await owner.req('GET', '/api/owner/reports/daily')).status === 200, 'vencida: relatorios continuam visiveis');
+    await prisma.tenant.update({ where: { id: t }, data: { subscription_until: null } });
+
+    // --- A10: sugestao aceite em varios tipos de negocio
+    const sugName = 'Sumo Teste A40 ' + crypto.randomBytes(2).toString('hex');
+    const { nameKey } = require('../src/utils/catalogSuggestions');
+    await prisma.catalogSuggestion.create({ data: { tenant_id: t, product_id: newP.id, business_type: 'bottle_store', product_name: sugName, name_key: nameKey(sugName), category: 'Bebidas', barcode: '6001234567890', cost_price: 3000, sell_price: 5000 } });
+    const groups = (await admin.req('GET', '/api/admin/catalog-suggestions')).data.groups;
+    const g = groups.find((x) => x.name_key === nameKey(sugName));
+    ok(g && g.barcode === '6001234567890', 'sugestao chega ao admin com o codigo de barras do estabelecimento', g);
+    const acc = await admin.req('POST', '/api/admin/catalog-suggestions/accept', { business_type: 'bottle_store', name_key: nameKey(sugName), product_name: sugName, category: 'Bebidas', suggested_cost: 3000, suggested_sell: 5000, barcode: '6001234567890', also_types: ['mercearia', 'supermercado'] });
+    const rows = await prisma.masterCatalog.findMany({ where: { product_name: sugName } });
+    ok(acc.status === 201 && rows.length === 3 && rows.every((r) => r.barcode === '6001234567890'), 'aceite em 3 tipos de negocio de uma vez, com o codigo de barras', acc.data);
+    await prisma.masterCatalog.deleteMany({ where: { product_name: sugName } });
+  } finally {
+    await prisma.posTerminalMember.deleteMany({ where: { tenant_id: t } });
+    await prisma.tenant.update({ where: { id: t }, data: { vat_mode: 'none', vat_rate_std: 16, inss_employer_pct: 0, subscription_until: null, custom_items_enabled: true } });
+  }
+}
+
+async function test41() {
+  section(41, 'Etapa A: «Brevemente» + «Avise-me» (lista de espera publica, so o admin ve) e e-mail unico em todo o Genesis');
+  const phone = '84' + String(Date.now()).slice(-7);
+  const anon = client();
+  try {
+    ok((await anon.req('POST', '/api/auth/request-account', { businessName: 'Restaurante Teste', ownerName: 'Dono Teste', businessType: 'restaurante', location: 'Maputo', phone, email: 'r-' + phone + '@teste.local', acceptTerms: true })).data?.code === 'MODE_COMING_SOON', 'pedido de conta de restaurante: «brevemente» (400)');
+    ok((await anon.req('POST', '/api/waitlist', { business_type: 'bottle_store', name: 'Ana', phone, channel: 'whatsapp' })).status === 400, 'avise-me de um tipo que ja existe: 400');
+    ok((await anon.req('POST', '/api/waitlist', { business_type: 'hotelaria', name: 'Ana', phone, channel: 'email' })).status === 400, 'avisar por e-mail sem e-mail: 400');
+    const w = await anon.req('POST', '/api/waitlist', { business_type: 'hotelaria', name: 'Ana Teste', phone, email: '', channel: 'whatsapp' });
+    ok(w.status === 201, 'sem sessao: fica na lista (hotelaria, WhatsApp)', w);
+    const w2 = await anon.req('POST', '/api/waitlist', { business_type: 'hotelaria', name: 'Ana Teste', phone, email: 'ana-' + phone + '@teste.local', channel: 'both' });
+    ok(w2.status === 201 && (await prisma.modeWaitlist.count({ where: { phone } })) === 1, 'o mesmo numero outra vez: actualiza, nao duplica');
+    ok((await prisma.runWithTenant(ctx.tenant.id, () => prisma.modeWaitlist.count().catch(() => -1))) <= 0, 'a aplicacao (papel das lojas) nao ve a lista');
+    ok((await ownerClient().req('GET', '/api/admin/waitlist')).status === 403, 'dono de loja nao abre a lista do admin');
+    const admin = adminClient();
+    const list = (await admin.req('GET', '/api/admin/waitlist')).data;
+    const row = list.rows.find((r) => r.phone === phone);
+    ok(row && row.channel === 'both' && row.email && list.by_type.hotelaria >= 1, 'admin ve o pedido: hotelaria, WhatsApp e e-mail', row);
+    ok((await admin.req('POST', '/api/admin/waitlist/' + row.id + '/notified')).status === 200 && (await prisma.modeWaitlist.findUnique({ where: { id: row.id } })).notified_at, 'admin marca como avisado');
+    ok((await admin.req('POST', '/api/admin/waitlist/' + row.id + '/notified')).status === 404, 'marcar outra vez: 404');
+    // E-mail unico em todo o Genesis (com a RLS a loja so via as suas contas).
+    const r = await ownerClient().req('POST', '/api/profile/email/start', { new_email: ctx.admin.email, password: OWNER_PW });
+    ok(r.data?.code === 'EMAIL_IN_USE', 'perfil: e-mail de uma conta de OUTRA loja/admin = 409', r);
+  } finally {
+    await prisma.modeWaitlist.deleteMany({ where: { phone } });
+    await prisma.auditLog.deleteMany({ where: { action: 'WAITLIST_NOTIFIED', user_id: ctx.admin.id } });
+  }
+}
+
+async function test42() {
+  section(42, '30/10: auditoria legivel (nomes em vez de codigos, artigos da venda), 2.a via do recibo (com PIN e sem rede), versao do PIN do dono no terminal');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  await unlockCashier().catch(() => {});
+  await prisma.product.update({ where: { id: ctx.product.id }, data: { stock_qty: 50 } });
+  const sale = await caixa.req('POST', '/api/sales', saleBody({ items: [{ product_id: ctx.product.id, quantity: 2, unit_sell_price: 10000, unit_cost_price: 0 }], total_amount: 20000, amount_received: 20000 }));
+  ok(sale.status === 201, 'caixista vende 2 unidades', sale);
+  // --- Auditoria do dono: o caixista pelo nome, nunca o codigo.
+  const list = await owner.req('GET', '/api/owner/audit?period=today&group=sales&limit=20');
+  const row = list.data?.items?.find((a) => a.action === 'CREATE_SALE' && a.entity_id === sale.data.id);
+  ok(row && row.names && row.names[ctx.cashier.id] === ctx.cashier.name, 'venda na auditoria: o id do caixista vem com o nome', row && row.names);
+  const detail = await owner.req('GET', '/api/owner/audit/' + row.id);
+  const items = detail.data?.sale?.items || [];
+  ok(detail.status === 200 && items.length === 1 && items[0].name === ctx.product.name && items[0].quantity === 2 && items[0].line_total === 20000, 'detalhe: o que se vendeu (produto, quantidade, total da linha)', detail.data?.sale);
+  ok(detail.data.sale.cashier_name === ctx.cashier.name && detail.data.sale.total_amount === 20000, 'detalhe: caixista e total da venda', detail.data.sale);
+  const adj = await owner.req('PATCH', '/api/products/' + ctx.product.id + '/stock', { delta: -1, reason: 'contagem 42' });
+  ok(adj.status === 200, 'dono ajusta o stock', adj);
+  const stock = (await owner.req('GET', '/api/owner/audit?period=today&group=stock&limit=20')).data?.items?.find((a) => a.action === 'STOCK_ADJUSTMENT');
+  const pid = stock && (stock.new_value?.product_id || stock.old_value?.product_id);
+  ok(!pid || stock.names[pid] === ctx.product.name, 'ajuste de stock: o produto pelo nome', stock && stock.names);
+  // --- 2.a via: so com o PIN do dono, sempre auditada.
+  const wrong = await caixa.req('POST', '/api/pos/sales/' + sale.data.id + '/reprint', { pin: '0000' });
+  ok(wrong.status === 403 && wrong.data?.code === 'INVALID_AUTH_PIN', '2.a via com PIN errado: 403', wrong);
+  ok((await caixa.req('POST', '/api/pos/sales/' + sale.data.id + '/reprint', {})).status === 400, '2.a via sem PIN nem marca de «sem rede»: 400');
+  const okRe = await caixa.req('POST', '/api/pos/sales/' + sale.data.id + '/reprint', { pin: PIN });
+  ok(okRe.status === 201, '2.a via com o PIN do dono: 201', okRe);
+  const at = new Date().toISOString();
+  const off = await caixa.req('POST', '/api/pos/sales/' + sale.data.id + '/reprint', { offline_at: at });
+  ok(off.status === 201, '2.a via feita sem rede: o registo chega depois (201)', off);
+  const logs = await prisma.auditLog.findMany({ where: { tenant_id: t, action: 'RECEIPT_REPRINTED', entity_id: sale.data.id }, orderBy: { created_at: 'asc' } });
+  ok(logs.length === 2 && JSON.parse(logs[1].new_value).offline_at === at && logs.every((l) => l.user_id === ctx.cashier.id), 'auditoria: 2 registos RECEIPT_REPRINTED (um marcado «sem rede»)', logs.map((l) => l.new_value));
+  const ownSale = await owner.req('POST', '/api/sales', saleBody());
+  ok((await caixa.req('POST', '/api/pos/sales/' + ownSale.data.id + '/reprint', { pin: PIN })).status === 404, '2.a via de uma venda que nao e dele: 404');
+  const viaGroup = (await owner.req('GET', '/api/owner/audit?period=today&group=sales&limit=50')).data?.items || [];
+  ok(viaGroup.some((a) => a.action === 'RECEIPT_REPRINTED'), 'o dono ve a 2.a via no filtro «Vendas»');
+  // Lista do terminal traz as partes do pagamento (para reimprimir igual).
+  const mine = await caixa.req('POST', '/api/pos/sales', { pin: PIN });
+  ok(mine.status === 200 && mine.data.every((s) => Array.isArray(s.payments)), 'lista do terminal: cada venda traz as partes do pagamento', mine.status);
+  await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: { in: ['SALES_VIEW_PIN_FAIL'] } } });
+  // --- Versao do PIN do dono no terminal (nunca o hash).
+  const term = await cashierTerminal();
+  const info = (await term.req('GET', '/api/pos/terminal')).data;
+  const tenant = await prisma.tenant.findUnique({ where: { id: t }, select: { cancel_pin_hash: true } });
+  ok(typeof info.auth_pin_v === 'string' && info.auth_pin_v.length > 0 && !JSON.stringify(info).includes(tenant.cancel_pin_hash), 'terminal recebe a versao do PIN do dono, nunca o PIN nem o hash', info.auth_pin_v);
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42 };
 
 (async () => {
   await prisma.ready();

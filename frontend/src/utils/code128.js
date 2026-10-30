@@ -63,14 +63,25 @@ export function code128Svg(text, { module = 1.4, height = 40 } = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w.toFixed(1)}" height="${height}" viewBox="0 0 ${w.toFixed(2)} ${height}" fill="#000" role="img" aria-label="${String(text).replace(/[<>"&]/g, '')}">${rects}</svg>`;
 }
 
+// Venda feita sem ligacao (30/10/2026): o numero do dia so existe depois de
+// chegar ao servidor. O recibo sai logo com um numero provisorio (P + inicio do
+// id da venda, o mesmo do QR) e sem codigo de barras.
+// Titulo do recibo; a reimpressao (2.a via) fica sempre marcada no papel.
+export const receiptTitle = (sale, t) => (sale?.copy ? t('RECIBO') + ' · ' + t('2.ª VIA') : t('RECIBO'));
+
+export const isProvisional = (sale) => Boolean(sale?.offline) && !sale?.daily_number;
+
 // Valor do codigo de barras: AAAAMMDD + numero do dia com 4 algarismos (so algarismos -> conjunto C).
+// Venda provisoria: '' (sem codigo de barras).
 export function documentBarcode(sale) {
+  if (isProvisional(sale)) return '';
   return documentNumber(sale).replace('-', '').slice(0, 8) + String(Number(sale?.daily_number || 0)).padStart(4, '0');
 }
 
-// Numero do documento: AAAAMMDD-NNN (dia da venda + numero do dia).
+// Numero do documento: AAAAMMDD-NNN (dia da venda + numero do dia); provisorio: AAAAMMDD-P1A2B.
 export function documentNumber(sale) {
   const d = new Date(sale?.created_at || Date.now());
   const day = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  if (isProvisional(sale)) return day + '-P' + String(sale.id || '').replace(/-/g, '').slice(0, 4).toUpperCase();
   return day + '-' + String(Number(sale?.daily_number || 0)).padStart(3, '0');
 }

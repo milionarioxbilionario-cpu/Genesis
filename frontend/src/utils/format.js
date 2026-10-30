@@ -41,6 +41,13 @@ export const axisMoney = (cents) => (moneyHidden ? '' : (Number(cents || 0) / 10
 
 export const int = (n) => numberFmt('int').format(Number(n || 0));
 
+// Etapa A7: horas de turno (segundos) -> «45 min» / «7 h 05».
+export function workedText(secs) {
+  if (!secs) return '—';
+  const m = Math.round(secs / 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
+}
+
 export function pct(value, digits = 0) {
   const s = (Number(value || 0)).toFixed(digits);
   return (locale() === 'pt-PT' ? s.replace('.', ',') : s) + '%';

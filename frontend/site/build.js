@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pt from './textos.pt.js';
 import en from './textos.en.js';
-import { renderHome, renderPricing, renderSitemap } from './template.js';
+import { renderHome, renderLegal, renderPricing, renderSitemap } from './template.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LUCIDE = path.join(ROOT, 'node_modules', 'lucide-react', 'dist', 'esm', 'icons');
@@ -33,6 +33,10 @@ export function buildSite() {
     'planos.html': renderPricing(pt, ctx),
     'en/index.html': renderHome(en, ctx),
     'en/pricing.html': renderPricing(en, ctx),
+    'privacidade.html': renderLegal(pt, 'privacy', ctx),
+    'termos.html': renderLegal(pt, 'terms', ctx),
+    'en/privacy.html': renderLegal(en, 'privacy', ctx),
+    'en/terms.html': renderLegal(en, 'terms', ctx),
     'public/sitemap.xml': renderSitemap(),
   };
 }

@@ -23,10 +23,15 @@ const INSS_EMPLOYER_PCT = 4;
 
 const int = (v) => Math.trunc(Number(v || 0));
 
-// Taxa efectiva de um produto: null/undefined = taxa normal; 0 = isento.
-function productVatRate(rate) {
-  return rate === null || rate === undefined ? VAT_STANDARD : int(rate);
+// Taxa efectiva de um produto: null/undefined = taxa normal do estabelecimento
+// (16% por omissao; Etapa A: o dono pode mudar, ex. 15%); 0 = isento.
+function productVatRate(rate, standard = VAT_STANDARD) {
+  return rate === null || rate === undefined ? int(standard) : int(rate);
 }
+
+// Limites das taxas que o dono pode escrever (inteiros em %).
+const RATE_MIN = 0;
+const RATE_MAX = 30;
 
 // Parte do IVA incluida num valor bruto (arredondada ao centavo, metade para cima).
 function vatIncluded(gross, ratePct) {
@@ -83,6 +88,6 @@ function monthVat({ sales = [], items = [] }) {
 }
 
 module.exports = {
-  VAT_STANDARD, VAT_MODES, ISPC_BRACKETS, ISPC_LIMIT, INSS_EMPLOYER_PCT,
+  VAT_STANDARD, VAT_MODES, ISPC_BRACKETS, ISPC_LIMIT, INSS_EMPLOYER_PCT, RATE_MIN, RATE_MAX,
   productVatRate, vatIncluded, allocateDiscount, saleVat, ispcRate, ispcEstimate, monthVat,
 };

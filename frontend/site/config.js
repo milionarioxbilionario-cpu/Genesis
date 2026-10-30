@@ -10,8 +10,11 @@ export const SITE_UPDATED = '2026-10-25';
 export const WHATSAPP = '258870150055';
 export const WHATSAPP_DISPLAY = '+258 87 015 0055';
 
-// Plano unico (decisao de 24/10/2026). Centavos, como no resto do Genesis.
-export const PLAN_PRICE_CENTS = 300000;
+// Plano Basico (24/10/2026: 3 000 MT; fundador 30/10/2026: 8 000 MT). Centavos.
+export const PLAN_PRICE_CENTS = 800000;
+// Premium (fundador 30/10/2026: 14 000 MT/mes). O cartao so aparece no site
+// quando `items` tiver o que o Premium inclui — decisao do fundador (nunca inventar).
+export const PREMIUM = { price_cents: 1400000, items: [] };
 
 // Onde pagar (pedido do fundador 25/10/2026). Vazio = a seccao nao aparece e
 // a forma de pagamento combina-se pelo WhatsApp. NUNCA inventar numeros:

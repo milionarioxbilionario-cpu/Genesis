@@ -15,11 +15,11 @@ export default {
 
   meta: {
     home: {
-      title: 'Genesis MZ — Point of sale, stock and cash control for businesses in Mozambique',
+      title: 'Genesis MZ | Point of sale, stock and cash control for businesses in Mozambique',
       description: 'Sales and management system for bottle stores, grocery shops, pastry shops, butcheries, restaurants, supermarkets and other businesses in Mozambique. Sells without internet, keeps track of stock, expiry dates, the till and real profit. First month free.',
     },
     pricing: {
-      title: 'Pricing — Genesis MZ',
+      title: 'Pricing | Genesis MZ',
       description: 'Genesis MZ costs {price} per month, everything included. New customers do not pay the first month. Join on WhatsApp.',
     },
   },
@@ -36,12 +36,13 @@ export default {
     contact: '{g}! I would like to know more about Genesis MZ.',
     join: '{g}! I would like to join the Genesis MZ plan ({price}/month).',
     annual: '{g}! I am interested in the Genesis MZ annual plan. Could you tell me more?',
+    premium: '{g}! I would like to know more about the Genesis MZ Premium plan.',
     paid: '{g}! I have paid the Genesis MZ subscription and will send the receipt. My account email is: ',
   },
 
   hero: {
     eyebrow: 'Made for businesses in Mozambique',
-    title: 'Sales, stock and cash for your business — even without internet',
+    title: 'Sales, stock and cash for your business,|even without internet',
     lead: 'Know at any time, on your phone, how much you sold, how much you made and what is running out. Your cashiers sell with their own PIN, and every metical is recorded.',
     already: 'Already have an account?',
     counter: 'At the counter?',
@@ -59,7 +60,14 @@ export default {
     problem: 'The problem',
     solution: 'With Genesis',
     items: [
-      { icon: 'wallet', q: 'Cash goes missing from the till', a: 'At the end of the shift, the cashier counts the cash without knowing how much should be there. Genesis does the maths and shows you straight away if anything is missing, and in which shift. If it happens three times, the cashier is stopped until the owner decides.' },
+      { icon: 'wallet', q: 'Cash goes missing from the till', a: 'To close the shift, the cashier has to count the cash in the drawer and type how much they counted, without knowing how much Genesis expects. If they type less than they sold in cash, Genesis refuses it; on the third time, their profile is locked until the owner unlocks it.',
+        more: [
+          'Only cash counts (notes and coins). What was paid by M-Pesa, e-Mola or card is not part of the count: Genesis already knows those amounts.',
+          'Example: today the cashier sold 17,000 MT in cash. Genesis knows it, because every sale was recorded. When closing the shift, they must type 17,000 MT or more (there may be tips).',
+          'If they type 16,000 MT, Genesis refuses and tells them they have 2 attempts left, without saying how much it should be. If they type less again (16,900 MT, for example), 1 is left. On the third, their profile is locked and only the owner can unlock it.',
+          'Each wrong attempt is recorded with the amount they typed and what Genesis expected, and the owner sees it as soon as they open Genesis.',
+          'If they closed the shift saying they counted 17,000 MT and at the end of the day hand you 16,000 MT, the conversation is simple: “You closed the shift saying you counted 17,000 MT. Where is the rest?”',
+        ] },
       { icon: 'calendar-clock', q: 'Products that go past their expiry date', a: 'Genesis warns you before a product expires and puts on sale first what expires first. Whatever spoils is noted as a loss: you know how much you lost and why.' },
       { icon: 'hand-coins', q: 'Forgotten customer credit', a: 'Every credit ("txeneka") keeps the name, contact, amount and agreed day. Genesis reminds you on the day and when it is overdue, and every payment is noted.' },
       { icon: 'chart-column', q: 'Not knowing your real profit', a: 'At the end of the month, Genesis takes salaries, rent, expenses and what you paid suppliers away from what came in. You know how much is really left for you.' },
@@ -109,10 +117,24 @@ export default {
     title: 'For entrepreneurs in Mozambique',
     lead: 'Choose your type of business and Genesis already brings the most common products, with suggested prices you can change. All in meticais, with M-Pesa and e-Mola.',
     items: [
-      { icon: 'beer', t: 'Bottle store' }, { icon: 'shopping-basket', t: 'Grocery shop' }, { icon: 'croissant', t: 'Pastry shop' },
-      { icon: 'beef', t: 'Butchery' }, { icon: 'utensils', t: 'Restaurant' }, { icon: 'store', t: 'Supermarket' },
+      { icon: 'beer', t: 'Bottle store' }, { icon: 'wine', t: 'Drinks shop' }, { icon: 'shopping-basket', t: 'Grocery shop' },
+      { icon: 'store', t: 'Supermarket' }, { icon: 'wheat', t: 'Bakery' }, { icon: 'cake-slice', t: 'Pastry shop' },
+      { icon: 'coffee', t: 'Coffee shop' }, { icon: 'beef', t: 'Butchery' }, { icon: 'flame', t: 'Grill house' },
+      { icon: 'shirt', t: 'Boutique' },
     ],
     other: 'Your business is not on the list? Talk to us.',
+    soon: {
+      title: 'Coming soon',
+      lead: 'We are preparing Genesis for these businesses with the care they deserve. Leave your contact and we will let you know as soon as it is ready.',
+      items: [
+        { icon: 'utensils', t: 'Restaurant', type: 'restaurante' }, { icon: 'hamburger', t: 'Fast food', type: 'fast_food' },
+        { icon: 'pill', t: 'Pharmacy', type: 'farmacia' }, { icon: 'stethoscope', t: 'Clinic', type: 'clinica' },
+        { icon: 'bed-double', t: 'Hotel and lodging', type: 'hotelaria' }, { icon: 'scissors', t: 'Hair and beauty salon', type: 'salao' },
+        { icon: 'fuel', t: 'Fuel station', type: 'posto_combustivel' }, { icon: 'building', t: 'Property rental', type: 'arrendamento' },
+        { icon: 'briefcase', t: 'Self-employed seller', type: 'nhonguista' }, { icon: 'ship', t: 'Importer', type: 'importador' },
+      ],
+      cta: 'Let me know when it is ready',
+    },
   },
 
   how: {
@@ -175,7 +197,7 @@ export default {
     lead: 'One plan, everything included. No surprises.',
     planName: 'Genesis MZ',
     planDesc: 'For one business, with the owner, the cashiers and the counter.',
-    free: 'New customers: the first month is free — you only start paying in the second month.',
+    free: 'New customers: the first month is free. You only start paying in the second month.',
     join: 'Join the plan',
     start: 'Start the free month',
     included: 'Included in the plan',
@@ -195,13 +217,15 @@ export default {
     annualTitle: 'Prefer to pay for the whole year?',
     annualText: 'Talk to us about the annual plan.',
     annualCta: 'Ask about the annual plan',
+    premiumName: 'Premium',
+    premiumJoin: 'Talk to us about Premium',
     payTitle: 'How to join and pay',
     paySteps: [
       { t: 'Tap «Join the plan»', d: 'It opens a WhatsApp chat with us, with the message already written.' },
       { t: 'We arrange the payment', d: 'We tell you how to pay and the exact amount.' },
       { t: 'Send the receipt', d: 'After paying, send us the receipt and your account email.' },
     ],
-    paidCta: 'I have paid — send the receipt',
+    paidCta: 'I have paid: send the receipt',
     mobileTitle: 'Mobile wallet',
     bankTitle: 'Bank deposit or transfer',
     account: 'Account', nib: 'NIB', holder: 'Holder',

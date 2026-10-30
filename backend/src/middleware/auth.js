@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prisma');
-const { blockedTenantStatus, isTrialExpired } = require('../utils/tenantStatus');
+const { blockedTenantStatus, isTrialExpired, isSubscriptionOverdue } = require('../utils/tenantStatus');
 const { isScopeAllowed } = require('../utils/sessionScopes');
 const { validateSessionClaims } = require('../utils/sessionUser');
 const { checkPanelLock } = require('../utils/panelLock');
@@ -15,6 +15,7 @@ const { checkPanelLock } = require('../utils/panelLock');
 //  3b. painel do dono bloqueado (PIN pessoal, Fase 12.4) -> 423 PANEL_LOCKED (utils/panelLock.js)
 //  4. loja suspensa/bloqueada/eliminada                 -> 403
 //  5. trial expirado: so leitura                        -> 402 TRIAL_EXPIRED
+//  5b. subscricao paga vencida (Etapa A): so leitura    -> 402 SUBSCRIPTION_OVERDUE
 // Falha de infra-estrutura (BD em baixo) -> 503, nunca 401: um 401 mandaria
 // todos os POS para o login e a fila offline deixaria de tentar.
 //
@@ -68,6 +69,9 @@ const authMiddleware = async (req, res, next) => {
       if (blocked) return res.status(403).json({ error: 'Conta suspensa. Contacte o suporte.', code: 'TENANT_BLOCKED' });
       if (req.method !== 'GET' && !TRIAL_EXEMPT.test(req.originalUrl.split('?')[0]) && await isTrialExpired(req.user.tenantId)) {
         return res.status(402).json({ error: 'O período de teste terminou. Contacte a Genesis para activar a subscrição.', code: 'TRIAL_EXPIRED' });
+      }
+      if (req.method !== 'GET' && !TRIAL_EXEMPT.test(req.originalUrl.split('?')[0]) && await isSubscriptionOverdue(req.user.tenantId)) {
+        return res.status(402).json({ error: 'A subscrição está em atraso. Pode consultar tudo; para vender e alterar, renove com a Genesis.', code: 'SUBSCRIPTION_OVERDUE' });
       }
     }
 

@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BookOpen, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, ScrollText, Store } from 'lucide-react';
+import { BellRing, BookOpen, ChevronsLeft, ChevronsRight, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, ScrollText, Store } from 'lucide-react';
 import {
   Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, LanguageSwitch, MoneyInput, PageHeader,
-  PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
+  IconButton, PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
   BrandMark,
 } from '@ui';
 import { I18nProvider, useI18n } from '@i18n/react.jsx';
 import { getLang, setLang } from '@i18n/core.js';
 import { money, date, dateTime, errorMessage } from '../../frontend/src/utils/format.js';
 import './i18n_en.js';
+import { shareOrDownloadCard, whatsappLink } from './accountCard.js';
 
 // PAINEL DO SUPER ADMIN (Genesis 2.0) — build separada do produto. Mesmo
 // design system. Fala com /api/admin/* (protegido por origem + sessao +
@@ -31,7 +32,7 @@ const STATUS = {
   rejected: { label: 'Rejeitada', tone: 'neutral' },
   deleted: { label: 'Eliminada', tone: 'neutral' },
 };
-const TYPES = { bottle_store: 'Bottle store', mercearia: 'Mercearia', padaria: 'Pastelaria', talho: 'Talho', supermercado: 'Supermercado', restaurante: 'Restaurante', boutique: 'Boutique', outro: 'Outro' };
+const TYPES = { bottle_store: 'Bottle store', loja_bebidas: 'Loja de bebidas', mercearia: 'Mercearia', supermercado: 'Supermercado', padaria: 'Padaria', pastelaria: 'Pastelaria', cafetaria: 'Cafetaria', talho: 'Talho', restaurante: 'Restaurante', churrascaria: 'Churrascaria', fast_food: 'Fast food', boutique: 'Boutique', salao: 'Salão e barbearia', farmacia: 'Farmácia', clinica: 'Clínica', posto_combustivel: 'Posto de combustível', nhonguista: 'Vendedor por conta própria', importador: 'Importador', hotelaria: 'Hotel e alojamento', arrendamento: 'Arrendamento', outro: 'Outro' };
 
 function useLoad(url) {
   const [state, setState] = useState({ data: null, loading: true, error: '' });
@@ -104,36 +105,46 @@ function RequireAdmin({ children }) {
 const NAV = [
   { to: '/', label: 'Visão geral', icon: LayoutDashboard, end: true },
   { to: '/pedidos', label: 'Pedidos de conta', icon: Inbox },
-  { to: '/lojas', label: 'Lojas', icon: Store },
+  { to: '/lojas', label: 'Estabelecimentos', icon: Store },
   { to: '/catalogos', label: 'Catálogos-mestre', icon: BookOpen },
   { to: '/sugestoes', label: 'Sugestões', icon: Lightbulb },
   { to: '/pedidos-clientes', label: 'Pedidos de clientes', icon: PackageSearch },
+  { to: '/avise-me', label: 'Avise-me', icon: BellRing },
   { to: '/auditoria', label: 'Auditoria', icon: ScrollText },
 ];
+
+// Etapa A (27/10): barra recolhivel (so icones), lembrada no aparelho.
+const SIDEBAR_KEY = 'genesis.admin.sidebar.collapsed';
 
 function Shell() {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; } });
+  const toggle = () => setCollapsed((v) => { try { localStorage.setItem(SIDEBAR_KEY, v ? '0' : '1'); } catch { /* sem armazenamento */ } return !v; });
+  const logout = async () => { await api.post('/api/auth/logout').catch(() => {}); navigate('/entrar'); };
   return (
     <div className="min-h-screen bg-bg">
-      <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col border-r border-border bg-surface md:flex">
-        <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
-          <BrandMark />
-          <span className="font-semibold text-ink">Admin</span>
+      <aside className={cx('fixed inset-y-0 left-0 hidden flex-col border-r border-border bg-surface transition-[width] duration-200 md:flex', collapsed ? 'w-16' : 'w-56')}>
+        <div className={cx('flex h-14 items-center border-b border-border', collapsed ? 'justify-center px-2' : 'gap-2.5 px-5')}>
+          {!collapsed && <BrandMark />}
+          {!collapsed && <span className="flex-1 font-semibold text-ink">Admin</span>}
+          <IconButton label={collapsed ? t('Mostrar o menu') : t('Esconder o menu')} icon={collapsed ? ChevronsRight : ChevronsLeft} size="sm" onClick={toggle} />
         </div>
-        <nav className="flex-1 px-3 py-3">
+        <nav className={cx('flex-1 py-3', collapsed ? 'px-2' : 'px-3')}>
           {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('mb-0.5 flex h-9 items-center gap-3 rounded px-3 text-base', isActive ? 'bg-accent-soft font-medium text-accent-text' : 'text-ink-2 hover:bg-subtle')}>
-              <Icon size={17} strokeWidth={1.8} />{t(label)}
+            <NavLink key={to} to={to} end={end} title={collapsed ? t(label) : undefined} aria-label={collapsed ? t(label) : undefined} className={({ isActive }) => cx('mb-0.5 flex h-9 items-center rounded text-base', collapsed ? 'justify-center' : 'gap-3 px-3', isActive ? 'bg-accent-soft font-medium text-accent-text' : 'text-ink-2 hover:bg-subtle')}>
+              <Icon size={17} strokeWidth={1.8} />{!collapsed && t(label)}
             </NavLink>
           ))}
         </nav>
-        <div className="flex flex-col gap-2 border-t border-border p-3">
-          <LanguageSwitch className="px-2" onChange={saveLanguage} />
-          <Button variant="ghost" icon={LogOut} block onClick={async () => { await api.post('/api/auth/logout').catch(() => {}); navigate('/entrar'); }}>{t('Sair')}</Button>
+        <div className={cx('flex flex-col gap-2 border-t border-border', collapsed ? 'items-center p-2' : 'p-3')}>
+          {!collapsed && <LanguageSwitch className="px-2" onChange={saveLanguage} />}
+          {collapsed
+            ? <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={logout} />
+            : <Button variant="ghost" icon={LogOut} block onClick={logout}>{t('Sair')}</Button>}
         </div>
       </aside>
-      <main className="mx-auto max-w-content px-4 py-6 md:pl-64 md:pr-8 lg:py-8">
+      <main className={cx('mx-auto max-w-content px-4 py-6 transition-[padding] duration-200 md:pr-8 lg:py-8', collapsed ? 'md:pl-24' : 'md:pl-64')}>
         <div className="mb-4 flex items-center gap-2 md:hidden">
           <nav className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
             {NAV.map(({ to, label, end }) => <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('shrink-0 rounded px-3 py-1.5 text-sm', isActive ? 'bg-accent-soft text-accent-text' : 'text-ink-2')}>{t(label)}</NavLink>)}
@@ -202,7 +213,7 @@ function Requests() {
   const [busy, setBusy] = useState('');
   async function approve(x) {
     setBusy(x.id);
-    try { const r = await api.post(`/api/admin/requests/${x.id}/approve`); setApproved({ ...r.data, name: x.name, phone: x.phone }); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+    try { const r = await api.post(`/api/admin/requests/${x.id}/approve`); setApproved({ ...r.data, name: x.name, phone: x.phone, owner_name: x.owner_name }); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
   async function reject() {
     setBusy(rejecting.id);
@@ -235,6 +246,11 @@ function Requests() {
             <KeyValue label="Email" value={approved.email} />
             <KeyValue label={t('Senha temporária')} value={<span className="font-medium">{approved.temporaryPassword}</span>} />
             <KeyValue label={t('Teste até')} value={date(approved.trial_ends_at)} />
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button onClick={() => shareOrDownloadCard(approved).catch((err) => toast(errorMessage(err), 'danger'))}>{t('Imagem da conta')}</Button>
+              <Button variant="primary" onClick={() => window.open(whatsappLink(approved), '_blank', 'noopener')}>{t('Enviar pelo WhatsApp')}</Button>
+            </div>
+            <p className="mt-2 text-xs text-ink-muted">{t('O WhatsApp abre com a mensagem de boas-vindas e os dados de entrada; a imagem pode ser anexada à mesma conversa.')}</p>
           </>
         )}
       </Dialog>
@@ -261,7 +277,7 @@ function Tenants() {
   }), [data, filter, q]);
   return (
     <>
-      <PageHeader title={t('Lojas')} />
+      <PageHeader title={t('Estabelecimentos')} />
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Toolbar>
         <Segmented value={filter} onChange={setFilter} options={[{ value: 'live', label: t('Activas e em teste') }, { value: 'problem', label: t('Suspensas') }, { value: 'all', label: t('Todas') }]} />
@@ -271,7 +287,10 @@ function Tenants() {
         columns={[
           { key: 'name', header: t('Loja'), render: (x) => <div><p className="text-ink">{x.name}</p><p className="text-xs text-ink-muted">{t(TYPES[x.business_type] || x.business_type)} · {x.location}</p></div> },
           { key: 'status', header: t('Estado'), render: (x) => <Badge tone={STATUS[x.status]?.tone}>{STATUS[x.status] ? t(STATUS[x.status].label) : x.status}</Badge> },
-          { key: 'trial', header: t('Teste até'), render: (x) => (x.status === 'trial' ? <span className={new Date(x.trial_ends_at) < new Date() ? 'text-danger' : 'text-ink-2'}>{date(x.trial_ends_at)}</span> : '—') },
+          { key: 'trial', header: t('Teste / activa até'), render: (x) => {
+            const until = x.status === 'trial' ? x.trial_ends_at : x.status === 'active' ? x.subscription_until : null;
+            return until ? <span className={new Date(until) < new Date() ? 'text-danger' : 'text-ink-2'}>{date(until)}</span> : '—';
+          } },
           { key: 'sales', header: t('Vendas 30 dias'), align: 'right', render: (x) => x.sales_30d },
           { key: 'revenue', header: t('Receita 30 dias'), align: 'right', render: (x) => money(x.revenue_30d) },
         ]}
@@ -316,6 +335,7 @@ function TenantDrawer({ id, onClose, onChanged }) {
           <div>
             <KeyValue label={t('Estado')} value={<Badge tone={STATUS[s.status]?.tone}>{STATUS[s.status] ? t(STATUS[s.status].label) : s.status}</Badge>} />
             {s.status === 'trial' && <KeyValue label={t('Teste até')} value={date(s.trial_ends_at)} />}
+            {s.status === 'active' && <KeyValue label={t('Activa até')} value={s.subscription_until ? <span className={new Date(s.subscription_until) < new Date() ? 'text-danger' : undefined}>{date(s.subscription_until)}{new Date(s.subscription_until) < new Date() ? ' · ' + t('em atraso (só leitura)') : ''}</span> : t('sem data')} />}
             <KeyValue label={t('Dono')} value={s.owner_name} />
             <KeyValue label={t('Telefone')} value={s.phone} />
             <KeyValue label={t('Subscrição')} value={t('{value} / mês', { value: money(s.subscription_price) })} />
@@ -338,15 +358,19 @@ function TenantDrawer({ id, onClose, onChanged }) {
             )}
             <div className="flex flex-wrap items-end gap-2">
               <Select label={t('Mudar o plano')} value={plan || `${s.plan}:${s.plan_period}`} onChange={(e) => setPlan(e.target.value)} className="w-56">
-                <option value="basic:monthly">{t('Básico mensal (3 000 MT)')}</option>
+                <option value="basic:monthly">{t('Básico mensal (8 000 MT)')}</option>
                 <option value="basic:annual">{t('Básico anual')}</option>
-                <option value="premium:monthly">{t('Premium mensal (8 000 MT)')}</option>
+                <option value="premium:monthly">{t('Premium mensal (14 000 MT)')}</option>
                 <option value="premium:annual">{t('Premium anual')}</option>
               </Select>
               <Button loading={busy === 'plan'} disabled={!plan || plan === `${s.plan}:${s.plan_period}`} onClick={() => { const [p, per] = plan.split(':'); act('plan', t('Mudar o plano'), { body: { plan: p, period: per } }).then(() => setPlan('')); }}>{t('Guardar plano')}</Button>
             </div>
             {s.status === 'trial' && <Button loading={busy === 'extend-trial'} onClick={() => act('extend-trial', t('Prolongar teste'), { body: { days: 14 } })}>{t('Prolongar teste 14 dias')}</Button>}
-            {['trial', 'suspended'].includes(s.status) && <Button variant="primary" loading={busy === 'activate'} onClick={() => act('activate', t('Activar subscrição'), { confirm: t('A loja passa a pagante (activa).') })}>{t('Activar subscrição (pagamento recebido)')}</Button>}
+            {['trial', 'suspended', 'active'].includes(s.status) && (
+              <Button variant="primary" loading={busy === 'activate'} onClick={() => act('activate', s.status === 'active' ? t('Renovar subscrição') : t('Activar subscrição'), { confirm: s.plan_period === 'annual' ? t('Pagamento recebido: fica activa mais 12 meses.') : t('Pagamento recebido: fica activa mais 1 mês.') })}>
+                {s.status === 'active' ? t('Renovar (pagamento recebido)') : t('Activar subscrição (pagamento recebido)')}
+              </Button>
+            )}
             {['active', 'trial'].includes(s.status) && <Button variant="danger-ghost" loading={busy === 'suspend'} onClick={() => act('suspend', t('Suspender'), { confirm: t('Todas as sessões e terminais da loja deixam de funcionar de imediato.'), danger: true })}>{t('Suspender (pagamento em atraso)')}</Button>}
             {s.status === 'suspended' && <Button loading={busy === 'unsuspend'} onClick={() => act('unsuspend', t('Reactivar'))}>{t('Reactivar')}</Button>}
             {s.status === 'blocked' ? <Button loading={busy === 'unblock'} onClick={() => act('unblock', t('Desbloquear'))}>{t('Desbloquear')}</Button>
@@ -436,7 +460,19 @@ function Catalogs() {
               <MoneyInput label={t('Preço de compra sugerido')} valueCents={open.suggested_cost} onChangeCents={(v) => setOpen({ ...open, suggested_cost: v })} />
               <MoneyInput label={t('Preço de venda sugerido')} valueCents={open.suggested_sell} onChangeCents={(v) => setOpen({ ...open, suggested_sell: v })} />
             </div>
-            <Input label={t('Código de barras')} value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" />
+            <Input label={t('Código de barras')} value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" hint={open.barcode ? t('Veio do estabelecimento que criou o produto. Corrija se estiver errado.') : undefined} />
+            <fieldset>
+              <legend className="mb-1.5 text-sm font-medium text-ink">{t('Acrescentar também a')}</legend>
+              <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto rounded border border-border p-2 sm:grid-cols-2">
+                {Object.entries(TYPES).filter(([k]) => k !== open.business_type).map(([k, label]) => (
+                  <label key={k} className="flex items-center gap-2 text-sm text-ink-2">
+                    <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={(open.also_types || []).includes(k)}
+                      onChange={(e) => setOpen({ ...open, also_types: e.target.checked ? [...(open.also_types || []), k] : (open.also_types || []).filter((x) => x !== k) })} />
+                    {t(label)}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <Select label={t('Ícone')} value={open.icon || ''} onChange={(e) => setOpen({ ...open, icon: e.target.value || null })}>
               <option value="">{t('Automático (pela categoria)')}</option>
               {PRODUCT_ICONS.map((i) => <option key={i.key} value={i.key}>{t(i.label)}</option>)}
@@ -468,7 +504,7 @@ function LostRequests() {
         columns={[
           { key: 'name', header: t('Produto pedido'), render: (g) => <span className="text-ink">{g.product_name}</span> },
           { key: 'type', header: t('Tipo de negócio'), render: (g) => t(TYPES[g.business_type] || g.business_type) },
-          { key: 'stores', header: t('Lojas'), align: 'right', render: (g) => g.stores },
+          { key: 'stores', header: t('Estabelecimentos'), align: 'right', render: (g) => g.stores },
           { key: 'requests', header: t('Pedidos'), align: 'right', render: (g) => g.requests },
           { key: 'units', header: t('Unidades'), align: 'right', render: (g) => g.units },
           { key: 'price', header: t('Preço indicado'), align: 'right', render: (g) => g.avg_price == null ? <span className="text-ink-muted">—</span> : <span>{money(g.avg_price)}{g.min_price !== g.max_price && <span className="block text-xs text-ink-muted">{money(g.min_price)} – {money(g.max_price)}</span>}</span> },
@@ -478,6 +514,51 @@ function LostRequests() {
         rowKey={(g) => g.key}
         loading={loading && !data}
         empty={<p className="py-10 text-center text-ink-muted">{t('Nenhum pedido fora do catálogo neste período.')}</p>}
+      />
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- avise-me
+// Etapa A: quem deixou o contacto para os modos ainda por construir (restaurante,
+// hotel, farmacia…). Ninguem e avisado sozinho: o fundador avisa e marca aqui.
+const CHANNEL = { whatsapp: 'WhatsApp', email: 'E-mail', both: 'WhatsApp e e-mail' };
+function Waitlist() {
+  const toast = useToast();
+  const { t } = useI18n();
+  const { data, error, loading, reload } = useLoad('/api/admin/waitlist');
+  const [busy, setBusy] = useState('');
+  async function notified(r) {
+    setBusy(r.id);
+    try { await api.post('/api/admin/waitlist/' + r.id + '/notified'); toast(t('Marcado como avisado.')); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+  }
+  const wa = (r) => 'https://wa.me/' + (r.phone.length === 9 && r.phone.startsWith('8') ? '258' + r.phone : r.phone);
+  return (
+    <>
+      <PageHeader title={t('Avise-me')} description={t('Quem pediu para ser avisado quando o Genesis tiver o modo do seu negócio. Ninguém é avisado automaticamente: avise e marque aqui.')} />
+      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
+      {data && Object.keys(data.by_type).length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {Object.entries(data.by_type).sort((a, b) => b[1] - a[1]).map(([k, n]) => <Badge key={k}>{t(TYPES[k] || k)} · {n}</Badge>)}
+        </div>
+      )}
+      <Table
+        columns={[
+          { key: 'name', header: t('Nome'), render: (r) => <div><p className="text-ink">{r.name}</p><p className="num text-xs text-ink-muted">{r.phone}{r.email ? ' · ' + r.email : ''}</p></div> },
+          { key: 'type', header: t('Tipo de negócio'), render: (r) => t(TYPES[r.business_type] || r.business_type) },
+          { key: 'channel', header: t('Avisar por'), render: (r) => t(CHANNEL[r.channel] || r.channel) },
+          { key: 'when', header: t('Pedido'), render: (r) => <span className="whitespace-nowrap text-ink-2">{date(r.created_at)}</span> },
+          { key: 'state', header: t('Estado'), render: (r) => (r.notified_at ? <Badge tone="positive">{t('Avisado')}</Badge> : <Badge tone="warning">{t('À espera')}</Badge>) },
+          { key: 'actions', header: '', align: 'right', render: (r) => (
+            <div className="flex justify-end gap-1">
+              <Button size="sm" variant="ghost" onClick={() => window.open(wa(r), '_blank', 'noopener')}>WhatsApp</Button>
+              {!r.notified_at && <Button size="sm" loading={busy === r.id} onClick={() => notified(r)}>{t('Marcar avisado')}</Button>}
+            </div>
+          ) },
+        ]}
+        rows={data?.rows || []}
+        loading={loading && !data}
+        empty={<p className="py-10 text-center text-ink-muted">{t('Ainda ninguém pediu para ser avisado.')}</p>}
       />
     </>
   );
@@ -498,8 +579,9 @@ function Suggestions() {
       await api.post('/api/admin/catalog-suggestions/accept', {
         business_type: open.business_type, name_key: open.name_key, product_name: open.product_name.trim(), product_name_en: open.product_name_en?.trim() || null, category: open.category.trim() || 'Geral',
         suggested_cost: open.cost, suggested_sell: open.sell, barcode: open.barcode?.trim() || null, icon: open.icon || null,
+        also_types: open.also_types || [],
       });
-      toast(t('Acrescentado ao catálogo-mestre. As lojas novas deste tipo já o recebem.'));
+      toast((open.also_types || []).length ? t('Acrescentado a {n} tipos de negócio.', { n: 1 + open.also_types.length }) : t('Acrescentado ao catálogo-mestre. As lojas novas deste tipo já o recebem.'));
       setOpen(null); reload();
     } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
@@ -515,7 +597,7 @@ function Suggestions() {
         columns={[
           { key: 'name', header: t('Produto'), render: (g) => <div className="flex items-center gap-3"><ProductImage product={{ name: g.product_name, category: g.category, icon: g.icon }} size={32} /><div><p className="text-ink">{g.product_name}</p><p className="text-xs text-ink-muted">{g.category}{g.barcode ? ' · ' + g.barcode : ''}</p></div></div> },
           { key: 'type', header: t('Tipo de negócio'), render: (g) => t(TYPES[g.business_type] || g.business_type) },
-          { key: 'stores', header: t('Lojas'), align: 'right', render: (g) => g.stores },
+          { key: 'stores', header: t('Estabelecimentos'), align: 'right', render: (g) => g.stores },
           { key: 'cost', header: t('Compra (média)'), align: 'right', render: (g) => money(g.avg_cost) },
           { key: 'sell', header: t('Venda (média)'), align: 'right', render: (g) => <span>{money(g.avg_sell)}{g.min_sell !== g.max_sell && <span className="block text-xs text-ink-muted">{money(g.min_sell)} – {money(g.max_sell)}</span>}</span> },
           { key: 'when', header: t('Último'), render: (g) => <span className="whitespace-nowrap text-ink-2">{date(g.last_at)}</span> },
@@ -550,7 +632,19 @@ function Suggestions() {
               <MoneyInput label={t('Preço de venda sugerido')} valueCents={open.sell} onChangeCents={(v) => setOpen({ ...open, sell: v })} />
             </div>
             <KeyValue label={t('Preços de venda nas lojas')} value={open.min_sell === open.max_sell ? money(open.min_sell) : `${money(open.min_sell)} – ${money(open.max_sell)}`} />
-            <Input label={t('Código de barras')} value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" />
+            <Input label={t('Código de barras')} value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" hint={open.barcode ? t('Veio do estabelecimento que criou o produto. Corrija se estiver errado.') : undefined} />
+            <fieldset>
+              <legend className="mb-1.5 text-sm font-medium text-ink">{t('Acrescentar também a')}</legend>
+              <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto rounded border border-border p-2 sm:grid-cols-2">
+                {Object.entries(TYPES).filter(([k]) => k !== open.business_type).map(([k, label]) => (
+                  <label key={k} className="flex items-center gap-2 text-sm text-ink-2">
+                    <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={(open.also_types || []).includes(k)}
+                      onChange={(e) => setOpen({ ...open, also_types: e.target.checked ? [...(open.also_types || []), k] : (open.also_types || []).filter((x) => x !== k) })} />
+                    {t(label)}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <Select label={t('Ícone')} value={open.icon || ''} onChange={(e) => setOpen({ ...open, icon: e.target.value || null })}>
               <option value="">{t('Automático (pela categoria)')}</option>
               {PRODUCT_ICONS.map((i) => <option key={i.key} value={i.key}>{t(i.label)}</option>)}
@@ -598,6 +692,7 @@ export default function App() {
                 <Route path="catalogos" element={<Catalogs />} />
                 <Route path="sugestoes" element={<Suggestions />} />
                 <Route path="pedidos-clientes" element={<LostRequests />} />
+                <Route path="avise-me" element={<Waitlist />} />
                 <Route path="auditoria" element={<Audit />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

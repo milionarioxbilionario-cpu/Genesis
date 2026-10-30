@@ -19,7 +19,7 @@ const terminalAuth = require('../middleware/terminalAuth');
 const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { setSessionCookies, clearSessionCookies, verifyAccessToken, passwordVersion } = require('../utils/tokens');
-const { TERMINAL_COOKIE, consumePairingCode, createTerminal, terminalCookieOptions } = require('../utils/terminals');
+const { TERMINAL_COOKIE, consumePairingCode, createTerminal, rotateTerminal, terminalMemberIds, terminalCookieOptions } = require('../utils/terminals');
 const { getShiftLock } = require('../utils/shiftLock');
 const { getShiftState, closeShiftBlind, shiftStatus } = require('../utils/shift');
 const { checkAuthorizationPin } = require('../utils/authPin');
@@ -45,10 +45,13 @@ router.post('/pair', pairLimiter, asyncHandler(async (req, res) => {
   const pairing = consumePairingCode(code);
   if (!pairing) throw httpError(400, 'Código inválido ou expirado. Peça um novo ao dono da loja.', 'INVALID_PAIRING_CODE');
   if (await blockedTenantStatus(pairing.tenantId)) throw httpError(403, 'Conta suspensa. Contacte o suporte.', 'TENANT_BLOCKED');
-  const { terminal, cookieValue } = await createTerminal(pairing);
+  // Codigo de um terminal que ja existe: volta a ser o mesmo terminal (perfis e nome mantidos).
+  const made = pairing.terminalId ? await rotateTerminal({ tenantId: pairing.tenantId, terminalId: pairing.terminalId }) : await createTerminal(pairing);
+  if (!made) throw httpError(400, 'Código inválido ou expirado. Peça um novo ao dono do estabelecimento.', 'INVALID_PAIRING_CODE');
+  const { terminal, cookieValue } = made;
   res.cookie(TERMINAL_COOKIE, cookieValue, terminalCookieOptions());
   clearSessionCookies(res); // nenhuma sessao anterior (ex.: do dono) fica neste browser
-  await writeAudit({ tenantId: pairing.tenantId, userId: pairing.createdBy, req, action: 'TERMINAL_PAIRED', entityType: 'terminal', entityId: terminal.id, newValue: { name: terminal.name } });
+  await writeAudit({ tenantId: pairing.tenantId, userId: pairing.createdBy, req, action: pairing.terminalId ? 'TERMINAL_REPAIRED' : 'TERMINAL_PAIRED', entityType: 'terminal', entityId: terminal.id, newValue: { name: terminal.name } });
   res.status(201).json({ ok: true, terminal: { id: terminal.id, name: terminal.name } });
 }));
 
@@ -64,10 +67,13 @@ function currentPosSession(req, terminalId) {
 
 router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   const { tenantId, id } = req.terminal;
-  const [tenant, cashiers] = await Promise.all([
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true, discount_free_pct: true, vat_mode: true } }),
+  const [tenant, allCashiers, memberIds] = await Promise.all([
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true, discount_free_pct: true, vat_mode: true, custom_items_enabled: true, cancel_pin_hash: true } }),
     prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true, language: true } }),
+    terminalMemberIds(prisma, id),
   ]);
+  // Etapa A: so os perfis deste terminal (sem lista = todos, como antes).
+  const cashiers = memberIds ? allCashiers.filter((c) => memberIds.includes(c.id)) : allCashiers;
   const profiles = await Promise.all(cashiers.map(async (c) => {
     const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
     // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
@@ -78,8 +84,11 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   res.json({
     terminal: { id, name: req.terminal.name },
     // 15.1: o recibo leva o logotipo, o telefone, o NUIT e a mensagem final (tambem sem rede).
-    store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none' },
+    store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none', custom_items_enabled: tenant?.custom_items_enabled !== false },
     cashiers: profiles,
+    // 30/10/2026: versao do PIN de autorizacao do dono (nunca o PIN). Quando muda,
+    // o terminal apaga o verificador que permite abrir as vendas sem rede.
+    auth_pin_v: tenant?.cancel_pin_hash ? passwordVersion(tenant.cancel_pin_hash) : null,
     session_cashier_id: profiles.some((p) => p.id === sessionUserId) ? sessionUserId : null,
   });
 }));
@@ -90,6 +99,8 @@ router.post('/login', terminalAuth, pinLimiter, asyncHandler(async (req, res) =>
   const cashier = await prisma.user.findFirst({ where: { id: cashier_id, tenant_id: tenantId, role: 'cashier', is_active: true } });
   if (!cashier) throw httpError(404, 'Perfil não encontrado neste terminal', 'CASHIER_NOT_FOUND');
   if (!cashier.pin_hash) throw httpError(400, 'Este caixista ainda não tem PIN. O dono define-o em Equipa.', 'PIN_NOT_SET');
+  const memberIds = await terminalMemberIds(prisma, terminalId);
+  if (memberIds && !memberIds.includes(cashier.id)) throw httpError(403, 'Este perfil não trabalha neste terminal.', 'NOT_ON_TERMINAL');
 
   const fails = await prisma.auditLog.count({ where: { tenant_id: tenantId, action: 'POS_PIN_FAIL', entity_id: cashier.id, created_at: { gt: new Date(Date.now() - PIN_FAIL_WINDOW_MS) } } });
   if (fails >= PIN_FAIL_MAX) throw httpError(423, 'Demasiados PINs errados. Este perfil fica bloqueado 15 minutos.', 'PIN_LOCKED');
@@ -142,12 +153,28 @@ router.post('/sales', auth, requireRole('cashier'), asyncHandler(async (req, res
   await writeAudit({ req, tenantId, action: 'SALES_VIEWED', entityType: 'user', entityId: userId });
   const sales = await prisma.sale.findMany({
     where: { tenant_id: tenantId, cashier_user_id: userId },
-    include: { items: true },
+    include: { items: true, payments: { select: { method: true, amount: true } } },
     orderBy: { created_at: 'desc' },
     take: 20,
   });
   // Sem custos (especificacao 4.3).
   res.json(sales.map(({ total_cost, items, ...sale }) => ({ ...sale, items: items.map(({ unit_cost_price, ...item }) => item) })));
+}));
+
+// 2.a via do recibo (30/10/2026): so de vendas do proprio caixista, com o PIN do
+// dono outra vez (a lista ja o pediu) e sempre na auditoria — reimprimir um
+// recibo e a forma classica de levar mercadoria duas vezes com o mesmo talao.
+// Sem rede o PIN foi conferido no terminal (verificador local): o registo chega
+// depois, sem PIN, marcado «sem ligação» — so escreve na auditoria, nao abre nada.
+router.post('/sales/:id/reprint', auth, requireRole('cashier'), asyncHandler(async (req, res) => {
+  const body = z.object({ pin: z.string().regex(/^\d{4,6}$/, 'PIN inválido').optional(), offline_at: z.string().datetime().optional() })
+    .refine((x) => x.pin || x.offline_at, { message: 'PIN em falta' }).parse(req.body);
+  const { tenantId, userId } = req.user;
+  const sale = await prisma.sale.findFirst({ where: { id: req.params.id, tenant_id: tenantId, cashier_user_id: userId }, select: { id: true, daily_number: true, total_amount: true } });
+  if (!sale) throw httpError(404, 'Venda não encontrada', 'SALE_NOT_FOUND');
+  if (body.pin) await checkAuthorizationPin({ req, tenantId, pin: body.pin, failAction: 'SALES_VIEW_PIN_FAIL', entityType: 'sale', entityId: sale.id });
+  await writeAudit({ req, tenantId, action: 'RECEIPT_REPRINTED', entityType: 'sale', entityId: sale.id, newValue: { daily_number: sale.daily_number, total_amount: sale.total_amount, terminal_id: req.user.tid || null, ...(body.pin ? {} : { offline_at: body.offline_at }) } });
+  res.status(201).json({ ok: true });
 }));
 
 module.exports = router;

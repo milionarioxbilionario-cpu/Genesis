@@ -202,7 +202,7 @@ function LogoCard({ s, store, reload }) {
 // Fase 15.2/15.3: regime de impostos das vendas e INSS do patrao.
 const TAX_HELP = {
   none: 'As vendas não levam imposto. O recibo e os relatórios ficam como até aqui.',
-  iva: 'Os preços já incluem o IVA de 16%. O recibo mostra o IVA de cada venda e o relatório do mês mostra quanto tem de entregar ao Estado. Pode marcar produtos isentos (arroz, pão, farinha de milho…) na ficha de cada produto.',
+  iva: 'Os preços já incluem o IVA. O recibo mostra o IVA de cada venda e o relatório do mês mostra quanto tem de entregar ao Estado. Pode marcar produtos isentos (arroz, pão, farinha de milho…) na ficha de cada produto.',
   ispc: 'Imposto simplificado para quem vende até 4 000 000 MT por ano: 3%, 4% ou 5% do que vende, conforme o escalão, pago por trimestre. O relatório do mês mostra a estimativa.',
 };
 function TaxesCard({ s, reload }) {
@@ -211,12 +211,17 @@ function TaxesCard({ s, reload }) {
   const { reloadTenant } = useOutletContext() || {};
   const [mode, setMode] = useState(s.taxes?.vat_mode || 'none');
   const [inss, setInss] = useState((s.taxes?.inss_employer_pct || 0) > 0);
+  // Etapa A: taxas escritas pelo dono (16% e 4% por omissao).
+  const [vatRate, setVatRate] = useState(String(s.taxes?.vat_rate_std ?? 16));
+  const [inssPct, setInssPct] = useState(String(s.taxes?.inss_employer_pct || 4));
+  const pct = (v) => Number(v);
+  const okPct = (v) => /^\d{1,2}$/.test(String(v)) && pct(v) <= 30;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function save() {
     setBusy(true); setError('');
     try {
-      await api.put('/api/settings/taxes', { vat_mode: mode, inss_employer_pct: inss ? 4 : 0 });
+      await api.put('/api/settings/taxes', { vat_mode: mode, ...(mode === 'iva' ? { vat_rate_std: pct(vatRate) } : {}), inss_employer_pct: inss ? pct(inssPct) : 0 });
       toast(t('Alterações guardadas.'));
       reload(); reloadTenant?.();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
@@ -227,11 +232,17 @@ function TaxesCard({ s, reload }) {
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Segmented value={mode} onChange={setMode} options={[{ value: 'none', label: t('Sem imposto') }, { value: 'iva', label: t('IVA') }, { value: 'ispc', label: t('ISPC') }]} />
       <p className="mt-3 max-w-2xl text-sm text-ink-2">{t(TAX_HELP[mode])}</p>
+      {mode === 'iva' && (
+        <Input label={t('Taxa normal do IVA (%)')} inputMode="numeric" value={vatRate} onChange={(e) => setVatRate(e.target.value.replace(/\D/g, '').slice(0, 2))} hint={t('16% é a taxa normal em Moçambique. Mude só se o seu negócio paga outra taxa.')} error={okPct(vatRate) ? undefined : t('Escreva um número de 0 a 30.')} className="mt-4 max-w-xs" />
+      )}
       <label className="mt-5 flex max-w-2xl items-start gap-2.5 text-sm text-ink-2">
         <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--accent)]" checked={inss} onChange={(e) => setInss(e.target.checked)} />
-        <span>{t('Os trabalhadores estão inscritos no INSS. O patrão paga 4% dos salários e isso entra no lucro real do mês.')}</span>
+        <span>{t('Os trabalhadores estão inscritos no INSS. O que o patrão paga sobre os salários entra no lucro real do mês.')}</span>
       </label>
-      <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy} onClick={save}>{t('Guardar')}</Button></div>
+      {inss && (
+        <Input label={t('INSS pago pelo patrão (%)')} inputMode="numeric" value={inssPct} onChange={(e) => setInssPct(e.target.value.replace(/\D/g, '').slice(0, 2))} hint={t('4% é a taxa normal. Mude só se o seu negócio paga outra.')} error={okPct(inssPct) ? undefined : t('Escreva um número de 0 a 30.')} className="mt-3 max-w-xs" />
+      )}
+      <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy} disabled={(mode === 'iva' && !okPct(vatRate)) || (inss && !okPct(inssPct))} onClick={save}>{t('Guardar')}</Button></div>
     </Card>
   );
 }
@@ -452,8 +463,27 @@ function Discounts({ s, reload }) {
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'pin'} disabled={!/^\d{4,6}$/.test(pin) || !password} onClick={savePin}>{t('Guardar PIN')}</Button></div>
       </Card>
+      <CustomItemsCard s={s} reload={reload} />
       <PanelLockCard />
     </div>
+  );
+}
+
+// Etapa A: o dono decide se o terminal pode vender artigos fora do catalogo.
+function CustomItemsCard({ s, reload }) {
+  const toast = useToast();
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const on = s.custom_items_enabled !== false;
+  async function toggle(next) {
+    setBusy(true);
+    try { await api.put('/api/settings/custom-items', { enabled: next }); toast(next ? t('Pedido personalizado ligado.') : t('Pedido personalizado desligado.')); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader title={t('Pedido personalizado')} description={t('Permite ao caixista vender o que não está no catálogo (ex.: meia dose, avulso, prato do dia), com descrição e preço escritos. Não mexe no stock e fica no rastreio com quem vendeu e a que preço.')} action={<Badge tone={on ? 'positive' : undefined}>{on ? t('Ligado') : t('Desligado')}</Badge>} />
+      <div className="flex justify-end"><Button loading={busy} variant={on ? 'secondary' : 'primary'} onClick={() => toggle(!on)}>{on ? t('Desligar') : t('Ligar')}</Button></div>
+    </Card>
   );
 }
 
@@ -525,6 +555,8 @@ function Terminals() {
   const confirm = useConfirm();
   const { t } = useI18n();
   const terminals = useApi('/api/owner/terminals');
+  const cashiers = useApi('/api/owner/cashiers');
+  const [members, setMembers] = useState(null); // { terminal, ids }
   const [name, setName] = useState('');
   const [asking, setAsking] = useState(false);
   const [pairing, setPairing] = useState(null);
@@ -547,6 +579,26 @@ function Terminals() {
       setAsking(false); setPairing({ ...res.data, name: name.trim() }); setName('');
     } catch (err) { setError(errorMessage(err)); }
   }
+  // Etapa A: o browser do balcao perdeu a ligacao -> codigo novo para o MESMO terminal.
+  async function repair(term) {
+    try {
+      const res = await api.post(`/api/owner/terminals/${term.id}/pairing-code`);
+      setPairing({ ...res.data, name: term.name, repair: true });
+    } catch (err) { toast(errorMessage(err), 'danger'); }
+  }
+  async function reactivate(term) {
+    try { await api.post(`/api/owner/terminals/${term.id}/reactivate`); toast(t('Terminal reactivado.')); terminals.reload(); } catch (err) { toast(errorMessage(err), 'danger'); }
+  }
+  async function remove(term) {
+    if (!(await confirm({ title: t('Eliminar terminal'), message: t('"{name}" sai da lista de vez. As vendas feitas nele continuam nos relatórios.', { name: term.name }), confirmLabel: t('Eliminar'), danger: true }))) return;
+    try { await api.delete(`/api/owner/terminals/${term.id}`); toast(t('Terminal eliminado.')); terminals.reload(); } catch (err) { toast(errorMessage(err), 'danger'); }
+  }
+  async function saveMembers() {
+    try {
+      await api.put(`/api/owner/terminals/${members.terminal.id}/members`, { user_ids: members.ids });
+      toast(t('Perfis do terminal guardados.')); setMembers(null); terminals.reload();
+    } catch (err) { toast(errorMessage(err), 'danger'); }
+  }
   async function revoke(term) {
     if (!(await confirm({ title: t('Revogar terminal'), message: t('"{name}" deixa de poder vender. Vendas ainda por enviar nesse computador perdem-se.', { name: term.name }), confirmLabel: t('Revogar'), danger: true }))) return;
     try { await api.post(`/api/owner/terminals/${term.id}/revoke`); toast(t('Terminal revogado.')); terminals.reload(); } catch (err) { toast(errorMessage(err), 'danger'); }
@@ -563,7 +615,19 @@ function Terminals() {
           { key: 'created_at', header: t('Emparelhado'), render: (x) => dateTime(x.created_at) },
           { key: 'last_seen_at', header: t('Última actividade'), render: (x) => dateTime(x.last_seen_at) },
           { key: 'state', header: t('Estado'), render: (x) => (x.revoked_at ? <Badge>{t('Revogado')}</Badge> : <Badge tone="positive">{t('Activo')}</Badge>) },
-          { key: 'actions', header: '', align: 'right', render: (x) => !x.revoked_at && <Button size="sm" variant="danger-ghost" onClick={() => revoke(x)}>{t('Revogar')}</Button> },
+          { key: 'members', header: t('Perfis'), render: (x) => <span className="text-ink-2">{x.member_ids?.length ? t('{n} perfil(is)', { n: x.member_ids.length }) : t('Todos (balcão geral)')}</span> },
+          { key: 'actions', header: '', align: 'right', render: (x) => (
+            <span className="flex flex-wrap justify-end gap-1">
+              {x.revoked_at ? (<>
+                <Button size="sm" variant="ghost" onClick={() => reactivate(x)}>{t('Reactivar')}</Button>
+                <Button size="sm" variant="danger-ghost" onClick={() => remove(x)}>{t('Eliminar')}</Button>
+              </>) : (<>
+                <Button size="sm" variant="ghost" onClick={() => setMembers({ terminal: x, ids: x.member_ids || [] })}>{t('Perfis')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => repair(x)}>{t('Novo código')}</Button>
+                <Button size="sm" variant="danger-ghost" onClick={() => revoke(x)}>{t('Revogar')}</Button>
+              </>)}
+            </span>
+          ) },
         ]}
         rows={terminals.data || []}
         loading={terminals.loading && !terminals.data}
@@ -574,10 +638,25 @@ function Terminals() {
         {error && <Alert tone="danger" className="mb-3">{error}</Alert>}
         <Input label={t('Nome do terminal')} placeholder={t('Ex.: Balcão principal')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
       </Dialog>
+      <Dialog open={Boolean(members)} size="sm" title={members ? t('Perfis de {name}', { name: members.terminal.name }) : ''} onClose={() => setMembers(null)}
+        footer={<><Button onClick={() => setMembers(null)}>{t('Cancelar')}</Button><Button variant="primary" onClick={saveMembers}>{t('Guardar')}</Button></>}>
+        {members && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-ink-2">{t('Escolha quem trabalha neste terminal (ex.: só os da cafetaria). Sem nenhum marcado, aparecem todos os caixistas.')}</p>
+            {(cashiers.data || []).filter((c) => c.is_active !== false).map((c) => (
+              <label key={c.id} className="flex items-center gap-2.5 rounded border border-border px-3 py-2 text-base text-ink">
+                <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={members.ids.includes(c.id)} onChange={(e) => setMembers((m) => ({ ...m, ids: e.target.checked ? [...m.ids, c.id] : m.ids.filter((i) => i !== c.id) }))} />
+                {c.name}
+              </label>
+            ))}
+          </div>
+        )}
+      </Dialog>
       <Dialog open={Boolean(pairing)} size="sm" title={pairing ? t('Código para {name}', { name: pairing.name }) : ''} onClose={() => { setPairing(null); terminals.reload(); }}
         footer={<Button variant="primary" onClick={() => { setPairing(null); terminals.reload(); }}>{t('Concluído')}</Button>}>
         {pairing && (
           <>
+            {pairing.repair && <Alert tone="info" className="mb-3">{t('Use este código no aparelho que perdeu a ligação. Continua a ser o mesmo terminal, com os mesmos perfis; o código antigo desse aparelho deixa de valer.')}</Alert>}
             <ol className="mb-4 list-decimal space-y-1 pl-5 text-base text-ink-2">
               <li>{t('No computador do balcão, abra')} <span className="font-medium text-ink">{window.location.origin}/terminal</span></li>
               <li>{t('Introduza este código:')}</li>

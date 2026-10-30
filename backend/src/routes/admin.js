@@ -25,6 +25,7 @@ const { iconSchema } = require('../utils/productIcons');
 const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
 const { groupLostRequests } = require('../utils/lostRequests');
 const { PLANS, PERIODS, effectivePlan } = require('../services/plans');
+const { BUSINESS_TYPES } = require('../utils/businessTypes');
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -187,8 +188,10 @@ router.post('/tenants/:tenantId/extend-trial', asyncHandler(async (req, res) => 
   res.json({ ok: true, trial_ends_at: base });
 }));
 
-// Fase 16: plano Basico (3 000 MT/mes) ou Premium (8 000 MT/mes); mensal ou anual.
-const PLAN_PRICE = { basic: 300000, premium: 800000 };
+// Fase 16: plano Basico ou Premium; mensal ou anual. Precos do fundador de
+// 30/10/2026: Basico 8 000 MT/mes, Premium 14 000 MT/mes (antes 3 000 / 8 000).
+// So vale para quem muda de plano a partir de agora; quem ja paga fica com o seu preco.
+const PLAN_PRICE = { basic: 800000, premium: 1400000 };
 router.post('/tenants/:tenantId/plan', asyncHandler(async (req, res) => {
   const data = z.object({ plan: z.enum(PLANS), period: z.enum(PERIODS) }).parse(req.body);
   const tenant = await findTenant(req.params.tenantId);
@@ -198,7 +201,21 @@ router.post('/tenants/:tenantId/plan', asyncHandler(async (req, res) => {
   res.json({ ok: true, ...next });
 }));
 
-router.post('/tenants/:tenantId/activate', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'ACTIVATE_SUBSCRIPTION', to: 'active' })));
+// Etapa A: activar = pago ate uma data (+1 mes no plano mensal, +12 no anual, ou o
+// que o admin escolher). Renovar antes do fim soma a partir da data que ja havia.
+router.post('/tenants/:tenantId/activate', asyncHandler(async (req, res) => {
+  const { months } = z.object({ months: z.number().int().min(1).max(24).optional() }).parse(req.body || {});
+  const tenant = await findTenant(req.params.tenantId);
+  if (['deleted', 'rejected', 'pending'].includes(tenant.status)) throw httpError(409, 'Este estabelecimento não pode ser activado (estado: ' + tenant.status + ')', 'NOT_ACTIVATABLE');
+  const n = months || (tenant.plan_period === 'annual' ? 12 : 1);
+  const now = new Date();
+  const until = tenant.subscription_until && tenant.subscription_until > now ? new Date(tenant.subscription_until) : now;
+  until.setMonth(until.getMonth() + n);
+  await prisma.tenant.update({ where: { id: tenant.id }, data: { status: 'active', subscription_until: until } });
+  await audit(req, 'ACTIVATE_SUBSCRIPTION', tenant.id, { status: tenant.status, subscription_until: tenant.subscription_until }, { status: 'active', subscription_until: until, months: n });
+  afterStatusChange();
+  res.json({ ok: true, status: 'active', subscription_until: until });
+}));
 
 // Modo suporte (so leitura): codigo de uso unico valido 60 s.
 router.post('/tenants/:tenantId/support', asyncHandler(async (req, res) => {
@@ -210,10 +227,25 @@ router.post('/tenants/:tenantId/support', asyncHandler(async (req, res) => {
   res.json({ url: `${APP_URL()}/suporte#${code}` });
 }));
 
+// ---------------------------------------------------------------- avise-me
+// Etapa A: quem pediu para ser avisado quando o modo do seu negocio existir.
+router.get('/waitlist', asyncHandler(async (req, res) => {
+  const rows = await prisma.modeWaitlist.findMany({ orderBy: { created_at: 'desc' }, take: 1000 });
+  const by_type = {};
+  for (const r of rows) if (!r.notified_at) by_type[r.business_type] = (by_type[r.business_type] || 0) + 1;
+  res.json({ rows, by_type, pending: rows.filter((r) => !r.notified_at).length });
+}));
+
+router.post('/waitlist/:id/notified', asyncHandler(async (req, res) => {
+  const r = await prisma.modeWaitlist.updateMany({ where: { id: req.params.id, notified_at: null }, data: { notified_at: new Date() } });
+  if (r.count !== 1) throw httpError(404, 'Pedido não encontrado ou já avisado', 'WAITLIST_NOT_FOUND');
+  await writeAudit({ req, tenantId: null, action: 'WAITLIST_NOTIFIED', entityType: 'waitlist', entityId: req.params.id });
+  res.json({ ok: true });
+}));
+
 // ---------------------------------------------------------------- sugestoes
 // Produtos que as lojas criaram fora do catalogo-mestre (Fase 8.2). Agrupados
 // por tipo de negocio + nome; sem nomes de lojas (so quantas e os precos).
-const BUSINESS_TYPES = ['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro'];
 const groupKeySchema = z.object({
   business_type: z.enum(BUSINESS_TYPES),
   name_key: z.string().min(1).max(200),
@@ -233,23 +265,34 @@ router.post('/catalog-suggestions/accept', asyncHandler(async (req, res) => {
     suggested_sell: z.number().int().positive('preço de venda tem de ser maior que zero'),
     barcode: z.string().trim().regex(/^[0-9A-Za-z-]{4,32}$/, 'código de barras inválido').nullish(),
     icon: iconSchema,
+    // Etapa A: tambem noutros tipos de negocio (ex.: Coca-Cola na mercearia e no supermercado).
+    also_types: z.array(z.enum(BUSINESS_TYPES)).max(40).default([]),
   }).safeParse(req.body);
   if (!parsed.success) throw httpError(400, parsed.error.errors[0].message, 'INVALID_SUGGESTION');
   const d = parsed.data;
   const created = await prisma.$transaction(async (tx) => {
     const pending = await tx.catalogSuggestion.findMany({ where: { business_type: d.business_type, name_key: d.name_key, status: 'pending' }, select: { id: true } });
     if (!pending.length) throw httpError(404, 'Sugestão já tratada ou inexistente', 'SUGGESTION_NOT_FOUND');
-    const existing = await tx.masterCatalog.findMany({ where: { business_type: d.business_type }, select: { product_name: true } });
-    if (existing.some((m) => nameKey(m.product_name) === nameKey(d.product_name))) throw httpError(409, 'Esse produto já está no catálogo-mestre deste tipo de negócio', 'ALREADY_IN_CATALOG');
-    const row = await tx.masterCatalog.create({ data: {
-      business_type: d.business_type, product_name: d.product_name, product_name_en: d.product_name_en || null, category: d.category,
-      suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell, barcode: d.barcode || null, icon: d.icon || null,
-    } });
+    const types = [d.business_type, ...d.also_types.filter((x) => x !== d.business_type)];
+    const existing = await tx.masterCatalog.findMany({ where: { business_type: { in: types } }, select: { business_type: true, product_name: true } });
+    const has = (type) => existing.some((m) => m.business_type === type && nameKey(m.product_name) === nameKey(d.product_name));
+    if (has(d.business_type)) throw httpError(409, 'Esse produto já está no catálogo-mestre deste tipo de negócio', 'ALREADY_IN_CATALOG');
+    const added = [];
+    let row = null;
+    for (const type of types) {
+      if (has(type)) continue; // noutro tipo ja existia: fica como estava
+      const r = await tx.masterCatalog.create({ data: {
+        business_type: type, product_name: d.product_name, product_name_en: d.product_name_en || null, category: d.category,
+        suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell, barcode: d.barcode || null, icon: d.icon || null,
+      } });
+      if (!row) row = r;
+      added.push(type);
+    }
     await tx.catalogSuggestion.updateMany({ where: { id: { in: pending.map((p) => p.id) } }, data: { status: 'added', resolved_at: new Date(), resolved_by: req.user.userId } });
-    return { row, stores: pending.length };
+    return { row, added, stores: pending.length };
   });
-  await writeAudit({ req, tenantId: null, action: 'CATALOG_SUGGESTION_ADDED', entityType: 'master_catalog', entityId: created.row.id, oldValue: null, newValue: { business_type: d.business_type, product_name: d.product_name, suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell } });
-  res.status(201).json({ id: created.row.id, message: 'Acrescentado ao catálogo-mestre.' });
+  await writeAudit({ req, tenantId: null, action: 'CATALOG_SUGGESTION_ADDED', entityType: 'master_catalog', entityId: created.row.id, oldValue: null, newValue: { business_type: d.business_type, also_types: created.added.slice(1), product_name: d.product_name, suggested_cost: d.suggested_cost, suggested_sell: d.suggested_sell } });
+  res.status(201).json({ id: created.row.id, added_types: created.added, message: 'Acrescentado ao catálogo-mestre.' });
 }));
 
 router.post('/catalog-suggestions/dismiss', asyncHandler(async (req, res) => {

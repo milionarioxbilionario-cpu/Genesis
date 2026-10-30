@@ -5,7 +5,7 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { lossReason, timelineDetail, timelineExtra, timelineTitle, timelineWhen, timelineWho } from '../../utils/timelineText';
 import PdfButton from '../../components/PdfButton';
-import { money, int, isoDay, date, dateTime, monthName, PAYMENT_LABEL, axisMoney } from '../../utils/format';
+import { money, int, isoDay, date, dateTime, monthName, PAYMENT_LABEL, axisMoney, workedText } from '../../utils/format';
 import { getLang, locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import SaleDrawer from '../../components/SaleDrawer';
@@ -91,10 +91,7 @@ function Breakdown({ r }) {
         {Object.entries(r.by_payment).filter(([k, v]) => v > 0 || k !== 'mobile_money').map(([k, v]) => <KeyValue key={k} label={PAYMENT_LABEL[k] || k} value={money(v)} />)}
         {r.discounts_total > 0 && <KeyValue label={t('Descontos concedidos')} value={'−' + money(r.discounts_total)} tone="danger" />}
       </Card>
-      <Card>
-        <CardHeader title={t('Por caixista')} />
-        {r.by_cashier.length === 0 ? <p className="text-ink-muted">{t('Sem vendas.')}</p> : r.by_cashier.map((c) => <KeyValue key={c.cashier_id} label={`${c.name} · ${t('{n} venda(s)', { n: c.sales })}`} value={money(c.revenue)} />)}
-      </Card>
+      <CashierStats rows={r.by_cashier} />
       <Card>
         <CardHeader title={t('Perdas')} description={r.losses.length ? t('{n} registo(s) · {v} ao custo', { n: r.losses.length, v: money(r.losses_total) }) : undefined} />
         {r.losses.length === 0 ? <p className="text-ink-muted">{t('Nenhuma perda registada.')}</p> : r.losses.slice(0, 8).map((l) => (
@@ -198,12 +195,44 @@ const TYPE_FILTERS = [
 ];
 const PAGE = 50;
 
+// Etapa A7: quem trabalhou quanto tempo, quem vendeu mais (vendas e artigos) e quem rendeu mais.
+function CashierStats({ rows }) {
+  const { t } = useI18n();
+  const best = (k) => (rows.length > 1 ? rows.reduce((a, b) => (b[k] > a[k] ? b : a)).cashier_id : null);
+  const topSales = best('sales');
+  const topRevenue = best('revenue');
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader title={t('Por caixista')} description={t('Horas de turno (da primeira entrada ao fecho), vendas, artigos e receita.')} />
+      <Table
+        columns={[
+          { key: 'name', header: t('Caixista'), render: (c) => (
+            <span className="flex flex-wrap items-center gap-1.5 text-ink">{c.name}
+              {c.cashier_id === topSales && <Badge tone="positive">{t('Mais vendas')}</Badge>}
+              {c.cashier_id === topRevenue && <Badge tone="positive">{t('Mais receita')}</Badge>}
+            </span>
+          ) },
+          { key: 'hours', header: t('Horas'), align: 'right', render: (c) => <span className="num text-ink-2">{workedText(c.worked_seconds)}{c.shifts > 1 ? ` · ${t('{n} turnos', { n: c.shifts })}` : ''}</span> },
+          { key: 'sales', header: t('Vendas'), align: 'right', render: (c) => <span className="num">{int(c.sales)}</span> },
+          { key: 'items', header: t('Artigos'), align: 'right', render: (c) => <span className="num">{formatHuman(c.items || 0)}</span> },
+          { key: 'revenue', header: t('Receita'), align: 'right', render: (c) => <span className="num font-medium">{money(c.revenue)}</span> },
+        ]}
+        rows={rows}
+        rowKey="cashier_id"
+        empty={<p className="py-6 text-center text-ink-muted">{t('Sem vendas.')}</p>}
+      />
+    </Card>
+  );
+}
+
 function Timeline({ from, to }) {
   const { t } = useI18n();
   const [type, setType] = useState('');
+  const [cashierId, setCashierId] = useState('');
+  const cashiers = useApi('/api/owner/cashiers');
   const [page, setPage] = useState(1);
   const [sale, setSale] = useState(null);
-  const url = `/api/owner/reports/timeline?from=${from}&to=${to}&page=${page}&page_size=${PAGE}${type ? '&types=' + type : ''}`;
+  const url = `/api/owner/reports/timeline?from=${from}&to=${to}&page=${page}&page_size=${PAGE}${type ? '&types=' + type : ''}${cashierId ? '&cashier_id=' + cashierId : ''}`;
   const { data, loading, error } = useApi(url);
   const sameDay = from === to;
   const value = (e) => {
@@ -220,9 +249,15 @@ function Timeline({ from, to }) {
           <h2 className="text-lg font-semibold text-ink">{t('Rastreio')}</h2>
           <p className="text-sm text-ink-muted">{t('Cada movimento, por ordem. Clique numa venda para ver o recibo.')}</p>
         </div>
-        <Select aria-label={t('Tipo de movimento')} value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} className="no-print w-52">
-          {TYPE_FILTERS.map((f) => <option key={f.value} value={f.value}>{t(f.label)}</option>)}
-        </Select>
+        <div className="no-print flex flex-wrap gap-2">
+          <Select aria-label={t('Caixista')} value={cashierId} onChange={(e) => { setCashierId(e.target.value); setPage(1); }} className="w-48">
+            <option value="">{t('Todos os caixistas')}</option>
+            {(cashiers.data || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </Select>
+          <Select aria-label={t('Tipo de movimento')} value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} className="w-52">
+            {TYPE_FILTERS.map((f) => <option key={f.value} value={f.value}>{t(f.label)}</option>)}
+          </Select>
+        </div>
       </div>
       {error && <Alert tone="danger">{error}</Alert>}
       {data && (

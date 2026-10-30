@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
-import { CheckCircle2, ImageDown, Printer } from 'lucide-react';
+import { CheckCircle2, ImageDown, Printer, WifiOff } from 'lucide-react';
 import api from '../../utils/api';
 import db from '../../db/localDb';
 import { newUuid, SYNC_STATE } from '../../utils/syncPolicy';
 import { preloadReceiptPdf, printReceipt, saleVerifyUrl, shareReceiptImage } from '../../utils/receiptPrinter';
+import { documentNumber } from '../../utils/code128';
 import PdfReadyDialog from '../../components/PdfReadyDialog';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
 import { money, time, errorMessage, PAYMENT_LABEL } from '../../utils/format';
+import { t as tr } from '../../i18n/core';
+import { checkOfflinePin, isOfflineError, loadSnapshot, rememberPin, saveSnapshot } from '../../utils/offlinePin';
 import { Alert, Badge, Button, Dialog, Input, KeyValue, MoneyInput, Segmented, Select, Spinner, useToast } from '../../components/ui';
 import { formatQty, isMeasured, lineAmount, parseQty, qtyInput } from '../../utils/units';
 
@@ -72,11 +75,15 @@ export function ReceiptDialog({ store, cashier, sale, items, onClose }) {
     <Dialog
       open
       size="sm"
-      title={t('Venda registada')}
+      title={sale.offline ? t('Venda guardada neste terminal') : t('Venda registada')}
       onClose={onClose}
       footer={<><Button icon={ImageDown} loading={sharing} onClick={sendImage}>{t('Imagem (WhatsApp)')}</Button><Button icon={Printer} loading={printing} onClick={print}>{t('Imprimir recibo')}</Button><Button variant="primary" onClick={onClose} autoFocus>{t('Nova venda')}</Button></>}
     >
-      <div className="mb-3 flex items-center gap-2 text-positive"><CheckCircle2 size={18} /><span className="font-medium">{t('Venda n.º {n}', { n: String(sale.daily_number || '').padStart(3, '0') })}</span></div>
+      {sale.offline ? (
+        <div className="mb-3 flex items-start gap-2 text-warning"><WifiOff size={18} className="mt-0.5 shrink-0" /><span className="text-sm">{t('Sem ligação: a venda fica neste terminal e é enviada sozinha quando a rede voltar. O recibo é provisório ({n}).', { n: documentNumber(sale) })}</span></div>
+      ) : (
+        <div className="mb-3 flex items-center gap-2 text-positive"><CheckCircle2 size={18} /><span className="font-medium">{t('Venda n.º {n}', { n: String(sale.daily_number || '').padStart(3, '0') })}</span></div>
+      )}
       <div className="rounded border border-border p-3">
         {items.map((l) => <KeyValue key={l.product_id} label={`${formatQty(l.quantity, l.unit)} × ${l.product_name}`} value={money(lineAmount(l.quantity, l.unit_sell_price, l.unit))} />)}
         <div className="my-1 border-t border-border" />
@@ -184,20 +191,85 @@ export function CloseShiftDialog({ shift, onClose, onDone, syncNow }) {
 
 // A lista so abre com o PIN do dono: o caixista via o total do turno e
 // acertava o fecho cego. Cancelar continua a pedir PIN + motivo.
-export function RecentSalesDialog({ onClose, onChanged }) {
+// Vendas do caixista neste terminal (30/10/2026):
+//  - abre com o PIN do dono; com rede o servidor confere e o terminal guarda so o
+//    verificador (utils/offlinePin.js), para da proxima vez abrir sem rede;
+//  - em cima, as vendas feitas aqui sem ligacao e ainda por enviar;
+//  - «Reimprimir» = 2.a via marcada no papel e sempre na auditoria (sem rede, o
+//    registo vai quando a rede voltar).
+const REPRINTS_KEY = (terminalId) => `pos:reprints:${terminalId}`;
+const SALES_SNAPSHOT_KEY = (terminalId, cashierId) => `pos:sales:${terminalId}:${cashierId}`;
+
+async function localPendingSales(cashierId) {
+  try {
+    const [rows, products] = await Promise.all([
+      db.sales.where('sync_state').equals(SYNC_STATE.PENDING).toArray(),
+      db.products.toArray(),
+    ]);
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return rows.filter((r) => r.payload && r.payload.seller_user_id === cashierId)
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+      .map((r) => ({
+        ...r.payload, offline: true, status: 'pending',
+        items: r.items_view || r.payload.items.map((it) => ({ ...it, product_name: it.product_name || byId.get(it.product_id)?.name || tr('Produto'), unit: it.unit || byId.get(it.product_id)?.unit || 'un' })),
+      }));
+  } catch { return []; }
+}
+
+// 2.as vias feitas sem rede: o registo na auditoria vai quando houver ligacao.
+async function flushReprints(terminalId) {
+  const snap = await loadSnapshot(REPRINTS_KEY(terminalId));
+  const list = snap?.data || [];
+  if (!list.length) return;
+  const left = [];
+  for (const r of list) {
+    try { await api.post(`/api/pos/sales/${r.sale_id}/reprint`, { offline_at: r.at }); } catch (err) {
+      if (isOfflineError(err)) left.push(r); // 4xx (venda inexistente): nao adianta repetir
+    }
+  }
+  await saveSnapshot(REPRINTS_KEY(terminalId), left);
+}
+
+export function RecentSalesDialog({ store, cashier, terminalId, authPinVersion, onClose, onChanged }) {
   const toast = useToast();
   const { t } = useI18n();
   const [ownerPin, setOwnerPin] = useState(null);
   const [pinError, setPinError] = useState('');
   const [sales, setSales] = useState(null);
+  const [offline, setOffline] = useState(false);
   const [cancelling, setCancelling] = useState(null);
+  const [reprint, setReprint] = useState(null);
+  const [reprinting, setReprinting] = useState(null);
   const [pin, setPin] = useState('');
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const load = (p = ownerPin) => api.post('/api/pos/sales', { pin: p })
-    .then((r) => { setOwnerPin(p); setPinError(''); setSales(r.data); })
-    .catch((err) => { if (!ownerPin) setPinError(errorMessage(err)); else setSales([]); });
+  const authKey = `auth:${terminalId}`;
+
+  async function load(p = ownerPin) {
+    const pending = await localPendingSales(cashier.id);
+    try {
+      const r = await api.post('/api/pos/sales', { pin: p });
+      rememberPin(authKey, p, authPinVersion);
+      saveSnapshot(SALES_SNAPSHOT_KEY(terminalId, cashier.id), r.data);
+      flushReprints(terminalId);
+      setOwnerPin(p); setPinError(''); setOffline(false);
+      const sent = new Set(r.data.map((x) => x.id));
+      setSales([...pending.filter((x) => !sent.has(x.id)), ...r.data]);
+    } catch (err) {
+      if (!isOfflineError(err)) { if (!ownerPin) setPinError(errorMessage(err)); else setSales(pending); return; }
+      // Sem rede: o PIN do dono confere-se com o verificador guardado neste terminal.
+      const check = await checkOfflinePin(authKey, p);
+      if (check.result === 'ok') {
+        const snap = await loadSnapshot(SALES_SNAPSHOT_KEY(terminalId, cashier.id));
+        const known = new Set(pending.map((x) => x.id));
+        setOwnerPin(p); setPinError(''); setOffline(true);
+        setSales([...pending, ...(snap?.data || []).filter((x) => !known.has(x.id))]);
+      } else if (check.result === 'wrong') setPinError(t('PIN incorrecto. Restam {n} tentativa(s) sem rede.', { n: check.remaining }));
+      else if (check.result === 'locked') setPinError(t('Demasiados PINs errados sem rede. Espere 15 minutos ou volte a ter ligação.'));
+      else setPinError(t('Sem ligação. Para abrir as vendas sem rede, o PIN do dono tem de ter sido usado uma vez neste terminal com rede.'));
+    }
+  }
 
   async function cancel() {
     setBusy(true); setError('');
@@ -207,6 +279,20 @@ export function RecentSalesDialog({ onClose, onChanged }) {
       setCancelling(null); setPin(''); setReason('');
       load(); onChanged();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
+  }
+
+  async function doReprint(s) {
+    setReprinting(s.id);
+    try {
+      if (s.status !== 'pending') {
+        try { await api.post(`/api/pos/sales/${s.id}/reprint`, { pin: ownerPin }); } catch (err) {
+          if (!isOfflineError(err)) { toast(errorMessage(err), 'danger'); return; }
+          const snap = await loadSnapshot(REPRINTS_KEY(terminalId));
+          await saveSnapshot(REPRINTS_KEY(terminalId), [...(snap?.data || []), { sale_id: s.id, at: new Date().toISOString() }]);
+        }
+      }
+      setReprint({ sale: { ...s, copy: true, offline: s.status === 'pending' }, items: s.items });
+    } finally { setReprinting(null); }
   }
 
   if (!ownerPin) {
@@ -221,6 +307,8 @@ export function RecentSalesDialog({ onClose, onChanged }) {
       />
     );
   }
+
+  if (reprint) return <ReceiptDialog store={store} cashier={cashier} {...reprint} onClose={() => setReprint(null)} />;
 
   if (cancelling) {
     return (
@@ -242,21 +330,25 @@ export function RecentSalesDialog({ onClose, onChanged }) {
   }
 
   return (
-    <Dialog open title={t('As minhas últimas vendas')} description={t('Só é possível cancelar vendas de hoje.')} onClose={onClose} size="md">
+    <Dialog open title={t('As minhas últimas vendas')} description={offline ? t('Sem ligação: vendas guardadas neste terminal. Cancelar só com rede.') : t('Só é possível cancelar vendas de hoje.')} onClose={onClose} size="md">
       {!sales ? <div className="flex justify-center py-8"><Spinner /></div> : sales.length === 0 ? (
         <p className="py-6 text-center text-ink-muted">{t('Ainda não há vendas.')}</p>
       ) : (
         <ul className="divide-y divide-border">
           {sales.map((s) => {
             const today = new Date(s.created_at).toDateString() === new Date().toDateString();
+            const pending = s.status === 'pending';
             return (
-              <li key={s.id} className="flex items-center gap-3 py-2.5">
-                <span className="num w-10 text-sm text-ink-muted">{String(s.daily_number || '').padStart(3, '0')}</span>
+              <li key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
+                <span className="num w-14 text-sm text-ink-muted">{pending ? documentNumber(s).slice(9) : String(s.daily_number || '').padStart(3, '0')}</span>
                 <div className="min-w-0 flex-1">
                   <p className="num font-medium text-ink">{money(s.total_amount)}</p>
                   <p className="text-xs text-ink-muted">{time(s.created_at)} · {PAYMENT_LABEL[s.payment_method] || s.payment_method} · {t('{n} artigo(s)', { n: s.items.length })}</p>
                 </div>
-                {s.status === 'cancelled' ? <Badge tone="danger">{t('Cancelada')}</Badge> : today && <Button size="sm" variant="danger-ghost" onClick={() => setCancelling(s)}>{t('Cancelar')}</Button>}
+                {pending && <Badge tone="warning">{t('Por enviar')}</Badge>}
+                {s.status === 'cancelled' && <Badge tone="danger">{t('Cancelada')}</Badge>}
+                {s.status !== 'cancelled' && <Button size="sm" variant="ghost" icon={Printer} loading={reprinting === s.id} onClick={() => doReprint(s)}>{t('Reimprimir')}</Button>}
+                {s.status !== 'cancelled' && !pending && !offline && today && <Button size="sm" variant="danger-ghost" onClick={() => setCancelling(s)}>{t('Cancelar')}</Button>}
               </li>
             );
           })}
@@ -341,6 +433,40 @@ export function WeightDialog({ product, quantity = 0, onConfirm, onClose }) {
         {text && q == null && <p className="text-sm text-danger">{t('Escreva um número, até 3 casas decimais (ex.: 1,250).')}</p>}
         {over && <p className="text-sm text-danger">{t('Só há {n} em stock.', { n: formatQty(product.stock_qty, product.unit) })}</p>}
         <div className="flex items-baseline justify-between border-t border-border pt-3"><span className="text-base text-ink-2">{t('Valor')}</span><span className="num text-xl font-semibold text-ink">{money(lineAmount(q || 0, product.sell_price, product.unit))}</span></div>
+      </form>
+    </Dialog>
+  );
+}
+
+// Etapa A: artigo fora do catalogo (ex.: «xarope meia dose»). Entra no cesto e no
+// recibo, nao mexe no stock; o preco escrito fica auditado. Opcional: criar o produto.
+export function CustomItemDialog({ onClose, onAdd }) {
+  const { t } = useI18n();
+  const [name, setName] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [price, setPrice] = useState(null);
+  const [toCatalog, setToCatalog] = useState(false);
+  const qty = Number(quantity);
+  const ok = name.trim().length >= 2 && Number.isInteger(qty) && qty >= 1 && qty <= 1000 && price > 0;
+  function add() {
+    if (!ok) return;
+    onAdd({ product_name: name.trim().replace(/\s+/g, ' ').slice(0, 120), quantity: qty, unit_sell_price: price, add_to_catalog: toCatalog });
+    onClose();
+  }
+  return (
+    <Dialog open title={t('Pedido personalizado')} description={t('Para o que não está no catálogo. Não mexe no stock; o dono vê quem vendeu e a que preço.')} onClose={onClose}
+      footer={<><Button onClick={onClose}>{t('Cancelar')}</Button><Button variant="primary" disabled={!ok} onClick={add}>{t('Pôr no cesto')}</Button></>}>
+      <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); add(); }}>
+        <Input label={t('Descrição')} placeholder={t('Ex.: xarope meia dose, 3 comprimidos avulso…')} value={name} maxLength={120} onChange={(e) => setName(e.target.value)} autoFocus />
+        <div className="grid grid-cols-2 gap-3">
+          <Input label={t('Quantidade')} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, '').slice(0, 4))} inputClassName="num" />
+          <MoneyInput label={t('Preço unitário')} valueCents={price} onChangeCents={setPrice} />
+        </div>
+        <label className="flex items-start gap-2.5 text-sm text-ink-2">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--accent)]" checked={toCatalog} onChange={(e) => setToCatalog(e.target.checked)} />
+          <span>{t('Acrescentar ao catálogo para a próxima vez (o dono completa o preço de compra e o stock).')}</span>
+        </label>
+        {price > 0 && qty >= 1 && <p className="num text-right text-base font-medium text-ink">{money(price * qty)}</p>}
       </form>
     </Dialog>
   );

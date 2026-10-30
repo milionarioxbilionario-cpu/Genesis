@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import api from '../../utils/api';
-import { dateTime, date, errorMessage } from '../../utils/format';
+import { dateTime, date, errorMessage, money, PAYMENT_LABEL } from '../../utils/format';
+import { formatQty } from '../../utils/units';
 import { actionLabel, ALERT_ACTIONS, diffRows, fieldValue } from '../../utils/auditLabels';
 import { t as tr } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
@@ -30,7 +31,7 @@ function summary(a) {
   const n = a.new_value && typeof a.new_value === 'object' ? a.new_value : {};
   const o = a.old_value && typeof a.old_value === 'object' ? a.old_value : {};
   const parts = [];
-  const name = n.name || n.product_name || o.name || n.debtor_name || n.description;
+  const name = n.name || n.product_name || o.name || n.debtor_name || n.description || (n.product_id && a.names?.[n.product_id]);
   if (name) parts.push(name);
   if (a.action === 'STOCK_ENTRY' && n.added != null) parts.push(tr('+{n} un.', { n: n.added }));
   else if (n.delta != null) parts.push(tr('{n} un.', { n: (n.delta > 0 ? '+' : '') + n.delta }));
@@ -48,6 +49,18 @@ export default function AuditLogPage({ settings, reloadSettings }) {
   const [group, setGroup] = useState('all');
   const [state, setState] = useState({ items: [], next: null, loading: true, error: '', meta: null });
   const [open, setOpen] = useState(null);
+  // Detalhe de uma venda (artigos), pedido ao abrir o registo.
+  const [detail, setDetail] = useState({ id: null, sale: null, loading: false });
+  useEffect(() => {
+    if (!open || open.entity_type !== 'sale') return undefined;
+    let alive = true;
+    setDetail({ id: open.id, sale: null, loading: true });
+    api.get('/api/owner/audit/' + open.id)
+      .then(({ data }) => { if (alive) setDetail({ id: open.id, sale: data.sale || null, loading: false }); })
+      .catch(() => { if (alive) setDetail({ id: open.id, sale: null, loading: false }); });
+    return () => { alive = false; };
+  }, [open]);
+  const sale = detail.id === open?.id ? detail.sale : null;
   const [savingRet, setSavingRet] = useState(false);
   // Valor gravado acabado de escolher: as Definicoes recarregam depois (rede lenta).
   const [savedMonths, setSavedMonths] = useState(null);
@@ -143,13 +156,36 @@ export default function AuditLogPage({ settings, reloadSettings }) {
               {open.new_value?.terminal_id && <KeyValue label={t('Terminal')} value={open.terminal_name || t('terminal da loja')} />}
               {open.ip_address && <KeyValue label={t('Endereço IP')} value={open.ip_address} />}
             </div>
+            {sale && (
+              <section>
+                <h3 className="mb-2 font-medium text-ink">{sale.daily_number ? t('Venda n.º {n}', { n: sale.daily_number }) : t('O que se vendeu')}</h3>
+                {sale.status === 'cancelled' && <Badge tone="danger">{t('Cancelada')}</Badge>}
+                <table className="mt-1 w-full text-sm">
+                  <tbody>
+                    {sale.items.map((i, k) => (
+                      <tr key={k} className="border-t border-border align-top">
+                        <td className="py-1.5 pr-2 text-ink">{i.custom ? t('Personalizado: {name}', { name: i.name }) : i.name}</td>
+                        <td className="num py-1.5 pr-2 text-right text-ink-muted whitespace-nowrap">{formatQty(i.quantity, i.unit)} × {money(i.unit_price)}</td>
+                        <td className="num py-1.5 text-right text-ink whitespace-nowrap">{money(i.line_total)}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-border font-medium"><td className="py-1.5 text-ink" colSpan={2}>{t('Total')}</td><td className="num py-1.5 text-right text-ink">{money(sale.total_amount)}</td></tr>
+                  </tbody>
+                </table>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {sale.payments?.length > 1 ? sale.payments.map((p) => `${PAYMENT_LABEL[p.method] || p.method} ${money(p.amount)}`).join(' · ') : (PAYMENT_LABEL[sale.payment_method] || sale.payment_method)}
+                  {sale.cashier_name ? ' · ' + t('Caixista: {name}', { name: sale.cashier_name }) : ''}
+                </p>
+              </section>
+            )}
+            {open.entity_type === 'sale' && detail.loading && <Skeleton className="h-16 w-full" />}
             <section>
               <h3 className="mb-2 font-medium text-ink">{t('O que mudou')}</h3>
-              {diffRows(open.old_value, open.new_value).length === 0 ? <p className="text-sm text-ink-muted">{t('Sem detalhes guardados.')}</p> : (
+              {diffRows(open.old_value, open.new_value, open.names).length === 0 ? <p className="text-sm text-ink-muted">{t('Sem detalhes guardados.')}</p> : (
                 <table className="w-full text-sm">
                   <thead><tr className="text-left text-xs text-ink-muted"><th className="pb-1 font-medium">{t('Campo')}</th><th className="pb-1 font-medium">{t('Antes')}</th><th className="pb-1 font-medium">{t('Depois')}</th></tr></thead>
                   <tbody>
-                    {diffRows(open.old_value, open.new_value).map((r) => (
+                    {diffRows(open.old_value, open.new_value, open.names).map((r) => (
                       <tr key={r.key} className="border-t border-border align-top">
                         <td className="py-1.5 pr-2 text-ink-2">{r.label}</td>
                         <td className="num py-1.5 pr-2 text-ink-muted">{r.before ?? '—'}</td>

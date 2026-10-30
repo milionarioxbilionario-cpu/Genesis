@@ -9,16 +9,20 @@ const { asyncHandler, httpError } = require('../utils/http');
 const { imageUrlSchema } = require('../utils/productImage');
 const { recordCatalogSuggestions } = require('../utils/catalogSuggestions');
 const { iconSchema } = require('../utils/productIcons');
+const { BUSINESS_TYPES, catalogTypeOf, MODE_PENDING } = require('../utils/businessTypes');
 
 // Fonte unica: tabela MasterCatalog (carregada por scripts/seed_master_catalogs.js
 // a partir de data/master_catalogs.json). Ja nao ha templates escritos aqui.
-const BUSINESS_TYPES = ['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro'];
 
 // GET /api/catalogs/:businessType — catalogo pre-definido (publico: nao tem dados de loja).
 router.get('/:businessType', asyncHandler(async (req, res) => {
   const { businessType } = req.params;
   if (!BUSINESS_TYPES.includes(businessType)) throw httpError(404, 'Tipo de negócio desconhecido', 'UNKNOWN_BUSINESS_TYPE');
-  const rows = await prisma.masterCatalog.findMany({ where: { business_type: businessType }, orderBy: [{ category: 'asc' }, { product_name: 'asc' }] });
+  // Sem catalogo proprio (ex.: pastelaria, cafetaria), usa o do tipo mais parecido.
+  let rows = await prisma.masterCatalog.findMany({ where: { business_type: businessType }, orderBy: [{ category: 'asc' }, { product_name: 'asc' }] });
+  if (!rows.length && catalogTypeOf(businessType) !== businessType) {
+    rows = await prisma.masterCatalog.findMany({ where: { business_type: catalogTypeOf(businessType) }, orderBy: [{ category: 'asc' }, { product_name: 'asc' }] });
+  }
   const sampleProducts = rows.map((r) => ({
     name: r.product_name,
     price_mzn: r.suggested_sell / 100,
@@ -29,7 +33,7 @@ router.get('/:businessType', asyncHandler(async (req, res) => {
     image_url: r.image_url || null,
     icon: r.icon || null,
   }));
-  res.json({ businessType, template: { categories: [...new Set(rows.map((r) => r.category))].sort(), sampleProducts } });
+  res.json({ businessType, mode_pending: MODE_PENDING.includes(businessType), template: { categories: [...new Set(rows.map((r) => r.category))].sort(), sampleProducts } });
 }));
 
 // Valores em MZN (o que o dono escreve) — convertidos para centavos aqui.

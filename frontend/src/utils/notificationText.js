@@ -22,6 +22,7 @@ export function notificationTitle(n) {
       return t('Stock baixo');
     case 'lot_expiring': return t('Validade');
     case 'shift_difference': return t('Diferença no fecho de turno');
+    case 'shift_attempt_fail': return t('Fecho de turno recusado');
     case 'goal_reached': return t('Meta atingida');
     case 'day_closed': return t('Fecho do dia');
     default: return n.type;
@@ -44,6 +45,7 @@ export function notificationDetail(n) {
     case 'shift_difference':
       if (p.difference < 0) return t('{name}, {day}: faltaram {v} na caixa.', { name: p.cashier, day: day(p.day), v: money(-p.difference) });
       return t('{name}, {day}: sobraram {v} na caixa.', { name: p.cashier, day: day(p.day), v: money(p.difference) });
+    case 'shift_attempt_fail': return t('{name}, {day}: escreveu {declared}, esperado {expected} (tentativa {n}/{max}).', { name: p.cashier, day: day(p.day), declared: money(p.declared), expected: money(p.expected), n: p.attempt, max: p.max || 3 });
     case 'goal_reached': return t('{month}: {current} vendidos, meta {target}.', { month: monthName(p.month), current: money(p.current), target: money(p.target) });
     case 'day_closed': return t('Hoje: {n} venda(s), {v}. Ver o relatório do dia.', { n: p.sales, v: money(p.revenue) });
     default: return '';

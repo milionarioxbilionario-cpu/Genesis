@@ -3,6 +3,8 @@
 // httpError: erro de REGRA DE NEGOCIO com codigo HTTP 4xx. O POS offline trata
 // 4xx como recusa definitiva e 5xx/rede como "tentar de novo" — por isso uma
 // regra violada NUNCA pode sair como 500, e uma falha inesperada nunca como 4xx.
+// Um 5xx criado de proposito (ex.: 503 «envio de e-mails nao configurado») mostra
+// a sua mensagem e o codigo; so as falhas inesperadas ficam com a mensagem generica.
 //
 // asyncHandler: no Express 4 uma promessa rejeitada num handler async nao e
 // apanhada. No Node 24 uma rejeicao nao tratada TERMINA O PROCESSO — um clique
@@ -14,6 +16,7 @@ const { ZodError } = require('zod');
 function httpError(statusCode, message, code, params) {
   const e = new Error(message);
   e.statusCode = statusCode;
+  e.expose = true;
   if (code) e.code = code;
   if (params) e.params = params;
   return e;
@@ -27,7 +30,7 @@ function errorHandler(err, req, res, next) {
   if (err instanceof ZodError) {
     return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos', details: err.errors });
   }
-  if (err && err.statusCode && err.statusCode < 500) {
+  if (err && err.statusCode && (err.statusCode < 500 || err.expose === true)) {
     return res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.params ? { params: err.params } : {}) });
   }
   // Prisma "registo nao encontrado" num update/delete por id.

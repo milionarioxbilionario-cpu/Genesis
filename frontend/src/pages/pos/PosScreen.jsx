@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, ChevronUp, CircleAlert, ClipboardCheck, Lock, Minus, PackageSearch, PackageX, Plus, ReceiptText, ScanBarcode, Search, Settings2, ShoppingBasket, Trash2, WifiOff, X } from 'lucide-react';
+import { Camera, ChevronUp, CircleAlert, ClipboardCheck, Lock, Minus, PackageSearch, PackageX, PencilLine, Plus, ReceiptText, ScanBarcode, Search, Settings2, ShoppingBasket, Trash2, WifiOff, X } from 'lucide-react';
 import BarcodeScanner from '../../components/BarcodeScanner';
 import DevicesDialog from './DevicesDialog';
 import { openCashDrawer, wasAsked } from '../../utils/devices';
@@ -11,8 +11,8 @@ import { loadCatalog, decrementCached } from '../../utils/productCache';
 import { money, errorMessage } from '../../utils/format';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
-import { BrandMark, Alert, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, useToast, cx } from '../../components/ui';
-import { AuthorizationPinDialog, CloseShiftDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog, WeightDialog } from './PosDialogs';
+import { BrandMark, Alert, Badge, Button, IconButton, LanguageSwitch, MoneyInput, ProductImage, Segmented, Spinner, useToast, cx } from '../../components/ui';
+import { AuthorizationPinDialog, CloseShiftDialog, CustomItemDialog, DemandDialog, ReceiptDialog, RecentSalesDialog, ShrinkageDialog, WeightDialog } from './PosDialogs';
 import { formatQty, isMeasured, lineAmount } from '../../utils/units';
 
 // Ecra de toque (telemovel/tablet): decide o foco automatico da pesquisa.
@@ -42,7 +42,7 @@ const SHORTCUTS = [['F2', 'desconto'], ['F3', 'recebido'], ['F4', 'pagamento'], 
 export default function PosScreen({ info, cashier, onLock, askDevices = false }) {
   const toast = useToast();
   const { t } = useI18n();
-  const { isOnline, pendingCount, rejectedCount, refreshCounts, syncNow } = useOfflineSync();
+  const { isOnline, pendingCount, rejectedCount, syncing, refreshCounts, syncNow } = useOfflineSync();
   const [products, setProducts] = useState([]);
   const [catalogSource, setCatalogSource] = useState('online');
   const [catalogLoaded, setCatalogLoaded] = useState(false);
@@ -69,9 +69,18 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
   const [camera, setCamera] = useState(false);
   const gridRef = useRef(null);
 
+  // Stock que mudou desde o ultimo carregamento: o numero pisca uma vez (so ele).
+  const [changed, setChanged] = useState(() => new Set());
+  const lastStock = useRef(null);
   const refreshCatalog = useCallback(async () => {
     try {
       const { products: list, source } = await loadCatalog();
+      const before = lastStock.current;
+      lastStock.current = new Map(list.map((p) => [p.id, p.stock_qty]));
+      if (before) {
+        const diff = new Set(list.filter((p) => before.has(p.id) && before.get(p.id) !== p.stock_qty).map((p) => p.id));
+        if (diff.size) { setChanged(diff); setTimeout(() => setChanged(new Set()), 1600); }
+      }
       setProducts(list);
       setCatalogSource(source);
     } catch (err) { setError(errorMessage(err)); } finally { setCatalogLoaded(true); }
@@ -88,6 +97,17 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
     const t = setInterval(() => { refreshCatalog(); refreshShift(); }, 30000);
     return () => clearInterval(t);
   }, [catalogSource, isOnline, refreshCatalog, refreshShift]);
+  // 30/10/2026: a fila chegou ao servidor -> stock e turno de novo, e o caixista ve.
+  useEffect(() => {
+    function onSynced(e) {
+      const { synced = 0, rejected = 0 } = e.detail || {};
+      refreshCatalog(); refreshShift();
+      if (synced > 0) toast(t('{n} registo(s) feito(s) sem ligação já enviado(s).', { n: synced }));
+      if (rejected > 0) toast(t('{n} registo(s) sem ligação recusado(s). Veja o motivo em Vendas.', { n: rejected }), 'danger');
+    }
+    window.addEventListener('genesis:queue-synced', onSynced);
+    return () => window.removeEventListener('genesis:queue-synced', onSynced);
+  }, [refreshCatalog, refreshShift, toast, t]);
   // Ecras de toque: sem foco automatico (no iPhone abria o teclado a cada produto).
   useEffect(() => { if (!dialog && !devicesOpen && !camera && !TOUCH) searchRef.current?.focus(); }, [dialog, cart.length, devicesOpen, camera]);
   useEffect(() => { if (!cart.length) setCartOpen(false); }, [cart.length]);
@@ -136,6 +156,11 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       const line = { product_id: p.id, product_name: p.name, unit_sell_price: p.sell_price, unit: p.unit, quantity: Math.min(q, p.stock_qty || 0), stock: p.stock_qty };
       return c.some((l) => l.product_id === p.id) ? c.map((l) => (l.product_id === p.id ? line : l)) : [...rest, line];
     });
+  }
+  // Etapa A: pedido personalizado (sem produto): chave local propria, sem limite de stock.
+  const customOn = info.store.custom_items_enabled !== false;
+  function addCustom(item) {
+    setCart((c) => [...c, { ...item, product_id: 'custom-' + newUuid(), custom: true, unit: 'un', stock: 1000 }]);
   }
   const setQty = (id, q) => setCart((c) => c.flatMap((l) => (l.product_id !== id ? [l] : q <= 0 ? [] : [{ ...l, quantity: Math.min(q, l.stock) }])));
 
@@ -235,7 +260,9 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
     const payload = pendingSale.current || {
       id: newUuid(),
       seller_user_id: cashier.id,
-      items: cart.map((l) => ({ product_id: l.product_id, quantity: l.quantity, unit_sell_price: l.unit_sell_price, unit_cost_price: 0 })),
+      items: cart.map((l) => (l.custom
+        ? { custom: true, product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price, ...(l.add_to_catalog ? { add_to_catalog: true } : {}) }
+        : { product_id: l.product_id, quantity: l.quantity, unit_sell_price: l.unit_sell_price, unit_cost_price: 0 })),
       discount_amount: effectiveDiscount,
       total_amount: total,
       payment_method: split ? 'mixed' : payment,
@@ -261,11 +288,14 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         refreshShift();
       } else if (shouldQueueOffline(err)) {
         pendingSale.current = null;
-        await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload });
+        // items_view: nomes e unidades para reimprimir o recibo sem rede.
+        await db.sales.put({ id: payload.id, created_at: payload.created_at, sync_state: SYNC_STATE.PENDING, payload, items_view: cart.map((l) => ({ product_id: l.product_id, product_name: l.product_name, quantity: l.quantity, unit_sell_price: l.unit_sell_price, unit: l.unit || 'un' })) });
         if (cashPart > 0) openCashDrawer();
         await decrementCached(payload.items);
         await refreshCounts();
-        toast(t('Sem ligação: venda guardada neste terminal. É enviada automaticamente.'));
+        // 30/10/2026: o cliente leva recibo mesmo sem rede (provisorio; o QR usa o
+        // id da venda, que e o mesmo depois de enviada).
+        setDialog({ receipt: { sale: { ...payload, offline: true, amount_received: total + change, change_given: change }, items: cart } });
         resetSale();
         refreshCatalog();
       } else if (err?.response?.status !== 401) {
@@ -289,13 +319,17 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         </div>
         <div className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
           {!isOnline && <span className="hidden items-center gap-1.5 text-warning sm:flex"><WifiOff size={15} /> {t('Offline')}</span>}
-          {pendingCount > 0 && <span className="hidden text-ink-muted sm:inline">{t('{n} por enviar', { n: pendingCount })}</span>}
+          {pendingCount > 0 && (syncing
+            ? <span className="flex items-center gap-1.5 text-accent"><Spinner className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t('A enviar {n}…', { n: pendingCount })}</span></span>
+            : <span className={cx('text-ink-muted', isOnline ? 'hidden sm:inline' : 'inline')}>{t('{n} por enviar', { n: pendingCount })}</span>)}
           {rejectedCount > 0 && <span className="hidden text-danger sm:inline">{t('{n} recusado(s)', { n: rejectedCount })}</span>}
           <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => setDialog('recent')}>{t('Vendas')}</Button>
           <IconButton label={t('Vendas')} icon={ReceiptText} size="sm" variant="ghost" className="sm:hidden" onClick={() => setDialog('recent')} />
+          {customOn && <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('custom')}>{t('Pedido personalizado')}</Button>}
           <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('demand')}>{t('Produto em falta')}</Button>
           <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => setDialog('shrink')}>{t('Quebra')}</Button>
           {/* Telemovel: os mesmos dois botoes em icone (antes nao havia forma de os abrir). */}
+          {customOn && <IconButton label={t('Pedido personalizado')} icon={PencilLine} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('custom')} />}
           <IconButton label={t('Produto em falta')} icon={PackageSearch} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('demand')} />
           <IconButton label={t('Quebra')} icon={PackageX} size="sm" variant="ghost" className="md:hidden" onClick={() => setDialog('shrink')} />
           {/* Lingua do caixista (9.3): guardada na conta dele, nao no aparelho. No
@@ -374,7 +408,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
                   <span className="line-clamp-2 min-h-[2.5em] text-sm font-medium leading-tight text-ink">{p.name}</span>
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="num text-base font-semibold text-ink">{money(p.sell_price)}</span>
-                    <span className={cx('num text-xs', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? t('Esgotado') : isMeasured(p.unit) ? formatQty(p.stock_qty, p.unit) : t('{n} un.', { n: p.stock_qty })}</span>
+                    <span className={cx('num rounded px-1 text-xs transition-colors duration-700', changed.has(p.id) && 'stock-flash', out ? 'text-danger' : low ? 'text-warning' : 'text-ink-muted')}>{out ? t('Esgotado') : isMeasured(p.unit) ? formatQty(p.stock_qty, p.unit) : t('{n} un.', { n: p.stock_qty })}</span>
                   </span>
                 </button>
               );
@@ -422,7 +456,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
             ) : cart.map((l) => (
               <div key={l.product_id} className="flex items-center gap-3 border-b border-border px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-base text-ink">{l.product_name}</p>
+                  <p className="truncate text-base text-ink">{l.product_name}{l.custom && <Badge className="ml-1.5 align-middle">{t('Personalizado')}</Badge>}</p>
                   <p className="num text-xs text-ink-muted">{isMeasured(l.unit) ? t('{price} / {unit}', { price: money(l.unit_sell_price), unit: l.unit }) : t('{price} / un.', { price: money(l.unit_sell_price) })}</p>
                 </div>
                 {isMeasured(l.unit) ? (
@@ -506,6 +540,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
         </aside>
       </div>
 
+      {dialog === 'custom' && <CustomItemDialog onClose={() => setDialog(null)} onAdd={addCustom} />}
       {dialog?.weight && <WeightDialog product={dialog.weight.product} quantity={dialog.weight.quantity} onConfirm={(q) => setWeight(dialog.weight.product, q)} onClose={() => setDialog(null)} />}
       {dialog?.pin && (
         <AuthorizationPinDialog
@@ -535,7 +570,7 @@ export default function PosScreen({ info, cashier, onLock, askDevices = false })
       )}
       {dialog?.receipt && <ReceiptDialog store={info.store} cashier={cashier} {...dialog.receipt} onClose={() => setDialog(null)} />}
       {dialog === 'close' && <CloseShiftDialog shift={shift} syncNow={syncNow} onClose={() => setDialog(null)} onDone={() => { refreshShift(); }} />}
-      {dialog === 'recent' && <RecentSalesDialog onClose={() => setDialog(null)} onChanged={() => { refreshCatalog(); refreshShift(); }} />}
+      {dialog === 'recent' && <RecentSalesDialog store={info.store} cashier={cashier} terminalId={info.terminal.id} authPinVersion={info.auth_pin_v} onClose={() => setDialog(null)} onChanged={() => { refreshCatalog(); refreshShift(); }} />}
       {dialog === 'shrink' && <ShrinkageDialog products={products} cashier={cashier} onClose={() => setDialog(null)} onSaved={() => { refreshCounts(); refreshCatalog(); }} />}
       {devicesOpen && <DevicesDialog cashier={cashier} onClose={() => setDevicesOpen(false)} />}
       <BarcodeScanner open={camera} continuous onClose={() => setCamera(false)} onCode={onCameraCode} />

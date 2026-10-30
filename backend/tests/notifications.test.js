@@ -57,6 +57,19 @@ test('fecho de turno: diferenca negativa e aviso, positiva info, mais de 7 dias 
   assert.strictEqual(m['shift_difference:z'], undefined);
 });
 
+test('fecho recusado (Etapa A8): escrito, esperado e tentativa; a 3.a e critica; mais de 7 dias nao aparece', () => {
+  const items = buildNotifications({ now: NOW, failedAttempts: [
+    { id: 'a1', at: new Date('2026-10-18T10:00:00Z'), cashier: 'Carlos', declared: 1600000, expected: 1700000, attempt: 1 },
+    { id: 'a3', at: new Date('2026-10-18T10:20:00Z'), cashier: 'Carlos', declared: 1650000, expected: 1700000, attempt: 3 },
+    { id: 'old', at: new Date('2026-10-10T10:00:00Z'), cashier: 'Carlos', declared: 0, expected: 100, attempt: 1 },
+  ] });
+  const m = byId(items);
+  assert.strictEqual(m['shift_attempt_fail:a1'].level, 'warning');
+  assert.deepStrictEqual(m['shift_attempt_fail:a1'].params, { cashier: 'Carlos', declared: 1600000, expected: 1700000, attempt: 1, max: 3, day: '2026-10-18' });
+  assert.strictEqual(m['shift_attempt_fail:a3'].level, 'critical');
+  assert.strictEqual(m['shift_attempt_fail:old'], undefined);
+});
+
 test('meta atingida so quando ha meta e o vendido chega a ela', () => {
   assert.strictEqual(buildNotifications({ now: NOW, goal: { target: 100000, current: 99999, month: 10, year: 2026 } }).length, 0);
   assert.strictEqual(buildNotifications({ now: NOW, goal: { target: 0, current: 5000, month: 10, year: 2026 } }).length, 0);

@@ -28,4 +28,32 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://genesismz.com/en/pricing"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://genesismz.com/planos"/>
   </url>
+  <url>
+    <loc>https://genesismz.com/privacidade</loc>
+    <lastmod>2026-10-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-MZ" href="https://genesismz.com/privacidade"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://genesismz.com/en/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://genesismz.com/privacidade"/>
+  </url>
+  <url>
+    <loc>https://genesismz.com/en/privacy</loc>
+    <lastmod>2026-10-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-MZ" href="https://genesismz.com/privacidade"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://genesismz.com/en/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://genesismz.com/privacidade"/>
+  </url>
+  <url>
+    <loc>https://genesismz.com/termos</loc>
+    <lastmod>2026-10-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-MZ" href="https://genesismz.com/termos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://genesismz.com/en/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://genesismz.com/termos"/>
+  </url>
+  <url>
+    <loc>https://genesismz.com/en/terms</loc>
+    <lastmod>2026-10-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-MZ" href="https://genesismz.com/termos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://genesismz.com/en/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://genesismz.com/termos"/>
+  </url>
 </urlset>

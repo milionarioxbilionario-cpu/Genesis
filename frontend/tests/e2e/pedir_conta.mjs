@@ -43,9 +43,18 @@ try {
   await page.screenshot({ path: path.join(SHOTS, 'p1-sem-email.png') });
 
   await email.fill('  fatima.nhantumbo@gmail.com ');
+  // 30/10/2026: so maiores de 18 anos, com Termos e Privacidade aceites.
+  const terms = page.getByRole('checkbox', { name: /Tenho 18 anos ou mais/ });
+  await page.getByRole('button', { name: 'Enviar pedido' }).click();
+  await page.waitForTimeout(800);
+  ok(sent.length === 0 && await terms.evaluate((el) => !el.validity.valid), 'sem a caixa dos 18 anos: o browser não envia o pedido', sent);
+  ok(await page.getByRole('link', { name: 'Termos e condições' }).getAttribute('href') === '/termos' && await page.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href') === '/privacidade', 'ligações para os Termos e a Política de privacidade');
+  await terms.check();
+  await page.screenshot({ path: path.join(SHOTS, 'p1b-18-anos.png') });
   await page.getByRole('button', { name: 'Enviar pedido' }).click();
   await page.getByRole('heading', { name: 'Pedido recebido' }).waitFor({ timeout: 30000 });
   ok(sent.length === 1 && sent[0].email === 'fatima.nhantumbo@gmail.com', 'com email: pedido enviado com o email sem espaços', sent);
+  ok(sent[0].acceptTerms === true, 'pedido leva a confirmação dos 18 anos e dos Termos', sent[0]);
   ok(!('nuit' in sent[0]) && !('idDocument' in sent[0]), 'NUIT e BI vazios continuam opcionais (não são enviados)', sent[0]);
   await page.screenshot({ path: path.join(SHOTS, 'p2-recebido.png') });
 } finally {

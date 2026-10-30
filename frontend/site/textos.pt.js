@@ -19,11 +19,11 @@ export default {
 
   meta: {
     home: {
-      title: 'Genesis MZ — Sistema de vendas, stock e caixa para negócios em Moçambique',
+      title: 'Genesis MZ | Sistema de vendas, stock e caixa para negócios em Moçambique',
       description: 'Sistema de vendas e gestão para bottle stores, mercearias, pastelarias, talhos, restaurantes, supermercados e outros negócios em Moçambique. Vende sem internet, controla o stock, as validades, a caixa e o lucro real. 1.º mês grátis.',
     },
     pricing: {
-      title: 'Planos e preço — Genesis MZ',
+      title: 'Planos e preço | Genesis MZ',
       description: 'Genesis MZ custa {price} por mês, com tudo incluído. Clientes novos não pagam o 1.º mês. Adira pelo WhatsApp.',
     },
   },
@@ -40,12 +40,13 @@ export default {
     contact: '{g}! Quero saber mais sobre o Genesis MZ.',
     join: '{g}! Quero aderir ao plano Genesis MZ de {price}/mês.',
     annual: '{g}! Tenho interesse no plano anual do Genesis MZ. Podem dar-me mais informações?',
+    premium: '{g}! Quero saber mais sobre o plano Premium do Genesis MZ.',
     paid: '{g}! Já paguei a subscrição do Genesis MZ e vou enviar o comprovativo. O email da minha conta é: ',
   },
 
   hero: {
     eyebrow: 'Feito para os negócios de Moçambique',
-    title: 'Vendas, stock e caixa do seu negócio — mesmo sem internet',
+    title: 'Vendas, stock e caixa do seu negócio,|mesmo sem internet',
     lead: 'Saiba a qualquer hora, no seu telemóvel, quanto vendeu, quanto lucrou e o que está a acabar. Os seus caixistas vendem cada um com o seu PIN, e cada metical fica registado.',
     already: 'Já tem conta?',
     counter: 'No balcão?',
@@ -63,7 +64,14 @@ export default {
     problem: 'O problema',
     solution: 'Com o Genesis',
     items: [
-      { icon: 'wallet', q: 'Falta dinheiro na caixa', a: 'No fim do turno, o caixista conta o dinheiro sem saber quanto devia lá estar. O Genesis faz as contas e mostra-lhe logo se falta alguma coisa e em que turno. Se faltar três vezes, o caixista fica parado até o dono decidir.' },
+      { icon: 'wallet', q: 'Falta dinheiro na caixa', a: 'Para fechar o turno, o caixista tem de contar o dinheiro vivo da gaveta e escrever quanto contou, sem saber quanto o Genesis espera. Se escrever menos do que vendeu em dinheiro, o Genesis não aceita; à terceira vez, o perfil dele fica bloqueado até o dono o desbloquear.',
+        more: [
+          'Só conta o dinheiro vivo (notas e moedas). O que foi pago por M-Pesa, e-Mola ou cartão não entra na contagem: o Genesis já sabe esses valores.',
+          'Exemplo: hoje o caixista vendeu 17 000 MT em dinheiro. O Genesis sabe-o, porque cada venda ficou registada. Ao fechar o turno, ele tem de escrever 17 000 MT ou mais (pode haver gorjetas).',
+          'Se escrever 16 000 MT, o Genesis recusa e diz-lhe que lhe restam 2 tentativas, sem lhe dizer quanto devia ser. Se voltar a escrever menos (16 900 MT, por exemplo), resta-lhe 1. À terceira, o perfil dele fica bloqueado e só o dono o pode desbloquear.',
+          'Cada tentativa errada fica registada com o valor que ele escreveu e o que o Genesis esperava, e o dono vê-o logo ao abrir o Genesis.',
+          'Se ele fechou o turno a dizer que contou 17 000 MT e ao fim do dia lhe entrega 16 000 MT, a conversa é simples: «Fechaste o turno a dizer que contaste 17 000 MT. Onde está o resto?»',
+        ] },
       { icon: 'calendar-clock', q: 'Produtos que passam da validade', a: 'O Genesis avisa antes de o produto vencer e põe à venda primeiro o que vence primeiro. O que estragar fica anotado como perda: sabe quanto perdeu e porquê.' },
       { icon: 'hand-coins', q: 'Txenekas esquecidas', a: 'Cada txeneka fica com o nome, o contacto, o valor e o dia combinado. O Genesis avisa no próprio dia e quando o prazo passa, e cada pagamento fica anotado.' },
       { icon: 'chart-column', q: 'Não saber quanto lucra de verdade', a: 'No fim do mês, o Genesis tira ao que entrou os salários, a renda, as despesas e o que pagou aos fornecedores. Fica a saber quanto sobrou mesmo para si.' },
@@ -113,10 +121,26 @@ export default {
     title: 'Para quem empreende em Moçambique',
     lead: 'Escolha o tipo de negócio e o Genesis já traz os produtos mais comuns, com preços sugeridos que pode mudar. Tudo em meticais, com M-Pesa e e-Mola.',
     items: [
-      { icon: 'beer', t: 'Bottle store' }, { icon: 'shopping-basket', t: 'Mercearia' }, { icon: 'croissant', t: 'Pastelaria' },
-      { icon: 'beef', t: 'Talho' }, { icon: 'utensils', t: 'Restaurante' }, { icon: 'store', t: 'Supermercado' },
+      // 27/10: tipos separados (nada de «A / B»). So os que ja funcionam com a venda ao balcao.
+      { icon: 'beer', t: 'Bottle store' }, { icon: 'wine', t: 'Loja de bebidas' }, { icon: 'shopping-basket', t: 'Mercearia e contentor' },
+      { icon: 'store', t: 'Supermercado' }, { icon: 'wheat', t: 'Padaria' }, { icon: 'cake-slice', t: 'Pastelaria' },
+      { icon: 'coffee', t: 'Cafetaria' }, { icon: 'beef', t: 'Talho' }, { icon: 'flame', t: 'Churrascaria' },
+      { icon: 'shirt', t: 'Boutique' },
     ],
     other: 'O seu negócio não está na lista? Fale connosco.',
+    // 27/10 (decisao do fundador): estes precisam de um modo proprio; primeiro o balcao, a fundo.
+    soon: {
+      title: 'Brevemente',
+      lead: 'Estamos a preparar o Genesis para estes negócios com o cuidado que merecem. Deixe o contacto e avisamos assim que estiver pronto.',
+      items: [
+        { icon: 'utensils', t: 'Restaurante', type: 'restaurante' }, { icon: 'hamburger', t: 'Fast food', type: 'fast_food' },
+        { icon: 'pill', t: 'Farmácia', type: 'farmacia' }, { icon: 'stethoscope', t: 'Clínica', type: 'clinica' },
+        { icon: 'bed-double', t: 'Hotel e alojamento', type: 'hotelaria' }, { icon: 'scissors', t: 'Salão e barbearia', type: 'salao' },
+        { icon: 'fuel', t: 'Posto de combustível', type: 'posto_combustivel' }, { icon: 'building', t: 'Arrendamento', type: 'arrendamento' },
+        { icon: 'briefcase', t: 'Vendedor por conta própria', type: 'nhonguista' }, { icon: 'ship', t: 'Importador', type: 'importador' },
+      ],
+      cta: 'Avise-me quando estiver pronto',
+    },
   },
 
   how: {
@@ -179,7 +203,7 @@ export default {
     lead: 'Um só plano, com tudo incluído. Sem surpresas.',
     planName: 'Genesis MZ',
     planDesc: 'Para um negócio, com o dono, os caixistas e o balcão.',
-    free: 'Clientes novos: o 1.º mês é grátis — só começa a pagar no 2.º mês.',
+    free: 'Clientes novos: o 1.º mês é grátis. Só começa a pagar no 2.º mês.',
     join: 'Aderir ao plano',
     start: 'Começar o mês grátis',
     included: 'Incluído no plano',
@@ -199,13 +223,15 @@ export default {
     annualTitle: 'Prefere pagar o ano inteiro?',
     annualText: 'Fale connosco sobre o plano anual.',
     annualCta: 'Perguntar pelo plano anual',
+    premiumName: 'Premium',
+    premiumJoin: 'Falar sobre o Premium',
     payTitle: 'Como aderir e pagar',
     paySteps: [
       { t: 'Toque em «Aderir ao plano»', d: 'Abre uma conversa connosco no WhatsApp, já com a mensagem escrita.' },
       { t: 'Combinamos o pagamento', d: 'Dizemos-lhe como pagar e o valor certo.' },
       { t: 'Envie o comprovativo', d: 'Depois de pagar, envie-nos o comprovativo e o email da sua conta.' },
     ],
-    paidCta: 'Já paguei — enviar comprovativo',
+    paidCta: 'Já paguei: enviar comprovativo',
     mobileTitle: 'Carteira móvel',
     bankTitle: 'Depósito ou transferência bancária',
     account: 'Conta', nib: 'NIB', holder: 'Titular',

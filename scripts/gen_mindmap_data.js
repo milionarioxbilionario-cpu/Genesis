@@ -70,7 +70,8 @@ const SKIP_PATTERNS = [
   /(^|\/)_/,                // backend/_run4020.cmd
   /\(copy \d+\)/,           // e2e_test2 (copy 1).js
   /^(bl|final-build)\.txt$/,
-  /^Oque ja fiz/,
+  /^Oque ja fiz/,                // nome antigo do diario
+  /^Diario do Genesis/,
   /^atualizar_GITHUB/,
   /^DownloadNode/,
   /^tmp_/,                  // tmp_post_*.js (scripts temporarios)

@@ -22,13 +22,15 @@ async function getTenantStatus(tenantId) {
 
   let status = null;
   let trialEndsAt = null;
+  let subscriptionUntil = null;
   try {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { status: true, trial_ends_at: true },
+      select: { status: true, trial_ends_at: true, subscription_until: true },
     });
     status = tenant ? tenant.status : null;
     trialEndsAt = tenant ? tenant.trial_ends_at : null;
+    subscriptionUntil = tenant ? tenant.subscription_until : null;
   } catch (err) {
     // Nao transformamos uma falha transitoria de leitura numa queda de toda a
     // operacao. O isolamento entre lojas nao depende disto (depende dos filtros
@@ -41,7 +43,7 @@ async function getTenantStatus(tenantId) {
     return { blocked: false, status: null, at: now };
   }
 
-  const entry = { blocked: BLOCKED_STATUSES.has(status), status, trialEndsAt, at: now };
+  const entry = { blocked: BLOCKED_STATUSES.has(status), status, trialEndsAt, subscriptionUntil, at: now };
   cache.set(tenantId, entry);
   return entry;
 }
@@ -62,8 +64,20 @@ async function isTrialExpired(tenantId) {
   return status === 'trial' && Boolean(trialEndsAt) && new Date(trialEndsAt) < new Date();
 }
 
+// Etapa A: subscricao paga ate uma data. Passada essa data = em atraso = so
+// leitura, com a mesma regra do teste terminado (sem tarefa a correr: a data e
+// vista em cada pedido). Contas activas antigas sem data nao vencem.
+function subscriptionOverdue({ status, subscriptionUntil }, now = new Date()) {
+  return status === 'active' && Boolean(subscriptionUntil) && new Date(subscriptionUntil) < now;
+}
+
+async function isSubscriptionOverdue(tenantId) {
+  if (!tenantId) return false;
+  return subscriptionOverdue(await getTenantStatus(tenantId));
+}
+
 function clearTenantStatusCache() {
   cache.clear();
 }
 
-module.exports = { blockedTenantStatus, isTrialExpired, clearTenantStatusCache };
+module.exports = { blockedTenantStatus, isTrialExpired, isSubscriptionOverdue, subscriptionOverdue, clearTenantStatusCache };

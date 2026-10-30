@@ -1,8 +1,9 @@
 - [Commits on main](commits-on-main.md) — user wants work merged straight into main (solo repo)
 - [Git authorship](git-authorship.md) — commits só como Mente-MiIionaria, NUNCA linhas Claude/Copilot; repo privado; backup_claude.mjs antes de cada commit
-- [Autonomous phase runs](autonomous-phase-runs.md) — 25/10: perguntar tudo antes; depois cada etapa = testes+commit+push+publicar+aviso curto e seguir sem esperar
+- [Trabalho por etapas](autonomous-phase-runs.md) — etapa inteira (testes+commit+publicar); 30/10: noite autónoma, pendências do fundador num PDF na pasta Genesis
 - [Plano Fases 12-20](plan-fases-12-20-decisoes.md) — decisões: bloqueio PIN+FaceID 5 min, cores turno, servente, gerente, descontos 0/10/15%, premium+aniversário, revenda
 - [WhatsApp Business number](whatsapp-business-number.md) — +258849461056 given 2026-10-19; Twilio sender + templates still missing
 - [Site contact number](site-contact-number.md) — +258 87 015 0055 on the public landing, temporary; one constant to swap
-- [Subscription payment plans](subscription-payment-plans.md) — 25/10: Aderir via WhatsApp, annual on request (no price), premium 8.000 MT later, payment numbers not given yet; auto-confirmation = future phase
+- [Subscription payment plans](subscription-payment-plans.md) — 30/10: Básico 8 000 / Premium 14 000 MT (Premium escondido até haver conteúdo); clientes antigos mantêm preço; Aderir via WhatsApp
 - [Site: estilo e tom](site-estilo-e-tom.md) — branco destaque/verde acompanha; textos para o cliente, sem jargão técnico
+- [Foco no POS puro](foco-pos-puro.md) — 27/10: modos restaurante/hotel/farmácia/clínica/combustível/nhonguista/arrendamento só DEPOIS do plano e do Prompt Mestre; no site «Brevemente + Avise-me»

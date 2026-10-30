@@ -24,9 +24,10 @@ export default function Onboarding() {
   const [extraTypes, setExtraTypes] = useState([]);
   const [catalog, setCatalog] = useState(null);
   const [rent, setRent] = useState(0);
-  const [costs, setCosts] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
+  // 27/10 (fundador): as linhas comecam abertas, com exemplos — so com o botao «+» ninguem percebia para que serviam.
+  const [costs, setCosts] = useState([{ description: '', amount: 0 }]);
+  const [employees, setEmployees] = useState([{ name: '', role: '', salary: 0 }]);
+  const [suppliers, setSuppliers] = useState([{ name: '', phone: '', delivery: 0 }]);
   const [hours, setHours] = useState({ opening_time: '08:00', closing_time: '20:00' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -112,17 +113,20 @@ export default function Onboarding() {
           <Section title={t('Que tipo de negócio tem?')} description={t('Carregamos um catálogo de produtos adequado.')}>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {BUSINESS_TYPES.map((b) => (
-                <Choice key={b.value} checked={mainType === b.value} onClick={() => { setMainType(b.value); setExtraTypes((x) => x.filter((v) => v !== b.value)); setCatalog(null); }}>{t(b.label)}</Choice>
+                <Choice key={b.value} icon={b.icon} checked={mainType === b.value} onClick={() => { setMainType(b.value); setExtraTypes((x) => x.filter((v) => v !== b.value)); setCatalog(null); }}>{t(b.label)}</Choice>
               ))}
             </div>
+            {BUSINESS_TYPES.find((b) => b.value === mainType)?.pending && (
+              <Alert tone="info" className="mt-4">{t('O Genesis está a preparar um modo próprio para este tipo de negócio. Por agora já pode vender, controlar o stock e ver os relatórios com o terminal de vendas; quando o modo próprio ficar pronto, passa para ele sem perder nada.')}</Alert>
+            )}
           </Section>
         )}
 
         {step === 1 && (
-          <Section title={t('Vende também outra coisa?')} description={t('Opcional. Ex.: bottle store com churrasqueira.')}>
+          <Section title={t('Vende também outra coisa?')} description={t('Opcional. Ex.: bottle store com churrascaria.')}>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {BUSINESS_TYPES.filter((b) => b.value !== mainType && b.value !== 'outro').map((b) => (
-                <Choice key={b.value} checked={extraTypes.includes(b.value)} onClick={() => { setExtraTypes((x) => (x.includes(b.value) ? x.filter((v) => v !== b.value) : [...x, b.value])); setCatalog(null); }}>{t(b.label)}</Choice>
+              {BUSINESS_TYPES.filter((b) => b.value !== mainType && b.value !== 'outro' && !b.pending).map((b) => (
+                <Choice key={b.value} icon={b.icon} checked={extraTypes.includes(b.value)} onClick={() => { setExtraTypes((x) => (x.includes(b.value) ? x.filter((v) => v !== b.value) : [...x, b.value])); setCatalog(null); }}>{t(b.label)}</Choice>
               ))}
             </div>
           </Section>
@@ -180,24 +184,27 @@ export default function Onboarding() {
         )}
 
         {step === 3 && (
-          <Section title={t('Custos fixos e equipa')} description={t('Para que serve: no fim do mês o Genesis desconta renda, salários e entregas dos fornecedores ao que vendeu, e mostra o lucro que realmente lhe fica. Sem isto, o relatório só mostra a receita. Pode deixar em branco e preencher depois em Definições.')}>
+          <Section title={t('Custos fixos e equipa')} description={t('No fim de cada mês, o Genesis tira ao que vendeu tudo o que o negócio paga: salários, renda, luz e água, limpeza, as entregas dos fornecedores e o que mais quiser (até o combustível do seu carro). O que sobra é o dinheiro que fica mesmo para si — já sem nada para pagar.')}>
+            <Alert tone="info" className="mb-4">{t('Sem isto, o Genesis mostra quanto vendeu e quanto ganhou nos produtos, mas os salários, a renda e as outras despesas teria de os tirar à mão. Com isto preenchido, ele faz essa conta por si e mostra, por exemplo: «4 000 MT foram para a entrega dos refrescos; ficam-lhe 31 500 MT». Pode deixar em branco e preencher depois em Definições.')}</Alert>
             <Card>
               <MoneyInput label={t('Renda mensal do local')} hint={t('Deixe a zero se o espaço é seu.')} valueCents={rent} onChangeCents={setRent} className="max-w-xs" />
-              <h3 className="mb-2 mt-5 text-sm font-medium text-ink-2">{t('Outros custos mensais')}</h3>
+              <h3 className="mb-1 mt-5 text-sm font-medium text-ink-2">{t('Outros custos mensais')}</h3>
+              <p className="mb-2 text-sm text-ink-muted">{t('O que paga todos os meses além da renda. Escreva o que é e quanto custa por mês.')}</p>
               {costs.map((c, i) => (
                 <div key={i} className="mb-2 grid grid-cols-[minmax(0,1fr)_160px_auto] gap-2">
-                  <Input aria-label={t('Descrição')} placeholder={t('Ex.: Luz, água, transporte')} value={c.description} onChange={(e) => setCosts((x) => x.map((y, j) => (j === i ? { ...y, description: e.target.value } : y)))} />
+                  <Input aria-label={t('Descrição')} placeholder={t('Ex.: Luz e água')} value={c.description} onChange={(e) => setCosts((x) => x.map((y, j) => (j === i ? { ...y, description: e.target.value } : y)))} />
                   <MoneyInput aria-label={t('Valor')} valueCents={c.amount} onChangeCents={(v) => setCosts((x) => x.map((y, j) => (j === i ? { ...y, amount: v } : y)))} />
                   <Button variant="ghost" aria-label={t('Remover')} icon={Trash2} onClick={() => setCosts((x) => x.filter((_, j) => j !== i))} />
                 </div>
               ))}
               <Button size="sm" icon={Plus} onClick={() => setCosts((x) => [...x, { description: '', amount: 0 }])}>{t('Custo')}</Button>
-              <h3 className="mb-2 mt-5 text-sm font-medium text-ink-2">{t('Trabalhadores com salário fixo')}</h3>
+              <h3 className="mb-1 mt-5 text-sm font-medium text-ink-2">{t('Trabalhadores com salário fixo')}</h3>
+              <p className="mb-2 text-sm text-ink-muted">{t('Quem trabalha consigo e quanto recebe por mês: o nome, o que faz e o salário.')}</p>
               {employees.map((e, i) => (
                 <div key={i} className="mb-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_160px_auto] gap-2">
-                  <Input aria-label={t('Nome')} placeholder={t('Nome')} value={e.name} onChange={(ev) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, name: ev.target.value } : y)))} />
-                  <Input aria-label={t('Função')} placeholder={t('Função')} value={e.role} onChange={(ev) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, role: ev.target.value } : y)))} />
-                  <MoneyInput aria-label={t('Salário')} valueCents={e.salary} onChangeCents={(v) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, salary: v } : y)))} />
+                  <Input aria-label={t('Nome')} placeholder={t('Ex.: João Mabunda')} value={e.name} onChange={(ev) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, name: ev.target.value } : y)))} />
+                  <Input aria-label={t('Função')} placeholder={t('Ex.: Ajudante de balcão')} value={e.role} onChange={(ev) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, role: ev.target.value } : y)))} />
+                  <MoneyInput aria-label={t('Salário')} placeholder={t('Salário')} valueCents={e.salary} onChangeCents={(v) => setEmployees((x) => x.map((y, j) => (j === i ? { ...y, salary: v } : y)))} />
                   <Button variant="ghost" aria-label={t('Remover')} icon={Trash2} onClick={() => setEmployees((x) => x.filter((_, j) => j !== i))} />
                 </div>
               ))}
@@ -253,10 +260,10 @@ function Section({ title, description, children }) {
   );
 }
 
-function Choice({ checked, onClick, children }) {
+function Choice({ checked, onClick, children, icon: Icon }) {
   return (
     <button type="button" onClick={onClick} aria-pressed={checked} className={cx('flex h-12 items-center justify-between rounded-lg border px-4 text-left text-base transition-colors', checked ? 'border-accent bg-accent-soft text-ink' : 'border-border bg-surface text-ink-2 hover:border-border-strong')}>
-      {children}
+      <span className="flex items-center gap-3">{Icon && <Icon size={18} className={checked ? 'text-accent' : 'text-ink-muted'} aria-hidden="true" />}{children}</span>
       {checked && <Check size={16} className="text-accent" />}
     </button>
   );

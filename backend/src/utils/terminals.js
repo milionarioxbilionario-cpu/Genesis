@@ -18,17 +18,19 @@ const prisma = require('./prisma');
 const TERMINAL_COOKIE = 'genesis_terminal';
 const TERMINAL_COOKIE_MS = 365 * 24 * 60 * 60 * 1000;
 const PAIRING_TTL_MS = 10 * 60 * 1000;
-const pairingCodes = new Map(); // code -> { tenantId, name, createdBy, expiresAt }
+const pairingCodes = new Map(); // code -> { tenantId, name, createdBy, terminalId, expiresAt }
 
 const sha256 = (v) => crypto.createHash('sha256').update(String(v)).digest('hex');
 
-function createPairingCode({ tenantId, name, createdBy }) {
+// terminalId (Etapa A): codigo para voltar a ligar um terminal que ja existe
+// (o browser perdeu o cookie) — fica o mesmo terminal, com os mesmos perfis.
+function createPairingCode({ tenantId, name, createdBy, terminalId = null }) {
   const now = Date.now();
   for (const [code, entry] of pairingCodes) if (entry.expiresAt < now) pairingCodes.delete(code);
   let code;
   do { code = String(crypto.randomInt(100000, 1000000)); } while (pairingCodes.has(code));
   const expiresAt = now + PAIRING_TTL_MS;
-  pairingCodes.set(code, { tenantId, name, createdBy, expiresAt });
+  pairingCodes.set(code, { tenantId, name, createdBy, terminalId, expiresAt });
   return { code, expires_at: new Date(expiresAt).toISOString() };
 }
 
@@ -46,6 +48,21 @@ async function createTerminal({ tenantId, name, createdBy }) {
   const secret = crypto.randomBytes(32).toString('base64url');
   const terminal = await prisma.posTerminal.create({ data: { id, tenant_id: tenantId, name, secret_hash: sha256(secret), created_by: createdBy } });
   return { terminal, cookieValue: `${id}.${secret}` };
+}
+
+// Segredo novo para um terminal existente (o antigo deixa de valer) e reactivado.
+async function rotateTerminal({ tenantId, terminalId }) {
+  const secret = crypto.randomBytes(32).toString('base64url');
+  const r = await prisma.posTerminal.updateMany({ where: { id: terminalId, tenant_id: tenantId }, data: { secret_hash: sha256(secret), revoked_at: null } });
+  if (r.count !== 1) return null;
+  const terminal = await prisma.posTerminal.findUnique({ where: { id: terminalId } });
+  return { terminal, cookieValue: `${terminalId}.${secret}` };
+}
+
+// Perfis deste terminal (Etapa A): null = sem lista = todos os caixistas (balcao geral).
+async function terminalMemberIds(db, terminalId) {
+  const rows = await db.posTerminalMember.findMany({ where: { terminal_id: terminalId }, select: { user_id: true } });
+  return rows.length ? rows.map((r) => r.user_id) : null;
 }
 
 const seenAt = new Map(); // id -> ultima escrita de last_seen_at (evita 1 UPDATE por pedido)
@@ -75,5 +92,5 @@ function terminalCookieOptions() {
 }
 
 module.exports = {
-  TERMINAL_COOKIE, createPairingCode, consumePairingCode, createTerminal, verifyTerminalCookie, terminalCookieOptions,
+  TERMINAL_COOKIE, createPairingCode, consumePairingCode, createTerminal, rotateTerminal, terminalMemberIds, verifyTerminalCookie, terminalCookieOptions,
 };

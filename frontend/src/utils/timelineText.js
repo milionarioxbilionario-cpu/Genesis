@@ -22,7 +22,9 @@ export function timelineTitle(e) {
       return t(e.quantity >= 0 ? 'Entrada de stock: {q} × {name}' : 'Ajuste de stock: {q} × {name}', { q: (e.quantity > 0 ? '+' : '') + e.quantity, name: e.product_name });
     case 'debt': return e.debtor != null ? t('Txeneka nova: {name}', { name: e.debtor }) : e.title;
     case 'debt_payment': return e.debtor != null ? t('Txeneka paga: {name}', { name: e.debtor }) : e.title;
-    case 'shift': return t('Fecho de turno');
+    case 'shift':
+      if (e.shift_fail) return e.locked ? t('Perfil bloqueado no fecho') : t('Fecho recusado: tentativa {n}/3', { n: e.attempt || '?' });
+      return t('Fecho de turno');
     case 'demand':
       if (e.product_name == null) return e.title;
       return t(e.in_catalog ? 'Cliente pediu: {name}{q} (em falta)' : 'Cliente pediu: {name}{q} (fora do catálogo)', { name: e.product_name, q: e.quantity > 1 ? ' ×' + e.quantity : '' });
@@ -44,7 +46,9 @@ export function timelineDetail(e) {
       if (e.product_name == null) return e.detail;
       return e.supplier_name ? t('fornecedor {name}', { name: e.supplier_name }) : (e.quantity >= 0 ? t('sem fornecedor') : t('ajuste do dono'));
     case 'debt_payment': return t('pagamento recebido');
-    case 'shift': return e.amount === 0 ? t('contagem certa') : t('contagem com diferença');
+    case 'shift':
+      if (e.shift_fail) return t('escreveu {a}, esperado {b}', { a: money(e.declared || 0), b: money(e.expected || 0) });
+      return e.amount === 0 ? t('contagem certa') : t('contagem com diferença');
     case 'demand': return t('oportunidade perdida');
     default: return e.detail;
   }
@@ -59,7 +63,7 @@ export function timelineExtra(e) {
     e.discount ? t('desconto {v}', { v: money(e.discount) }) : null,
     e.type === 'loss' ? t('{v} por unidade', { v: money(e.unit_cost) }) : null,
     e.type === 'stock' ? t('{v} por unidade', { v: money(e.unit_cost) }) : null,
-    e.type === 'shift' ? t('contado {a} · esperado {b}', { a: money(e.counted), b: money(e.expected) }) : null,
+    e.type === 'shift' && !e.shift_fail ? t('contado {a} · esperado {b}', { a: money(e.counted), b: money(e.expected) }) : null,
   ].filter(Boolean).join(' · ');
 }
 

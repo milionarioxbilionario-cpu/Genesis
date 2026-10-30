@@ -29,6 +29,8 @@ export default function Terminal() {
       // e limpeza dos PINs guardados de perfis removidos ou com PIN mudado.
       saveSnapshot(SNAPSHOT_KEY, { ...d, session_cashier_id: null });
       pruneVerifiers(`cashier:${d.terminal.id}:`, Object.fromEntries(d.cashiers.map((c) => [pinKey(d, c), c.pin_v])));
+      // PIN do dono que abre as vendas sem rede: apaga-se quando muda ou deixa de existir.
+      pruneVerifiers(`auth:${d.terminal.id}`, d.auth_pin_v ? { [`auth:${d.terminal.id}`]: d.auth_pin_v } : {});
       const cashier = d.cashiers.find((c) => c.id === d.session_cashier_id);
       setState((s) => {
         // Ja a vender sem rede: a rede voltou, o caixista continua (a fila envia as

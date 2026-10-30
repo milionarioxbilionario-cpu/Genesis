@@ -155,7 +155,7 @@ try {
     await p.goto(BASE + '/planos');
     await p.waitForLoadState('networkidle');
     const join = decodeURIComponent((await p.getByRole('link', { name: 'Aderir ao plano' }).getAttribute('href')).split('?text=')[1]);
-    ok(/Quero aderir ao plano Genesis MZ de 3\s000\sMT\/mês\./.test(join), '«Aderir ao plano» leva o plano e o preço na mensagem', join);
+    ok(/Quero aderir ao plano Genesis MZ de 8\s000\sMT\/mês\./.test(join), '«Aderir ao plano» leva o plano e o preço na mensagem', join);
     const paid = decodeURIComponent((await p.getByRole('link', { name: /Já paguei/ }).getAttribute('href')).split('?text=')[1]);
     ok(/Já paguei a subscrição/.test(paid), '«Já paguei» pede o comprovativo', paid);
     await p.getByRole('link', { name: 'EN', exact: true }).first().click();

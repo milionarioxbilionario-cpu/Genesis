@@ -1,6 +1,6 @@
 ---
 name: subscription-payment-plans
-description: "Founder's 2026-10-25 decisions/ideas on plans and subscription payment (site \"Aderir\" via WhatsApp now; automatic payment confirmation later)"
+description: "Planos: 30/10 Básico 8 000 MT, Premium 14 000 MT (conteúdo do Premium por decidir, cartão escondido); Aderir via WhatsApp; confirmação automática de pagamentos = fase futura"
 metadata:
   node_type: memory
   type: project
@@ -20,3 +20,5 @@ Idea for a later phase (subscriptions), not built: confirm payments automaticall
 - Cards via Google/Apple Pay, PayPal, bank transfer (ABSA, Standard Bank, Millennium, Moza, BCI).
 
 **How to apply:** never invent payment numbers, bank accounts or the annual price; propose the automatic confirmation as its own phase after Fase 11. See [[site-contact-number]].
+
+**Update 2026-10-30:** founder set new prices: **Básico 8 000 MT/mês, Premium 14 000 MT/mês** (replaces 3 000 / 8 000). Applied: site config `PLAN_PRICE_CENTS = 800000`, `PREMIUM = { price_cents: 1400000, items: [] }` (Premium card hidden until `items` has content the founder approves — never invent it), admin `PLAN_PRICE`, DB default `subscription_price` 800000 for NEW accounts only; existing customers keep their price (my decision, flagged to founder). Founder was also asked whether a cheaper entry plan makes sense against 760–1 200 MT competitors.

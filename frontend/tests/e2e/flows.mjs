@@ -174,12 +174,14 @@ try {
   await termCtx.setOffline(true);
   await term.getByRole('button', { name: /Sumol Laranja 330ml/ }).click();
   await term.getByRole('button', { name: /Cobrar 35,00 MT/ }).click();
-  await term.getByText('Sem ligação: venda guardada neste terminal').waitFor({ timeout: T });
-  await term.getByText('1 por enviar').waitFor({ timeout: T });
-  ok(true, 'offline: venda guardada no terminal (1 por enviar)');
+  // 30/10/2026: sem rede o recibo aparece na mesma (provisorio).
+  await term.getByText('Venda guardada neste terminal').waitFor({ timeout: T });
   await shot(term, '26-pos-offline');
+  await term.getByRole('button', { name: 'Nova venda' }).click();
+  await term.getByText('1 por enviar').waitFor({ timeout: T });
+  ok(true, 'offline: venda guardada no terminal com recibo provisorio (1 por enviar)');
   await termCtx.setOffline(false);
-  await term.getByText('1 por enviar').waitFor({ state: 'detached', timeout: T });
+  await term.getByText(/sem ligação já enviado/).first().waitFor({ timeout: T }); // 30/10: aviso no fim do envio
   ok(true, 'rede de volta: venda offline sincronizada');
 
   // O caixista nao chega ao painel do dono.
@@ -220,6 +222,7 @@ try {
   await termCtx.setOffline(true);
   await term.getByRole('button', { name: /Sumol Laranja 330ml/ }).click();
   await term.getByRole('button', { name: /Cobrar 35,00 MT/ }).click();
+  await term.getByRole('button', { name: 'Nova venda' }).click();
   await term.getByText('1 por enviar').waitFor({ timeout: T });
   await term.getByRole('button', { name: 'Fechar turno' }).click();
   await term.getByLabel('Dinheiro contado na gaveta').fill('250');
@@ -230,7 +233,7 @@ try {
   await shot(term, '28b-pos-fecho-com-pendentes');
   await term.keyboard.press('Escape');
   await termCtx.setOffline(false);
-  await term.getByText('1 por enviar').waitFor({ state: 'detached', timeout: T });
+  await term.getByText(/sem ligação já enviado/).first().waitFor({ timeout: T }); // 30/10: aviso no fim do envio
 
   // Fecho certo (105 + 75 + 35 + 35 = 250 MT em dinheiro): o turno fica FECHADO.
   await term.getByRole('button', { name: 'Fechar turno' }).click();

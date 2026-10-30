@@ -6,6 +6,7 @@
 // 9.5: na lingua de quem imprime (t do i18n); em portugues fica igual.
 import { getLang, locale, t } from '../i18n/core.js';
 import { formatQty, lineAmount } from './units.js';
+import { receiptTitle } from './code128.js';
 
 const ESC = 0x1b;
 const GS = 0x1d;
@@ -112,7 +113,7 @@ export function buildEscPosReceipt({ shopName, shopLocation, shopPhone, shopNuit
   if (shopNuit) text('NUIT ' + shopNuit);
   center(false);
   line();
-  bold(true); text(twoCols(t('RECIBO'), docNumber || String(sale.daily_number || 0).padStart(3, '0'))); bold(false);
+  bold(true); text(twoCols(receiptTitle(sale, t), docNumber || String(sale.daily_number || 0).padStart(3, '0'))); bold(false);
   text(new Date(sale.created_at || Date.now()).toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
   if (cashierName) text(t('Caixista:') + ' ' + cashierName);
   line();
@@ -135,6 +136,7 @@ export function buildEscPosReceipt({ shopName, shopLocation, shopPhone, shopNuit
   line();
   center(true);
   if (barcode) { out.push(...barcodeBytes(barcode)); text(''); }
+  else if (sale.offline && !sale.daily_number) text(t('Venda feita sem ligação: fica confirmada quando o terminal voltar à rede.'));
   if (verifyUrl) {
     out.push(...qrBytes(verifyUrl));
     text(t('Verifique este recibo'));

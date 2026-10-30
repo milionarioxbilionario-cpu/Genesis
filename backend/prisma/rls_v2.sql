@@ -32,7 +32,7 @@ DECLARE t text;
 BEGIN
   -- Tabelas com tenant_id directo.
   FOREACH t IN ARRAY ARRAY['Product','Sale','StockEntry','Employee','Supplier','FixedCost','Debt',
-                           'DemandCapture','ShrinkageRecord','ShiftClosing','SaleGoal','ProductPriceHistory','PosTerminal','StockLot','Expense','ShoppingList','ShoppingListItem','CatalogSuggestion','WebAuthnCredential','SalePayment']
+                           'DemandCapture','ShrinkageRecord','ShiftClosing','SaleGoal','ProductPriceHistory','PosTerminal','StockLot','Expense','ShoppingList','ShoppingListItem','CatalogSuggestion','WebAuthnCredential','SalePayment','PosTerminalMember']
   LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_%s ON public.%I', lower(t), t);
@@ -85,6 +85,11 @@ CREATE POLICY tenant_isolation_debtpayment ON public."DebtPayment" FOR ALL TO ge
 ALTER TABLE public."MasterCatalog" ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS master_catalog_read ON public."MasterCatalog";
 CREATE POLICY master_catalog_read ON public."MasterCatalog" FOR SELECT TO genesis_app USING (true);
+
+-- Lista de espera dos modos por construir (Etapa A): vem do site publico, sem
+-- tenant_id; so o cliente de sistema (admin) a le. A aplicacao nao ve nada.
+ALTER TABLE public."ModeWaitlist" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public."ModeWaitlist" FROM genesis_app;
 
 -- device_keys (legado, ja nao usado): sem acesso para a aplicacao.
 REVOKE ALL ON TABLE public.device_keys FROM genesis_app;

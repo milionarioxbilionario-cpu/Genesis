@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gift, Info } from 'lucide-react';
-import api from '../../utils/api';
+import api, { trackOwnCredentialChange } from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { date, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
@@ -112,7 +112,7 @@ function PasswordCard() {
   async function save() {
     setBusy(true); setError('');
     try {
-      await api.put('/api/profile/password', { current_password: f.current, new_password: f.next });
+      await trackOwnCredentialChange(api.put('/api/profile/password', { current_password: f.current, new_password: f.next }));
       toast(t('Senha mudada. As outras sessões foram fechadas.'));
       setF({ current: '', next: '', confirm: '' });
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }

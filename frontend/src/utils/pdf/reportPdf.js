@@ -4,7 +4,8 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 // PDF sai sempre com os valores, mesmo no modo privado.
-import { moneyExact as money, int, date, dateTime, PAYMENT_LABEL } from '../format';
+import { moneyExact as money, int, date, dateTime, PAYMENT_LABEL, workedText } from '../format';
+import { formatHuman } from '../units';
 import { lossReason, timelineDetail, timelineExtra, timelineTitle, timelineValueText, timelineWhen, timelineWho } from '../timelineText';
 import { pdfText, safeFileName } from './text';
 import { getLang, locale, t } from '../../i18n/core.js';
@@ -113,7 +114,7 @@ function breakdown(pdf, r) {
   pdf.table([t('Forma'), t('Valor')], Object.entries(r.by_payment).filter(([k, v]) => v > 0 || k !== 'mobile_money').map(([k, v]) => [PAYMENT_LABEL[k] || k, money(v)]), { right: [1] });
 
   pdf.heading(t('Por caixista'));
-  pdf.table([t('Caixista'), t('Vendas'), t('Receita')], r.by_cashier.map((c) => [c.name, int(c.sales), money(c.revenue)]), { right: [1, 2], empty: t('Sem vendas.') });
+  pdf.table([t('Caixista'), t('Horas'), t('Vendas'), t('Artigos'), t('Receita')], r.by_cashier.map((c) => [c.name, workedText(c.worked_seconds), int(c.sales), formatHuman(c.items || 0), money(c.revenue)]), { right: [1, 2, 3, 4], empty: t('Sem vendas.') });
 
   if (r.by_category.length) {
     pdf.heading(t('Por categoria'));

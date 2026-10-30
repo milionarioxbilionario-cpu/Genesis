@@ -32,6 +32,7 @@ export default function useOfflineSync({ intervalMs = 30000 } = {}) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [pendingCount, setPendingCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
   const running = useRef(false);
 
   const refreshCounts = useCallback(async () => {
@@ -51,16 +52,24 @@ export default function useOfflineSync({ intervalMs = 30000 } = {}) {
     running.current = true;
     try {
       if (typeof navigator === 'undefined' || navigator.onLine) {
+        const { pending } = await countQueue(db);
+        if (pending > 0) setSyncing(true);
         let result = await runSync(db, post);
         if (result.authFailed) {
           const r = await fetch('/api/refresh', { method: 'POST', credentials: 'same-origin' }).catch(() => null);
           if (r && r.ok) result = await runSync(db, post);
+        }
+        // 30/10/2026: o ecra tem de saber que a fila chegou ao servidor (stock,
+        // turno e aviso «N enviadas»); antes so mudava ao trocar de pagina.
+        if (result.synced > 0 || result.rejected > 0) {
+          window.dispatchEvent(new CustomEvent('genesis:queue-synced', { detail: { synced: result.synced, rejected: result.rejected } }));
         }
       }
     } catch (err) {
       console.error('useOfflineSync: passagem falhou', err);
     } finally {
       running.current = false;
+      setSyncing(false);
       await refreshCounts();
     }
   }, [refreshCounts]);
@@ -82,5 +91,5 @@ export default function useOfflineSync({ intervalMs = 30000 } = {}) {
     };
   }, [intervalMs, syncNow]);
 
-  return { isOnline, pendingCount, rejectedCount, syncNow, refreshCounts };
+  return { isOnline, pendingCount, rejectedCount, syncing, syncNow, refreshCounts };
 }

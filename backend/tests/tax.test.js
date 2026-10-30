@@ -18,6 +18,10 @@ test('taxa do produto: null = 16 (normal), 0 = isento', () => {
   assert.equal(tax.productVatRate(null), 16);
   assert.equal(tax.productVatRate(undefined), 16);
   assert.equal(tax.productVatRate(0), 0);
+  // Etapa A: taxa normal do estabelecimento (ex.: 15%).
+  assert.equal(tax.productVatRate(null, 15), 15);
+  assert.equal(tax.productVatRate(0, 15), 0);
+  assert.equal(tax.vatIncluded(11500, 15), 1500);
 });
 
 test('desconto repartido pelas linhas: soma certa, proporcional, sem centavos perdidos', () => {

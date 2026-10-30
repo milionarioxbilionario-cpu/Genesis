@@ -18,6 +18,7 @@ const { dayInMaputo } = require('../utils/shiftDay');
 const { effectivePlan, giftAvailable, giftWindow } = require('../services/plans');
 
 const router = express.Router();
+const emailTaken = async (email) => Boolean(await prisma.system.user.findFirst({ where: { email }, select: { id: true } }));
 router.use(auth, requireRole('owner'));
 
 const userId = (req) => req.user.userId;
@@ -87,7 +88,10 @@ router.post('/email/start', asyncHandler(async (req, res) => {
   const u = await prisma.user.findUnique({ where: { id: userId(req) } });
   if (!u?.password_hash || !(await bcrypt.compare(data.password, u.password_hash))) throw httpError(403, 'A senha actual não está certa.', 'WRONG_PASSWORD');
   if (data.new_email === String(u.email || '').toLowerCase()) throw httpError(400, 'Esse já é o seu e-mail.', 'SAME_EMAIL');
-  if (await prisma.user.findFirst({ where: { email: data.new_email }, select: { id: true } })) throw httpError(409, 'Esse e-mail já pertence a outra conta.', 'EMAIL_IN_USE');
+  // O e-mail e unico em TODO o Genesis: com a RLS, o cliente da loja so via as contas
+  // desta loja e deixava passar o e-mail de outra loja ou do admin (27/10). Ligacao de
+  // sistema, so para saber se existe (nao devolve nada da outra conta).
+  if (await emailTaken(data.new_email)) throw httpError(409, 'Esse e-mail já pertence a outra conta.', 'EMAIL_IN_USE');
   const cfg = getMailerConfig();
   const production = process.env.NODE_ENV === 'production';
   if (!cfg.isConfigured && production) throw httpError(503, 'O envio de e-mails ainda não está configurado. Fale com o suporte para mudar o e-mail.', 'EMAIL_NOT_CONFIGURED');
@@ -117,7 +121,7 @@ router.post('/email/confirm', asyncHandler(async (req, res) => {
     throw httpError(400, 'Os códigos não estão certos.', 'BAD_EMAIL_CODES');
   }
   emailChanges.delete(userId(req));
-  if (await prisma.user.findFirst({ where: { email: pending.newEmail }, select: { id: true } })) throw httpError(409, 'Esse e-mail já pertence a outra conta.', 'EMAIL_IN_USE');
+  if (await emailTaken(pending.newEmail)) throw httpError(409, 'Esse e-mail já pertence a outra conta.', 'EMAIL_IN_USE');
   const before = await prisma.user.findUnique({ where: { id: userId(req) }, select: { email: true } });
   await prisma.user.update({ where: { id: userId(req) }, data: { email: pending.newEmail } });
   invalidateSessionUser(userId(req));

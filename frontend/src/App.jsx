@@ -7,6 +7,8 @@ import { I18nProvider } from './i18n/react';
 // (Recharts), e o painel nao descarrega o POS. Requisito: POS < 2 s em 3G.
 const Login = lazy(() => import('./pages/auth/Login'));
 const RequestAccount = lazy(() => import('./pages/auth/RequestAccount'));
+const NotifyMe = lazy(() => import('./pages/auth/NotifyMe'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const Support = lazy(() => import('./pages/auth/Support'));
 const VerifyReceipt = lazy(() => import('./pages/VerifyReceipt'));
@@ -66,6 +68,7 @@ export default function App() {
               <Route path="/inicio" element={<Root />} />
               <Route path="/entrar" element={<Login />} />
               <Route path="/pedir-conta" element={<RequestAccount />} />
+              <Route path="/avise-me" element={<NotifyMe />} />
               <Route path="/recuperar-senha" element={<ResetPassword />} />
               <Route path="/suporte" element={<Support />} />
               <Route path="/verify/:saleId" element={<VerifyReceipt />} />
@@ -94,7 +97,8 @@ export default function App() {
               <Route path="/cashier/*" element={<Navigate to="/terminal" replace />} />
               <Route path="/hub" element={<Navigate to="/terminal" replace />} />
               <Route path="/owner/*" element={<Navigate to="/app" replace />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Qualquer outro endereco: pagina 404 (antes ia em silencio para o inicio). */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
           </SessionProvider>

@@ -262,6 +262,8 @@ app.use('/api/profile', profileRoutes);
 
 // Verificacao publica do QR dos recibos (sem sessao, so leitura).
 app.use('/api/verify', verifyRoutes);
+// Etapa A: «Avise-me quando estiver pronto» (publico, sem sessao).
+app.use('/api/waitlist', require('./routes/waitlist'));
 
 // Rotas Protegidas de Admin
 app.use('/api/admin', adminOriginCheck, authMiddleware, requireRole('super_admin'), adminRoutes);

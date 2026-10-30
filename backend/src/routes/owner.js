@@ -30,6 +30,7 @@ const { writeAudit } = require('../utils/audit');
 const { createPairingCode } = require('../utils/terminals');
 const { monthCloseStatus, monthKey } = require('../services/monthClose');
 const { GROUPS, GROUP_KEYS, groupOf, actionFilter, periodStart, retentionCutoff, RETENTION_OPTIONS } = require('../utils/auditGroups');
+const { lineAmount } = require('../utils/units');
 
 const router = express.Router();
 router.use(auth);
@@ -58,9 +59,9 @@ router.get('/tenant', asyncHandler(async (req, res) => {
   if (!t) throw httpError(404, 'Estabelecimento não encontrado');
   res.json({
     id: t.id, name: t.name, owner_name: t.owner_name, business_type: t.business_type, location: t.location,
-    phone: t.phone, email: t.email, status: t.status, trial_ends_at: t.trial_ends_at,
+    phone: t.phone, email: t.email, status: t.status, trial_ends_at: t.trial_ends_at, subscription_until: t.subscription_until,
     subscription_price: t.subscription_price, onboarding_completed: t.onboarding_completed, created_at: t.created_at,
-    vat_mode: t.vat_mode || 'none', // Fase 15.2: o formulario do produto mostra o IVA so quando a loja o cobra
+    vat_mode: t.vat_mode || 'none', vat_rate_std: t.vat_rate_std ?? 16, // Fase 15.2 / Etapa A: o formulario do produto mostra o IVA (e a taxa normal) so quando o estabelecimento o cobra
   });
 }));
 
@@ -74,14 +75,40 @@ const auditQuery = z.object({
   cursor: z.string().max(80).optional(),
 });
 const parseAuditJson = (v) => { try { return v ? JSON.parse(v) : null; } catch { return v; } };
-function auditRow(l, terminals, users) {
+// Campos com ids guardados no "antes / depois": o dono ve o nome, nunca o codigo.
+const REF_FIELDS = { product_id: 'product', supplier_id: 'supplier', cashier_user_id: 'user', seller_user_id: 'user', operated_by: 'user', user_id: 'user', recorded_by: 'user' };
+function auditRow(l, terminals, users, refs = new Map()) {
   const nv = parseAuditJson(l.new_value);
+  const ov = parseAuditJson(l.old_value);
+  const names = {};
+  for (const v of [nv, ov]) {
+    if (!v || typeof v !== 'object') continue;
+    for (const k of Object.keys(REF_FIELDS)) if (typeof v[k] === 'string' && refs.has(v[k])) names[v[k]] = refs.get(v[k]);
+  }
   return {
     id: l.id, action: l.action, group: groupOf(l.action), entity_type: l.entity_type, entity_id: l.entity_id,
     user_name: users.get(l.user_id) || SUPPORT_NAME, ip_address: l.ip_address, created_at: l.created_at,
-    old_value: parseAuditJson(l.old_value), new_value: nv,
+    old_value: ov, new_value: nv, names,
     terminal_name: nv && nv.terminal_id ? terminals.get(nv.terminal_id) || null : null,
   };
+}
+// Nomes de produtos, fornecedores e pessoas citados nos registos da pagina
+// (sempre filtrado pela loja; produtos apagados mantem o nome).
+async function refNames(tenantId, rows) {
+  const ids = { product: new Set(), supplier: new Set(), user: new Set() };
+  for (const r of rows) {
+    for (const raw of [r.new_value, r.old_value]) {
+      const v = parseAuditJson(raw);
+      if (!v || typeof v !== 'object') continue;
+      for (const [k, kind] of Object.entries(REF_FIELDS)) if (typeof v[k] === 'string' && v[k]) ids[kind].add(v[k]);
+    }
+  }
+  const [products, suppliers, people] = await Promise.all([
+    ids.product.size ? prisma.product.findMany({ where: { tenant_id: tenantId, id: { in: [...ids.product] } }, select: { id: true, name: true } }) : [],
+    ids.supplier.size ? prisma.supplier.findMany({ where: { tenant_id: tenantId, id: { in: [...ids.supplier] } }, select: { id: true, name: true } }) : [],
+    ids.user.size ? prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: [...ids.user] } }, select: { id: true, name: true } }) : [],
+  ]);
+  return new Map([...products, ...suppliers, ...people].map((x) => [x.id, x.name]));
 }
 // Nomes de quem fez cada registo, lidos A PARTE: o super admin (sessao de
 // suporte) nao pertence a loja e a RLS esconde-o — com include, o Prisma
@@ -114,9 +141,9 @@ router.get('/audit', asyncHandler(async (req, res) => {
   const last = page[page.length - 1];
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { audit_retention_months: true } });
   const months = tenant?.audit_retention_months || 2;
-  const [terminals, users] = await Promise.all([terminalNames(tenantId), userNames(tenantId, page)]);
+  const [terminals, users, refs] = await Promise.all([terminalNames(tenantId), userNames(tenantId, page), refNames(tenantId, page)]);
   res.json({
-    items: page.map((l) => auditRow(l, terminals, users)),
+    items: page.map((l) => auditRow(l, terminals, users, refs)),
     next_cursor: rows.length > q.limit && last ? `${last.created_at.toISOString()}|${last.id}` : null,
     groups: GROUPS.map(({ key, label }) => ({ key, label })).concat([{ key: 'other', label: 'Outros' }]),
     retention_months: months,
@@ -129,7 +156,26 @@ router.get('/audit/:id', asyncHandler(async (req, res) => {
   const tenantId = tenantOf(req);
   const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId } });
   if (!l) throw httpError(404, 'Registo não encontrado', 'AUDIT_NOT_FOUND');
-  res.json(auditRow(l, await terminalNames(tenantId), await userNames(tenantId, [l])));
+  const [terminals, users, refs] = await Promise.all([terminalNames(tenantId), userNames(tenantId, [l]), refNames(tenantId, [l])]);
+  const row = auditRow(l, terminals, users, refs);
+  // Registo de uma venda: o que se vendeu, para o dono perceber sem abrir outra pagina.
+  if (l.entity_type === 'sale' && l.entity_id) {
+    const sale = await prisma.sale.findFirst({
+      where: { id: l.entity_id, tenant_id: tenantId },
+      select: { daily_number: true, status: true, total_amount: true, payment_method: true, cashier: { select: { name: true } },
+        items: { select: { product_name: true, quantity: true, unit: true, unit_sell_price: true, custom: true } },
+        payments: { select: { method: true, amount: true } } },
+    });
+    if (sale) {
+      row.sale = {
+        daily_number: sale.daily_number, status: sale.status, total_amount: sale.total_amount, payment_method: sale.payment_method,
+        cashier_name: sale.cashier?.name || null,
+        items: sale.items.map((i) => ({ name: i.product_name, quantity: i.quantity, unit: i.unit, unit_price: i.unit_sell_price, line_total: lineAmount(i.quantity, i.unit_sell_price, i.unit), custom: i.custom })),
+        payments: sale.payments,
+      };
+    }
+  }
+  res.json(row);
 }));
 
 // ---------------------------------------------------------------- equipa: caixistas
@@ -215,8 +261,59 @@ router.post('/cashiers/:id/unlock', asyncHandler(async (req, res) => {
 
 // ---------------------------------------------------------------- terminais
 router.get('/terminals', asyncHandler(async (req, res) => {
-  const rows = await prisma.posTerminal.findMany({ where: { tenant_id: tenantOf(req) }, orderBy: { created_at: 'desc' } });
-  res.json(rows.map(({ secret_hash, ...t }) => t));
+  const [rows, members] = await Promise.all([
+    prisma.posTerminal.findMany({ where: { tenant_id: tenantOf(req) }, orderBy: { created_at: 'desc' } }),
+    prisma.posTerminalMember.findMany({ where: { tenant_id: tenantOf(req) }, select: { terminal_id: true, user_id: true } }),
+  ]);
+  // member_ids vazio = todos os caixistas (balcao geral).
+  res.json(rows.map(({ secret_hash, ...t }) => ({ ...t, member_ids: members.filter((m) => m.terminal_id === t.id).map((m) => m.user_id) })));
+}));
+
+async function ownTerminal(req) {
+  const t = await prisma.posTerminal.findFirst({ where: { id: req.params.id, tenant_id: tenantOf(req) } });
+  if (!t) throw httpError(404, 'Terminal não encontrado');
+  return t;
+}
+
+// Etapa A: codigo para voltar a ligar ESTE terminal (o browser perdeu a ligacao) — nao cria outro.
+router.post('/terminals/:id/pairing-code', asyncHandler(async (req, res) => {
+  const t = await ownTerminal(req);
+  const pairing = createPairingCode({ tenantId: tenantOf(req), name: t.name, createdBy: req.user.userId, terminalId: t.id });
+  await writeAudit({ req, action: 'TERMINAL_PAIRING_CODE', entityType: 'terminal', entityId: t.id, newValue: { name: t.name, repair: true } });
+  res.status(201).json(pairing);
+}));
+
+router.post('/terminals/:id/reactivate', asyncHandler(async (req, res) => {
+  const t = await ownTerminal(req);
+  if (t.revoked_at) await prisma.posTerminal.update({ where: { id: t.id }, data: { revoked_at: null } });
+  await writeAudit({ req, action: 'TERMINAL_REACTIVATED', entityType: 'terminal', entityId: t.id, newValue: { name: t.name } });
+  res.json({ ok: true });
+}));
+
+// So um terminal revogado se elimina (evita apagar por engano o que esta a vender).
+router.delete('/terminals/:id', asyncHandler(async (req, res) => {
+  const t = await ownTerminal(req);
+  if (!t.revoked_at) throw httpError(409, 'Revogue o terminal antes de o eliminar.', 'TERMINAL_ACTIVE');
+  await prisma.$transaction(async (tx) => {
+    await tx.posTerminalMember.deleteMany({ where: { tenant_id: tenantOf(req), terminal_id: t.id } });
+    await tx.posTerminal.delete({ where: { id: t.id } });
+  });
+  await writeAudit({ req, action: 'TERMINAL_DELETED', entityType: 'terminal', entityId: t.id, oldValue: { name: t.name } });
+  res.json({ ok: true });
+}));
+
+// Perfis que trabalham neste terminal ([] = todos os caixistas).
+router.put('/terminals/:id/members', asyncHandler(async (req, res) => {
+  const t = await ownTerminal(req);
+  const { user_ids: userIds } = z.object({ user_ids: z.array(z.string().uuid()).max(200) }).parse(req.body);
+  const valid = userIds.length ? await prisma.user.findMany({ where: { tenant_id: tenantOf(req), id: { in: userIds }, role: 'cashier' }, select: { id: true } }) : [];
+  if (valid.length !== new Set(userIds).size) throw httpError(400, 'Perfil que não pertence a este estabelecimento', 'BAD_MEMBERS');
+  await prisma.$transaction(async (tx) => {
+    await tx.posTerminalMember.deleteMany({ where: { tenant_id: tenantOf(req), terminal_id: t.id } });
+    if (valid.length) await tx.posTerminalMember.createMany({ data: valid.map((u) => ({ id: require('crypto').randomUUID(), tenant_id: tenantOf(req), terminal_id: t.id, user_id: u.id })) });
+  });
+  await writeAudit({ req, action: 'TERMINAL_MEMBERS', entityType: 'terminal', entityId: t.id, newValue: { name: t.name, members: valid.length } });
+  res.json({ ok: true, member_ids: valid.map((u) => u.id) });
 }));
 
 router.post('/terminals/pairing-code', asyncHandler(async (req, res) => {
@@ -416,14 +513,14 @@ router.get('/reports/monthly', asyncHandler(async (req, res) => {
 router.get('/reports/timeline', asyncHandler(async (req, res) => {
   const q = z.object({
     from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    types: z.string().optional(), page: z.coerce.number().int().min(1).default(1),
+    types: z.string().optional(), cashier_id: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1),
     page_size: z.coerce.number().int().min(1).max(200).default(50),
   }).parse(req.query);
   const start = dayRange(q.from).start; const end = dayRange(q.to).end;
   if (end < start) throw httpError(400, 'Intervalo de datas inválido', 'BAD_RANGE');
   if (end - start > 92 * 86400000) throw httpError(400, 'Máximo de 3 meses por rastreio', 'RANGE_TOO_LARGE');
   const types = q.types ? q.types.split(',').filter(Boolean) : undefined;
-  res.json(await timeline(tenantOf(req), start, end, { ...(types ? { types } : {}), page: q.page, pageSize: q.page_size }));
+  res.json(await timeline(tenantOf(req), start, end, { ...(types ? { types } : {}), cashierId: q.cashier_id || null, page: q.page, pageSize: q.page_size }));
 }));
 
 // Metas dos ultimos 12 meses (meta, atingido, %).

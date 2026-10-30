@@ -2100,8 +2100,8 @@ específico foi corrigido em TODOS os locais onde podia existir (ver REGRA 6
 — grep obrigatório por padrão repetido).
 
 --------------------------------------------------------------------------------
-SECÇÃO 22 — FICHEIRO DE REGISTO OBRIGATÓRIO: "Oque ja fiz para corrigir
-estes erros.txt"
+SECÇÃO 22 — FICHEIRO DE REGISTO OBRIGATÓRIO: "Diario do Genesis - o que foi feito e se funcionou.txt"
+(até 29/10/2026 chamava-se "Oque ja fiz para corrigir estes erros.txt")
 --------------------------------------------------------------------------------
 
 Instrução explícita e permanente do fundador, a cumprir SEMPRE, em todas as
@@ -2111,7 +2111,7 @@ Sempre que terminar de fazer qualquer modificação no projecto, escrever
 (ou, se já existir, ACRESCENTAR ao fim de) um ficheiro de texto chamado
 exactamente:
 
-`Oque ja fiz para corrigir estes erros.txt`
+`Diario do Genesis - o que foi feito e se funcionou.txt`
 
 Nesse ficheiro, registar detalhadamente, em cada actualização:
 - O que foi feito.
@@ -2174,7 +2174,7 @@ contradição acima:
 3. Verificar se `Mapa Mental/mapa_mental_3d.html` já existe (SECÇÃO 11). Se
    não existir, planear a sua criação (não necessariamente na primeira
    mini-meta, mas registar como pendente no Mapa Mental).
-4. Verificar se `Oque ja fiz para corrigir estes erros.txt` já existe
+4. Verificar se `Diario do Genesis - o que foi feito e se funcionou.txt` já existe
    (SECÇÃO 22). Se não existir, criá-lo agora.
 5. Seguir a ordem de verificação da SECÇÃO 17 antes de qualquer feature
    nova — re-verificar o que o fundador diz já ter corrigido (SECÇÃO 21).
@@ -2185,8 +2185,8 @@ contradição acima:
    anteriores.
 8. Implementar apenas essa mini-meta.
 9. Testar, com prova real.
-10. Actualizar o Mapa Mental (Parte A e Parte B) e o ficheiro "Oque ja fiz
-    para corrigir estes erros.txt".
+10. Actualizar o Mapa Mental (Parte A e Parte B) e o ficheiro
+    "Diario do Genesis - o que foi feito e se funcionou.txt".
 11. Reportar ao fundador o que foi feito e a prova, seguindo o formato de
     checkpoint acordado no ponto 2 desta secção.
 

@@ -44,7 +44,7 @@ try {
   await shot(page, '43-admin-aprovado');
   await page.getByRole('button', { name: 'Concluído' }).click();
 
-  await page.getByRole('link', { name: 'Lojas' }).click();
+  await page.getByRole('link', { name: 'Estabelecimentos' }).click();
   await page.getByText(fx.request.name).first().waitFor({ timeout: T });
   await page.waitForLoadState('networkidle', { timeout: T });
   await shot(page, '44-admin-lojas');
@@ -79,7 +79,7 @@ try {
 
   // Fase 7.3: browser que bloqueia o separador (Safari no iPhone) -> link
   // para tocar, em vez de nada acontecer.
-  await page.getByRole('link', { name: 'Lojas' }).click();
+  await page.getByRole('link', { name: 'Estabelecimentos' }).click();
   await page.getByText(fx.request.name).first().click();
   await page.getByText('Abrir modo suporte (só leitura)').waitFor({ timeout: T });
   await page.evaluate(() => { window.open = () => null; });

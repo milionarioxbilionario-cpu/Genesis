@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-27",
+  "updatedAt": "2026-10-30",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -88,10 +88,10 @@
     },
     "backend/src/routes/auth.js": {
       "status": "ok",
-      "summary": "Login email/senha, login Google verificado no servidor, pedido de conta, forgot-password (codigo de 6 digitos) e reset-password com codigo OBRIGATORIO.",
+      "summary": "Login, Google, recuperar senha, pedido de conta (18+ e Termos), suporte.",
       "role": "Autenticacao.",
       "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 25/10/2026: normalizedEmail passou para fora do try em /login, /forgot-password e /reset-password (o catch lancava ReferenceError e o pedido ficava sem resposta com a BD em baixo). Provado: BD simulada em baixo -> 500 imediato (antes: sem resposta em 4 s). Por publicar.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase).",
       "bugsFixed": "28/09: (a) CAUSA-RAIZ dos 500 — faltava a coluna Tenant.onboarding_completed no Postgres, e toda a query de login faz include:{tenant:true} que traz todas as colunas de Tenant; o Prisma lancava 'The column Tenant.onboarding_completed does not exist' e o catch devolvia 500 'Erro interno no servidor'. Corrigido com prisma/fix_2026-09-28_colunas.sql. (b) O pedido de conta tambem falhava pelo mesmo motivo (tenant.create escreve essa coluna) — devolvia 201 em vez de 500. (c) CLOCK_SKEW no login Google."
     },
     "backend/src/services/passwordResetStore.js": {
@@ -104,7 +104,7 @@
       "status": "ok",
       "summary": "Venda transaccional: valida stock, calcula totais em centavos, gera daily_number sequencial por dia, idempotencia por id e auditoria. Turno fechado = 409 SHIFT_CLOSED; GET recusado ao caixista (lista so com PIN do dono em /api/pos/sales).",
       "role": "Nucleo do POS.",
-      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou."
+      "notes": "17/10/2026 Fase 9.5 (terminal em ingles; X de Dispositivos): idioma_pos.mjs 28/28 (+contraprova do X), i18n.test.mjs 11/11, escpos 4/4, verify_system 4/6/7/8/21/27/29 OK; regressao pos/flows/fase8_8/fase5/idioma passou. | 30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
     },
     "backend/src/routes/shift_closings.js": {
       "status": "ok",
@@ -115,9 +115,9 @@
     },
     "backend/src/routes/owner.js": {
       "status": "ok",
-      "summary": "Rotas do dono: tenant, alertas, dashboard, relatorios, caixistas, fecho cego de turno, desbloqueio com senha, metas, despesas e salarios.",
-      "role": "API do dono.",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8. | 18/10/2026 Fase 10.1: GET /api/owner/notifications (verify_system 31 23/23)."
+      "summary": "Painel do dono; auditoria com nomes e artigos da venda.",
+      "role": "Dono.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "backend/src/routes/admin.js": {
       "status": "ok",
@@ -371,8 +371,9 @@
     },
     "frontend/src/hooks/useOfflineSync.js": {
       "status": "ok",
-      "summary": "Sincronizacao offline para o servidor com Authorization Bearer, e envio de perdas/procura pendentes.",
-      "role": "Offline."
+      "summary": "Envia a fila a cada 30 s e quando a rede volta; avisa o ecra (genesis:queue-synced).",
+      "role": "Terminal sem rede.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "frontend/src/hooks/useIsolatedScreen.js": {
       "status": "ok",
@@ -1001,8 +1002,9 @@
     },
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
-      "summary": "Ecra de vendas do terminal: grelha com foto/icone, faixa do leitor, M-Pesa/e-Mola separados, atalhos F2/F3/F4/Ctrl+Enter/Alt+n/setas. Faixa Turno fechado + Abrir turno novo (PIN do dono).",
-      "notes": "25/10/2026 Fase 12: telemovel = barra do cesto em baixo + cesto por cima; tablet 2 colunas; 100dvh. Falta teste no iPhone real."
+      "summary": "Ecra de vendas: recibo sem rede, stock que muda pisca, «A enviar N».",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase).",
+      "role": "Terminal POS."
     },
     "frontend/src/components/ui/ProductImage.jsx": {
       "status": "ok",
@@ -1074,7 +1076,7 @@
       "summary": "Definicoes da loja, custos fixos e despesas avulsas.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "11/10/2026 Fase 8.7: PUT /report-schedule + report_schedule no GET. verify_system 26."
+      "notes": "11/10/2026 Fase 8.7: PUT /report-schedule + report_schedule no GET. verify_system 26. | 30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
     },
     "frontend/src/pages/owner/Settings.jsx": {
       "summary": "Definicoes: loja, custos e despesas, descontos/PIN, terminais, auditoria.",
@@ -1116,14 +1118,14 @@
       "summary": "Moldura do painel do dono; monta o fecho do mes e o sino de notificacoes.",
       "role": "Painel do dono.",
       "status": "ok",
-      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
+      "notes": "04/10/2026: regressao completa OK. | 17/10/2026 Fase 9.3 (publicada 1f1f384): menu traduzido + seletor PT/EN no menu (grava na conta; modo suporte so muda o ecra). | 18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site. | 30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
     },
     "backend/src/routes/pos.js": {
       "status": "ok",
-      "summary": "Terminal: emparelhar, perfis (com estado do turno), PIN do caixista, fecho cego, abrir turno novo e ver vendas com o PIN do dono.",
-      "role": "Balcao.",
+      "summary": "Terminal: emparelhar, perfis, PIN, turno, vendas com PIN do dono, 2.a via.",
+      "role": "Terminal POS.",
       "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3 (publicada 1f1f384): perfis e login do terminal devolvem a lingua do caixista."
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "backend/src/utils/shift.js": {
       "status": "ok",
@@ -1139,15 +1141,15 @@
     },
     "backend/src/utils/sessionScopes.js": {
       "status": "ok",
-      "summary": "Listas fechadas de rotas por ambito (pos = terminal, support = so leitura).",
+      "summary": "Listas fechadas de rotas por ambito de sessao (terminal, suporte).",
       "role": "Seguranca.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser. | 17/10/2026 Fase 9.3 (publicada 1f1f384): ambito pos aceita PUT /api/auth/language (lingua do proprio caixista); suporte nao."
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "frontend/src/pages/pos/PosDialogs.jsx": {
       "status": "ok",
-      "summary": "Dialogos do POS: PIN do dono, recibo, fecho cego (envia a fila antes e recusa com vendas por enviar), vendas com PIN, quebra, produto em falta.",
-      "role": "Balcao.",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8."
+      "summary": "Dialogos do terminal: recibo (tambem provisorio sem rede), vendas com 2.a via e PIN do dono sem rede.",
+      "role": "Terminal POS.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "frontend/src/pages/pos/Terminal.jsx": {
       "status": "ok",
@@ -1326,15 +1328,15 @@
     },
     "frontend/src/pages/owner/AuditLogPage.jsx": {
       "status": "ok",
-      "summary": "Definicoes > Auditoria: retencao, Hoje/Semana/Mes/Tudo, tipo, lista, detalhe antes/depois.",
-      "role": "Pagina do dono.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "summary": "Rastreio do dono; o detalhe de uma venda mostra o que se vendeu.",
+      "role": "Auditoria do dono.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "frontend/src/utils/auditLabels.js": {
       "status": "ok",
-      "summary": "Nomes das accoes e campos da auditoria (PT/EN pelo t); diferencas antes/depois.",
+      "summary": "Nomes das accoes e campos da auditoria (PT/EN); ids escondidos ou trocados pelo nome; dinheiro em MT; pagamento em PT.",
       "role": "Auditoria do dono.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     },
     "frontend/tests/e2e/fase8_5.mjs": {
       "status": "ok",
@@ -1678,6 +1680,86 @@
       "summary": "Recibo em imagem PNG (1176 px) para enviar ao cliente por WhatsApp: logotipo, NUIT, n.o do documento com codigo de barras, QR e mensagem do dono. Desenho testavel com canvas falso.",
       "role": "Recibo (imagem para WhatsApp).",
       "notes": "27/10/2026 Fase 15.1/15.1b publicadas (9207f9d, 8ae2ab4): verify_system 34 14/14; fase15.mjs 10/10 e flows.mjs 41/41 em genesismz.com; unitarios frontend 58/58."
+    },
+    "backend/src/routes/waitlist.js": {
+      "status": "ok",
+      "summary": "POST publico /api/waitlist: «Avise-me quando estiver pronto» dos modos de negocio ainda por construir (nome, WhatsApp, e-mail opcional, canal). Grava em ModeWaitlist pelo cliente de sistema.",
+      "role": "Lista de espera dos modos futuros (restaurante, hotel, farmacia...).",
+      "security": "Tabela sem tenant_id: RLS ligada e sem politica para genesis_app (o papel da aplicacao nao ve nada); so o admin le.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "backend/src/utils/businessTypes.js": {
+      "status": "ok",
+      "summary": "Lista unica dos tipos de negocio (com icone) e quais ja tem modo proprio; os outros ficam «Brevemente».",
+      "role": "Tipos separados no pedido de conta e no onboarding.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "frontend/src/pages/auth/NotifyMe.jsx": {
+      "status": "ok",
+      "summary": "Pagina /avise-me: formulario da lista de espera, PT/EN.",
+      "role": "Brevemente + Avise-me.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "frontend/src/pages/NotFound.jsx": {
+      "status": "ok",
+      "summary": "Pagina «nao encontrada» dentro da app para rotas que nao existem.",
+      "role": "404 da app.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "admin-frontend/src/accountCard.js": {
+      "status": "ok",
+      "summary": "Cartao da conta criada (imagem PNG/PDF com a marca: dados, senha temporaria, teste ate...) para enviar por WhatsApp.",
+      "role": "Admin: entrega da conta ao dono.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "backend/src/utils/http.js": {
+      "status": "ok",
+      "summary": "httpError/asyncHandler/errorHandler. 30/10: um 5xx criado de proposito (ex.: 503 e-mails nao configurados) mostra a mensagem e o codigo; falhas inesperadas continuam com «Erro interno do servidor».",
+      "role": "Erros HTTP de todas as rotas.",
+      "security": "Nada do erro inesperado sai para o cliente (tests/http.test.js).",
+      "notes": "30/10/2026: defeito visto no genesismz.com (Perfil > Mudar o e-mail dava «Erro interno do servidor»); http.test.js 3/3."
+    },
+    "backend/src/routes/profile.js": {
+      "status": "ok",
+      "summary": "Perfil do dono (Fase 16): senha, e-mail com 2 codigos, WhatsApp dos alertas, aniversario/presente. E-mail unico em todo o Genesis (cliente de sistema so para saber se existe).",
+      "role": "Perfil.",
+      "notes": "30/10/2026: em producao a mudanca de e-mail dava 500 (corrigido em utils/http.js)."
+    },
+    "frontend/src/pages/owner/Profile.jsx": {
+      "status": "ok",
+      "summary": "Ecra do Perfil do dono (Fase 16).",
+      "role": "Perfil.",
+      "notes": "30/10/2026 Etapa A: unitarios backend 116/116 e frontend 64/64, verify_system 40-41 sem falhas, etapaA.mjs 16/16 (local contra o Supabase)."
+    },
+    "frontend/src/utils/stockOverlay.js": {
+      "status": "ok",
+      "summary": "Desconta do stock do servidor as vendas e quebras ainda por enviar deste terminal.",
+      "role": "Terminal sem rede.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
+    },
+    "frontend/src/utils/productCache.js": {
+      "status": "ok",
+      "summary": "Catalogo guardado no aparelho; stock com a fila descontada.",
+      "role": "Terminal sem rede.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
+    },
+    "frontend/src/utils/code128.js": {
+      "status": "ok",
+      "summary": "Numero e codigo de barras do recibo; recibo provisorio sem rede; titulo 2.a via.",
+      "role": "Recibos.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
+    },
+    "frontend/site/legal.js": {
+      "status": "ok",
+      "summary": "Texto da Politica de privacidade e dos Termos (PT/EN).",
+      "role": "Site publico.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
+    },
+    "frontend/src/pages/auth/RequestAccount.jsx": {
+      "status": "ok",
+      "summary": "Pedido de conta; exige 18+ e Termos.",
+      "role": "Registo.",
+      "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
     }
   }
 }

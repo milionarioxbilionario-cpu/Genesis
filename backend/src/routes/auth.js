@@ -19,6 +19,7 @@ const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessi
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
 const authMiddleware = require('../middleware/auth');
+const { BUSINESS_TYPES, MODE_PENDING } = require('../utils/businessTypes');
 
 // Limite do login (decisao do fundador 12/10): so contam as tentativas
 // ERRADAS (4xx). Antes contavam tambem as certas: o dono que entrava no PC, no
@@ -76,7 +77,7 @@ const requestAccountSchema = z.object({
   businessName: z.string().min(3),
   ownerName: z.string().min(3),
   // Os 8 tipos da especificacao 6.1 (faltavam restaurante e boutique).
-  businessType: z.enum(['bottle_store', 'mercearia', 'padaria', 'talho', 'supermercado', 'restaurante', 'boutique', 'outro']),
+  businessType: z.enum(BUSINESS_TYPES),
   location: z.string().min(3),
   phone: z.string().min(8),
   // Obrigatorio (decisao do fundador 12/10): e o login do dono e o destino do
@@ -84,8 +85,13 @@ const requestAccountSchema = z.object({
   // <loja>@genesis.co.mz (dominio que nao e nosso) e o reset nunca chegava.
   email: z.string().trim().toLowerCase().email().max(254),
   nuit: z.string().optional(),
-  idDocument: z.string().optional()
+  idDocument: z.string().optional(),
+  // 30/10/2026: so maiores de 18 anos (capacidade para contratar) e com os
+  // Termos e a Politica de Privacidade aceites.
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Confirme que tem 18 anos ou mais e que aceita os Termos e a Política de Privacidade.' }) }),
 });
+// Versao dos textos legais aceites (data da ultima alteracao das paginas).
+const TERMS_VERSION = '2026-10-30';
 
 // Login com Google verificado NO SERVIDOR.
 //
@@ -609,7 +615,14 @@ router.put('/language', authMiddleware, async (req, res) => {
 
 router.post('/request-account', requestAccountLimiter, async (req, res) => {
   try {
+    const parsed = requestAccountSchema.safeParse(req.body);
+    if (!parsed.success && parsed.error.issues.some((i) => i.path[0] === 'acceptTerms')) {
+      return res.status(400).json({ error: 'Confirme que tem 18 anos ou mais e que aceita os Termos e a Política de Privacidade.', code: 'TERMS_REQUIRED' });
+    }
     const data = requestAccountSchema.parse(req.body);
+    if (MODE_PENDING.includes(data.businessType)) {
+      return res.status(400).json({ error: 'Este tipo de negócio chega brevemente. Deixe o contacto em «Avise-me» e avisamos quando estiver pronto.', code: 'MODE_COMING_SOON' });
+    }
 
     const created = await prisma.tenant.create({
       data: {
@@ -621,6 +634,8 @@ router.post('/request-account', requestAccountLimiter, async (req, res) => {
         email: data.email,
         nuit: data.nuit,
         id_document: data.idDocument,
+        terms_accepted_at: new Date(),
+        terms_version: TERMS_VERSION,
         status: 'pending'
       }
     });

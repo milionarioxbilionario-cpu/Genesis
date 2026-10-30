@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
+import { BarChart3, ChevronsLeft, ChevronsRight, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
 import { PrivacyContext, usePrivacy, usePrivacyState } from '../utils/privacy';
 import api, { saveLanguage } from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
@@ -37,40 +37,57 @@ function useOnline() {
   return online;
 }
 
-function Sidebar({ tenant, onNavigate }) {
+// Etapa A (27/10): recolhida mostra so os icones (o nome aparece ao passar o rato).
+const SIDEBAR_KEY = 'genesis.sidebar.collapsed';
+function useSidebarCollapsed() {
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; } });
+  const toggle = () => setCollapsed((v) => { try { localStorage.setItem(SIDEBAR_KEY, v ? '0' : '1'); } catch { /* sem armazenamento */ } return !v; });
+  return [collapsed, toggle];
+}
+
+function Sidebar({ tenant, onNavigate, collapsed = false, onToggle }) {
   const { user, logout } = useSession();
   const { t } = useI18n();
   const navigate = useNavigate();
   const support = user?.scope === 'support';
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
-        <BrandMark />
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}</p>
-          <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>
-        </div>
+      <div className={cx('flex h-14 items-center border-b border-border', collapsed ? 'justify-center px-2' : 'gap-2.5 px-5')}>
+        {!collapsed && <BrandMark />}
+        {!collapsed && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}</p>
+            <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>
+          </div>
+        )}
+        {onToggle && <IconButton label={collapsed ? t('Mostrar o menu') : t('Esconder o menu')} icon={collapsed ? ChevronsRight : ChevronsLeft} size="sm" onClick={onToggle} />}
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label={t('Navegação principal')}>
+      <nav className={cx('flex-1 overflow-y-auto py-3', collapsed ? 'px-2' : 'px-3')} aria-label={t('Navegação principal')}>
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             onClick={onNavigate}
+            title={collapsed ? t(label) : undefined}
+            aria-label={collapsed ? t(label) : undefined}
             className={({ isActive }) => cx(
-              'mb-0.5 flex h-9 items-center gap-3 rounded px-3 text-base transition-colors',
+              'mb-0.5 flex h-9 items-center rounded text-base transition-colors',
+              collapsed ? 'justify-center px-0' : 'gap-3 px-3',
               isActive ? 'bg-accent-soft font-medium text-accent-text' : 'text-ink-2 hover:bg-subtle hover:text-ink',
             )}
           >
             <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-            {t(label)}
+            {!collapsed && t(label)}
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-border p-3">
+      <div className={cx('border-t border-border', collapsed ? 'flex flex-col items-center gap-2 p-2' : 'p-3')}>
         {/* Modo suporte e so leitura: a lingua muda o ecra, nao a conta do dono. */}
-        <LanguageSwitch className="mb-2 px-2" onChange={support ? undefined : saveLanguage} />
+        {!collapsed && <LanguageSwitch className="mb-2 px-2" onChange={support ? undefined : saveLanguage} />}
+        {collapsed ? (
+          <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
+        ) : (
         <div className="flex items-center justify-between gap-2 rounded px-2 py-1.5">
           {/* Fase 16: o nome abre o Perfil (senha, e-mail, plano, aniversario). */}
           {support ? (
@@ -86,6 +103,7 @@ function Sidebar({ tenant, onNavigate }) {
           )}
           <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
         </div>
+        )}
       </div>
     </div>
   );
@@ -105,6 +123,7 @@ export default function AppShell() {
   const online = useOnline();
   const [tenant, setTenant] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, toggleCollapsed] = useSidebarCollapsed();
   const privacy = usePrivacyState(user?.id);
 
   useEffect(() => {
@@ -119,12 +138,15 @@ export default function AppShell() {
   const current = NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
   const trialDays = tenant?.status === 'trial' && tenant.trial_ends_at
     ? Math.ceil((new Date(tenant.trial_ends_at) - Date.now()) / 86400000) : null;
+  // Etapa A: subscricao paga ate uma data; avisa 7 dias antes e depois de vencer.
+  const paidDays = tenant?.status === 'active' && tenant.subscription_until
+    ? Math.ceil((new Date(tenant.subscription_until) - Date.now()) / 86400000) : null;
 
   return (
     <PrivacyContext.Provider value={privacy}>
     <div className="min-h-screen bg-bg">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-surface lg:block">
-        <Sidebar tenant={tenant} />
+      <aside className={cx('fixed inset-y-0 left-0 z-30 hidden border-r border-border bg-surface transition-[width] duration-200 lg:block', collapsed ? 'w-16' : 'w-60')}>
+        <Sidebar tenant={tenant} collapsed={collapsed} onToggle={toggleCollapsed} />
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-[rgba(28,25,23,0.30)] lg:hidden" onMouseDown={(e) => { if (e.target === e.currentTarget) setMobileOpen(false); }}>
@@ -134,7 +156,7 @@ export default function AppShell() {
         </div>
       )}
 
-      <div className="lg:pl-60">
+      <div className={cx('transition-[padding] duration-200', collapsed ? 'lg:pl-16' : 'lg:pl-60')}>
         {(sessionOffline || !online) && (
           <div className="no-print bg-warning px-4 py-1.5 text-center text-sm font-medium text-white">
             {t('Sem ligação — a mostrar os dados guardados neste aparelho. Só consulta: nada pode ser alterado até a internet voltar.')}
@@ -151,6 +173,11 @@ export default function AppShell() {
             {trialDays !== null && (
               <span className={cx('hidden sm:inline', trialDays <= 7 ? 'text-warning' : 'text-ink-muted')}>
                 {trialDays > 0 ? t('Período de teste: {n} dia(s)', { n: trialDays }) : t('Período de teste terminado — só leitura')}
+              </span>
+            )}
+            {paidDays !== null && paidDays <= 7 && (
+              <span className={cx('hidden sm:inline', paidDays > 0 ? 'text-warning' : 'text-danger')}>
+                {paidDays > 0 ? t('Subscrição: renove em {n} dia(s)', { n: paidDays }) : t('Subscrição em atraso — só leitura')}
               </span>
             )}
             {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}

@@ -24,6 +24,7 @@ const SCOPES = {
     ['POST', /^\/api\/pos\/shift\/close\/?$/],
     ['POST', /^\/api\/pos\/shift\/open\/?$/], // exige o PIN do dono
     ['POST', /^\/api\/pos\/sales\/?$/], // lista de vendas: exige o PIN do dono
+    ['POST', /^\/api\/pos\/sales\/[^/]+\/reprint\/?$/], // 2.a via (30/10): PIN do dono ou registo do que foi feito sem rede
   ],
   support: [
     ['GET', /^\/api\/auth\/me\/?$/],

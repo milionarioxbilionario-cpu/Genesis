@@ -6,11 +6,24 @@
 // carregamento bem sucedido e e usado quando nao ha rede.
 import db from '../db/localDb';
 import api from './api';
+import { SYNC_STATE } from './syncPolicy.js';
+import { applyPending } from './stockOverlay.js';
+
+async function pendingRows() {
+  try {
+    const [sales, shrink] = await Promise.all([
+      db.sales.where('sync_state').equals(SYNC_STATE.PENDING).toArray(),
+      db.shrinkage_records.where('sync_state').equals(SYNC_STATE.PENDING).toArray(),
+    ]);
+    return { sales, shrink };
+  } catch { return { sales: [], shrink: [] }; }
+}
 
 export async function loadCatalog() {
   try {
     const res = await api.get('/api/products');
-    const active = (res.data || []).filter((p) => p.is_active !== false);
+    const { sales, shrink } = await pendingRows();
+    const active = applyPending((res.data || []).filter((p) => p.is_active !== false), sales, shrink);
     try {
       await db.transaction('rw', db.products, async () => {
         await db.products.clear();
@@ -31,6 +44,7 @@ export async function decrementCached(items) {
   try {
     await db.transaction('rw', db.products, async () => {
       for (const it of items) {
+        if (!it.product_id) continue; // pedido personalizado: sem stock
         const p = await db.products.get(it.product_id);
         if (p) await db.products.update(p.id, { stock_qty: Math.max(0, (p.stock_qty || 0) - it.quantity) });
       }
