@@ -36,6 +36,7 @@ export default function LiveMap() {
   const [error, setError] = useState(TOKEN ? '' : t('Falta a chave do Mapbox (VITE_MAPBOX_TOKEN).'));
   const [style, setStyle] = useState('map');
   const [clock, setClock] = useState(() => new Date());
+  const [ready, setReady] = useState(false);
 
   useEffect(() => { const i = setInterval(() => setClock(new Date()), 30000); return () => clearInterval(i); }, []);
 
@@ -56,6 +57,7 @@ export default function LiveMap() {
       map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
       map.on('style.load', () => { try { map.setConfigProperty('basemap', 'lightPreset', lightFor(maputoHour())); } catch { /* estilo sem luz configuravel */ } });
       mapRef.current = { map, mapboxgl };
+      setReady(true); // os pinos so se desenham agora (os dados podem ter chegado antes do mapa)
     })().catch((err) => setError(t('Não foi possível abrir o mapa: {e}', { e: err.message })));
     return () => { alive = false; mapRef.current?.map.remove(); mapRef.current = null; markers.current.clear(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -77,7 +79,7 @@ export default function LiveMap() {
       const popup = new m.mapboxgl.Popup({ offset: 14 }).setHTML(`<strong>${p.name.replace(/[<>&]/g, '')}</strong><br>${String(p.place || '').replace(/[<>&]/g, '')}<br>${t('Hoje')}: ${money(p.today_total)} (${p.today_count})`);
       markers.current.set(p.id, new m.mapboxgl.Marker({ element: el }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(m.map));
     }
-  }, [points, style]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [points, style, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ao vivo: bolhas por cima do pino e lista «Agora».
   useEffect(() => {
