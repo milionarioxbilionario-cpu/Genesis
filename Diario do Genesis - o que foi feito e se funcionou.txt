@@ -2226,3 +2226,5 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - O admin vê quanto se vende, mas NÃO vê lucros nem custos das lojas. Cada dono só recebe os avisos da sua loja (testado).
 - Ainda não fiz desta etapa: gráficos da receita das subscrições, filtros por cidade, som ambiente e o botão de pedir ajuda. Ficam anotados.
 - Testes: 14 de 14 no sistema e 9 de 9 no browser. Os testes apanharam 3 defeitos meus (um deles de segurança: um link falso passava como sendo do Google) e corrigi antes de publicar.
+- SITE REAL: a Etapa C foi publicada e testada no genesismz.com: 9 de 9. O primeiro teste no site real apanhou um defeito que no computador não aparecia (os pontos do mapa não apareciam com a internet verdadeira, porque o mapa demorava mais a carregar). Corrigi, publiquei de novo e voltou a dar 9 de 9.
+- DEIXEI-TE UM PDF na pasta Genesis: "Para ler - respostas e o que preciso de ti (30-10-2026).pdf". Tem o resumo da noite, as respostas às tuas perguntas (concorrentes, preços, hotel, importar históricos, DartPOS) e as coisas que só tu podes fazer, nas caixas amarelas.
