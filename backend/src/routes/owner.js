@@ -31,12 +31,22 @@ const { createPairingCode } = require('../utils/terminals');
 const { monthCloseStatus, monthKey } = require('../services/monthClose');
 const { GROUPS, GROUP_KEYS, groupOf, actionFilter, periodStart, retentionCutoff, RETENTION_OPTIONS } = require('../utils/auditGroups');
 const { lineAmount } = require('../utils/units');
+const { openStream } = require('../utils/liveBus');
 
 const router = express.Router();
 router.use(auth);
 router.use(requireRole('owner'));
 
 const tenantOf = (req) => req.user.tenantId;
+
+// Etapa C: vendas e cancelamentos ao vivo, so desta loja (aviso no painel).
+router.get('/live', (req, res) => {
+  const tenantId = tenantOf(req);
+  openStream(req, res, {
+    filter: (e) => e.tenant_id === tenantId && (e.type === 'sale' || e.type === 'cancel'),
+    shape: (e) => ({ type: e.type, sale_id: e.sale_id, daily_number: e.daily_number ?? null, total: e.total, profit: e.profit ?? null, payment_method: e.payment_method || null, at: e.at }),
+  });
+});
 // PIN do caixista: exactamente 4 digitos (o teclado do terminal submete ao 4.o).
 const PIN = z.string().regex(/^\d{4}$/, 'O PIN tem 4 dígitos');
 const isoDate = z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Data inválida');

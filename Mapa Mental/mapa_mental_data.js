@@ -1,66 +1,66 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-30T01:36:52.948Z */
+   Gerado em: 2026-10-30T02:20:33.872Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-30T01:36:52.948Z",
+ "generatedAt": "2026-10-30T02:20:33.872Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 378,
+  "files": 387,
   "planned": 5,
-  "links": 682,
-  "lines": 53691,
+  "links": 700,
+  "lines": 54492,
   "byStatus": {
-   "ok": 224,
+   "ok": 229,
    "partial": 8,
    "broken": 0,
    "planned": 5,
-   "untracked": 146
+   "untracked": 150
   },
   "byGroup": {
    "infra": 52,
    "docs": 11,
-   "admin": 13,
-   "backend-data": 88,
-   "backend": 74,
+   "admin": 14,
+   "backend-data": 91,
+   "backend": 76,
    "frontend-pub": 8,
-   "frontend": 133,
+   "frontend": 136,
    "scripts": 4
   }
  },
  "topExternals": [
   {
    "pkg": "react",
-   "count": 54
+   "count": 57
   },
   {
    "pkg": "node:path",
-   "count": 42
+   "count": 43
   },
   {
    "pkg": "node:fs",
-   "count": 41
+   "count": 42
   },
   {
    "pkg": "node:test",
-   "count": 34
+   "count": 36
   },
   {
    "pkg": "node:assert",
-   "count": 34
+   "count": 36
   },
   {
    "pkg": "lucide-react",
-   "count": 32
+   "count": 34
   },
   {
    "pkg": "@playwright/test",
-   "count": 29
+   "count": 30
   },
   {
    "pkg": "react-router-dom",
-   "count": 24
+   "count": 25
   },
   {
    "pkg": "dotenv",
@@ -123,7 +123,7 @@ window.GENESIS_MINDMAP = {
    "count": 4
   },
   {
-   "pkg": "@fontsource-variable/inter",
+   "pkg": "axios",
    "count": 3
   }
  ],
@@ -163,10 +163,10 @@ window.GENESIS_MINDMAP = {
    "id": "admin",
    "label": "Super Admin",
    "tone": "#a855f7",
-   "nodes": 13,
+   "nodes": 14,
    "clusters": {
     "admin-frontend": 5,
-    "admin-frontend/src": 5,
+    "admin-frontend/src": 6,
     "admin-frontend/tests": 3
    }
   },
@@ -174,7 +174,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 88,
+   "nodes": 91,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -202,10 +202,11 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261027_venda_peso": 1,
     "backend/prisma/migrations/20261028_etapa_a": 1,
     "backend/prisma/migrations/20261028_lista_espera": 1,
+    "backend/prisma/migrations/20261030_localizacao": 1,
     "backend/prisma/migrations/20261030_precos_termos": 1,
     "backend/prisma/migrations/20261030_terminal_guarda": 1,
     "backend/scripts": 32,
-    "backend/tests": 23,
+    "backend/tests": 25,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -213,13 +214,13 @@ window.GENESIS_MINDMAP = {
    "id": "backend",
    "label": "Backend (API)",
    "tone": "#e50914",
-   "nodes": 74,
+   "nodes": 76,
    "clusters": {
     "backend/src": 1,
     "backend/src/middleware": 5,
     "backend/src/routes": 19,
     "backend/src/services": 17,
-    "backend/src/utils": 31,
+    "backend/src/utils": 33,
     "backend/src/jobs": 1
    }
   },
@@ -238,11 +239,11 @@ window.GENESIS_MINDMAP = {
    "id": "frontend",
    "label": "Frontend (Owner/POS)",
    "tone": "#3b82f6",
-   "nodes": 133,
+   "nodes": 136,
    "clusters": {
     "frontend/scripts": 5,
     "frontend/src": 4,
-    "frontend/src/components": 8,
+    "frontend/src/components": 9,
     "frontend/src/components/ui": 11,
     "frontend/src/db": 1,
     "frontend/src/hooks": 1,
@@ -251,13 +252,13 @@ window.GENESIS_MINDMAP = {
     "frontend/src/layouts": 1,
     "frontend/src/pages": 3,
     "frontend/src/pages/auth": 6,
-    "frontend/src/pages/owner": 13,
+    "frontend/src/pages/owner": 14,
     "frontend/src/pages/pos": 5,
     "frontend/src/ui": 2,
     "frontend/src/utils": 22,
     "frontend/src/utils/pdf": 4,
     "frontend/tests": 13,
-    "frontend/tests/e2e": 27
+    "frontend/tests/e2e": 28
    }
   },
   {
@@ -329,8 +330,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1316,
-   "size": 298305,
+   "lines": 1325,
+   "size": 301315,
    "externals": [
     "@prisma/client"
    ],
@@ -373,8 +374,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1778,
-   "size": 104836,
+   "lines": 1808,
+   "size": 106157,
    "externals": [
     "nodemailer"
    ],
@@ -938,8 +939,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 27,
-   "size": 610,
+   "lines": 28,
+   "size": 638,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -980,8 +981,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 706,
-   "size": 47318,
+   "lines": 710,
+   "size": 47620,
    "externals": [
     "react",
     "react-router-dom",
@@ -993,13 +994,46 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "frontend/src/utils/format.js",
-    "admin-frontend/src/accountCard.js"
+    "admin-frontend/src/accountCard.js",
+    "admin-frontend/src/LiveMap.jsx"
    ],
    "usedBy": [
     "admin-frontend/src/main.jsx"
    ],
    "inbound": 1,
-   "outbound": 2
+   "outbound": 3
+  },
+  {
+   "id": "admin-frontend/src/LiveMap.jsx",
+   "path": "admin-frontend/src/LiveMap.jsx",
+   "label": "LiveMap.jsx",
+   "group": "admin",
+   "dir": "admin-frontend/src",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Mapa ao vivo do admin (Mapbox 3D).",
+   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "role": "Etapa C.",
+   "security": "",
+   "planned": false,
+   "lines": 150,
+   "size": 8918,
+   "externals": [
+    "react",
+    "axios",
+    "lucide-react",
+    "@i18n/react.jsx",
+    "@ui",
+    "mapbox-gl"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/format.js"
+   ],
+   "usedBy": [
+    "admin-frontend/src/App.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 1
   },
   {
    "id": "admin-frontend/src/accountCard.js",
@@ -1039,8 +1073,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 214,
-   "size": 11488,
+   "lines": 229,
+   "size": 12459,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -1814,6 +1848,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261030_localizacao/migration.sql",
+   "path": "backend/prisma/migrations/20261030_localizacao/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261030_localizacao",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 5,
+   "size": 291,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/migrations/20261030_precos_termos/migration.sql",
    "path": "backend/prisma/migrations/20261030_precos_termos/migration.sql",
    "label": "migration.sql",
@@ -1889,8 +1944,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 555,
-   "size": 19961,
+   "lines": 559,
+   "size": 20130,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1912,8 +1967,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 572,
-   "size": 20843,
+   "lines": 576,
+   "size": 21012,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -2716,8 +2771,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 2356,
-   "size": 210250,
+   "lines": 2427,
+   "size": 215050,
    "externals": [
     "dotenv",
     "crypto",
@@ -2975,8 +3030,8 @@ window.GENESIS_MINDMAP = {
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 379,
-   "size": 25086,
+   "lines": 420,
+   "size": 27543,
    "externals": [
     "express",
     "bcrypt",
@@ -2994,13 +3049,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/catalogSuggestions.js",
     "backend/src/utils/lostRequests.js",
     "backend/src/services/plans.js",
-    "backend/src/utils/businessTypes.js"
+    "backend/src/utils/businessTypes.js",
+    "backend/src/utils/liveBus.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 11
+   "outbound": 12
   },
   {
    "id": "backend/src/routes/auth.js",
@@ -3219,8 +3275,8 @@ window.GENESIS_MINDMAP = {
    "role": "Dono.",
    "security": "",
    "planned": false,
-   "lines": 607,
-   "size": 35079,
+   "lines": 617,
+   "size": 35595,
    "externals": [
     "express",
     "crypto",
@@ -3245,13 +3301,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/terminals.js",
     "backend/src/services/monthClose.js",
     "backend/src/utils/auditGroups.js",
-    "backend/src/utils/units.js"
+    "backend/src/utils/units.js",
+    "backend/src/utils/liveBus.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 17
+   "outbound": 18
   },
   {
    "id": "backend/src/routes/panelLock.js",
@@ -3450,8 +3507,8 @@ window.GENESIS_MINDMAP = {
    "role": "Nucleo do POS.",
    "security": "",
    "planned": false,
-   "lines": 599,
-   "size": 30563,
+   "lines": 603,
+   "size": 31068,
    "externals": [
     "express",
     "zod",
@@ -3469,13 +3526,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/stockLots.js",
     "backend/src/services/tax.js",
     "backend/src/utils/salePayments.js",
-    "backend/src/utils/units.js"
+    "backend/src/utils/units.js",
+    "backend/src/utils/liveBus.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 10
+   "outbound": 11
   },
   {
    "id": "backend/src/routes/settings.js",
@@ -3490,8 +3548,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 329,
-   "size": 19313,
+   "lines": 366,
+   "size": 21680,
    "externals": [
     "express",
     "bcrypt",
@@ -3505,6 +3563,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/audit.js",
     "backend/src/services/tax.js",
     "backend/src/services/monthlyDeductions.js",
+    "backend/src/utils/geo.js",
     "backend/src/utils/auditGroups.js",
     "backend/src/services/reportJob.js"
    ],
@@ -3512,7 +3571,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 9
+   "outbound": 10
   },
   {
    "id": "backend/src/routes/shoppingLists.js",
@@ -4301,6 +4360,30 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/src/utils/geo.js",
+   "path": "backend/src/utils/geo.js",
+   "label": "geo.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Link do Google Maps ou coordenadas -> ponto do estabelecimento.",
+   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "role": "Etapa C.",
+   "security": "",
+   "planned": false,
+   "lines": 46,
+   "size": 2026,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/settings.js",
+    "backend/tests/geo.test.js"
+   ],
+   "inbound": 2,
+   "outbound": 0
+  },
+  {
    "id": "backend/src/utils/http.js",
    "path": "backend/src/utils/http.js",
    "label": "http.js",
@@ -4370,6 +4453,34 @@ window.GENESIS_MINDMAP = {
     "backend/tests/serverLang.test.js"
    ],
    "inbound": 9,
+   "outbound": 0
+  },
+  {
+   "id": "backend/src/utils/liveBus.js",
+   "path": "backend/src/utils/liveBus.js",
+   "label": "liveBus.js",
+   "group": "backend",
+   "dir": "backend/src/utils",
+   "ext": ".js",
+   "status": "ok",
+   "summary": "Eventos ao vivo (SSE) por loja; cada cliente isolado.",
+   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "role": "Etapa C.",
+   "security": "",
+   "planned": false,
+   "lines": 37,
+   "size": 1670,
+   "externals": [
+    "events"
+   ],
+   "dependsOn": [],
+   "usedBy": [
+    "backend/src/routes/admin.js",
+    "backend/src/routes/owner.js",
+    "backend/src/routes/sales.js",
+    "backend/tests/liveBus.test.js"
+   ],
+   "inbound": 4,
    "outbound": 0
   },
   {
@@ -5127,6 +5238,32 @@ window.GENESIS_MINDMAP = {
    "outbound": 1
   },
   {
+   "id": "backend/tests/geo.test.js",
+   "path": "backend/tests/geo.test.js",
+   "label": "geo.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 34,
+   "size": 2008,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/utils/geo.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
    "id": "backend/tests/guard.test.js",
    "path": "backend/tests/guard.test.js",
    "label": "guard.test.js",
@@ -5173,6 +5310,33 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/utils/http.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/liveBus.test.js",
+   "path": "backend/tests/liveBus.test.js",
+   "label": "liveBus.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 51,
+   "size": 2338,
+   "externals": [
+    "node:test",
+    "node:assert",
+    "node:events"
+   ],
+   "dependsOn": [
+    "backend/src/utils/liveBus.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -6564,6 +6728,37 @@ window.GENESIS_MINDMAP = {
    "outbound": 3
   },
   {
+   "id": "frontend/src/components/LiveSales.jsx",
+   "path": "frontend/src/components/LiveSales.jsx",
+   "label": "LiveSales.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/components",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Aviso de venda ao vivo no painel do dono.",
+   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "role": "Etapa C.",
+   "security": "",
+   "planned": false,
+   "lines": 37,
+   "size": 1770,
+   "externals": [
+    "react",
+    "react-router-dom"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/format.js",
+    "frontend/src/utils/privacy.jsx",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/layouts/AppShell.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
    "id": "frontend/src/components/MonthCloseDialog.jsx",
    "path": "frontend/src/components/MonthCloseDialog.jsx",
    "label": "MonthCloseDialog.jsx",
@@ -7034,6 +7229,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/BirthdayDialog.jsx",
+    "frontend/src/components/LiveSales.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/NotificationBell.jsx",
     "frontend/src/components/PanelLock.jsx",
@@ -7051,6 +7247,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
@@ -7068,7 +7265,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/Terminal.jsx",
     "frontend/src/utils/session.jsx"
    ],
-   "inbound": 36,
+   "inbound": 38,
    "outbound": 0
   },
   {
@@ -7299,8 +7496,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 1105,
-   "size": 69028,
+   "lines": 1126,
+   "size": 70596,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -7358,6 +7555,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx",
     "frontend/src/components/BarcodeScanner.jsx",
     "frontend/src/components/BirthdayDialog.jsx",
+    "frontend/src/components/LiveSales.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/NotificationBell.jsx",
     "frontend/src/components/PanelLock.jsx",
@@ -7378,6 +7576,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
@@ -7394,7 +7593,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/pos/PosScreen.jsx",
     "frontend/src/pages/pos/Terminal.jsx"
    ],
-   "inbound": 38,
+   "inbound": 40,
    "outbound": 2
   },
   {
@@ -7437,8 +7636,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 200,
-   "size": 11083,
+   "lines": 202,
+   "size": 11231,
    "externals": [
     "react",
     "react-router-dom",
@@ -7452,13 +7651,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/i18n/react.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/NotificationBell.jsx",
+    "frontend/src/components/LiveSales.jsx",
     "frontend/src/components/BirthdayDialog.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "frontend/src/main.jsx",
@@ -7849,6 +8049,37 @@ window.GENESIS_MINDMAP = {
    "outbound": 7
   },
   {
+   "id": "frontend/src/pages/owner/LocationCard.jsx",
+   "path": "frontend/src/pages/owner/LocationCard.jsx",
+   "label": "LocationCard.jsx",
+   "group": "frontend",
+   "dir": "frontend/src/pages/owner",
+   "ext": ".jsx",
+   "status": "ok",
+   "summary": "Localizacao no mapa nas Definicoes.",
+   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "role": "Etapa C.",
+   "security": "",
+   "planned": false,
+   "lines": 72,
+   "size": 3739,
+   "externals": [
+    "react",
+    "lucide-react"
+   ],
+   "dependsOn": [
+    "frontend/src/utils/api.js",
+    "frontend/src/utils/format.js",
+    "frontend/src/i18n/react.jsx",
+    "frontend/src/components/ui/index.js"
+   ],
+   "usedBy": [
+    "frontend/src/pages/owner/Settings.jsx"
+   ],
+   "inbound": 1,
+   "outbound": 4
+  },
+  {
    "id": "frontend/src/pages/owner/Onboarding.jsx",
    "path": "frontend/src/pages/owner/Onboarding.jsx",
    "label": "Onboarding.jsx",
@@ -8071,8 +8302,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 672,
-   "size": 46681,
+   "lines": 674,
+   "size": 46769,
    "externals": [
     "react",
     "react-router-dom",
@@ -8088,6 +8319,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/api.js",
     "frontend/src/utils/useApi.js",
     "frontend/src/pages/owner/AuditLogPage.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx",
     "frontend/src/utils/format.js",
     "frontend/src/i18n/core.js",
     "frontend/src/i18n/react.jsx",
@@ -8097,7 +8329,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 12
+   "outbound": 13
   },
   {
    "id": "frontend/src/pages/owner/ShoppingLists.jsx",
@@ -8493,6 +8725,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
@@ -8511,7 +8744,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/session.jsx",
     "frontend/src/utils/useApi.js"
    ],
-   "inbound": 31,
+   "inbound": 32,
    "outbound": 1
   },
   {
@@ -8528,7 +8761,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 88,
-   "size": 8999,
+   "size": 9096,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js",
@@ -8651,6 +8884,8 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [
     "admin-frontend/src/App.jsx",
+    "admin-frontend/src/LiveMap.jsx",
+    "frontend/src/components/LiveSales.jsx",
     "frontend/src/components/MonthCloseDialog.jsx",
     "frontend/src/components/PanelLock.jsx",
     "frontend/src/components/SaleDrawer.jsx",
@@ -8664,6 +8899,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/pages/owner/AuditLogPage.jsx",
     "frontend/src/pages/owner/Debts.jsx",
     "frontend/src/pages/owner/Home.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx",
     "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/ProductDrawer.jsx",
     "frontend/src/pages/owner/Products.jsx",
@@ -8688,7 +8924,7 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/useApi.js",
     "frontend/tests/i18n.test.mjs"
    ],
-   "inbound": 37,
+   "inbound": 40,
    "outbound": 1
   },
   {
@@ -8957,9 +9193,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/utils/format.js"
    ],
    "usedBy": [
+    "frontend/src/components/LiveSales.jsx",
     "frontend/src/layouts/AppShell.jsx"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 1
   },
   {
@@ -9451,6 +9688,31 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 176,
    "size": 10744,
+   "externals": [
+    "node:fs",
+    "node:path",
+    "@playwright/test"
+   ],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "frontend/tests/e2e/etapaC.mjs",
+   "path": "frontend/tests/e2e/etapaC.mjs",
+   "label": "etapaC.mjs",
+   "group": "frontend",
+   "dir": "frontend/tests/e2e",
+   "ext": ".mjs",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 113,
+   "size": 7511,
    "externals": [
     "node:fs",
     "node:path",
@@ -10407,8 +10669,8 @@ window.GENESIS_MINDMAP = {
    "role": "Build.",
    "security": "",
    "planned": false,
-   "lines": 113,
-   "size": 5497,
+   "lines": 114,
+   "size": 5631,
    "externals": [
     "vite",
     "node:url",
@@ -10773,6 +11035,14 @@ window.GENESIS_MINDMAP = {
    "target": "admin-frontend/src/accountCard.js"
   },
   {
+   "source": "admin-frontend/src/App.jsx",
+   "target": "admin-frontend/src/LiveMap.jsx"
+  },
+  {
+   "source": "admin-frontend/src/LiveMap.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
    "source": "admin-frontend/src/accountCard.js",
    "target": "frontend/src/ui/marca.js"
   },
@@ -11113,6 +11383,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/businessTypes.js"
   },
   {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/liveBus.js"
+  },
+  {
    "source": "backend/src/routes/auth.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -11327,6 +11601,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/owner.js",
    "target": "backend/src/utils/units.js"
+  },
+  {
+   "source": "backend/src/routes/owner.js",
+   "target": "backend/src/utils/liveBus.js"
   },
   {
    "source": "backend/src/routes/panelLock.js",
@@ -11545,6 +11823,10 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/units.js"
   },
   {
+   "source": "backend/src/routes/sales.js",
+   "target": "backend/src/utils/liveBus.js"
+  },
+  {
    "source": "backend/src/routes/settings.js",
    "target": "backend/src/utils/prisma.js"
   },
@@ -11571,6 +11853,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/settings.js",
    "target": "backend/src/services/monthlyDeductions.js"
+  },
+  {
+   "source": "backend/src/routes/settings.js",
+   "target": "backend/src/utils/geo.js"
   },
   {
    "source": "backend/src/routes/settings.js",
@@ -11905,12 +12191,20 @@ window.GENESIS_MINDMAP = {
    "target": "backend/src/utils/fefo.js"
   },
   {
+   "source": "backend/tests/geo.test.js",
+   "target": "backend/src/utils/geo.js"
+  },
+  {
    "source": "backend/tests/guard.test.js",
    "target": "backend/src/routes/guard.js"
   },
   {
    "source": "backend/tests/http.test.js",
    "target": "backend/src/utils/http.js"
+  },
+  {
+   "source": "backend/tests/liveBus.test.js",
+   "target": "backend/src/utils/liveBus.js"
   },
   {
    "source": "backend/tests/lostRequests.test.js",
@@ -12150,6 +12444,22 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/components/BirthdayDialog.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
+   "source": "frontend/src/components/LiveSales.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/components/LiveSales.jsx",
+   "target": "frontend/src/utils/privacy.jsx"
+  },
+  {
+   "source": "frontend/src/components/LiveSales.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/components/LiveSales.jsx",
    "target": "frontend/src/components/ui/index.js"
   },
   {
@@ -12414,6 +12724,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "frontend/src/layouts/AppShell.jsx",
+   "target": "frontend/src/components/LiveSales.jsx"
+  },
+  {
+   "source": "frontend/src/layouts/AppShell.jsx",
    "target": "frontend/src/components/BirthdayDialog.jsx"
   },
   {
@@ -12653,6 +12967,22 @@ window.GENESIS_MINDMAP = {
    "target": "frontend/src/components/ui/index.js"
   },
   {
+   "source": "frontend/src/pages/owner/LocationCard.jsx",
+   "target": "frontend/src/utils/api.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/LocationCard.jsx",
+   "target": "frontend/src/utils/format.js"
+  },
+  {
+   "source": "frontend/src/pages/owner/LocationCard.jsx",
+   "target": "frontend/src/i18n/react.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/LocationCard.jsx",
+   "target": "frontend/src/components/ui/index.js"
+  },
+  {
    "source": "frontend/src/pages/owner/Onboarding.jsx",
    "target": "frontend/src/utils/api.js"
   },
@@ -12859,6 +13189,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Settings.jsx",
    "target": "frontend/src/pages/owner/AuditLogPage.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Settings.jsx",
+   "target": "frontend/src/pages/owner/LocationCard.jsx"
   },
   {
    "source": "frontend/src/pages/owner/Settings.jsx",

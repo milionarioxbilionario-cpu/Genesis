@@ -21,7 +21,7 @@ export const ACTION_LABEL = {
   PANEL_LOCK_SIGNED_OUT: 'Sessão terminada por PINs errados', PASSKEY_ADDED: 'Face ID / impressão digital activado', PASSKEY_REMOVED: 'Face ID / impressão digital removido',
   CREATE_CASHIER: 'Caixista criado', UPDATE_CASHIER: 'Caixista alterado', DEACTIVATE_CASHIER: 'Caixista desactivado', REACTIVATE_CASHIER: 'Caixista reactivado',
   CREATE_EMPLOYEE: 'Trabalhador criado', UPDATE_EMPLOYEE: 'Trabalhador alterado',
-  UPDATE_STORE: 'Dados da loja alterados', UPDATE_TAXES: 'Impostos alterados', UPDATE_HOURS: 'Horário alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', UPDATE_EXPIRY_ALERT: 'Aviso de validade alterado',
+  UPDATE_STORE: 'Dados da loja alterados', UPDATE_LOCATION: 'Localização alterada', UPDATE_TAXES: 'Impostos alterados', UPDATE_HOURS: 'Horário alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', UPDATE_EXPIRY_ALERT: 'Aviso de validade alterado',
   UPDATE_MONTH_CLOSE_DAY: 'Dia do fecho do mês alterado', UPDATE_AUDIT_RETENTION: 'Tempo da auditoria alterado', UPDATE_REPORT_SCHEDULE: 'Horário dos relatórios alterado',
   CREATE_FIXED_COST: 'Custo fixo criado', UPDATE_FIXED_COST: 'Custo fixo alterado', DELETE_FIXED_COST: 'Custo fixo removido',
   CREATE_EXPENSE: 'Despesa registada', UPDATE_EXPENSE: 'Despesa alterada', DELETE_EXPENSE: 'Despesa removida', SET_GOAL: 'Meta definida',
@@ -52,7 +52,7 @@ export const FIELD_LABEL = {
   daily_report_time: 'Hora do relatório diário', weekly_report_day: 'Dia do relatório semanal', weekly_report_time: 'Hora do relatório semanal', monthly_report_time: 'Hora do relatório mensal',
   audit_retention_months: 'Meses guardados', status: 'Estado', debtor_name: 'Cliente', due_date: 'Data limite', monthly_salary: 'Salário', cancel_reason: 'Motivo',
   subtotal: 'Subtotal', total_cost: 'Custo da mercadoria', item_count: 'Nº de artigos', free_limit: 'Desconto livre', vat_amount: 'IVA incluído',
-  client_created_at: 'Hora no dispositivo', first_checked_at: 'Conferido pela 1.ª vez', discount_amount: 'Desconto', daily_number: 'Venda n.º', offline_at: 'Feita sem ligação a', change_amount: 'Troco', amount_received: 'Valor recebido', cashier_user_id: 'Caixista', seller_user_id: 'Caixista',
+  client_created_at: 'Hora no dispositivo', lat: 'Latitude', lng: 'Longitude', address: 'Morada', first_checked_at: 'Conferido pela 1.ª vez', discount_amount: 'Desconto', daily_number: 'Venda n.º', offline_at: 'Feita sem ligação a', change_amount: 'Troco', amount_received: 'Valor recebido', cashier_user_id: 'Caixista', seller_user_id: 'Caixista',
 };
 export const fieldLabel = (k) => (FIELD_LABEL[k] ? t(FIELD_LABEL[k]) : k.replace(/_/g, ' '));
 

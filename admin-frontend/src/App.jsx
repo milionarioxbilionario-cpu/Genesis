@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
+// Etapa C: o mapa (mapbox-gl, pesado) so se carrega ao abrir a pagina.
+const LiveMap = lazy(() => import('./LiveMap.jsx'));
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BellRing, BookOpen, ChevronsLeft, ChevronsRight, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, ScrollText, Store } from 'lucide-react';
+import { BellRing, BookOpen, ChevronsLeft, ChevronsRight, Globe2, Inbox, LayoutDashboard, Lightbulb, LogOut, PackageSearch, ScrollText, Store } from 'lucide-react';
 import {
   Alert, Badge, Button, Card, CardHeader, ConfirmProvider, Dialog, Drawer, Input, KeyValue, LanguageSwitch, MoneyInput, PageHeader,
   IconButton, PRODUCT_ICONS, ProductImage, Segmented, Select, Spinner, Stat, Table, Textarea, ToastProvider, Toolbar, useConfirm, useToast, cx,
@@ -106,6 +108,7 @@ const NAV = [
   { to: '/', label: 'Visão geral', icon: LayoutDashboard, end: true },
   { to: '/pedidos', label: 'Pedidos de conta', icon: Inbox },
   { to: '/lojas', label: 'Estabelecimentos', icon: Store },
+  { to: '/mapa', label: 'Mapa ao vivo', icon: Globe2 },
   { to: '/catalogos', label: 'Catálogos-mestre', icon: BookOpen },
   { to: '/sugestoes', label: 'Sugestões', icon: Lightbulb },
   { to: '/pedidos-clientes', label: 'Pedidos de clientes', icon: PackageSearch },
@@ -689,6 +692,7 @@ export default function App() {
                 <Route index element={<Overview />} />
                 <Route path="pedidos" element={<Requests />} />
                 <Route path="lojas" element={<Tenants />} />
+                <Route path="mapa" element={<Suspense fallback={null}><LiveMap /></Suspense>} />
                 <Route path="catalogos" element={<Catalogs />} />
                 <Route path="sugestoes" element={<Suggestions />} />
                 <Route path="pedidos-clientes" element={<LostRequests />} />

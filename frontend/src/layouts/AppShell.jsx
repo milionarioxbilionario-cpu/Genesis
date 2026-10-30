@@ -9,6 +9,7 @@ import { useI18n } from '../i18n/react';
 import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
 import NotificationBell from '../components/NotificationBell';
+import LiveSales from '../components/LiveSales';
 import BirthdayDialog from '../components/BirthdayDialog';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
@@ -183,6 +184,7 @@ export default function AppShell() {
             {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}
             <PrivacyToggle />
             {user?.role === 'owner' && <NotificationBell />}
+            {user?.role === 'owner' && !user?.scope && online && !sessionOffline && <LiveSales />}
           </div>
         </header>
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">

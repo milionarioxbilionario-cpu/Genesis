@@ -2335,7 +2335,78 @@ async function test43() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43 };
+// Le um canal SSE ate `want` eventos ou `ms` milissegundos.
+async function readSse(path, headers, want, ms, during) {
+  const ctrl = new AbortController();
+  const events = [];
+  const res = await fetch(BASE + path, { headers, signal: ctrl.signal });
+  if (res.status !== 200) return { status: res.status, events };
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  const pump = (async () => {
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf('\n\n')) >= 0) {
+          const block = buf.slice(0, i); buf = buf.slice(i + 2);
+          const type = (block.match(/^event: (.+)$/m) || [])[1];
+          const data = (block.match(/^data: (.+)$/m) || [])[1];
+          if (type && data) events.push({ type, data: JSON.parse(data) });
+          if (events.length >= want) { ctrl.abort(); return; }
+        }
+      }
+    } catch { /* abortado */ }
+  })();
+  await new Promise((r) => setTimeout(r, 1500)); // o canal esta aberto antes de provocar o evento
+  if (during) await during();
+  await pump;
+  clearTimeout(timer);
+  return { status: 200, events };
+}
+
+async function test44() {
+  section(44, 'Etapa C: localizacao do estabelecimento, canal ao vivo do dono (so a sua loja, com lucro) e do admin (mapa), mapa com vendas de hoje');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  ok((await owner.req('PUT', '/api/settings/location', { lat: 0, lng: 0 })).status === 400, 'localizacao 0,0: 400');
+  ok((await owner.req('PUT', '/api/settings/location', { lat: 95, lng: 32 })).status === 400, 'latitude 95: 400');
+  const link = 'https://www.google.com/maps/place/Polana/@-25.9692,32.5995,17z/data=!3m1!4b1!8m2!3d-25.969512!4d32.601144';
+  const r = await owner.req('POST', '/api/settings/location/resolve', { text: link });
+  ok(r.status === 200 && r.data.lat === -25.969512 && r.data.lng === 32.601144, 'link do Google Maps -> coordenadas do marcador', r.data);
+  ok((await owner.req('POST', '/api/settings/location/resolve', { text: 'https://google.com.evil.example/maps/x' })).data?.code === 'LOCATION_NOT_FOUND', 'link que nao e do Google: recusado sem o abrir');
+  const put = await owner.req('PUT', '/api/settings/location', { lat: r.data.lat, lng: r.data.lng, address: 'Polana' });
+  ok(put.status === 200, 'dono guarda o ponto no mapa', put);
+  const s = (await owner.req('GET', '/api/settings')).data;
+  ok(s.geo && s.geo.lat === -25.969512 && s.geo.lng === 32.601144, 'Definicoes devolvem o ponto', s.geo);
+  ok((await prisma.auditLog.count({ where: { tenant_id: t, action: 'UPDATE_LOCATION' } })) >= 1, 'auditoria: UPDATE_LOCATION');
+  // Canal do dono: a venda chega com total e lucro.
+  await unlockCashier().catch(() => {});
+  await prisma.product.update({ where: { id: ctx.product.id }, data: { stock_qty: 50 } });
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  const ownerCookie = { Cookie: 'token=' + signAccessToken(ctx.owner) };
+  const live = await readSse('/api/owner/live', ownerCookie, 1, 25000, () => caixa.req('POST', '/api/sales', saleBody()));
+  const ev = live.events.find((e) => e.type === 'sale');
+  ok(live.status === 200 && ev && ev.data.total === 10000 && ev.data.profit === 4000, 'dono recebe a venda ao vivo (100 MT, lucro 40 MT)', live);
+  ok(ev && ev.data.tenant_id === undefined && ev.data.seller_user_id === undefined, 'o aviso nao leva ids internos');
+  ok((await fetch(BASE + '/api/owner/live', { headers: { Cookie: 'token=' + signAccessToken(ctx.cashier, { scope: 'pos' }) } })).status === 403, 'caixista nao abre o canal do dono (403)');
+  // Canal e mapa do admin.
+  const adminHeaders = { Cookie: 'token=' + signAccessToken(ctx.admin), Origin: ADMIN_ORIGIN };
+  const map = await adminClient().req('GET', '/api/admin/map');
+  const pt = map.data?.points?.find((p) => p.id === t);
+  ok(map.status === 200 && pt && pt.lat === -25.969512 && pt.today_total >= 10000, 'mapa do admin: o estabelecimento com o ponto e as vendas de hoje', pt);
+  ok(!JSON.stringify(map.data).includes('total_cost') && !JSON.stringify(map.data).includes('profit'), 'mapa do admin: sem custos nem lucros');
+  const adm = await readSse('/api/admin/live', adminHeaders, 1, 25000, () => caixa.req('POST', '/api/sales', saleBody()));
+  const aev = adm.events.find((e) => e.type === 'sale' && e.data.tenant_id === t);
+  ok(adm.status === 200 && aev && aev.data.total === 10000 && aev.data.profit === undefined, 'admin recebe a venda ao vivo (sem o lucro)', adm);
+  ok((await fetch(BASE + '/api/admin/live', { headers: ownerCookie })).status === 403, 'dono nao abre o canal do admin (403)');
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44 };
 
 (async () => {
   await prisma.ready();

@@ -1772,6 +1772,36 @@
       "summary": "Ecra do guarda: leitor USB/camara, verde Pode sair, vermelho Ja conferido.",
       "role": "Antifraude a saida.",
       "notes": "30/10/2026 Etapa B: verify_system 43 22/22, guarda.mjs 8/8, guard.test.js 3/3."
+    },
+    "backend/src/utils/geo.js": {
+      "status": "ok",
+      "summary": "Link do Google Maps ou coordenadas -> ponto do estabelecimento.",
+      "role": "Etapa C.",
+      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+    },
+    "backend/src/utils/liveBus.js": {
+      "status": "ok",
+      "summary": "Eventos ao vivo (SSE) por loja; cada cliente isolado.",
+      "role": "Etapa C.",
+      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+    },
+    "frontend/src/pages/owner/LocationCard.jsx": {
+      "status": "ok",
+      "summary": "Localizacao no mapa nas Definicoes.",
+      "role": "Etapa C.",
+      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+    },
+    "frontend/src/components/LiveSales.jsx": {
+      "status": "ok",
+      "summary": "Aviso de venda ao vivo no painel do dono.",
+      "role": "Etapa C.",
+      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+    },
+    "admin-frontend/src/LiveMap.jsx": {
+      "status": "ok",
+      "summary": "Mapa ao vivo do admin (Mapbox 3D).",
+      "role": "Etapa C.",
+      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
     }
   }
 }

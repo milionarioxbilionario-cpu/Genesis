@@ -44,7 +44,8 @@ export default defineConfig({
         // A cache 'genesis-api' e apagada ao sair e ao entrar outra conta (utils/session.jsx).
         // Fora: sessao (/api/auth), terminal (/api/pos), bloqueio (/api/lock), admin.
         runtimeCaching: [{
-          urlPattern: ({ url, request }) => request.method === 'GET' && /^\/api\/(owner|dashboard|products|inventory|settings|sales|shopping-lists)(\/|$)/.test(url.pathname),
+          // /api/owner/live (aviso de venda ao vivo, Etapa C) nunca acaba: fica fora da cache.
+          urlPattern: ({ url, request }) => request.method === 'GET' && url.pathname !== '/api/owner/live' && /^\/api\/(owner|dashboard|products|inventory|settings|sales|shopping-lists)(\/|$)/.test(url.pathname),
           handler: 'NetworkFirst',
           options: {
             cacheName: 'genesis-api',

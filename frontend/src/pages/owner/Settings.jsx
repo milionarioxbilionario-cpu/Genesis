@@ -10,6 +10,7 @@ import { forgetReceiptInfo } from '../../components/SaleDrawer';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import AuditLogPage from './AuditLogPage';
+import LocationCard from './LocationCard';
 import { money, date, dateTime, isoDay, errorMessage } from '../../utils/format';
 import { locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
@@ -91,6 +92,7 @@ function Store({ s, reload }) {
         </div>
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'store'} onClick={() => save('store')}>{t('Guardar')}</Button></div>
       </Card>
+      <LocationCard s={s} reload={reload} />
       <LogoCard s={s} store={store} reload={reload} />
       <TaxesCard s={s} reload={reload} />
       <Card>

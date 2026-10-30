@@ -13,6 +13,7 @@ const { productVatRate, saleVat } = require('../services/tax');
 const { splitPayment } = require('../utils/salePayments');
 const { lineAmount } = require('../utils/units');
 const rateLimit = require('express-rate-limit');
+const { publish } = require('../utils/liveBus');
 
 const saleSchema = z.object({
   id: z.string().uuid().optional(),
@@ -450,9 +451,11 @@ router.post('/', async (req, res) => {
        } });
      }
 
-     return { id: sale.id, daily_number: sale.daily_number, vat_amount: sale.vat_amount };
+     return { id: sale.id, daily_number: sale.daily_number, vat_amount: sale.vat_amount, total: totalAmount, cost: totalCost, payment_method: paymentMethod };
    });
 
+   // Etapa C: aviso ao vivo (painel do dono e mapa do admin).
+   publish({ type: 'sale', tenant_id: tenantId, sale_id: result.id, daily_number: result.daily_number, total: result.total, profit: result.total - result.cost, payment_method: result.payment_method, seller_user_id: sellerUserId });
    return res.status(201).json({ id: result.id, daily_number: result.daily_number, vat_amount: result.vat_amount || 0 });
  } catch (err) {
    if (err instanceof z.ZodError) {
@@ -586,6 +589,7 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
       });
     });
 
+    publish({ type: 'cancel', tenant_id: tenantId, sale_id: id, total: sale.total_amount });
     return res.json({ ok: true, message: 'Venda cancelada com sucesso' });
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0]?.message || 'Dados inválidos' });

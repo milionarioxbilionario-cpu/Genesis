@@ -14,6 +14,7 @@ const { asyncHandler, httpError } = require('../utils/http');
 const { writeAudit } = require('../utils/audit');
 const { VAT_MODES, RATE_MIN, RATE_MAX } = require('../services/tax');
 const { monthlyAmount } = require('../services/monthlyDeductions');
+const { parseLocation, validCoords, mapsLinkKind } = require('../utils/geo');
 
 const router = express.Router();
 router.use(auth, requireRole('owner'));
@@ -72,6 +73,8 @@ router.get('/', asyncHandler(async (req, res) => {
   const fixed = await prisma.fixedCost.findMany({ where: { tenant_id: t.id }, orderBy: { description: 'asc' } });
   res.json({
     store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type, nuit: t.nuit || null, receipt_footer: t.receipt_footer || null, has_logo: Boolean(t.logo_data) },
+    // Etapa C: ponto no mapa (null = ainda por configurar).
+    geo: t.lat != null && t.lng != null ? { lat: t.lat, lng: t.lng, address: t.address || null } : null,
     hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00' },
     discount_free_pct: t.discount_free_pct,
     custom_items_enabled: t.custom_items_enabled !== false,
@@ -148,6 +151,40 @@ router.put('/discount', asyncHandler(async (req, res) => {
 }));
 
 // Etapa A: venda personalizada (artigo fora do catalogo) no terminal, ligada ou nao.
+// Etapa C: ponto do estabelecimento no mapa (GPS, link do Google Maps ou coordenadas).
+router.put('/location', asyncHandler(async (req, res) => {
+  const data = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), address: z.string().trim().max(200).optional().nullable() }).parse(req.body);
+  if (!validCoords(data.lat, data.lng)) throw httpError(400, 'Localização inválida.', 'BAD_LOCATION');
+  const lat = Math.round(data.lat * 1e6) / 1e6;
+  const lng = Math.round(data.lng * 1e6) / 1e6;
+  const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { lat: true, lng: true, address: true } });
+  await prisma.tenant.update({ where: { id: tenantId(req) }, data: { lat, lng, address: data.address || null } });
+  await writeAudit({ req, action: 'UPDATE_LOCATION', entityType: 'tenant', entityId: tenantId(req), oldValue: before, newValue: { lat, lng, address: data.address || null } });
+  res.json({ ok: true, location: { lat, lng, address: data.address || null } });
+}));
+
+// Link do Google Maps -> coordenadas. Os links curtos (maps.app.goo.gl) so se
+// abrem para ler o destino; so enderecos do Google (utils/geo.js mapsLinkKind).
+router.post('/location/resolve', asyncHandler(async (req, res) => {
+  const { text } = z.object({ text: z.string().trim().min(3).max(2000) }).parse(req.body);
+  let found = parseLocation(text);
+  if (!found && mapsLinkKind(text) === 'short') {
+    try {
+      let url = text.trim();
+      for (let i = 0; i < 4 && !found; i++) {
+        const r = await fetch(url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(8000) });
+        const next = r.headers.get('location');
+        if (!next) break;
+        found = parseLocation(decodeURIComponent(next));
+        if (!mapsLinkKind(next)) break; // so segue para o Google
+        url = next;
+      }
+    } catch { /* sem rede ou link invalido: responde abaixo */ }
+  }
+  if (!found) throw httpError(400, 'Não encontrei a localização nesse link. Abra o local no Google Maps, toque em «Partilhar» e copie o link.', 'LOCATION_NOT_FOUND');
+  res.json(found);
+}));
+
 router.put('/custom-items', asyncHandler(async (req, res) => {
   const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body);
   await prisma.tenant.update({ where: { id: tenantId(req) }, data: { custom_items_enabled: enabled } });

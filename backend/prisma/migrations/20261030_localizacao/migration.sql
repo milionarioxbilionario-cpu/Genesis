@@ -1,0 +1,4 @@
+-- Etapa C (30/10/2026): ponto de cada estabelecimento no mapa. SO ADICOES; idempotente.
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS "lat" DOUBLE PRECISION;
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS "lng" DOUBLE PRECISION;
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS "address" TEXT;

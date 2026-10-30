@@ -2216,3 +2216,13 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - O guarda não vende, não vê lucros nem custos, e não vê a lista de vendas. Um recibo de outra loja não aparece. Uma venda cancelada também fica a vermelho.
 - Um defeito que o teste apanhou e corrigi: no princípio, ler um recibo repetido mostrava o vermelho mas não avisava o dono. Agora avisa logo na leitura.
 - Testes neste computador: 22 de 22 no sistema, 8 de 8 no browser. Funcionou: sim. O site passou a explicar o guarda na parte dos recibos.
+- SITE REAL: o terminal do guarda foi publicado e testado no genesismz.com: 8 de 8. A Etapa B está fechada.
+
+
+==================== 30/10/2026 — Etapa C: localização no mapa, aviso de venda e mapa 3D ao vivo ====================
+- LOCALIZAÇÃO: em Definições > Loja há agora "Localização no mapa". Toca em "Usar a localização deste aparelho" (GPS) ou cola o link do Google Maps (no Google Maps: Partilhar > Copiar link). Aparece logo um pequeno mapa com o ponto. Testado com um link verdadeiro: funcionou.
+- AVISO DE VENDA: com o painel aberto (em qualquer página), quando um caixista vende aparece em baixo "Venda n.º 012: 450,00 MT · lucro 120,00 MT". Tocar abre as Vendas. Com o "olho" (modo privado) ligado, diz só "Nova venda" sem valores. Funcionou: sim.
+- MAPA AO VIVO (só no teu painel de administração): um globo 3D (Mapbox) com Moçambique, um ponto por estabelecimento que já marcou a localização, e cada venda aparece por cima do ponto a verde "+450,00 MT" (cancelamento a vermelho). A luz do mapa muda com a hora de Maputo (dia, fim de tarde, noite). Botão "Satélite" para ver a imagem de satélite. Do lado, "Agora" com as últimas vendas e a lista de quem ainda não marcou a localização.
+- O admin vê quanto se vende, mas NÃO vê lucros nem custos das lojas. Cada dono só recebe os avisos da sua loja (testado).
+- Ainda não fiz desta etapa: gráficos da receita das subscrições, filtros por cidade, som ambiente e o botão de pedir ajuda. Ficam anotados.
+- Testes: 14 de 14 no sistema e 9 de 9 no browser. Os testes apanharam 3 defeitos meus (um deles de segurança: um link falso passava como sendo do Google) e corrigi antes de publicar.

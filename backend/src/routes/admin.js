@@ -26,6 +26,7 @@ const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
 const { groupLostRequests } = require('../utils/lostRequests');
 const { PLANS, PERIODS, effectivePlan } = require('../services/plans');
 const { BUSINESS_TYPES } = require('../utils/businessTypes');
+const { openStream } = require('../utils/liveBus');
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -57,6 +58,46 @@ router.get('/audit', asyncHandler(async (req, res) => {
 }));
 
 // Metricas globais da plataforma (especificacao 4.1).
+// Etapa C: mapa ao vivo. Estabelecimentos com ponto no mapa + vendas de hoje (dia de Maputo).
+const MAP_STATUSES = ['active', 'trial', 'suspended'];
+const maputoTodayStart = () => new Date(new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10) + 'T00:00:00+02:00');
+router.get('/map', asyncHandler(async (req, res) => {
+  const tenants = await prisma.tenant.findMany({ where: { status: { in: MAP_STATUSES } }, select: { id: true, name: true, business_type: true, status: true, plan: true, location: true, lat: true, lng: true } });
+  const since = maputoTodayStart();
+  const sums = await prisma.sale.groupBy({ by: ['tenant_id'], where: { status: 'completed', created_at: { gte: since } }, _sum: { total_amount: true }, _count: true });
+  const byId = new Map(sums.map((s) => [s.tenant_id, s]));
+  res.json({
+    points: tenants.filter((t) => t.lat != null && t.lng != null).map((t) => ({
+      id: t.id, name: t.name, business_type: t.business_type, status: t.status, plan: t.plan, place: t.location, lat: t.lat, lng: t.lng,
+      today_total: Number(byId.get(t.id)?._sum.total_amount || 0), today_count: byId.get(t.id)?._count || 0,
+    })),
+    without_location: tenants.filter((t) => t.lat == null || t.lng == null).map((t) => ({ id: t.id, name: t.name, place: t.location })),
+  });
+}));
+
+// Etapa C: acontecimentos de todos os estabelecimentos (sem lucros nem caixistas).
+let mapCache = { at: 0, byId: new Map() };
+async function mapInfo(id) {
+  if (Date.now() - mapCache.at > 60000 || !mapCache.byId.has(id)) {
+    const rows = await prisma.tenant.findMany({ where: { status: { in: MAP_STATUSES } }, select: { id: true, name: true, lat: true, lng: true } });
+    mapCache = { at: Date.now(), byId: new Map(rows.map((r) => [r.id, r])) };
+  }
+  return mapCache.byId.get(id) || null;
+}
+router.get('/live', (req, res) => {
+  openStream(req, res, {
+    filter: (e) => e.type === 'sale' || e.type === 'cancel',
+    // Nome e ponto vem da cache (refeita a cada minuto). Loja que ainda nao esta
+    // na cache: o evento vai sem ponto (o painel actualiza a lista) e a cache refaz-se.
+    shape: (e) => {
+      const t = mapCache.byId.get(e.tenant_id);
+      if (!t) mapInfo(e.tenant_id).catch(() => {});
+      return { type: e.type, tenant_id: e.tenant_id, name: t?.name || null, lat: t?.lat ?? null, lng: t?.lng ?? null, total: e.total, at: e.at };
+    },
+  });
+  mapInfo('').catch(() => {});
+});
+
 router.get('/overview', asyncHandler(async (req, res) => {
   const tenants = await prisma.tenant.findMany({ select: { id: true, status: true, subscription_price: true, created_at: true, trial_ends_at: true } });
   const count = (st) => tenants.filter((t) => t.status === st).length;
