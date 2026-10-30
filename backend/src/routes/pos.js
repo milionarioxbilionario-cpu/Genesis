@@ -61,7 +61,7 @@ function currentPosSession(req, terminalId) {
   if (!token) return null;
   try {
     const d = verifyAccessToken(token);
-    return d.scope === 'pos' && d.tid === terminalId ? d.userId : null;
+    return (d.scope === 'pos' || d.scope === 'guard') && d.tid === terminalId ? d.userId : null;
   } catch { return null; }
 }
 
@@ -69,7 +69,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   const { tenantId, id } = req.terminal;
   const [tenant, allCashiers, memberIds] = await Promise.all([
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true, discount_free_pct: true, vat_mode: true, custom_items_enabled: true, cancel_pin_hash: true } }),
-    prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, pin_hash: true, language: true } }),
+    prisma.user.findMany({ where: { tenant_id: tenantId, role: { in: ['cashier', 'guard'] }, is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, role: true, pin_hash: true, language: true } }),
     terminalMemberIds(prisma, id),
   ]);
   // Etapa A: so os perfis deste terminal (sem lista = todos, como antes).
@@ -78,7 +78,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
     const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
     // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
     // pin_v: muda quando o PIN muda — o terminal apaga o verificador do PIN sem rede (Fase 12.2).
-    return { id: c.id, name: c.name, language: c.language, has_pin: Boolean(c.pin_hash), pin_v: c.pin_hash ? passwordVersion(c.pin_hash) : null, locked: lock.locked, shift_open: shift.open };
+    return { id: c.id, name: c.name, role: c.role, language: c.language, has_pin: Boolean(c.pin_hash), pin_v: c.pin_hash ? passwordVersion(c.pin_hash) : null, locked: lock.locked, shift_open: shift.open };
   }));
   const sessionUserId = currentPosSession(req, id);
   res.json({
@@ -96,7 +96,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
 router.post('/login', terminalAuth, pinLimiter, asyncHandler(async (req, res) => {
   const { cashier_id, pin } = z.object({ cashier_id: z.string().uuid(), pin: z.string().regex(/^\d{4}$/, 'PIN inválido') }).parse(req.body);
   const { tenantId, id: terminalId } = req.terminal;
-  const cashier = await prisma.user.findFirst({ where: { id: cashier_id, tenant_id: tenantId, role: 'cashier', is_active: true } });
+  const cashier = await prisma.user.findFirst({ where: { id: cashier_id, tenant_id: tenantId, role: { in: ['cashier', 'guard'] }, is_active: true } });
   if (!cashier) throw httpError(404, 'Perfil não encontrado neste terminal', 'CASHIER_NOT_FOUND');
   if (!cashier.pin_hash) throw httpError(400, 'Este caixista ainda não tem PIN. O dono define-o em Equipa.', 'PIN_NOT_SET');
   const memberIds = await terminalMemberIds(prisma, terminalId);
@@ -110,9 +110,10 @@ router.post('/login', terminalAuth, pinLimiter, asyncHandler(async (req, res) =>
     return res.status(401).json({ error: 'PIN incorrecto', code: 'INVALID_PIN', remaining: Math.max(0, PIN_FAIL_MAX - fails - 1) });
   }
 
-  setSessionCookies(res, cashier, { scope: 'pos', tid: terminalId });
+  // Etapa B: o guarda tem uma sessao propria, que so le e confere recibos.
+  setSessionCookies(res, cashier, { scope: cashier.role === 'guard' ? 'guard' : 'pos', tid: terminalId });
   await writeAudit({ req, tenantId, userId: cashier.id, action: 'POS_LOGIN', entityType: 'user', entityId: cashier.id, newValue: { terminal: terminalId } });
-  res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name, language: cashier.language } });
+  res.json({ ok: true, cashier: { id: cashier.id, name: cashier.name, role: cashier.role, language: cashier.language } });
 }));
 
 router.post('/lock', (req, res) => {

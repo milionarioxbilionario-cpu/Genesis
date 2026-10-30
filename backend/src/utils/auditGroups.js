@@ -5,7 +5,7 @@
 const { dayInMaputo } = require('./fefo');
 
 const GROUPS = [
-  { key: 'sales', label: 'Vendas', actions: ['CREATE_SALE', 'CANCEL_SALE', 'CANCEL_ATTEMPT', 'DISCOUNT_AUTHORIZED', 'DISCOUNT_PIN_FAIL', 'SALES_VIEWED', 'RECEIPT_REPRINTED'] },
+  { key: 'sales', label: 'Vendas', actions: ['CREATE_SALE', 'CANCEL_SALE', 'CANCEL_ATTEMPT', 'DISCOUNT_AUTHORIZED', 'DISCOUNT_PIN_FAIL', 'SALES_VIEWED', 'RECEIPT_REPRINTED', 'RECEIPT_CHECKED', 'RECEIPT_RECHECK_ATTEMPT'] },
   { key: 'stock', label: 'Stock', actions: ['STOCK_ENTRY', 'STOCK_ADJUSTMENT', 'LOT_EXPIRY_CHANGED', 'CREATE_SHRINKAGE', 'AUTO_EXPIRY_LOSS', 'IMPORT_CATALOG', 'CREATE_DEMAND_CAPTURE'] },
   { key: 'products', label: 'Produtos', actions: ['CREATE_PRODUCT', 'UPDATE_PRODUCT', 'DELETE_PRODUCT'] },
   { key: 'shifts', label: 'Turnos', actions: ['SHIFT_CLOSING_OK', 'SHIFT_ATTEMPT_FAIL', 'SHIFT_OPENED', 'CASHIER_LOCKED', 'CASHIER_UNLOCKED', 'POS_LOGIN'] },

@@ -30,6 +30,7 @@ const panelLockRoutes = require('./routes/panelLock');
 const profileRoutes = require('./routes/profile');
 const posWriteAuth = require('./middleware/posWriteAuth');
 const verifyRoutes = require('./routes/verify');
+const guardRoutes = require('./routes/guard');
 const helmet = require('helmet');
 const { errorHandler } = require('./utils/http');
 
@@ -262,6 +263,8 @@ app.use('/api/profile', profileRoutes);
 
 // Verificacao publica do QR dos recibos (sem sessao, so leitura).
 app.use('/api/verify', verifyRoutes);
+// Etapa B: terminal do guarda (sessao de ambito 'guard').
+app.use('/api/guard', guardRoutes);
 // Etapa A: «Avise-me quando estiver pronto» (publico, sem sessao).
 app.use('/api/waitlist', require('./routes/waitlist'));
 

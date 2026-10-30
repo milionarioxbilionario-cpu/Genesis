@@ -179,15 +179,17 @@ router.get('/audit/:id', asyncHandler(async (req, res) => {
 }));
 
 // ---------------------------------------------------------------- equipa: caixistas
+// Etapa B: a equipa do terminal tem caixistas e guardas (o guarda so confere recibos).
+const TEAM_ROLES = ['cashier', 'guard'];
 async function ownCashier(req, id = req.params.id) {
-  const c = await prisma.user.findFirst({ where: { id, tenant_id: tenantOf(req), role: 'cashier' } });
+  const c = await prisma.user.findFirst({ where: { id, tenant_id: tenantOf(req), role: { in: TEAM_ROLES } } });
   if (!c) throw httpError(404, 'Caixista não encontrado nesta loja');
   return c;
 }
 
 router.get('/cashiers', asyncHandler(async (req, res) => {
   const tenantId = tenantOf(req);
-  const cashiers = await prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier' }, orderBy: { name: 'asc' } });
+  const cashiers = await prisma.user.findMany({ where: { tenant_id: tenantId, role: { in: TEAM_ROLES } }, orderBy: { name: 'asc' } });
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const rows = await Promise.all(cashiers.map(async (c) => {
     const [lock, today] = await Promise.all([
@@ -195,7 +197,7 @@ router.get('/cashiers', asyncHandler(async (req, res) => {
       prisma.sale.aggregate({ where: { tenant_id: tenantId, cashier_user_id: c.id, status: 'completed', created_at: { gte: start } }, _sum: { total_amount: true }, _count: true }),
     ]);
     return {
-      id: c.id, name: c.name, phone: c.phone, is_active: c.is_active, created_at: c.created_at,
+      id: c.id, name: c.name, role: c.role, phone: c.phone, is_active: c.is_active, created_at: c.created_at,
       has_pin: Boolean(c.pin_hash), locked: lock.locked, attempts: lock.attempts, max_attempts: lock.maxAttempts,
       today_sales: today._count, today_revenue: Number(today._sum.total_amount || 0),
     };
@@ -207,15 +209,15 @@ router.get('/cashiers', asyncHandler(async (req, res) => {
 // senha: a conta recebe um email interno e uma senha aleatoria inutilizavel
 // (o login por email recusa o papel cashier — ver routes/auth.js).
 router.post('/cashiers', asyncHandler(async (req, res) => {
-  const data = z.object({ name: z.string().trim().min(2).max(80), phone: z.string().trim().max(20).optional().nullable(), pin: PIN }).parse(req.body);
+  const data = z.object({ name: z.string().trim().min(2).max(80), phone: z.string().trim().max(20).optional().nullable(), pin: PIN, role: z.enum(TEAM_ROLES).default('cashier') }).parse(req.body);
   const user = await prisma.user.create({ data: {
-    tenant_id: tenantOf(req), role: 'cashier', name: data.name, phone: data.phone || null,
+    tenant_id: tenantOf(req), role: data.role, name: data.name, phone: data.phone || null,
     email: `caixa-${crypto.randomUUID()}@pos.genesis.local`,
     password_hash: await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10),
     pin_hash: await bcrypt.hash(data.pin, 10), is_active: true,
   } });
-  await writeAudit({ req, action: 'CREATE_CASHIER', entityType: 'user', entityId: user.id, newValue: { name: user.name } });
-  res.status(201).json({ id: user.id, name: user.name, is_active: true, has_pin: true });
+  await writeAudit({ req, action: 'CREATE_CASHIER', entityType: 'user', entityId: user.id, newValue: { name: user.name, role: user.role } });
+  res.status(201).json({ id: user.id, name: user.name, role: user.role, is_active: true, has_pin: true });
 }));
 
 router.put('/cashiers/:id', asyncHandler(async (req, res) => {
@@ -306,7 +308,7 @@ router.delete('/terminals/:id', asyncHandler(async (req, res) => {
 router.put('/terminals/:id/members', asyncHandler(async (req, res) => {
   const t = await ownTerminal(req);
   const { user_ids: userIds } = z.object({ user_ids: z.array(z.string().uuid()).max(200) }).parse(req.body);
-  const valid = userIds.length ? await prisma.user.findMany({ where: { tenant_id: tenantOf(req), id: { in: userIds }, role: 'cashier' }, select: { id: true } }) : [];
+  const valid = userIds.length ? await prisma.user.findMany({ where: { tenant_id: tenantOf(req), id: { in: userIds }, role: { in: TEAM_ROLES } }, select: { id: true } }) : [];
   if (valid.length !== new Set(userIds).size) throw httpError(400, 'Perfil que não pertence a este estabelecimento', 'BAD_MEMBERS');
   await prisma.$transaction(async (tx) => {
     await tx.posTerminalMember.deleteMany({ where: { tenant_id: tenantOf(req), terminal_id: t.id } });

@@ -2206,3 +2206,13 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - SITE SEM "CARA DE IA": tirei os travessões (—) do texto do site e as etiquetas em forma de pílula. Revi as 16 regras do vídeo uma a uma (quadro no PDF).
 - SEGURANÇA: não instalei as "skills de hacker" do GitHub (explico no PDF porquê: podiam levar as senhas deste computador). Fiz eu a revisão: não há senhas no GitHub, as rotas têm limites de tentativas, e corrigi duas coisas: o site passa a mandar ao browser as regras de segurança (contra moldura falsa, HTTPS sempre) e actualizei as bibliotecas com falhas conhecidas que não partem nada.
 - Um erro meu apanhado pelos testes: a rota da 2.ª via recusava todos os PINs (escrevi mal uma regra). O teste do sistema apanhou-o antes de chegar ao site; corrigido e testado de novo.
+- SITE REAL: publiquei tudo isto em genesismz.com e repeti os testes no site verdadeiro: correcções de hoje 20 de 20, painel e terminal 41 de 41, Perfil/Fase 16 15 de 15 (o teste que faltava desde 27/10), administração 7 de 7. A Etapa A está fechada.
+
+
+==================== 30/10/2026 — Etapa B: o terminal do guarda ====================
+- O que é: um telemóvel ou tablet à porta da loja. O dono cria em "Equipa" um perfil com a função "Guarda" e um PIN (como um caixista). No terminal, o guarda entra com o PIN e, em vez do ecrã de vendas, vê um leitor de recibos.
+- Como funciona: o cliente mostra o recibo; o guarda lê o QR (com a câmara ou com a pistola/leitor) e vê o que foi comprado. Toca em "Marcar como conferido" e aparece a verde "Conferido. Pode sair."
+- A fraude que trava: se alguém mostrar o MESMO recibo outra vez (por exemplo um recibo reimpresso para levar a mercadoria duas vezes), o ecrã fica todo VERMELHO: "Recibo já conferido a 30/10 às 03:35 por Rui Guarda. Não deixe sair a mercadoria." E o dono vê isso no rastreio, em destaque.
+- O guarda não vende, não vê lucros nem custos, e não vê a lista de vendas. Um recibo de outra loja não aparece. Uma venda cancelada também fica a vermelho.
+- Um defeito que o teste apanhou e corrigi: no princípio, ler um recibo repetido mostrava o vermelho mas não avisava o dono. Agora avisa logo na leitura.
+- Testes neste computador: 22 de 22 no sistema, 8 de 8 no browser. Funcionou: sim. O site passou a explicar o guarda na parte dos recibos.

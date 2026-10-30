@@ -12,10 +12,11 @@ import { useI18n } from '../i18n/react';
 // onCode(code) devolve { ok, message } para o aviso no ecra.
 const REPEAT_MS = 1500;
 
-async function loadReader() {
+// qr: tambem le QR (Etapa B, terminal do guarda: o QR do recibo).
+async function loadReader(qr = false) {
   const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([import('@zxing/browser'), import('@zxing/library')]);
   const hints = new Map();
-  hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.CODE_128]);
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.CODE_128, ...(qr ? [BarcodeFormat.QR_CODE] : [])]);
   return new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 });
 }
 
@@ -27,7 +28,7 @@ function cameraError(err) {
   return tr('Não foi possível abrir a câmara.');
 }
 
-export default function BarcodeScanner({ open, onClose, onCode, continuous = false, title }) {
+export default function BarcodeScanner({ open, onClose, onCode, continuous = false, title, qr = false }) {
   const { t } = useI18n();
   const video = useRef(null);
   const controls = useRef(null);
@@ -44,7 +45,7 @@ export default function BarcodeScanner({ open, onClose, onCode, continuous = fal
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error('sem camara'), { name: 'NotFoundError' });
-        const reader = await loadReader();
+        const reader = await loadReader(qr);
         if (cancelled) return;
         controls.current = await reader.decodeFromConstraints({ audio: false, video: { facingMode: { ideal: 'environment' } } }, video.current, (result) => {
           if (!result || cancelled) return;

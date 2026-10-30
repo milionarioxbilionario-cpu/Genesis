@@ -2269,7 +2269,73 @@ async function test42() {
   ok(typeof info.auth_pin_v === 'string' && info.auth_pin_v.length > 0 && !JSON.stringify(info).includes(tenant.cancel_pin_hash), 'terminal recebe a versao do PIN do dono, nunca o PIN nem o hash', info.auth_pin_v);
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42 };
+async function test43() {
+  section(43, 'Etapa B: terminal do guarda (papel guard, recibo conferido uma vez, recibo repetido = 409 com quem e quando, so a sua loja, RLS)');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  const caixa = client(signAccessToken(ctx.cashier, { scope: 'pos' }));
+  await unlockCashier().catch(() => {});
+  // O dono cria um guarda (mesma lista da equipa, funcao «guard»).
+  const cg = await owner.req('POST', '/api/owner/cashiers', { name: 'Guarda Rui', pin: '1357', role: 'guard' });
+  ok(cg.status === 201 && cg.data.role === 'guard', 'dono cria um guarda com PIN', cg);
+  const guardUser = await prisma.user.findUnique({ where: { id: cg.data.id } });
+  try {
+    ok((await owner.req('POST', '/api/owner/cashiers', { name: 'Chefe', pin: '1111', role: 'owner' })).status === 400, 'funcao invalida (owner): 400');
+    const list = (await owner.req('GET', '/api/owner/cashiers')).data;
+    ok(list.some((c) => c.id === guardUser.id && c.role === 'guard'), 'equipa mostra o guarda com a funcao');
+    // Terminal: o guarda aparece nos perfis e entra com o PIN; sessao de ambito «guard».
+    const term = await pairedTerminal('Saida A43');
+    const prof = (await term.req('GET', '/api/pos/terminal')).data;
+    ok(prof.cashiers.some((c) => c.id === guardUser.id && c.role === 'guard'), 'terminal mostra o perfil do guarda');
+    const login = await term.req('POST', '/api/pos/login', { cashier_id: guardUser.id, pin: '1357' });
+    ok(login.status === 200 && login.data.cashier.role === 'guard', 'guarda entra com o PIN', login);
+    const guard = client(signAccessToken(guardUser, { scope: 'guard', tid: prof.terminal.id }));
+    // O guarda nao vende, nao ve produtos com precos de custo nem a lista de vendas.
+    ok((await guard.req('POST', '/api/sales', saleBody())).status === 403, 'guarda nao vende (403)');
+    ok((await guard.req('POST', '/api/pos/sales', { pin: PIN })).status === 403, 'guarda nao abre a lista de vendas (403)');
+    ok((await guard.req('GET', '/api/owner/audit')).status === 403, 'guarda nao chega ao painel do dono (403)');
+    // Um caixista nao chega as rotas do guarda.
+    ok((await caixa.req('GET', '/api/guard/receipt?code=' + crypto.randomUUID())).status === 403, 'caixista nao usa o leitor do guarda (403)');
+    // Venda real e leitura pelo QR (endereco /verify/<id>).
+    await prisma.product.update({ where: { id: ctx.product.id }, data: { stock_qty: 50 } });
+    const sale = await caixa.req('POST', '/api/sales', saleBody());
+    ok(sale.status === 201, 'caixista vende', sale);
+    const qr = 'https://genesismz.com/verify/' + sale.data.id;
+    const r1 = await guard.req('GET', '/api/guard/receipt?code=' + encodeURIComponent(qr));
+    ok(r1.status === 200 && r1.data.sale.id === sale.data.id && r1.data.check === null && r1.data.sale.items[0].name === ctx.product.name, 'QR lido: mostra a venda, ainda nao conferida', r1.data);
+    ok(r1.data.sale.total_cost === undefined && !JSON.stringify(r1.data).includes('unit_cost'), 'o guarda nao ve custos');
+    const c1 = await guard.req('POST', '/api/guard/receipt/' + sale.data.id + '/check');
+    ok(c1.status === 201 && c1.data.check.guard_name === 'Guarda Rui', 'marcar como conferido: 201', c1);
+    const c2 = await guard.req('POST', '/api/guard/receipt/' + sale.data.id + '/check');
+    ok(c2.status === 409 && c2.data.code === 'ALREADY_CHECKED' && c2.data.check.guard_name === 'Guarda Rui' && c2.data.check.checked_at, 'recibo lido outra vez: 409 «ja conferido» com quem e quando', c2);
+    // Pelo codigo de barras (AAAAMMDD + numero do dia).
+    const day = new Date(Date.now() + 2 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+    const bc = day + String(sale.data.daily_number).padStart(4, '0');
+    const r2 = await guard.req('GET', '/api/guard/receipt?code=' + bc);
+    ok(r2.status === 200 && r2.data.sale.id === sale.data.id && r2.data.check, 'codigo de barras lido: mesma venda, ja conferida', r2.data);
+    ok((await guard.req('GET', '/api/guard/receipt?code=abc')).status === 400, 'texto que nao e recibo: 400');
+    // Venda de OUTRA loja: nao existe para este guarda.
+    const otherSale = await prisma.sale.findFirst({ where: { tenant_id: { not: t } }, select: { id: true } });
+    if (otherSale) {
+      ok((await guard.req('GET', '/api/guard/receipt?code=' + otherSale.id)).status === 404, 'recibo de outro estabelecimento: 404');
+      ok((await guard.req('POST', '/api/guard/receipt/' + otherSale.id + '/check')).status === 404, 'conferir recibo de outro estabelecimento: 404');
+    }
+    // Venda cancelada nao sai.
+    const s2 = await caixa.req('POST', '/api/sales', saleBody());
+    await owner.req('POST', '/api/sales/' + s2.data.id + '/cancel', { pin: PIN, reason: 'teste 43' });
+    ok((await guard.req('POST', '/api/guard/receipt/' + s2.data.id + '/check')).data?.code === 'SALE_CANCELLED', 'venda cancelada: 409 SALE_CANCELLED');
+    // Auditoria do dono e RLS.
+    const logs = await prisma.auditLog.findMany({ where: { tenant_id: t, entity_id: sale.data.id, action: { in: ['RECEIPT_CHECKED', 'RECEIPT_RECHECK_ATTEMPT'] } } });
+    ok(logs.filter((l) => l.action === 'RECEIPT_CHECKED').length === 1 && logs.filter((l) => l.action === 'RECEIPT_RECHECK_ATTEMPT').length === 2, 'auditoria: 1 conferido + 2 apresentacoes repetidas (marcar outra vez e ler o codigo de barras)', logs.map((l) => l.action));
+    const otherTenant = await prisma.tenant.findFirst({ where: { id: { not: t } }, select: { id: true } });
+    if (otherTenant) ok((await prisma.runWithTenant(otherTenant.id, () => prisma.receiptCheck.count({ where: { sale_id: sale.data.id } }))) === 0, 'RLS: outra loja nao ve a conferencia');
+    ok((await prisma.runWithTenant(t, () => prisma.receiptCheck.count({ where: { sale_id: sale.data.id } }))) === 1, 'RLS: a propria loja ve a sua conferencia');
+  } finally {
+    await prisma.receiptCheck.deleteMany({ where: { tenant_id: t } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43 };
 
 (async () => {
   await prisma.ready();

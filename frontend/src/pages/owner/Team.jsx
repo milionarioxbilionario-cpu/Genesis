@@ -4,7 +4,7 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, date, isoDay, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
-import { Alert, Badge, Button, Dialog, Drawer, Input, MoneyInput, PageHeader, Table, Tabs, Toolbar, useConfirm, useToast } from '../../components/ui';
+import { Alert, Badge, Button, Dialog, Drawer, Input, MoneyInput, PageHeader, Select, Table, Tabs, Toolbar, useConfirm, useToast } from '../../components/ui';
 
 export default function Team() {
   const { t } = useI18n();
@@ -34,7 +34,7 @@ function Cashiers() {
   async function create() {
     setBusy(true); setError('');
     try {
-      await api.post('/api/owner/cashiers', { name: creating.name.trim(), phone: creating.phone.trim() || null, pin: creating.pin });
+      await api.post('/api/owner/cashiers', { name: creating.name.trim(), phone: creating.phone.trim() || null, pin: creating.pin, role: creating.role });
       toast(t('{name} pode entrar no terminal com o PIN.', { name: creating.name.trim() }));
       setCreating(null); cashiers.reload();
     } catch (err) { setError(errorMessage(err)); } finally { setBusy(false); }
@@ -63,15 +63,16 @@ function Cashiers() {
   return (
     <>
       <Toolbar>
-        <p className="text-sm text-ink-muted">{t('Cada caixista entra no terminal da loja com um PIN pessoal de 4 dígitos.')}</p>
-        <Button className="ml-auto" variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ name: '', phone: '', pin: '' }); }}>{t('Novo caixista')}</Button>
+        <p className="text-sm text-ink-muted">{t('Cada pessoa entra no terminal com um PIN pessoal de 4 dígitos. O caixista vende; o guarda confere os recibos à saída.')}</p>
+        <Button className="ml-auto" variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ name: '', phone: '', pin: '', role: 'cashier' }); }}>{t('Novo perfil')}</Button>
       </Toolbar>
       <Table
         columns={[
           { key: 'name', header: t('Nome'), render: (c) => <span className={c.is_active ? 'text-ink' : 'text-ink-faint'}>{c.name}</span> },
+          { key: 'role', header: t('Função'), render: (c) => <Badge tone={c.role === 'guard' ? 'info' : 'neutral'}>{c.role === 'guard' ? t('Guarda') : t('Caixista')}</Badge> },
           { key: 'state', header: t('Estado'), render: (c) => (!c.is_active ? <Badge>{t('Inactivo')}</Badge> : c.locked ? <Badge tone="danger">{t('Bloqueado no fecho')}</Badge> : !c.has_pin ? <Badge tone="warning">{t('Sem PIN')}</Badge> : <Badge tone="positive">{t('Activo')}</Badge>) },
-          { key: 'sales', header: t('Vendas hoje'), align: 'right', render: (c) => c.today_sales },
-          { key: 'revenue', header: t('Receita hoje'), align: 'right', render: (c) => money(c.today_revenue) },
+          { key: 'sales', header: t('Vendas hoje'), align: 'right', render: (c) => (c.role === 'guard' ? '—' : c.today_sales) },
+          { key: 'revenue', header: t('Receita hoje'), align: 'right', render: (c) => (c.role === 'guard' ? '—' : money(c.today_revenue)) },
           { key: 'actions', header: '', align: 'right', render: (c) => (
             <div className="flex justify-end gap-1">
               {c.locked && c.is_active && <Button size="sm" variant="primary" onClick={() => unlock(c)}>{t('Desbloquear')}</Button>}
@@ -85,14 +86,18 @@ function Cashiers() {
         empty={<p className="py-10 text-center text-ink-muted">{t('Ainda não há caixistas.')}</p>}
       />
 
-      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={t('Novo caixista')}
+      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={t('Novo perfil')}
         footer={<><Button onClick={() => setCreating(null)}>{t('Cancelar')}</Button><Button variant="primary" loading={busy} disabled={!creating || creating.name.trim().length < 2 || !pinOk(creating.pin)} onClick={create}>{t('Criar')}</Button></>}>
         {creating && (
           <div className="flex flex-col gap-4">
             {error && <Alert tone="danger">{error}</Alert>}
             <Input label={t('Nome')} value={creating.name} onChange={(e) => setCreating({ ...creating, name: e.target.value })} autoFocus />
+            <Select label={t('Função')} value={creating.role} onChange={(e) => setCreating({ ...creating, role: e.target.value })}>
+              <option value="cashier">{t('Caixista: vende no balcão')}</option>
+              <option value="guard">{t('Guarda: confere os recibos à saída')}</option>
+            </Select>
             <Input label={t('Telefone')} hint={t('Opcional')} inputMode="tel" value={creating.phone} onChange={(e) => setCreating({ ...creating, phone: e.target.value })} />
-            <Input label={t('PIN de 4 dígitos')} hint={t('Entregue-o ao caixista em privado.')} type="password" inputMode="numeric" maxLength={4} value={creating.pin} onChange={(e) => setCreating({ ...creating, pin: e.target.value.replace(/\D/g, '') })} inputClassName="num tracking-[0.4em]" />
+            <Input label={t('PIN de 4 dígitos')} hint={t('Entregue-o à pessoa em privado.')} type="password" inputMode="numeric" maxLength={4} value={creating.pin} onChange={(e) => setCreating({ ...creating, pin: e.target.value.replace(/\D/g, '') })} inputClassName="num tracking-[0.4em]" />
           </div>
         )}
       </Drawer>

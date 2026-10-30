@@ -7,7 +7,7 @@ import { t } from '../i18n/core.js';
 
 export const ACTION_LABEL = {
   CREATE_SALE: 'Venda', CANCEL_SALE: 'Venda cancelada', CANCEL_ATTEMPT: 'PIN errado ao cancelar venda', DISCOUNT_AUTHORIZED: 'Desconto autorizado',
-  DISCOUNT_PIN_FAIL: 'PIN errado em desconto', SALES_VIEWED: 'Vendas do dia vistas no terminal', RECEIPT_REPRINTED: '2.ª via de recibo impressa',
+  DISCOUNT_PIN_FAIL: 'PIN errado em desconto', SALES_VIEWED: 'Vendas do dia vistas no terminal', RECEIPT_REPRINTED: '2.ª via de recibo impressa', RECEIPT_CHECKED: 'Recibo conferido à saída', RECEIPT_RECHECK_ATTEMPT: 'Recibo já conferido apresentado outra vez',
   STOCK_ENTRY: 'Entrada de stock', STOCK_ADJUSTMENT: 'Ajuste de stock', LOT_EXPIRY_CHANGED: 'Validade de lote alterada', CREATE_SHRINKAGE: 'Quebra registada',
   AUTO_EXPIRY_LOSS: 'Lote vencido (perda automática)', IMPORT_CATALOG: 'Catálogo inicial importado', CREATE_DEMAND_CAPTURE: 'Venda perdida (produto em falta)',
   CREATE_PRODUCT: 'Produto criado', UPDATE_PRODUCT: 'Produto alterado', DELETE_PRODUCT: 'Produto removido',
@@ -32,7 +32,7 @@ export const ACTION_LABEL = {
 export const actionLabel = (a) => (ACTION_LABEL[a] ? t(ACTION_LABEL[a]) : a);
 
 // Accoes que merecem atencao (PIN errado, bloqueio...).
-export const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'CANCEL_SALE', 'REPORT_SEND_FAILED', 'PANEL_UNLOCK_FAIL', 'PANEL_LOCK_SIGNED_OUT']);
+export const ALERT_ACTIONS = new Set(['CANCEL_ATTEMPT', 'DISCOUNT_PIN_FAIL', 'POS_PIN_FAIL', 'SHIFT_ATTEMPT_FAIL', 'CASHIER_LOCKED', 'AUTH_PIN_CHANGE_FAIL', 'SHIFT_OPEN_PIN_FAIL', 'SALES_VIEW_PIN_FAIL', 'CANCEL_SALE', 'REPORT_SEND_FAILED', 'PANEL_UNLOCK_FAIL', 'PANEL_LOCK_SIGNED_OUT', 'RECEIPT_RECHECK_ATTEMPT']);
 
 // Campos guardados em centavos -> mostrados em MT.
 const MONEY = new Set(['cost_price', 'sell_price', 'unit_cost', 'unit_price', 'total_amount', 'amount', 'counted_amount', 'expected_amount', 'difference', 'discount_amount', 'monthly_salary', 'delivery_cost_per_visit', 'target_amount', 'value', 'total', 'amount_paid', 'subtotal', 'total_cost', 'free_limit', 'vat_amount', 'change_amount', 'amount_received']);
@@ -52,7 +52,7 @@ export const FIELD_LABEL = {
   daily_report_time: 'Hora do relatório diário', weekly_report_day: 'Dia do relatório semanal', weekly_report_time: 'Hora do relatório semanal', monthly_report_time: 'Hora do relatório mensal',
   audit_retention_months: 'Meses guardados', status: 'Estado', debtor_name: 'Cliente', due_date: 'Data limite', monthly_salary: 'Salário', cancel_reason: 'Motivo',
   subtotal: 'Subtotal', total_cost: 'Custo da mercadoria', item_count: 'Nº de artigos', free_limit: 'Desconto livre', vat_amount: 'IVA incluído',
-  client_created_at: 'Hora no dispositivo', discount_amount: 'Desconto', daily_number: 'Venda n.º', offline_at: 'Feita sem ligação a', change_amount: 'Troco', amount_received: 'Valor recebido', cashier_user_id: 'Caixista', seller_user_id: 'Caixista',
+  client_created_at: 'Hora no dispositivo', first_checked_at: 'Conferido pela 1.ª vez', discount_amount: 'Desconto', daily_number: 'Venda n.º', offline_at: 'Feita sem ligação a', change_amount: 'Troco', amount_received: 'Valor recebido', cashier_user_id: 'Caixista', seller_user_id: 'Caixista',
 };
 export const fieldLabel = (k) => (FIELD_LABEL[k] ? t(FIELD_LABEL[k]) : k.replace(/_/g, ' '));
 

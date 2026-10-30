@@ -1760,6 +1760,18 @@
       "summary": "Pedido de conta; exige 18+ e Termos.",
       "role": "Registo.",
       "notes": "30/10/2026: unitarios 116+76, verify_system 2/6/10/11/40/41 154/154 + 42 15/15, correcoes_3010.mjs 20/20, site.mjs 55/55, pedir_conta 9/9 (local, Supabase)."
+    },
+    "backend/src/routes/guard.js": {
+      "status": "ok",
+      "summary": "Terminal do guarda: ler o recibo e marcar conferido uma vez; repetido = vermelho e rastreio.",
+      "role": "Antifraude a saida.",
+      "notes": "30/10/2026 Etapa B: verify_system 43 22/22, guarda.mjs 8/8, guard.test.js 3/3."
+    },
+    "frontend/src/pages/pos/GuardScreen.jsx": {
+      "status": "ok",
+      "summary": "Ecra do guarda: leitor USB/camara, verde Pode sair, vermelho Ja conferido.",
+      "role": "Antifraude a saida.",
+      "notes": "30/10/2026 Etapa B: verify_system 43 22/22, guarda.mjs 8/8, guard.test.js 3/3."
     }
   }
 }

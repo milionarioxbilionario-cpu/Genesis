@@ -1091,4 +1091,14 @@ addTranslations('en', {
   'Fecho recusado: tentativa {n}/3': 'Close refused: attempt {n}/3',
   'Perfil bloqueado no fecho': 'Profile locked at close',
   'escreveu {a}, esperado {b}': 'entered {a}, expected {b}',
+  // Etapa B: terminal do guarda
+  'Recibo conferido à saída': 'Receipt checked at the exit',
+  'Recibo já conferido apresentado outra vez': 'Already-checked receipt shown again',
+  'Conferido pela 1.ª vez': 'First checked',
+  'Cada pessoa entra no terminal com um PIN pessoal de 4 dígitos. O caixista vende; o guarda confere os recibos à saída.': 'Each person signs in on the terminal with a personal 4-digit PIN. The cashier sells; the guard checks receipts at the exit.',
+  'Novo perfil': 'New profile',
+  'Guarda': 'Guard',
+  'Caixista: vende no balcão': 'Cashier: sells at the counter',
+  'Guarda: confere os recibos à saída': 'Guard: checks receipts at the exit',
+  'Entregue-o à pessoa em privado.': 'Give it to the person in private.',
 });

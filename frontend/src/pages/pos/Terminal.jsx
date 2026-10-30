@@ -10,6 +10,7 @@ import { setLang, storedLang } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
 import '../../i18n/en/pos';
 import PosScreen from './PosScreen';
+import GuardScreen from './GuardScreen';
 
 // TERMINAL DE VENDAS (Genesis 2.0)
 //   nao emparelhado -> codigo de 6 digitos dado pelo dono
@@ -87,6 +88,10 @@ export default function Terminal() {
     );
   }
   if (state.status === 'pair') return <PairScreen onPaired={load} />;
+  if (state.status === 'selling' && state.cashier.role === 'guard') {
+    // Etapa B: o guarda confere recibos (sem vendas, sem fila offline).
+    return <GuardScreen info={state.info} guard={state.cashier} onLock={async () => { await api.post('/api/pos/lock').catch(() => {}); load(); }} />;
+  }
   if (state.status === 'selling') {
     return (
       <PosScreen
@@ -232,7 +237,7 @@ function ProfilesScreen({ info, notice, offline, savedAt, onLoggedIn }) {
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-subtle text-md font-semibold text-ink-2">{(c.name || '?').slice(0, 1).toUpperCase()}</span>
                     <span className="mt-3 font-medium text-ink">{c.name}</span>
                     <span className={cx('mt-0.5 text-xs', c.locked ? 'text-danger' : c.shift_open === false ? 'text-warning' : 'text-ink-muted')}>
-                      {!c.has_pin ? t('Sem PIN definido') : c.locked ? t('Bloqueado no fecho') : c.shift_open === false ? t('Fechado hoje') : t('Turno aberto')}
+                      {c.role === 'guard' ? t('Guarda: confere os recibos') : !c.has_pin ? t('Sem PIN definido') : c.locked ? t('Bloqueado no fecho') : c.shift_open === false ? t('Fechado hoje') : t('Turno aberto')}
                     </span>
                   </button>
                 ))}

@@ -1,28 +1,28 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-30T00:35:54.039Z */
+   Gerado em: 2026-10-30T01:36:52.948Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-30T00:35:54.039Z",
+ "generatedAt": "2026-10-30T01:36:52.948Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
-  "files": 374,
+  "files": 378,
   "planned": 5,
-  "links": 679,
-  "lines": 53157,
+  "links": 682,
+  "lines": 53691,
   "byStatus": {
-   "ok": 222,
+   "ok": 224,
    "partial": 8,
    "broken": 0,
    "planned": 5,
-   "untracked": 144
+   "untracked": 146
   },
   "byGroup": {
-   "infra": 50,
+   "infra": 52,
    "docs": 11,
    "admin": 13,
-   "backend-data": 86,
+   "backend-data": 88,
    "backend": 74,
    "frontend-pub": 8,
    "frontend": 133,
@@ -44,11 +44,11 @@ window.GENESIS_MINDMAP = {
   },
   {
    "pkg": "node:test",
-   "count": 33
+   "count": 34
   },
   {
    "pkg": "node:assert",
-   "count": 33
+   "count": 34
   },
   {
    "pkg": "lucide-react",
@@ -132,12 +132,12 @@ window.GENESIS_MINDMAP = {
    "id": "infra",
    "label": "Infra / Raiz",
    "tone": "#94a3b8",
-   "nodes": 50,
+   "nodes": 52,
    "clusters": {
     ".": 8,
     "Para o Claude": 3,
-    "Para o Claude/memoria": 9,
-    "Para o Claude/planos": 5,
+    "Para o Claude/memoria": 10,
+    "Para o Claude/planos": 6,
     "Para o Claude/skills/genesis-guia-tecnico": 1,
     "Para o Claude/skills/genesis-historico-auditoria": 1,
     "Para o Claude/skills/genesis-spec": 1,
@@ -174,7 +174,7 @@ window.GENESIS_MINDMAP = {
    "id": "backend-data",
    "label": "Backend - Dados e Testes",
    "tone": "#8f0a11",
-   "nodes": 86,
+   "nodes": 88,
    "clusters": {
     "backend/data": 1,
     "backend/prisma": 5,
@@ -203,8 +203,9 @@ window.GENESIS_MINDMAP = {
     "backend/prisma/migrations/20261028_etapa_a": 1,
     "backend/prisma/migrations/20261028_lista_espera": 1,
     "backend/prisma/migrations/20261030_precos_termos": 1,
+    "backend/prisma/migrations/20261030_terminal_guarda": 1,
     "backend/scripts": 32,
-    "backend/tests": 22,
+    "backend/tests": 23,
     "backend/prisma/migrations/postgres/0001_init": 1
    }
   },
@@ -328,8 +329,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1307,
-   "size": 295068,
+   "lines": 1316,
+   "size": 298305,
    "externals": [
     "@prisma/client"
    ],
@@ -372,8 +373,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1766,
-   "size": 104219,
+   "lines": 1778,
+   "size": 104836,
    "externals": [
     "nodemailer"
    ],
@@ -396,7 +397,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 127,
-   "size": 19052,
+   "size": 19065,
    "externals": [
     "@prisma/client"
    ],
@@ -439,8 +440,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 9,
-   "size": 1195,
+   "lines": 10,
+   "size": 1390,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -460,8 +461,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 20,
-   "size": 1487,
+   "lines": 27,
+   "size": 2407,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -483,6 +484,27 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 16,
    "size": 705,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/memoria/foco-pos-puro.md",
+   "path": "Para o Claude/memoria/foco-pos-puro.md",
+   "label": "foco-pos-puro.md",
+   "group": "infra",
+   "dir": "Para o Claude/memoria",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 20,
+   "size": 1820,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -586,8 +608,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 23,
-   "size": 1811,
+   "lines": 25,
+   "size": 2412,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -651,6 +673,27 @@ window.GENESIS_MINDMAP = {
    "planned": false,
    "lines": 289,
    "size": 21945,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
+   "id": "Para o Claude/planos/kind-sleeping-squid.md",
+   "path": "Para o Claude/planos/kind-sleeping-squid.md",
+   "label": "kind-sleeping-squid.md",
+   "group": "infra",
+   "dir": "Para o Claude/planos",
+   "ext": ".md",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 291,
+   "size": 18240,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1792,6 +1835,27 @@ window.GENESIS_MINDMAP = {
    "outbound": 0
   },
   {
+   "id": "backend/prisma/migrations/20261030_terminal_guarda/migration.sql",
+   "path": "backend/prisma/migrations/20261030_terminal_guarda/migration.sql",
+   "label": "migration.sql",
+   "group": "backend-data",
+   "dir": "backend/prisma/migrations/20261030_terminal_guarda",
+   "ext": ".sql",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 21,
+   "size": 1125,
+   "externals": [],
+   "dependsOn": [],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 0
+  },
+  {
    "id": "backend/prisma/rls_v2.sql",
    "path": "backend/prisma/rls_v2.sql",
    "label": "rls_v2.sql",
@@ -1805,7 +1869,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 96,
-   "size": 5470,
+   "size": 5485,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -1825,8 +1889,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 542,
-   "size": 19571,
+   "lines": 555,
+   "size": 19961,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -1848,8 +1912,8 @@ window.GENESIS_MINDMAP = {
    "role": "Modelo de dados.",
    "security": "",
    "planned": false,
-   "lines": 559,
-   "size": 20453,
+   "lines": 572,
+   "size": 20843,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -2652,8 +2716,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 2290,
-   "size": 204302,
+   "lines": 2356,
+   "size": 210250,
    "externals": [
     "dotenv",
     "crypto",
@@ -2696,8 +2760,8 @@ window.GENESIS_MINDMAP = {
    "role": "Ponto de entrada do backend.",
    "security": "CORRIGIDO 28/09: o handler global de erros ja nao devolve `details` ao cliente (enviava nomes de tabelas/colunas e o host da BD a qualquer pessoa) e respeita headersSent para nao tentar escrever um segundo 500. Passa a logar `[erro] <METODO> <rota>` com a stack completa no servidor.",
    "planned": false,
-   "lines": 296,
-   "size": 11750,
+   "lines": 299,
+   "size": 11892,
    "externals": [
     "dotenv",
     "express",
@@ -2729,6 +2793,7 @@ window.GENESIS_MINDMAP = {
     "backend/src/routes/profile.js",
     "backend/src/middleware/posWriteAuth.js",
     "backend/src/routes/verify.js",
+    "backend/src/routes/guard.js",
     "backend/src/utils/http.js",
     "backend/src/routes/waitlist.js",
     "backend/src/services/expiryJob.js",
@@ -2737,7 +2802,7 @@ window.GENESIS_MINDMAP = {
    ],
    "usedBy": [],
    "inbound": 0,
-   "outbound": 27
+   "outbound": 28
   },
   {
    "id": "backend/src/middleware/adminOriginCheck.js",
@@ -3083,14 +3148,14 @@ window.GENESIS_MINDMAP = {
    "group": "backend",
    "dir": "backend/src/routes",
    "ext": ".js",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Terminal do guarda: ler o recibo e marcar conferido uma vez; repetido = vermelho e rastreio.",
+   "notes": "30/10/2026 Etapa B: verify_system 43 22/22, guarda.mjs 8/8, guard.test.js 3/3.",
+   "role": "Antifraude a saida.",
    "security": "",
    "planned": false,
-   "lines": 102,
-   "size": 5835,
+   "lines": 106,
+   "size": 6269,
    "externals": [
     "express",
     "zod"
@@ -3103,8 +3168,11 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/audit.js",
     "backend/src/utils/units.js"
    ],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "backend/src/index.js",
+    "backend/tests/guard.test.js"
+   ],
+   "inbound": 2,
    "outbound": 6
   },
   {
@@ -3151,8 +3219,8 @@ window.GENESIS_MINDMAP = {
    "role": "Dono.",
    "security": "",
    "planned": false,
-   "lines": 605,
-   "size": 34830,
+   "lines": 607,
+   "size": 35079,
    "externals": [
     "express",
     "crypto",
@@ -3235,8 +3303,8 @@ window.GENESIS_MINDMAP = {
    "role": "Terminal POS.",
    "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
    "planned": false,
-   "lines": 181,
-   "size": 12587,
+   "lines": 182,
+   "size": 12809,
    "externals": [
     "express",
     "bcrypt",
@@ -4069,7 +4137,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 70,
-   "size": 4568,
+   "size": 4614,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/fefo.js"
@@ -4614,8 +4682,8 @@ window.GENESIS_MINDMAP = {
    "role": "Seguranca.",
    "security": "",
    "planned": false,
-   "lines": 44,
-   "size": 2035,
+   "lines": 51,
+   "size": 2312,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -5053,6 +5121,32 @@ window.GENESIS_MINDMAP = {
    ],
    "dependsOn": [
     "backend/src/utils/fefo.js"
+   ],
+   "usedBy": [],
+   "inbound": 0,
+   "outbound": 1
+  },
+  {
+   "id": "backend/tests/guard.test.js",
+   "path": "backend/tests/guard.test.js",
+   "label": "guard.test.js",
+   "group": "backend-data",
+   "dir": "backend/tests",
+   "ext": ".js",
+   "status": "untracked",
+   "summary": "",
+   "notes": "",
+   "role": "",
+   "security": "",
+   "planned": false,
+   "lines": 24,
+   "size": 969,
+   "externals": [
+    "node:test",
+    "node:assert"
+   ],
+   "dependsOn": [
+    "backend/src/routes/guard.js"
    ],
    "usedBy": [],
    "inbound": 0,
@@ -5762,7 +5856,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 457,
-   "size": 88651,
+   "size": 89500,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -5846,7 +5940,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 457,
-   "size": 88658,
+   "size": 89506,
    "externals": [],
    "dependsOn": [],
    "usedBy": [],
@@ -6322,7 +6416,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 241,
-   "size": 18238,
+   "size": 18511,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -6346,7 +6440,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 247,
-   "size": 18838,
+   "size": 19110,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -6418,8 +6512,8 @@ window.GENESIS_MINDMAP = {
    "role": "Camara.",
    "security": "",
    "planned": false,
-   "lines": 86,
-   "size": 4834,
+   "lines": 87,
+   "size": 4965,
    "externals": [
     "react",
     "@zxing/browser",
@@ -7205,8 +7299,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 1095,
-   "size": 68273,
+   "lines": 1105,
+   "size": 69028,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -7228,8 +7322,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 218,
-   "size": 15624,
+   "lines": 234,
+   "size": 16463,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -8085,8 +8179,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 167,
-   "size": 11087,
+   "lines": 172,
+   "size": 11741,
    "externals": [
     "react",
     "lucide-react"
@@ -8142,14 +8236,14 @@ window.GENESIS_MINDMAP = {
    "group": "frontend",
    "dir": "frontend/src/pages/pos",
    "ext": ".jsx",
-   "status": "untracked",
-   "summary": "",
-   "notes": "",
-   "role": "",
+   "status": "ok",
+   "summary": "Ecra do guarda: leitor USB/camara, verde Pode sair, vermelho Ja conferido.",
+   "notes": "30/10/2026 Etapa B: verify_system 43 22/22, guarda.mjs 8/8, guard.test.js 3/3.",
+   "role": "Antifraude a saida.",
    "security": "",
    "planned": false,
    "lines": 134,
-   "size": 7535,
+   "size": 7582,
    "externals": [
     "react",
     "lucide-react"
@@ -8162,8 +8256,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js"
    ],
-   "usedBy": [],
-   "inbound": 0,
+   "usedBy": [
+    "frontend/src/pages/pos/Terminal.jsx"
+   ],
+   "inbound": 1,
    "outbound": 6
   },
   {
@@ -8261,8 +8357,8 @@ window.GENESIS_MINDMAP = {
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 256,
-   "size": 13161,
+   "lines": 261,
+   "size": 13554,
    "externals": [
     "react",
     "react-router-dom",
@@ -8276,13 +8372,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/ui/index.js",
     "frontend/src/i18n/core.js",
     "frontend/src/i18n/react.jsx",
-    "frontend/src/pages/pos/PosScreen.jsx"
+    "frontend/src/pages/pos/PosScreen.jsx",
+    "frontend/src/pages/pos/GuardScreen.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 8
+   "outbound": 9
   },
   {
    "id": "frontend/src/registerSW.js",
@@ -8431,7 +8528,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 88,
-   "size": 8809,
+   "size": 8999,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js",
@@ -9378,7 +9475,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 295,
-   "size": 16881,
+   "size": 16866,
    "externals": [
     "node:fs",
     "node:path",
@@ -9703,8 +9800,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 124,
-   "size": 6967,
+   "lines": 125,
+   "size": 7062,
    "externals": [
     "node:fs",
     "node:path",
@@ -10897,6 +10994,10 @@ window.GENESIS_MINDMAP = {
   },
   {
    "source": "backend/src/index.js",
+   "target": "backend/src/routes/guard.js"
+  },
+  {
+   "source": "backend/src/index.js",
    "target": "backend/src/utils/http.js"
   },
   {
@@ -11802,6 +11903,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/tests/fefo.test.js",
    "target": "backend/src/utils/fefo.js"
+  },
+  {
+   "source": "backend/tests/guard.test.js",
+   "target": "backend/src/routes/guard.js"
   },
   {
    "source": "backend/tests/http.test.js",
@@ -13022,6 +13127,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/pos/Terminal.jsx",
    "target": "frontend/src/pages/pos/PosScreen.jsx"
+  },
+  {
+   "source": "frontend/src/pages/pos/Terminal.jsx",
+   "target": "frontend/src/pages/pos/GuardScreen.jsx"
   },
   {
    "source": "frontend/src/utils/api.js",
