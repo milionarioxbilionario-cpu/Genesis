@@ -350,4 +350,9 @@ addTranslations('en', {
   'A subscrição está em atraso. Pode consultar tudo; para vender e alterar, renove com a Genesis.': 'The subscription is overdue. You can view everything; to sell and make changes, renew with Genesis.',
   'A venda personalizada está desligada neste estabelecimento.': 'Custom sales are turned off in this business.',
   'Escreva o preço do pedido personalizado.': 'Enter the price of the custom order.',
+  // Etapa D: varios estabelecimentos
+  'Sem acesso a este estabelecimento. Entre de novo.': 'No access to this business. Please sign in again.',
+  'Este estabelecimento não é seu.': 'This business is not yours.',
+  'Este estabelecimento está bloqueado.': 'This business is blocked.',
+  'Não disponível nesta sessão.': 'Not available in this session.',
 });

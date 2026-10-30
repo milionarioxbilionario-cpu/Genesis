@@ -24,6 +24,8 @@ const { checkPanelLock } = require('../utils/panelLock');
 // Fase 16: senha, e-mail e aniversario (perfil) continuam com o teste terminado — sao a conta, nao vendas.
 const TRIAL_EXEMPT = /^\/api\/(auth\/language|profile(\/[\w/-]*)?)\/?$/;
 
+const { resolveActingTenant } = require('../utils/actingTenant');
+
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   let token = null;
@@ -43,9 +45,14 @@ const authMiddleware = async (req, res, next) => {
     const check = await validateSessionClaims(decoded);
     if (!check.ok) return res.status(check.status).json({ error: check.error, code: check.code });
 
+    // Etapa D: estabelecimento activo (o de casa ou outro do mesmo dono, validado).
+    const acting = await resolveActingTenant(check.user, decoded);
+    if (decoded.act && !acting) return res.status(403).json({ error: 'Sem acesso a este estabelecimento. Entre de novo.', code: 'ESTABLISHMENT_FORBIDDEN' });
+
     req.user = {
       userId: check.user.id,
-      tenantId: check.user.tenant_id || null,
+      tenantId: acting,
+      homeTenantId: check.user.tenant_id || null,
       // Papel e nome vem da BD, nao do token: uma alteracao conta logo.
       role: check.user.role,
       name: check.user.name,

@@ -1802,6 +1802,30 @@
       "summary": "Mapa ao vivo do admin (Mapbox 3D).",
       "role": "Etapa C.",
       "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+    },
+    "backend/src/utils/actingTenant.js": {
+      "status": "ok",
+      "summary": "Estabelecimento activo do dono, validado em cada pedido.",
+      "role": "Etapa D.",
+      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
+    },
+    "backend/src/routes/establishments.js": {
+      "status": "ok",
+      "summary": "Estabelecimentos do dono: lista, acrescentar, trocar, painel geral.",
+      "role": "Etapa D.",
+      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
+    },
+    "frontend/src/components/EstablishmentSwitcher.jsx": {
+      "status": "ok",
+      "summary": "Trocar de estabelecimento / acrescentar.",
+      "role": "Etapa D.",
+      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
+    },
+    "frontend/src/pages/owner/GroupPanel.jsx": {
+      "status": "ok",
+      "summary": "Painel geral de todos os estabelecimentos.",
+      "role": "Etapa D.",
+      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
     }
   }
 }

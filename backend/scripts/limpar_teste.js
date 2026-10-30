@@ -22,6 +22,7 @@ const prisma = require('../src/utils/prisma');
   for (const model of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminalMember', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
     await prisma[model].deleteMany({ where: { tenant_id: t } });
   }
+  await prisma.membership.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }] } }); // Etapa D
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
   await prisma.product.deleteMany({ where: { tenant_id: t } });
   await prisma.user.deleteMany({ where: { id: { in: userIds } } });

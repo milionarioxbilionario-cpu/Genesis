@@ -17,7 +17,7 @@ const SessionCtx = createContext(null);
 const ME_KEY = 'owner:me';
 export const API_CACHE = 'genesis-api';
 
-async function forgetOwnerData() {
+export async function forgetOwnerData() {
   await clearSnapshots('owner:');
   try { if ('caches' in window) await caches.delete(API_CACHE); } catch { /* sem Cache API */ }
 }

@@ -128,7 +128,17 @@ const SUPPORT_NAME = 'Equipa Genesis (suporte)';
 async function userNames(tenantId, rows) {
   const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
   if (!ids.length) return new Map();
-  return new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
+  const map = new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
+  // Etapa D: o dono de varios estabelecimentos tem a conta na loja «de casa»;
+  // aqui so se acrescentam os donos com acesso a ESTA loja (Membership).
+  const missing = ids.filter((id) => !map.has(id));
+  if (missing.length) {
+    const members = await prisma.system.membership.findMany({ where: { tenant_id: tenantId, user_id: { in: missing } }, select: { user_id: true } });
+    if (members.length) {
+      for (const u of await prisma.system.user.findMany({ where: { id: { in: members.map((m) => m.user_id) } }, select: { id: true, name: true } })) map.set(u.id, u.name);
+    }
+  }
+  return map;
 }
 const terminalNames = async (tenantId) => new Map((await prisma.posTerminal.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } })).map((t) => [t.id, t.name]));
 

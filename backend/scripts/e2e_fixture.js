@@ -126,6 +126,17 @@ async function addDemoData(tenantId, ownerId, cashierId) {
 
 async function remove(file) {
   const { tenantId: t } = JSON.parse(fs.readFileSync(file, 'utf8'));
+  // Etapa D: estabelecimentos que o dono de teste acrescentou saem tambem.
+  const ownerIds = (await prisma.user.findMany({ where: { tenant_id: t }, select: { id: true } })).map((u) => u.id);
+  const extra = (await prisma.membership.findMany({ where: { user_id: { in: ownerIds } }, select: { tenant_id: true } })).map((m) => m.tenant_id).filter((x) => x !== t);
+  await prisma.membership.deleteMany({ where: { OR: [{ user_id: { in: ownerIds } }, { tenant_id: t }] } });
+  for (const x of extra) await dropTenant(x);
+  await dropTenant(t);
+  const mc = await prisma.masterCatalog.deleteMany({ where: { product_name: { contains: t.slice(0, 8) } } });
+  console.log('fixture apagada: ' + t + (extra.length ? ' (+' + extra.length + ' estabelecimento(s))' : '') + (mc.count ? ' (+' + mc.count + ' no catalogo-mestre)' : ''));
+}
+
+async function dropTenant(t) {
   const userIds = (await prisma.user.findMany({ where: { tenant_id: t }, select: { id: true } })).map((u) => u.id);
   const saleIds = (await prisma.sale.findMany({ where: { tenant_id: t }, select: { id: true } })).map((s) => s.id);
   const debtIds = (await prisma.debt.findMany({ where: { tenant_id: t }, select: { id: true } })).map((d) => d.id);
@@ -134,17 +145,14 @@ async function remove(file) {
   await prisma.sale.deleteMany({ where: { tenant_id: t } });
   await prisma.debtPayment.deleteMany({ where: { debt_id: { in: debtIds } } });
   await prisma.debt.deleteMany({ where: { tenant_id: t } });
-  for (const m of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminal', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
+  for (const m of ['stockLot', 'stockEntry', 'shrinkageRecord', 'demandCapture', 'shiftClosing', 'productPriceHistory', 'fixedCost', 'employee', 'saleGoal', 'posTerminalMember', 'posTerminal', 'receiptCheck', 'supplier', 'expense', 'shoppingListItem', 'shoppingList', 'catalogSuggestion', 'webAuthnCredential']) {
     await prisma[m].deleteMany({ where: { tenant_id: t } });
   }
   await prisma.auditLog.deleteMany({ where: { OR: [{ tenant_id: t }, { user_id: { in: userIds } }, { entity_id: t }] } });
   await prisma.product.deleteMany({ where: { tenant_id: t } });
   await prisma.user.deleteMany({ where: { tenant_id: t } });
   await prisma.tenant.delete({ where: { id: t } });
-  // Produtos de teste que o admin acrescentou ao catalogo-mestre levam o
-  // prefixo do id da loja no nome (tests/e2e/fase8_2.mjs).
-  const mc = await prisma.masterCatalog.deleteMany({ where: { product_name: { contains: t.slice(0, 8) } } });
-  console.log('fixture apagada: ' + t + (mc.count ? ' (+' + mc.count + ' no catalogo-mestre)' : ''));
+  // (Produtos de teste no catalogo-mestre: prefixo do id da loja no nome, tests/e2e/fase8_2.mjs; apagados em remove.)
 }
 
 (async () => {

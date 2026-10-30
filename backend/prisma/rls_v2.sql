@@ -93,3 +93,8 @@ REVOKE ALL ON TABLE public."ModeWaitlist" FROM genesis_app;
 
 -- device_keys (legado, ja nao usado): sem acesso para a aplicacao.
 REVOKE ALL ON TABLE public.device_keys FROM genesis_app;
+
+-- Etapa D: estabelecimentos do mesmo dono (cruza lojas). So o cliente de sistema
+-- (middleware de autenticacao) a le; a aplicacao nao ve nada.
+ALTER TABLE public."Membership" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public."Membership" FROM genesis_app;

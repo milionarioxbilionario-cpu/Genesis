@@ -504,6 +504,20 @@ model WebAuthnCredential {
   @@index([tenant_id])
 }
 
+/// Etapa D (30/10/2026): o dono com varios estabelecimentos. Cada linha da a um
+/// dono (user_id, conta do estabelecimento «de casa») acesso a outro estabelecimento.
+/// Lida so pelo cliente de sistema (a aplicacao nao a ve: RLS sem politica).
+model Membership {
+  id         String   @id @default(uuid())
+  user_id    String
+  tenant_id  String
+  role       String   @default("owner")
+  created_at DateTime @default(now())
+
+  @@unique([user_id, tenant_id])
+  @@index([tenant_id])
+}
+
 /// Etapa B (30/10/2026): recibo conferido pelo guarda a saida. Uma vez por venda
 /// (sale_id unico): ler outra vez o mesmo recibo da o ecra vermelho.
 model ReceiptCheck {

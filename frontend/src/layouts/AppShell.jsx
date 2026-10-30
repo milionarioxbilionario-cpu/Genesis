@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, ChevronsLeft, ChevronsRight, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
+import { BarChart3, ChevronsLeft, ChevronsRight, ChevronsUpDown, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
 import { PrivacyContext, usePrivacy, usePrivacyState } from '../utils/privacy';
 import api, { saveLanguage } from '../utils/api';
 import { useSession, FullPageSpinner } from '../utils/session';
@@ -10,6 +10,7 @@ import '../i18n/en/owner';
 import MonthCloseDialog from '../components/MonthCloseDialog';
 import NotificationBell from '../components/NotificationBell';
 import LiveSales from '../components/LiveSales';
+import EstablishmentSwitcher from '../components/EstablishmentSwitcher';
 import BirthdayDialog from '../components/BirthdayDialog';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
@@ -51,16 +52,19 @@ function Sidebar({ tenant, onNavigate, collapsed = false, onToggle }) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const support = user?.scope === 'support';
+  const [switching, setSwitching] = useState(false);
   return (
     <div className="flex h-full flex-col">
       <div className={cx('flex h-14 items-center border-b border-border', collapsed ? 'justify-center px-2' : 'gap-2.5 px-5')}>
         {!collapsed && <BrandMark />}
         {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}</p>
+          // Etapa D: tocar no nome abre os estabelecimentos (trocar, painel geral, acrescentar).
+          <button type="button" disabled={support} onClick={() => setSwitching(true)} className="min-w-0 flex-1 rounded text-left hover:bg-subtle disabled:hover:bg-transparent" aria-label={t('Os seus estabelecimentos')}>
+            <p className="flex items-center gap-1 truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}{!support && <ChevronsUpDown size={14} className="shrink-0 text-ink-muted" />}</p>
             <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>
-          </div>
+          </button>
         )}
+        {!support && <EstablishmentSwitcher open={switching} onClose={() => setSwitching(false)} />}
         {onToggle && <IconButton label={collapsed ? t('Mostrar o menu') : t('Esconder o menu')} icon={collapsed ? ChevronsRight : ChevronsLeft} size="sm" onClick={onToggle} />}
       </div>
       <nav className={cx('flex-1 overflow-y-auto py-3', collapsed ? 'px-2' : 'px-3')} aria-label={t('Navegação principal')}>

@@ -27,7 +27,8 @@ function passwordVersion(passwordHash) {
 }
 
 // `tid` (opcional): terminal POS onde a sessao do caixista foi aberta.
-function buildPayload(user, scope, tid) {
+// `act` (opcional, Etapa D): estabelecimento activo de um dono com varios (utils/actingTenant.js).
+function buildPayload(user, scope, tid, act) {
   const payload = {
     userId: user.id,
     tenantId: user.tenant_id,
@@ -37,15 +38,16 @@ function buildPayload(user, scope, tid) {
   };
   if (scope) payload.scope = scope;
   if (tid) payload.tid = tid;
+  if (act && act !== user.tenant_id) payload.act = act;
   return payload;
 }
 
-function signAccessToken(user, { scope, tid } = {}) {
-  return jwt.sign(buildPayload(user, scope, tid), accessSecret(), { expiresIn: process.env.JWT_EXPIRY || '12h' });
+function signAccessToken(user, { scope, tid, act } = {}) {
+  return jwt.sign(buildPayload(user, scope, tid, act), accessSecret(), { expiresIn: process.env.JWT_EXPIRY || '12h' });
 }
 
-function signRefreshToken(user, { scope, tid } = {}) {
-  return jwt.sign(buildPayload(user, scope, tid), refreshSecret(), { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '30d' });
+function signRefreshToken(user, { scope, tid, act } = {}) {
+  return jwt.sign(buildPayload(user, scope, tid, act), refreshSecret(), { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '30d' });
 }
 
 function cookieOptions(maxAge) {
@@ -56,10 +58,10 @@ function cookieOptions(maxAge) {
 
 // Emite access + refresh com o MESMO scope. Emitir so o access deixava o
 // refresh antigo (sem scope) disponivel para recuperar uma sessao completa.
-function setSessionCookies(res, user, { scope, tid } = {}) {
-  const token = signAccessToken(user, { scope, tid });
+function setSessionCookies(res, user, { scope, tid, act } = {}) {
+  const token = signAccessToken(user, { scope, tid, act });
   res.cookie(ACCESS_COOKIE, token, cookieOptions(ACCESS_COOKIE_MS));
-  res.cookie(REFRESH_COOKIE, signRefreshToken(user, { scope, tid }), cookieOptions(REFRESH_COOKIE_MS));
+  res.cookie(REFRESH_COOKIE, signRefreshToken(user, { scope, tid, act }), cookieOptions(REFRESH_COOKIE_MS));
   return token;
 }
 

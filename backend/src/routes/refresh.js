@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const token = setSessionCookies(res, user, { scope: decoded.scope || undefined, tid: decoded.tid || undefined });
+    const token = setSessionCookies(res, user, { scope: decoded.scope || undefined, tid: decoded.tid || undefined, act: decoded.act || undefined });
     return res.json({ token });
   } catch (err) {
     console.error('Refresh token error', err.message || err);

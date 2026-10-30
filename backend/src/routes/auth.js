@@ -19,6 +19,7 @@ const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessi
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
 const authMiddleware = require('../middleware/auth');
+const { resolveActingTenant } = require('../utils/actingTenant');
 const { BUSINESS_TYPES, MODE_PENDING } = require('../utils/businessTypes');
 
 // Limite do login (decisao do fundador 12/10): so contam as tentativas
@@ -566,6 +567,11 @@ router.get('/me', async (req, res) => {
       : undefined;
     delete user.password_hash;
     delete user.lock_pin_hash;
+    // Etapa D: o painel mostra o estabelecimento activo (validado como no middleware).
+    const acting = await resolveActingTenant(user, payload);
+    if (payload.act && !acting) return res.status(403).json({ error: 'Sem acesso a este estabelecimento. Entre de novo.', code: 'ESTABLISHMENT_FORBIDDEN' });
+    const homeTenantId = user.tenant_id;
+    if (acting) user.tenant_id = acting;
     if (user.tenant_id) {
       const tenant = await prisma.tenant.findUnique({
         where: { id: user.tenant_id },
@@ -580,6 +586,7 @@ router.get('/me', async (req, res) => {
           scope: payload.scope || null,
           lock,
           tenant: tenant ? { name: tenant.name, location: tenant.location } : null,
+          home_tenant_id: homeTenantId,
         },
       });
     }

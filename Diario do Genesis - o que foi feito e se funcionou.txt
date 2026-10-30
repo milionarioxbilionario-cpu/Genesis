@@ -2228,3 +2228,12 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Testes: 14 de 14 no sistema e 9 de 9 no browser. Os testes apanharam 3 defeitos meus (um deles de segurança: um link falso passava como sendo do Google) e corrigi antes de publicar.
 - SITE REAL: a Etapa C foi publicada e testada no genesismz.com: 9 de 9. O primeiro teste no site real apanhou um defeito que no computador não aparecia (os pontos do mapa não apareciam com a internet verdadeira, porque o mapa demorava mais a carregar). Corrigi, publiquei de novo e voltou a dar 9 de 9.
 - DEIXEI-TE UM PDF na pasta Genesis: "Para ler - respostas e o que preciso de ti (30-10-2026).pdf". Tem o resumo da noite, as respostas às tuas perguntas (concorrentes, preços, hotel, importar históricos, DartPOS) e as coisas que só tu podes fazer, nas caixas amarelas.
+
+
+==================== 30/10/2026 — Etapa D (primeira parte): vários estabelecimentos e painel geral ====================
+- O que é: um dono com mais de um negócio (por exemplo a bottle store e uma mercearia na Matola) usa a MESMA conta para os dois. No painel, toca no nome da loja (em cima, à esquerda) e aparece a lista: escolhe em qual quer trabalhar, abre o "Painel geral" ou "Acrescentar estabelecimento".
+- Acrescentar: nome, tipo e localização; o estabelecimento novo abre no assistente de configuração, como o primeiro (produtos, custos, equipa).
+- Painel geral: o vendido hoje, nos últimos 7 dias e no mês, com o lucro bruto, de cada estabelecimento e de todos juntos, e quantos produtos estão esgotados em cada um.
+- Segurança (o mais importante): cada estabelecimento continua separado. Testei que um não vê os produtos nem as vendas do outro, que outro dono não consegue entrar (nem a falsificar o pedido), que um caixista não consegue, e que se o acesso for retirado deixa de funcionar em 5 segundos. 23 de 23. No browser: 6 de 6.
+- Ainda NÃO fiz: o gerente (pessoa com e-mail e senha que gere sem ver lucros) e o resto da etapa (lista do stock de todos, mapa no painel geral, descontos por número de estabelecimentos). Também falta: o modo de apoio da Genesis e os relatórios por WhatsApp ainda não funcionam para os estabelecimentos extra.
+- Nota: por volta das 5h o computador ficou sem memória e o sistema fechou os servidores de teste (não afectou o site). Passei a usar só um de cada vez.

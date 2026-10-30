@@ -24,6 +24,7 @@ const Team = lazy(() => import('./pages/owner/Team'));
 const Reports = lazy(() => import('./pages/owner/Reports'));
 const Settings = lazy(() => import('./pages/owner/Settings'));
 const Onboarding = lazy(() => import('./pages/owner/Onboarding'));
+const GroupPanel = lazy(() => import('./pages/owner/GroupPanel'));
 
 // Sessao terminou (senha mudou, conta desactivada, expirou): o painel volta ao
 // ecra de entrada com o motivo. O terminal trata o seu proprio caso.
@@ -86,6 +87,7 @@ export default function App() {
                 <Route path="relatorios" element={<Reports />} />
                 <Route path="definicoes" element={<Settings />} />
                 <Route path="perfil" element={<Profile />} />
+                <Route path="geral" element={<GroupPanel />} />
               </Route>
 
               {/* Enderecos antigos (marcadores, links ja partilhados). */}
