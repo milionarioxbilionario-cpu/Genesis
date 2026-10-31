@@ -20,7 +20,8 @@ const ok = (c, m, extra) => { if (c) console.log('  OK    ' + m); else { failure
 const shot = (page, name) => page.screenshot({ path: path.join(SHOTS, name + '.png') });
 async function unlockIfNeeded(p, pin = fx.lockPin) {
   const h = p.getByRole('heading', { name: 'Painel bloqueado' });
-  await h.waitFor({ timeout: 4000 }).catch(() => {});
+  // No site real o ecra do PIN pode demorar a aparecer (a app confirma a sessao primeiro).
+  await h.waitFor({ timeout: 10000 }).catch(() => {});
   if (await h.isVisible().catch(() => false)) { await p.keyboard.type(pin); await h.waitFor({ state: 'detached', timeout: 60000 }); }
 }
 const watch = (page) => {
@@ -120,13 +121,16 @@ try {
   watch(page2);
   await page2.goto(BASE + '/app/produtos');
   await unlockIfNeeded(page2);
-  await page2.getByRole('button', { name: 'Os seus estabelecimentos' }).waitFor({ timeout: T });
-  ok((await page2.getByRole('button', { name: 'Os seus estabelecimentos' }).innerText()).includes('Mercearia 24h'), '2.o separador: no 2.o estabelecimento');
+  const inB = await page2.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.getAttribute('aria-label') === 'Os seus estabelecimentos' && b.innerText.includes('Mercearia 24h')), null, { timeout: T }).then(() => true).catch(() => false);
+  if (!inB) await shot(page2, '3110-falha-2o-separador');
+  ok(inB, '2.o separador: no 2.o estabelecimento');
   await page.getByRole('button', { name: 'Os seus estabelecimentos' }).click();
-  await page.getByRole('button', { name: new RegExp(homeName) }).first().click();
-  await page.waitForURL('**/app', { timeout: T });
-  await page2.waitForFunction((n) => document.body.innerText.includes(n), homeName, { timeout: T }).catch(() => {});
+  await page.getByRole('dialog').getByRole('button', { name: new RegExp(homeName) }).first().click();
+  await page.waitForURL(/\/app$/, { timeout: T }).catch(async () => { await shot(page, '3110-falha-trocar'); throw new Error('trocar para casa nao navegou'); });
+  // O outro separador recarrega sozinho (aviso entre separadores) e volta a pedir o PIN.
+  await page2.waitForTimeout(3000);
   await unlockIfNeeded(page2);
+  await page2.waitForFunction((n) => [...document.querySelectorAll('button')].some((b) => b.getAttribute('aria-label') === 'Os seus estabelecimentos' && b.innerText.includes(n)), homeName, { timeout: T }).catch(() => {});
   const side2 = await page2.getByRole('button', { name: 'Os seus estabelecimentos' }).innerText().catch(() => '');
   ok(side2.includes(homeName), 'o outro separador recarregou no estabelecimento certo (antes: gravava no errado sem aviso)', side2);
   await page2.close();

@@ -23,11 +23,14 @@ let shownEstablishment = null;
 export function setShownEstablishment(id) { shownEstablishment = id || null; }
 const ESTABLISHMENT_CHANNEL = 'genesis-establishment';
 // Depois de trocar: os outros separadores recarregam logo, sem esperar pelo proximo pedido.
+// Este separador ignora o proprio aviso (vai ele mesmo para o Inicio).
+let selfAnnounceAt = 0;
 export function announceEstablishmentChange(id) {
+  selfAnnounceAt = Date.now();
   try { const c = new BroadcastChannel(ESTABLISHMENT_CHANNEL); c.postMessage(id); c.close(); } catch { /* browser antigo: fica o 409 */ }
 }
 export function onEstablishmentChange(fn) {
-  try { const c = new BroadcastChannel(ESTABLISHMENT_CHANNEL); c.onmessage = (e) => fn(e.data); return () => c.close(); } catch { return () => {}; }
+  try { const c = new BroadcastChannel(ESTABLISHMENT_CHANNEL); c.onmessage = (e) => { if (Date.now() - selfAnnounceAt > 10000) fn(e.data); }; return () => c.close(); } catch { return () => {}; }
 }
 
 api.interceptors.request.use((cfg) => {
