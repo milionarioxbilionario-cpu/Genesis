@@ -144,6 +144,9 @@ function PairScreen({ onPaired }) {
     try {
       await api.post('/api/pos/pair', { code });
       await clearCatalog();
+      // 31/10: pede ao browser para nao apagar os dados deste terminal (fila sem
+      // rede, catalogo). Nao chega aos cookies, mas evita limpezas automaticas.
+      try { await navigator.storage?.persist?.(); } catch { /* browser sem a funcao */ }
       onPaired();
     } catch (err) { setError(errorMessage(err)); } finally { setLoading(false); }
   }
@@ -156,12 +159,18 @@ function PairScreen({ onPaired }) {
         </div>
         <div className="mt-10 flex h-10 w-10 items-center justify-center rounded-full bg-subtle text-ink-2"><Monitor size={18} /></div>
         <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t('Emparelhar este terminal')}</h1>
-        <p className="mt-1.5 text-base text-ink-muted">{t('O dono gera o código em Definições → Terminais. Só é preciso fazer isto uma vez neste computador.')}</p>
+        <p className="mt-1.5 text-base text-ink-muted">{t('O dono gera o código em Definições › Terminais. Só é preciso fazer isto uma vez neste aparelho.')}</p>
         {error && <Alert tone="danger" className="mt-5">{error}</Alert>}
         <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
           <Input label={t('Código de emparelhamento')} inputMode="numeric" maxLength={6} autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} inputClassName="h-12 text-center text-lg num tracking-[0.4em]" />
           <Button type="submit" variant="primary" size="lg" block loading={loading} disabled={code.length !== 6}>{t('Emparelhar')}</Button>
         </form>
+        {/* 31/10 (fundador: «os terminais deslogam toda a hora»): porque acontece e como recuperar O MESMO terminal. */}
+        <div className="mt-6 rounded-lg border border-border bg-subtle px-3 py-2.5 text-sm text-ink-2">
+          <p className="font-medium text-ink">{t('Este aparelho já era um terminal?')}</p>
+          <p className="mt-1">{t('Peça ao dono «Novo código» para esse terminal em Definições › Terminais. Volta a ser o mesmo terminal, com os mesmos perfis: não crie outro.')}</p>
+          <p className="mt-1 text-ink-muted">{t('O emparelhamento perde-se quando se apagam os dados do browser, em modo privado, noutro browser ou com o Brave a limpar dados sozinho.')}</p>
+        </div>
         <p className="mt-6 text-sm text-ink-muted">{t('É o dono?')} <Link to="/entrar" className="font-medium text-accent">{t('Entrar no painel')}</Link></p>
       </div>
     </Centered>

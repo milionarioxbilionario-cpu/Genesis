@@ -21,7 +21,7 @@ addTranslations('en', {
   'Agora não': 'Not now',
   'Crie o PIN do seu painel': 'Create your panel PIN',
   'Confirme o PIN': 'Confirm the PIN',
-  '4 dígitos, só seus. O Genesis pede-o sempre que abre a app e depois de 5 minutos sem mexer, para ninguém ver os números da loja no seu telemóvel.': '4 digits, just yours. Genesis asks for it every time you open the app and after 5 minutes without use, so nobody sees your store figures on your phone.',
+  '4 dígitos, só seus. O Genesis pede-o sempre que abre a app e depois de 5 minutos sem mexer, para ninguém ver os números do seu negócio no seu telemóvel.': '4 digits, just yours. Genesis asks for it every time you open the app and after 5 minutes without use, so nobody sees your business figures on your phone.',
   'Escreva o mesmo PIN outra vez.': 'Type the same PIN again.',
   'Demasiados PINs errados. Entre de novo com o email e a senha.': 'Too many wrong PINs. Sign in again with your email and password.',
   'Painel bloqueado. Introduza o seu PIN.': 'Panel locked. Enter your PIN.',

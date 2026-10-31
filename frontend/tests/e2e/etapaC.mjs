@@ -43,16 +43,19 @@ try {
   await unlockIfNeeded(owner);
   await owner.goto(BASE + '/app/definicoes');
   await unlockIfNeeded(owner);
-  await owner.getByText('Localização no mapa').waitFor({ timeout: T });
+  await owner.getByText('Onde fica o estabelecimento?').waitFor({ timeout: T });
   ok(await owner.getByText('Ainda sem ponto no mapa.').isVisible(), 'sem ponto: o cartão diz que falta e que pode configurar mais tarde');
   await owner.getByLabel('Ou cole um link do Google Maps').fill('https://www.google.com/maps/place/Polana/@-25.9692,32.5995,17z/data=!3m1!4b1!8m2!3d-25.969512!4d32.601144');
   await owner.getByRole('button', { name: 'Usar', exact: true }).click();
   await owner.getByText('-25.96951, 32.60114').waitFor({ timeout: T });
+  // 31/10: o ponto so se grava depois de confirmar (antes gravava logo).
+  await owner.getByRole('button', { name: 'Guardar este ponto' }).click();
+  await owner.getByText('guardado', { exact: true }).waitFor({ timeout: T });
   const img = owner.getByAltText('Mapa com o ponto do estabelecimento');
   await img.waitFor({ timeout: T });
   const loaded = await img.evaluate((el) => new Promise((r) => (el.complete ? r(el.naturalWidth) : el.addEventListener('load', () => r(el.naturalWidth)))));
   ok(loaded > 0, 'link do Google Maps -> ponto guardado e mapa de pré-visualização (Mapbox) carregado', loaded);
-  await owner.locator('text=Localização no mapa').scrollIntoViewIfNeeded();
+  await owner.locator('text=Onde fica o estabelecimento?').scrollIntoViewIfNeeded();
   await shot(owner, 'C-01-localizacao');
 
   console.log('\n=== Venda -> aviso no painel ===');

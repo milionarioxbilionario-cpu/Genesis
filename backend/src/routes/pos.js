@@ -44,7 +44,7 @@ const pinLimiter = rateLimit({
 router.post('/pair', pairLimiter, asyncHandler(async (req, res) => {
   const { code } = z.object({ code: z.string().regex(/^\d{6}$/, 'O código tem 6 dígitos') }).parse(req.body);
   const pairing = consumePairingCode(code);
-  if (!pairing) throw httpError(400, 'Código inválido ou expirado. Peça um novo ao dono da loja.', 'INVALID_PAIRING_CODE');
+  if (!pairing) throw httpError(400, 'Código inválido ou expirado. Peça um novo ao dono do estabelecimento.', 'INVALID_PAIRING_CODE');
   if (await blockedTenantStatus(pairing.tenantId)) throw httpError(403, 'Conta suspensa. Contacte o suporte.', 'TENANT_BLOCKED');
   // Codigo de um terminal que ja existe: volta a ser o mesmo terminal (perfis e nome mantidos).
   const made = pairing.terminalId ? await rotateTerminal({ tenantId: pairing.tenantId, terminalId: pairing.terminalId }) : await createTerminal(pairing);
@@ -87,7 +87,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   res.json({
     terminal: { id, name: req.terminal.name, purpose: req.terminal.purpose || 'counter' },
     // 15.1: o recibo leva o logotipo, o telefone, o NUIT e a mensagem final (tambem sem rede).
-    store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none', custom_items_enabled: tenant?.custom_items_enabled !== false },
+    store: { name: tenant?.name || 'Estabelecimento', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none', custom_items_enabled: tenant?.custom_items_enabled !== false },
     cashiers: profiles,
     // 30/10/2026: versao do PIN de autorizacao do dono (nunca o PIN). Quando muda,
     // o terminal apaga o verificador que permite abrir as vendas sem rede.

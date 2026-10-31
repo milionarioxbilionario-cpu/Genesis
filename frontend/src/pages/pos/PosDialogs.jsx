@@ -391,7 +391,7 @@ export function ShrinkageDialog({ products, cashier, onClose, onSaved }) {
     onSaved(); onClose();
   }
   return (
-    <Dialog open title={t('Registar quebra ou consumo')} description={t('Produtos partidos, vencidos ou consumidos na loja.')} onClose={onClose}
+    <Dialog open title={t('Registar quebra ou consumo')} description={t('Produtos partidos, vencidos ou consumidos no estabelecimento.')} onClose={onClose}
       footer={<><Button onClick={onClose}>{t('Cancelar')}</Button><Button variant="primary" disabled={!p || !Number.isInteger(qty) || qty <= 0 || qty > (p?.stock_qty || 0)} onClick={save}>{t('Registar')}</Button></>}>
       <div className="flex flex-col gap-3">
         <ProductPicker products={products} value={productId} onChange={setProductId} />

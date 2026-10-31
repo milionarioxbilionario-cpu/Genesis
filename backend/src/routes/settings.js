@@ -73,7 +73,7 @@ const tenantId = (req) => req.user.tenantId;
 
 router.get('/', asyncHandler(async (req, res) => {
   const t = await prisma.tenant.findUnique({ where: { id: tenantId(req) } });
-  if (!t) throw httpError(404, 'Loja não encontrada');
+  if (!t) throw httpError(404, 'Estabelecimento não encontrado');
   const fixed = await prisma.fixedCost.findMany({ where: { tenant_id: t.id }, orderBy: { description: 'asc' } });
   res.json({
     store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type, nuit: t.nuit || null, receipt_footer: t.receipt_footer || null, has_logo: Boolean(t.logo_data) },
@@ -124,7 +124,7 @@ router.put('/taxes', asyncHandler(async (req, res) => {
 // Dados do recibo para reimprimir no painel (logotipo incluido; nao vai no GET / para nao pesar).
 router.get('/receipt', asyncHandler(async (req, res) => {
   const t = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, nuit: true, receipt_footer: true, logo_data: true } });
-  if (!t) throw httpError(404, 'Loja não encontrada');
+  if (!t) throw httpError(404, 'Estabelecimento não encontrado');
   res.json({ name: t.name, location: t.location, phone: t.phone, nuit: t.nuit, receipt_footer: t.receipt_footer, logo: t.logo_data });
 }));
 

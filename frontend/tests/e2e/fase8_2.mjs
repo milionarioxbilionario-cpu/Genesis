@@ -124,7 +124,7 @@ try {
   await admin.getByLabel('Senha').fill(ax.admin.password);
   await admin.getByRole('button', { name: 'Entrar' }).click();
   await admin.getByText('Receita mensal recorrente').waitFor({ timeout: T });
-  ok(await admin.getByText(/produto\(s\) novo\(s\) nas lojas/).isVisible({ timeout: T }), 'visão geral avisa os produtos novos');
+  ok(await admin.getByText(/produto\(s\) novo\(s\) nos estabelecimentos/).isVisible({ timeout: T }), 'visão geral avisa os produtos novos');
   await admin.getByRole('link', { name: 'Ver sugestões' }).click();
   const srow = admin.locator('tbody tr', { hasText: NAME });
   await srow.waitFor({ timeout: T });

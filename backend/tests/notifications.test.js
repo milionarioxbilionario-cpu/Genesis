@@ -108,3 +108,10 @@ test('31/10: com o horario novo, o «fecho do dia» e o dia que o carregador ind
   // Sem horario novo (dayClosed ausente): como antes.
   assert.ok(buildNotifications(base).some((x) => x.type === 'day_closed'), 'sem horario novo: a regra antiga');
 });
+
+test('31/10: lembrete «marque o estabelecimento no mapa» so quando falta o ponto', () => {
+  const base = { now: new Date('2026-11-07T10:00:00+02:00') };
+  assert.ok(buildNotifications({ ...base, hasLocation: false }).some((n) => n.type === 'no_location' && n.link === '/app/definicoes'), 'sem ponto: lembrete');
+  assert.ok(!buildNotifications({ ...base, hasLocation: true }).some((n) => n.type === 'no_location'), 'com ponto: nada');
+  assert.ok(!buildNotifications(base).some((n) => n.type === 'no_location'), 'sem informacao: nada (testes antigos)');
+});

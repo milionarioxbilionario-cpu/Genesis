@@ -24,7 +24,8 @@ async function isMember(userId, tenantId) {
 async function resolveActingTenant(user, decoded) {
   const act = decoded && decoded.act;
   if (!act || act === user.tenant_id) return user.tenant_id || null;
-  if (user.role !== 'owner' || decoded.scope) return null;
+  // Suporte (so leitura) tambem pode abrir um estabelecimento extra do dono.
+  if (user.role !== 'owner' || (decoded.scope && decoded.scope !== 'support')) return null;
   return (await isMember(user.id, act)) ? act : null;
 }
 

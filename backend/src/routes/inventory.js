@@ -96,7 +96,7 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
     }
     if (data.supplier_id) {
       const supplier = await prisma.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: req.user.tenantId } });
-      if (!supplier) return res.status(400).json({ error: 'Fornecedor não pertence a esta loja' });
+      if (!supplier) return res.status(400).json({ error: 'Fornecedor não pertence a este estabelecimento' });
     }
     const lots = data.lots
       ? data.lots.map((l) => ({ quantity: l.quantity, expiry_date: l.expiry_date || null }))

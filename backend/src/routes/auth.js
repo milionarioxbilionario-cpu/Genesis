@@ -69,7 +69,7 @@ const requestAccountLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, mess
 const supportLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
 // Caixistas entram SO no terminal da loja, com PIN (routes/pos.js).
-const USE_TERMINAL = { error: 'Caixistas entram no terminal da loja com o PIN pessoal.', code: 'USE_TERMINAL' };
+const USE_TERMINAL = { error: 'Caixistas entram no terminal do estabelecimento com o PIN pessoal.', code: 'USE_TERMINAL' };
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -677,8 +677,13 @@ router.post('/support', supportLimiter, async (req, res) => {
     const entry = consumeSupportCode(req.body && req.body.code);
     if (!entry) return res.status(400).json({ error: 'Código de suporte inválido ou expirado.', code: 'INVALID_SUPPORT_CODE' });
     const owner = await prisma.user.findUnique({ where: { id: entry.ownerUserId } });
-    if (!owner || owner.tenant_id !== entry.tenantId) return res.status(404).json({ error: 'Loja não encontrada.' });
-    setSessionCookies(res, owner, { scope: 'support' });
+    // 31/10: num estabelecimento extra a conta do dono e do de casa; a sessao leva
+    // o estabelecimento (act), validado pela Membership em cada pedido.
+    const member = owner && owner.tenant_id !== entry.tenantId
+      ? await prisma.membership.findFirst({ where: { user_id: owner.id, tenant_id: entry.tenantId } })
+      : null;
+    if (!owner || (owner.tenant_id !== entry.tenantId && !member)) return res.status(404).json({ error: 'Estabelecimento não encontrado.' });
+    setSessionCookies(res, owner, { scope: 'support', act: owner.tenant_id !== entry.tenantId ? entry.tenantId : undefined });
     await writeAudit({ req, tenantId: entry.tenantId, userId: entry.adminUserId, action: 'SUPPORT_SESSION_OPENED', entityType: 'tenant', entityId: entry.tenantId });
     return res.json({ ok: true, scope: 'support' });
   } catch (err) {

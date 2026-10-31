@@ -257,9 +257,9 @@ router.post('/', async (req, res) => {
        if (!data.authorization_pin) {
          throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono`, 'DISCOUNT_NEEDS_PIN', { pct: tenantPolicy?.discount_free_pct ?? 10 });
        }
-       if (!tenantPolicy?.cancel_pin_hash) throw httpError(400, 'PIN de autorização não configurado nesta loja', 'AUTH_PIN_NOT_SET');
+       if (!tenantPolicy?.cancel_pin_hash) throw httpError(400, 'PIN de autorização não configurado neste estabelecimento', 'AUTH_PIN_NOT_SET');
        const recentFails = await tx.auditLog.count({ where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - CANCEL_TENANT_WINDOW_MS) } } });
-       if (recentFails >= CANCEL_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados nesta loja. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
+       if (recentFails >= CANCEL_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados neste estabelecimento. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
        if (!(await bcrypt.compare(data.authorization_pin, tenantPolicy.cancel_pin_hash))) {
          const pinErr = httpError(403, 'PIN de autorização inválido', 'INVALID_AUTH_PIN');
          pinErr.recordDiscountPinFail = true; // gravado FORA da transaccao (catch)
@@ -529,7 +529,7 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
       return res.status(423).json({ error: 'Cancelamento desta venda bloqueado por múltiplas tentativas falhadas', code: 'SALE_CANCEL_LOCKED' });
     }
     if (recentTenantFails >= CANCEL_MAX_PER_TENANT) {
-      return res.status(429).json({ error: 'Demasiados PINs errados nesta loja. Espere 15 minutos.', code: 'TENANT_CANCEL_LOCKED' });
+      return res.status(429).json({ error: 'Demasiados PINs errados neste estabelecimento. Espere 15 minutos.', code: 'TENANT_CANCEL_LOCKED' });
     }
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cancel_pin_hash: true } });

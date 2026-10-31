@@ -25,6 +25,7 @@ export function notificationTitle(n) {
     case 'shift_attempt_fail': return t('Fecho de turno recusado');
     case 'goal_reached': return t('Meta atingida');
     case 'day_closed': return t('Fecho do dia');
+    case 'no_location': return t('Marque o estabelecimento no mapa');
     default: return n.type;
   }
 }
@@ -48,6 +49,7 @@ export function notificationDetail(n) {
     case 'shift_attempt_fail': return t('{name}, {day}: escreveu {declared}, esperado {expected} (tentativa {n}/{max}).', { name: p.cashier, day: day(p.day), declared: money(p.declared), expected: money(p.expected), n: p.attempt, max: p.max || 3 });
     case 'goal_reached': return t('{month}: {current} vendidos, meta {target}.', { month: monthName(p.month), current: money(p.current), target: money(p.target) });
     case 'day_closed': return t('Hoje: {n} venda(s), {v}. Ver o relatório do dia.', { n: p.sales, v: money(p.revenue) });
+    case 'no_location': return t('Definições › Estabelecimento › «Onde fica o estabelecimento?». Use o telemóvel no local ou cole o link do Google Maps.');
     default: return '';
   }
 }

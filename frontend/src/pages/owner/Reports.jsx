@@ -34,7 +34,7 @@ export default function Reports() {
   const go = (next) => setParams({ tab: next.tab || tab, ...(next.date || (next.tab || tab) === 'daily' ? { date: next.date || day } : {}) });
   return (
     <>
-      <PageHeader title={t('Relatórios')} description={t('Tudo o que aconteceu na loja, com o porquê de cada valor.')} />
+      <PageHeader title={t('Relatórios')} description={t('Tudo o que aconteceu no estabelecimento, com o porquê de cada valor.')} />
       <Tabs className="no-print mb-5" value={tab} onChange={(v) => go({ tab: v })} items={[{ value: 'daily', label: t('Diário') }, { value: 'weekly', label: t('Semanal') }, { value: 'monthly', label: t('Mensal') }]} />
       {tab === 'daily' && <Daily day={day} setDay={(d) => go({ tab: 'daily', date: d })} />}
       {tab === 'weekly' && <Weekly openDay={(d) => go({ tab: 'daily', date: d })} />}

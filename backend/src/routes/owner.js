@@ -197,7 +197,7 @@ router.get('/audit/:id', asyncHandler(async (req, res) => {
 const TEAM_ROLES = ['cashier', 'guard'];
 async function ownCashier(req, id = req.params.id) {
   const c = await prisma.user.findFirst({ where: { id, tenant_id: tenantOf(req), role: { in: TEAM_ROLES } } });
-  if (!c) throw httpError(404, 'Caixista não encontrado nesta loja');
+  if (!c) throw httpError(404, 'Caixista não encontrado neste estabelecimento');
   return c;
 }
 
@@ -605,7 +605,7 @@ router.get('/notifications', asyncHandler(async (req, res) => {
 
 router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
-  if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
+  if (!tenant?.phone) throw httpError(400, 'O estabelecimento não tem telefone configurado.');
   const snapshot = await getTenantAlertSnapshot(tenant.id);
   if (!snapshot.totalAlerts) return res.json({ ok: true, sent: 0, message: 'Sem alertas para enviar.' });
   const summary = buildAlertSummary(tenant, snapshot, reqLang(req));
@@ -617,8 +617,8 @@ router.post('/alerts/send', whatsappLimiter, asyncHandler(async (req, res) => {
 // Mensagem de teste: so para o telefone da propria loja, texto fixo.
 router.post('/whatsapp/test', whatsappLimiter, asyncHandler(async (req, res) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantOf(req) } });
-  if (!tenant?.phone) throw httpError(400, 'A loja não tem telefone configurado.');
-  const result = await sendWhatsAppAlert({ to: tenant.phone, message: tr(reqLang(req), 'Genesis: teste de ligação WhatsApp da loja {name}.', { name: tenant.name }), tenantName: tenant.name });
+  if (!tenant?.phone) throw httpError(400, 'O estabelecimento não tem telefone configurado.');
+  const result = await sendWhatsAppAlert({ to: tenant.phone, message: tr(reqLang(req), 'Genesis: teste de ligação WhatsApp do estabelecimento {name}.', { name: tenant.name }), tenantName: tenant.name });
   res.json({ ok: result.ok ?? false, ...result });
 }));
 

@@ -40,7 +40,7 @@ async function validateSessionClaims(decoded) {
 
   const user = await loadSessionUser(userId);
   if (!user || !user.is_active) {
-    return { ok: false, status: 401, error: 'Conta inactiva ou removida. Fale com o dono da loja.', code: 'ACCOUNT_INACTIVE' };
+    return { ok: false, status: 401, error: 'Conta inactiva ou removida. Fale com o dono do estabelecimento.', code: 'ACCOUNT_INACTIVE' };
   }
   if (!decoded.pv || decoded.pv !== passwordVersion(user.password_hash)) {
     return { ok: false, status: 401, error: 'Sessão expirada: a senha desta conta foi alterada. Entre de novo.', code: 'PASSWORD_CHANGED' };

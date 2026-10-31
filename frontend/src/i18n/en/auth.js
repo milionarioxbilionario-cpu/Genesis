@@ -5,7 +5,7 @@ addTranslations('en', {
   'Gestão comercial para Moçambique': 'Business management for Mozambique',
   // Entrar
   'Entrar': 'Sign in',
-  'Painel de gestão da sua loja.': 'Your store management panel.',
+  'Painel de gestão do seu negócio.': 'Your business management panel.',
   'Ainda não tem conta?': 'No account yet?',
   'Pedir uma conta': 'Request an account',
   'No balcão?': 'At the counter?',

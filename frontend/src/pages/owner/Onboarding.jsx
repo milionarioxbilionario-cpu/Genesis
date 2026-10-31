@@ -10,6 +10,7 @@ import '../../i18n/en/owner';
 import { BrandMark, Alert, Button, Card, Input, LanguageSwitch, MoneyInput, Spinner, cx } from '../../components/ui';
 import { BUSINESS_TYPES } from '../auth/RequestAccount';
 import HoursEditor, { DEFAULT_SCHEDULE, scheduleFrom } from '../../components/HoursEditor';
+import LocationCard from './LocationCard';
 
 // Nomes dos passos em portugues = chave da traducao.
 const STEPS = ['Tipo de negócio', 'Categorias adicionais', 'Catálogo', 'Custos e equipa', 'Horário'];
@@ -306,6 +307,8 @@ export default function Onboarding() {
                 <p>{t('Resumo: {p} produto(s) · renda {r} · {e} trabalhador(es) · {s} fornecedor(es).', { p: included.length, r: money(rent), e: employees.filter((x) => x.name.trim()).length, s: suppliers.filter((x) => x.name.trim()).length })}</p>
               </div>
             </Card>
+            {/* 31/10 (fundador): a localizacao pede-se ao criar, com o aviso de que e importante. */}
+            <div className="mt-4"><LocationCard s={{ geo: null, store: {} }} compact /></div>
           </Section>
         )}
 

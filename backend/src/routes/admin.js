@@ -27,6 +27,7 @@ const { groupLostRequests } = require('../utils/lostRequests');
 const { PLANS, PERIODS, effectivePlan } = require('../services/plans');
 const { BUSINESS_TYPES } = require('../utils/businessTypes');
 const { openStream, publish } = require('../utils/liveBus');
+const { invalidateActing } = require('../utils/actingTenant');
 const ADMIN_LIVE = new Set(['sale', 'cancel', 'loss', 'debt', 'debt_payment', 'expense', 'stock_in', 'shift_open', 'shift_close', 'shift_fail', 'subscription']);
 
 const router = express.Router();
@@ -37,7 +38,7 @@ const audit = (req, action, tenantId, oldValue, newValue) =>
 
 async function findTenant(id) {
   const t = await prisma.tenant.findUnique({ where: { id } });
-  if (!t) throw httpError(404, 'Loja não encontrada');
+  if (!t) throw httpError(404, 'Estabelecimento não encontrado');
   return t;
 }
 
@@ -167,8 +168,26 @@ router.post('/requests/:tenantId/approve', asyncHandler(async (req, res) => {
   // Email do pedido ja com conta: antes era inventado um <nome>.<hora>@... que
   // o dono nao conhecia (e o login Google com o email dele nunca acertava).
   // Agora o pedido fica pendente e o admin resolve com a pessoa.
-  if (await prisma.user.findUnique({ where: { email: ownerEmail } })) {
-    throw httpError(409, `O email ${ownerEmail} já tem uma conta no Genesis. Peça outro email ao dono ou rejeite o pedido.`, 'EMAIL_IN_USE');
+  const existing = await prisma.user.findUnique({ where: { email: ownerEmail } });
+  if (existing) {
+    // 31/10: o mesmo dono a pedir mais um estabelecimento. O admin escolhe juntar este
+    // pedido a conta dele (sem senha nova: entra com a que ja tem). Nunca para contas
+    // que nao sao de dono (caixistas, admin).
+    const join = Boolean(req.body && req.body.join_existing);
+    if (!join || existing.role !== 'owner' || !existing.is_active) {
+      throw httpError(409, existing.role === 'owner'
+        ? `O email ${ownerEmail} já é de um dono do Genesis (${existing.name}). Pode juntar este estabelecimento à conta dele.`
+        : `O email ${ownerEmail} já tem uma conta no Genesis. Peça outro email ao dono ou rejeite o pedido.`,
+        existing.role === 'owner' && existing.is_active ? 'EMAIL_IS_OWNER' : 'EMAIL_IN_USE');
+    }
+    await prisma.$transaction([
+      prisma.tenant.update({ where: { id: tenant.id }, data: { status: 'trial', trial_ends_at: trialEnds } }),
+      prisma.membership.create({ data: { user_id: existing.id, tenant_id: tenant.id, role: 'owner' } }),
+    ]);
+    invalidateActing(existing.id);
+    await audit(req, 'APPROVE_TENANT_JOINED', tenant.id, { status: tenant.status }, { status: 'trial', trial_ends_at: trialEnds, owner_email: ownerEmail, joined_owner: existing.id });
+    afterStatusChange();
+    return res.json({ email: ownerEmail, joined: true, owner_name: existing.name, trial_ends_at: trialEnds });
   }
   const passwordHash = await bcrypt.hash(tempPassword, 12);
   await prisma.$transaction([
@@ -230,7 +249,7 @@ router.post('/tenants/:tenantId/restore', asyncHandler((req, res) => setTenantSt
 router.post('/tenants/:tenantId/extend-trial', asyncHandler(async (req, res) => {
   const { days } = z.object({ days: z.number().int().min(1).max(90) }).parse(req.body);
   const tenant = await findTenant(req.params.tenantId);
-  if (tenant.status !== 'trial') throw httpError(409, 'A loja não está em período de teste');
+  if (tenant.status !== 'trial') throw httpError(409, 'O estabelecimento não está em período de teste');
   const base = tenant.trial_ends_at && tenant.trial_ends_at > new Date() ? new Date(tenant.trial_ends_at) : new Date();
   base.setDate(base.getDate() + days);
   await prisma.tenant.update({ where: { id: tenant.id }, data: { trial_ends_at: base } });
@@ -272,8 +291,13 @@ router.post('/tenants/:tenantId/activate', asyncHandler(async (req, res) => {
 // Modo suporte (so leitura): codigo de uso unico valido 60 s.
 router.post('/tenants/:tenantId/support', asyncHandler(async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
-  const owner = await prisma.user.findFirst({ where: { tenant_id: tenant.id, role: 'owner' }, orderBy: { created_at: 'asc' } });
-  if (!owner) throw httpError(404, 'Esta loja ainda não tem dono');
+  let owner = await prisma.user.findFirst({ where: { tenant_id: tenant.id, role: 'owner' }, orderBy: { created_at: 'asc' } });
+  // 31/10: estabelecimento extra — o dono tem a conta no de casa (Membership).
+  if (!owner) {
+    const m = await prisma.membership.findFirst({ where: { tenant_id: tenant.id, role: 'owner' }, orderBy: { created_at: 'asc' } });
+    if (m) owner = await prisma.user.findUnique({ where: { id: m.user_id } });
+  }
+  if (!owner) throw httpError(404, 'Este estabelecimento ainda não tem dono');
   const code = createSupportCode({ ownerUserId: owner.id, tenantId: tenant.id, adminUserId: req.user.userId });
   await audit(req, 'SUPPORT_CODE_ISSUED', tenant.id, null, { owner: owner.id });
   res.json({ url: `${APP_URL()}/suporte#${code}` });

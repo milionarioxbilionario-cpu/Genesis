@@ -9,7 +9,7 @@ addTranslations('en', {
   'Não foi possível contactar o servidor.': 'Could not reach the server.',
   'A sessão terminou. Introduza o PIN de novo.': 'The session ended. Enter your PIN again.',
   'Emparelhar este terminal': 'Pair this terminal',
-  'O dono gera o código em Definições → Terminais. Só é preciso fazer isto uma vez neste computador.': 'The owner generates the code in Settings → Terminals. You only need to do this once on this computer.',
+  'O dono gera o código em Definições › Terminais. Só é preciso fazer isto uma vez neste aparelho.': 'The owner generates the code in Settings › Terminals. You only need to do this once on this computer.',
   'Código de emparelhamento': 'Pairing code',
   'Emparelhar': 'Pair',
   'É o dono?': 'Are you the owner?',
@@ -155,7 +155,7 @@ addTranslations('en', {
   'Escolher produto': 'Choose product',
   'Quebra registada: {n} × {name}.': 'Breakage recorded: {n} × {name}.',
   'Registar quebra ou consumo': 'Record breakage or own use',
-  'Produtos partidos, vencidos ou consumidos na loja.': 'Products broken, expired or used in the store.',
+  'Produtos partidos, vencidos ou consumidos no estabelecimento.': 'Products broken, expired or used in the business.',
   'Vencido': 'Expired',
   'Pedido registado: {n} × {name}.': 'Request recorded: {n} × {name}.',
   'O cliente pediu e não havia. Fica no relatório de vendas perdidas.': 'The customer asked and there was none. It goes into the lost sales report.',
@@ -230,4 +230,8 @@ addTranslations('en', {
   'Ler o recibo': 'Scan the receipt',
   'Recibo': 'Receipt',
   'Câmara': 'Camera',
+  // 31/10: terminal que perdeu o emparelhamento
+  'Este aparelho já era um terminal?': 'Was this device already a terminal?',
+  'Peça ao dono «Novo código» para esse terminal em Definições › Terminais. Volta a ser o mesmo terminal, com os mesmos perfis: não crie outro.': 'Ask the owner for a «New code» for that terminal in Settings › Terminals. It becomes the same terminal again, with the same profiles: do not create another one.',
+  'O emparelhamento perde-se quando se apagam os dados do browser, em modo privado, noutro browser ou com o Brave a limpar dados sozinho.': 'Pairing is lost when browser data is cleared, in private mode, in another browser, or when Brave clears data on its own.',
 });

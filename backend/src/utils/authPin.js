@@ -18,7 +18,7 @@ async function checkAuthorizationPin({ req, tenantId, pin, failAction, entityTyp
   const recentFails = await prisma.auditLog.count({
     where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - AUTH_PIN_WINDOW_MS) } },
   });
-  if (recentFails >= AUTH_PIN_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados nesta loja. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
+  if (recentFails >= AUTH_PIN_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados neste estabelecimento. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cancel_pin_hash: true } });
   if (!tenant || !tenant.cancel_pin_hash) throw httpError(400, 'O dono ainda não definiu o PIN de autorização (Definições).', 'AUTH_PIN_NOT_SET');

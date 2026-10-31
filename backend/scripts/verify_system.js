@@ -530,7 +530,7 @@ async function test11() {
   const dup = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-DUP', owner_name: 'Dup', business_type: 'bottle_store', location: 'Teste', phone: '840000002', email: ctx.owner.email, status: 'pending' } });
   try {
     const r = await admin.req('POST', '/api/admin/requests/' + dup.id + '/approve');
-    ok(r.status === 409 && r.data?.code === 'EMAIL_IN_USE', 'aprovar pedido com email ja usado: 409 EMAIL_IN_USE', r);
+    ok(r.status === 409 && r.data?.code === 'EMAIL_IS_OWNER', 'aprovar pedido com o email de um dono: 409 EMAIL_IS_OWNER (o admin pode juntar a conta dele)', r);
     const after = await prisma.tenant.findUnique({ where: { id: dup.id }, select: { status: true } });
     const owners = await prisma.user.count({ where: { tenant_id: dup.id } });
     ok(after.status === 'pending' && owners === 0, 'o pedido continua pendente e nenhuma conta foi criada', { after, owners });
@@ -2858,7 +2858,59 @@ async function test51() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45, 46: test46, 47: test47, 48: test48, 49: test49, 50: test50, 51: test51 };
+async function test52() {
+  section(52, '31/10 (E1 2.a parte): modo suporte num estabelecimento extra (so leitura, o certo), pedido de conta com e-mail de um dono = juntar a conta dele, morada e lembrete «marque no mapa», textos «estabelecimento»');
+  const t = ctx.tenant.id;
+  const made = [];
+  let reqTenant = null;
+  try {
+    const owner = ownerClient();
+    const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + '-B', business_type: 'mercearia', location: 'Matola' });
+    const bId = cb.data.id; made.push(bId);
+    await prisma.tenant.update({ where: { id: bId }, data: { onboarding_completed: true } });
+    const b = ownerClient();
+    await b.req('POST', '/api/establishments/switch', { tenant_id: bId });
+    await b.req('POST', '/api/products', { name: 'So no B', category: 'X', sell_price: 1000, cost_price: 500, stock_qty: 3 });
+    // Modo suporte no extra: o admin abre-o e ve o B, so leitura.
+    const adm = client(signAccessToken(ctx.admin), { Origin: ADMIN_ORIGIN });
+    const sc = await adm.req('POST', '/api/admin/tenants/' + bId + '/support');
+    ok(sc.status === 200 && sc.data.url && sc.data.url.includes('#'), 'admin: codigo de suporte para o estabelecimento extra (antes: «ainda nao tem dono»)', sc);
+    const code = sc.data.url.split('#')[1];
+    const sup = client();
+    const rd = await sup.req('POST', '/api/auth/support', { code });
+    ok(rd.status === 200 && rd.data.scope === 'support', 'o codigo abre uma sessao de suporte', rd);
+    const sp = await sup.req('GET', '/api/products');
+    ok(sp.status === 200 && sp.data.some((p) => p.name === 'So no B') && !sp.data.some((p) => p.id === ctx.product.id), 'suporte ve os produtos do B (e so do B)', sp.status);
+    ok((await sup.req('POST', '/api/products', { name: 'X', category: 'X', sell_price: 100, cost_price: 50, stock_qty: 1 })).status === 403, 'suporte: so leitura (403 ao criar)');
+    // Pedido de conta com o e-mail de um dono: juntar.
+    const rq = await client().req('POST', '/api/auth/request-account', { businessName: ctx.tenant.name + '-R', ownerName: ctx.owner.name, businessType: 'mercearia', location: 'Beira', phone: '840000123', email: ctx.owner.email, acceptTerms: true });
+    ok(rq.status === 201 || rq.status === 200, 'pedido de conta com o mesmo e-mail do dono entra como pedido', rq);
+    reqTenant = await prisma.tenant.findFirst({ where: { name: ctx.tenant.name + '-R' } });
+    if (reqTenant) made.push(reqTenant.id);
+    const ap1 = await adm.req('POST', '/api/admin/requests/' + reqTenant.id + '/approve');
+    ok(ap1.status === 409 && ap1.data?.code === 'EMAIL_IS_OWNER', 'aprovar: o e-mail ja e de um dono -> pergunta se junta (409 EMAIL_IS_OWNER)', ap1);
+    const ap2 = await adm.req('POST', '/api/admin/requests/' + reqTenant.id + '/approve', { join_existing: true });
+    ok(ap2.status === 200 && ap2.data.joined === true && !ap2.data.temporaryPassword, 'juntar: sem senha nova (entra com a que tem)', ap2.data);
+    const list = (await owner.req('GET', '/api/establishments')).data;
+    ok(list.some((e) => e.id === reqTenant.id && e.status === 'trial'), 'o estabelecimento do pedido aparece na lista do dono, em teste');
+    ok((await prisma.user.count({ where: { email: ctx.owner.email } })) === 1, 'continua a haver uma so conta com esse e-mail');
+    // Morada e lembrete «marque no mapa».
+    const nb0 = (await b.req('GET', '/api/owner/notifications')).data;
+    ok(Array.isArray(nb0) ? nb0.some((n) => n.type === 'no_location') : (nb0.items || []).some((n) => n.type === 'no_location'), 'sem ponto no mapa: lembrete no sino', nb0);
+    const loc = await b.req('PUT', '/api/settings/location', { lat: -25.9692, lng: 32.5732, address: 'Av. Eduardo Mondlane, cruzamento com a Av. Karl Marx' });
+    ok(loc.status === 200 && loc.data.location.address.includes('Karl Marx'), 'morada guardada com o ponto', loc);
+    const nb1 = (await b.req('GET', '/api/owner/notifications')).data;
+    ok(!(Array.isArray(nb1) ? nb1 : (nb1.items || [])).some((n) => n.type === 'no_location'), 'com ponto: o lembrete desaparece');
+    // Textos: «estabelecimento» nas mensagens do servidor.
+    const miss = await b.req('POST', '/api/owner/cashiers/' + crypto.randomUUID() + '/unlock');
+    ok(!JSON.stringify(miss.data || {}).includes('loja'), 'mensagens do servidor sem «loja»', miss.data);
+  } finally {
+    for (const id of made) await dropTenant(id);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45, 46: test46, 47: test47, 48: test48, 49: test49, 50: test50, 51: test51, 52: test52 };
 
 (async () => {
   await prisma.ready();

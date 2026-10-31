@@ -90,7 +90,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
       await assertBarcodeFree(tx, tenantId, data.barcode ? data.barcode.trim() : null);
       if (data.supplier_id) {
         const supplier = await tx.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: tenantId } });
-        if (!supplier) { const e = new Error('Fornecedor não pertence a esta loja'); e.statusCode = 400; throw e; }
+        if (!supplier) { const e = new Error('Fornecedor não pertence a este estabelecimento'); e.statusCode = 400; throw e; }
       }
       const created = await tx.product.create({
         data: {

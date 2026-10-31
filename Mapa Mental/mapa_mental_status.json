@@ -124,7 +124,7 @@
       "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
       "role": "API da plataforma.",
       "security": "requireRole('super_admin') + adminOriginCheck.",
-      "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8."
+      "notes": "31/10/2026 E1 2.a parte: suporte nos extra (Membership), juntar pedido a conta de um dono (EMAIL_IS_OWNER), nao elimina o principal de quem tem outros; verify_system 51, 52."
     },
     "backend/src/routes/dashboard.js": {
       "status": "partial",
@@ -1155,7 +1155,7 @@
       "status": "ok",
       "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
       "role": "Balcao.",
-      "notes": "25/10/2026 Fase 12: arranca sem rede com perfis guardados e PIN confirmado no aparelho (fase12.mjs)."
+      "notes": "31/10/2026 E1 2.a parte: explicacao do terminal que perdeu o emparelhamento + storage.persist."
     },
     "backend/src/routes/verify.js": {
       "status": "ok",
@@ -1789,7 +1789,7 @@
       "status": "ok",
       "summary": "Localizacao no mapa nas Definicoes.",
       "role": "Etapa C.",
-      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+      "notes": "31/10/2026 E1 2.a parte: confirmar antes de gravar, precisao, fora de Mocambique, morada; verify_system 52."
     },
     "frontend/src/components/LiveSales.jsx": {
       "status": "ok",

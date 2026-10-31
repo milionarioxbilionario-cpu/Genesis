@@ -21,7 +21,7 @@ export const ACTION_LABEL = {
   PANEL_LOCK_SIGNED_OUT: 'Sessão terminada por PINs errados', PASSKEY_ADDED: 'Face ID / impressão digital activado', PASSKEY_REMOVED: 'Face ID / impressão digital removido',
   CREATE_CASHIER: 'Caixista criado', UPDATE_CASHIER: 'Caixista alterado', DEACTIVATE_CASHIER: 'Caixista desactivado', REACTIVATE_CASHIER: 'Caixista reactivado',
   CREATE_EMPLOYEE: 'Trabalhador criado', UPDATE_EMPLOYEE: 'Trabalhador alterado',
-  UPDATE_STORE: 'Dados da loja alterados', CREATE_ESTABLISHMENT: 'Estabelecimento acrescentado', UPDATE_LOCATION: 'Localização alterada', UPDATE_TAXES: 'Impostos alterados', UPDATE_HOURS: 'Horário alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', UPDATE_EXPIRY_ALERT: 'Aviso de validade alterado',
+  UPDATE_STORE: 'Dados do estabelecimento alterados', CREATE_ESTABLISHMENT: 'Estabelecimento acrescentado', UPDATE_LOCATION: 'Localização alterada', UPDATE_TAXES: 'Impostos alterados', UPDATE_HOURS: 'Horário alterado', UPDATE_DISCOUNT_POLICY: 'Limite de desconto alterado', UPDATE_EXPIRY_ALERT: 'Aviso de validade alterado',
   UPDATE_MONTH_CLOSE_DAY: 'Dia do fecho do mês alterado', UPDATE_AUDIT_RETENTION: 'Tempo da auditoria alterado', UPDATE_REPORT_SCHEDULE: 'Horário dos relatórios alterado',
   CREATE_FIXED_COST: 'Custo fixo criado', UPDATE_FIXED_COST: 'Custo fixo alterado', DELETE_FIXED_COST: 'Custo fixo removido',
   CREATE_EXPENSE: 'Despesa registada', UPDATE_EXPENSE: 'Despesa alterada', DELETE_EXPENSE: 'Despesa removida', SET_GOAL: 'Meta definida',

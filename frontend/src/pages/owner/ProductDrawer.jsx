@@ -116,7 +116,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
       onClose={close}
       title={editing?.id ? t('Editar produto') : entry ? t('Entrada de stock') : t('Novo produto')}
       description={editing?.id ? undefined : entry
-        ? t('Para um produto que a loja ainda não tem. Para mais unidades de um produto que já tem, use «Ajuste manual» › Adicionar.')
+        ? t('Para um produto que o estabelecimento ainda não tem. Para mais unidades de um produto que já tem, use «Ajuste manual» › Adicionar.')
         : t('Para produtos que ainda não tem. Se não estiver no catálogo do Genesis, avisamos a equipa para o acrescentar.')}
       footer={(
         <>

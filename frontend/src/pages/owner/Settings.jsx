@@ -19,7 +19,7 @@ import { Alert, Badge, Button, Card, CardHeader, Dialog, Drawer, Input, MoneyInp
 
 // label em portugues = chave da traducao.
 const TABS = [
-  { value: 'store', label: 'Loja' },
+  { value: 'store', label: 'Estabelecimento' },
   { value: 'costs', label: 'Custos e despesas' },
   { value: 'discounts', label: 'Descontos e PIN' },
   { value: 'terminals', label: 'Terminais' },
@@ -82,7 +82,7 @@ function Store({ s, reload }) {
     <div className="flex flex-col gap-4">
       {error && <Alert tone="danger">{error}</Alert>}
       <Card>
-        <CardHeader title={t('Dados da loja')} description={t('Aparecem no recibo e nas mensagens.')} />
+        <CardHeader title={t('Dados do estabelecimento')} description={t('Aparecem no recibo e nas mensagens.')} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input label={t('Nome')} value={store.name} onChange={(e) => setStore({ ...store, name: e.target.value })} className="sm:col-span-2" />
           <Input label={t('Localização')} value={store.location} onChange={(e) => setStore({ ...store, location: e.target.value })} />
@@ -268,7 +268,7 @@ function ReportSchedule({ s, reload }) {
   const at = form.daily_report_time || '—';
   return (
     <Card>
-      <CardHeader title={t('Relatórios por WhatsApp')} description={t('Quando quer receber cada relatório no WhatsApp da loja.')} />
+      <CardHeader title={t('Relatórios por WhatsApp')} description={t('Quando quer receber cada relatório no WhatsApp do estabelecimento.')} />
       {!s.reports_whatsapp_enabled && <Alert tone="info" className="mb-4">{t('O envio automático ainda não está ligado. As suas escolhas ficam guardadas e passam a valer quando for ligado.')}</Alert>}
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <div className="flex flex-col gap-4">

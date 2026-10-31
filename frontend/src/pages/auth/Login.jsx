@@ -126,7 +126,7 @@ export default function Login() {
   return (
     <AuthLayout
       title={t('Entrar')}
-      description={t('Painel de gestão da sua loja.')}
+      description={t('Painel de gestão do seu negócio.')}
       footer={(
         <div className="flex flex-col gap-2">
           <span>{t('Ainda não tem conta?')} <Link to="/pedir-conta" className="font-medium text-accent hover:text-accent-hover">{t('Pedir uma conta')}</Link></span>

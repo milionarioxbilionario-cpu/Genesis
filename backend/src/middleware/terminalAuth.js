@@ -8,7 +8,7 @@ module.exports = async function terminalAuth(req, res, next) {
   try {
     const terminal = await verifyTerminalCookie(req.cookies && req.cookies[TERMINAL_COOKIE]);
     if (!terminal) {
-      return res.status(401).json({ error: 'Este dispositivo não está emparelhado com a loja.', code: 'TERMINAL_NOT_PAIRED' });
+      return res.status(401).json({ error: 'Este dispositivo não está emparelhado com o estabelecimento.', code: 'TERMINAL_NOT_PAIRED' });
     }
     const blocked = await blockedTenantStatus(terminal.tenantId);
     if (blocked) return res.status(403).json({ error: 'Conta suspensa. Contacte o suporte.', code: 'TENANT_BLOCKED' });

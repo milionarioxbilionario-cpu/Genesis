@@ -2276,3 +2276,12 @@ SITE REAL (31/10): publicado e testado em genesismz.com. As correcções de hoje
 Nos testes apanhei e corrigi mais 3 coisas antes de chegarem a si: (1) no telemóvel, as escolhas do horário saíam do ecrã; (2) ao trocar de estabelecimento, a página recarregava em vez de ir para o Início; (3) o satélite.
 SATÉLITE: descobri a causa do «bugado». O Mapbox está a recusar as imagens de satélite à sua conta (resposta 429 = limite da conta). Testei à parte, até com o estilo de satélite oficial do Mapbox, e acontece o mesmo; o mapa normal funciona. Agora, quando isto acontece, o mapa avisa em português e volta ao mapa normal. Para o satélite voltar: na conta Mapbox (kleytonvelichane3@gmail.com) ver o uso e a faturação.
 Funcionou: sim (o satélite depende da conta Mapbox).
+
+
+=== 31/10/2026 — E1 (2.ª parte): «estabelecimento» em todo o lado, apoio nos extra, juntar contas, localização com precisão ===
+- A palavra «loja» saiu de todo o lado (108 textos: painel, terminal, admin e mensagens), trocada por «estabelecimento» ou «negócio», com a gramática certa (ex.: «Nenhum estabelecimento», «o estabelecimento pode ser recuperado»). Ficou só «Loja de roupa», que é o nome de um tipo de negócio.
+- No seu painel de administração, «Abrir modo suporte» já funciona também nos estabelecimentos extra de um dono (antes dizia «ainda não tem dono»). Só leitura, como sempre.
+- Se um dono pedir outra conta com o mesmo e-mail (para um 2.º negócio), ao aprovar pergunto «Juntar à conta que já existe?»: o estabelecimento novo aparece na lista dele, sem senha nova.
+- Localização: o ponto só se grava depois de confirmar no mapa, mostra a precisão («± 12 m»), avisa se a precisão for fraca ou se o ponto estiver fora de Moçambique, e há a morada escrita («Av. X, cruzamento com Y»). O cartão aparece no último passo da configuração, com o texto que pediu («muito importante… configure mais tarde, mas não se esqueça»), e o sino lembra até haver ponto.
+- Terminais: o ecrã de emparelhar explica porque um terminal perde a ligação e como voltar a ser o mesmo terminal («Novo código»), sem criar outro.
+- Testes: 37 de 37 e 233 de 233 nas verificações no servidor; unitários todos. Funcionou: sim (falta repetir no site real depois de publicar).

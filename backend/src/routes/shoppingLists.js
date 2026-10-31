@@ -54,7 +54,7 @@ async function resolveItems(tid, items) {
   const byId = new Map(products.map((p) => [p.id, p]));
   return items.map((i) => {
     const p = byId.get(i.product_id);
-    if (!p) throw httpError(400, 'Produto não encontrado nesta loja', 'BAD_PRODUCT');
+    if (!p) throw httpError(400, 'Produto não encontrado neste estabelecimento', 'BAD_PRODUCT');
     return { product_id: p.id, product_name: p.name, quantity: i.quantity, unit_cost: i.unit_cost ?? p.cost_price ?? 0 };
   });
 }

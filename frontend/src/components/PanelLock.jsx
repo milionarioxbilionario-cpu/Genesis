@@ -267,7 +267,7 @@ function CreatePin({ user, onDone, onLogout }) {
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{step === 'first' ? t('Crie o PIN do seu painel') : t('Confirme o PIN')}</h1>
       <p className="mb-6 mt-1 text-base text-ink-muted">
         {step === 'first'
-          ? t('4 dígitos, só seus. O Genesis pede-o sempre que abre a app e depois de 5 minutos sem mexer, para ninguém ver os números da loja no seu telemóvel.')
+          ? t('4 dígitos, só seus. O Genesis pede-o sempre que abre a app e depois de 5 minutos sem mexer, para ninguém ver os números do seu negócio no seu telemóvel.')
           : t('Escreva o mesmo PIN outra vez.')}
       </p>
       {error && <Alert tone="danger" className="mb-5 w-full text-left">{error}</Alert>}

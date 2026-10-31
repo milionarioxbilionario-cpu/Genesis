@@ -38,7 +38,7 @@ router.post('/', asyncHandler(async (req, res) => {
     let productName = null;
     if (productId) {
       const product = await tx.product.findFirst({ where: { id: productId, tenant_id: tenantId }, select: { id: true } });
-      if (!product) throw httpError(400, 'Produto não encontrado nesta loja', 'PRODUCT_NOT_FOUND');
+      if (!product) throw httpError(400, 'Produto não encontrado neste estabelecimento', 'PRODUCT_NOT_FOUND');
     } else {
       // Escrito a mao mas a loja ja tem esse produto: conta como o produto
       // (entra na recomendacao de compra em vez de ficar "fora do catalogo").

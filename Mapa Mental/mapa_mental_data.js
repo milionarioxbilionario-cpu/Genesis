@@ -1,16 +1,16 @@
 /* GERADO AUTOMATICAMENTE por scripts/gen_mindmap_data.js - NAO EDITAR A MAO.
    Fonte de verdade curada: Mapa Mental/mapa_mental_status.json
-   Gerado em: 2026-10-31T13:19:10.576Z */
+   Gerado em: 2026-10-31T15:48:29.640Z */
 window.GENESIS_MINDMAP = {
- "generatedAt": "2026-10-31T13:19:10.576Z",
+ "generatedAt": "2026-10-31T15:48:29.640Z",
  "generator": "scripts/gen_mindmap_data.js",
  "curatedFrom": "Mapa Mental/mapa_mental_status.json",
  "project": "Genesis",
  "totals": {
   "files": 408,
   "planned": 5,
-  "links": 780,
-  "lines": 58102,
+  "links": 782,
+  "lines": 58286,
   "byStatus": {
    "ok": 242,
    "partial": 8,
@@ -333,8 +333,8 @@ window.GENESIS_MINDMAP = {
    "role": "Documentacao.",
    "security": "",
    "planned": false,
-   "lines": 1372,
-   "size": 318027,
+   "lines": 1383,
+   "size": 320925,
    "externals": [
     "@prisma/client"
    ],
@@ -420,7 +420,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 1886,
-   "size": 109484,
+   "size": 109338,
    "externals": [
     "nodemailer"
    ],
@@ -1068,8 +1068,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel da plataforma.",
    "security": "",
    "planned": false,
-   "lines": 710,
-   "size": 47620,
+   "lines": 723,
+   "size": 48816,
    "externals": [
     "react",
     "react-router-dom",
@@ -1104,7 +1104,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 199,
-   "size": 12195,
+   "size": 12228,
    "externals": [
     "react",
     "axios",
@@ -1160,8 +1160,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 244,
-   "size": 13614,
+   "lines": 249,
+   "size": 14460,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -1285,7 +1285,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 106,
-   "size": 6177,
+   "size": 6188,
    "externals": [
     "node:fs",
     "node:path",
@@ -2900,8 +2900,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 2879,
-   "size": 255551,
+   "lines": 2931,
+   "size": 260125,
    "externals": [
     "dotenv",
     "crypto",
@@ -3139,7 +3139,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 27,
-   "size": 1510,
+   "size": 1521,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/terminals.js",
@@ -3162,12 +3162,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".js",
    "status": "ok",
    "summary": "Super admin: pedidos, aprovar/rejeitar, tenants, suspender/bloquear/recuperar/eliminar, impersonate e auditoria.",
-   "notes": "18/10/2026 Fase 9.6-9.8 (PDFs/WhatsApp/emails, admin, catalogo-mestre e pesquisa em PT/EN): unitarios todos a passar; verify_system 25+30 26/26; idioma_admin 17/17, idioma_pos 31/31, idioma_dono 35/35; regressao PT passou. Publicado f525726 (18/10) e testado no site: idioma_pos 31/31, idioma_dono 35/35, idioma_admin 17/17, fase8_6 8/8.",
+   "notes": "31/10/2026 E1 2.a parte: suporte nos extra (Membership), juntar pedido a conta de um dono (EMAIL_IS_OWNER), nao elimina o principal de quem tem outros; verify_system 51, 52.",
    "role": "API da plataforma.",
    "security": "requireRole('super_admin') + adminOriginCheck.",
    "planned": false,
-   "lines": 431,
-   "size": 28696,
+   "lines": 455,
+   "size": 30349,
    "externals": [
     "express",
     "bcrypt",
@@ -3186,13 +3186,14 @@ window.GENESIS_MINDMAP = {
     "backend/src/utils/lostRequests.js",
     "backend/src/services/plans.js",
     "backend/src/utils/businessTypes.js",
-    "backend/src/utils/liveBus.js"
+    "backend/src/utils/liveBus.js",
+    "backend/src/utils/actingTenant.js"
    ],
    "usedBy": [
     "backend/src/index.js"
    ],
    "inbound": 1,
-   "outbound": 12
+   "outbound": 13
   },
   {
    "id": "backend/src/routes/auth.js",
@@ -3207,8 +3208,8 @@ window.GENESIS_MINDMAP = {
    "role": "Autenticacao.",
    "security": "A rota /reset-password-instant foi REMOVIDA a 26/09. Sem codigo valido nao ha troca de senha. Rate limit no login, no pedido e na reposicao; resposta generica para nao revelar contas existentes. CORRIGIDO 28/09: conta sem password_hash devolve 401 NO_PASSWORD (antes bcrypt.compare(pass, null) lancava e dava 500).",
    "planned": false,
-   "lines": 695,
-   "size": 29180,
+   "lines": 700,
+   "size": 29622,
    "externals": [
     "express",
     "bcrypt",
@@ -3319,7 +3320,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 90,
-   "size": 4109,
+   "size": 4120,
    "externals": [
     "express",
     "zod"
@@ -3424,7 +3425,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 223,
-   "size": 9628,
+   "size": 9639,
    "externals": [
     "express",
     "zod"
@@ -3492,7 +3493,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 626,
-   "size": 36609,
+   "size": 36653,
    "externals": [
     "express",
     "crypto",
@@ -3578,7 +3579,7 @@ window.GENESIS_MINDMAP = {
    "security": "Abrir turno e ver vendas exigem o PIN de autorizacao do dono (falhas gravadas e limitadas).",
    "planned": false,
    "lines": 188,
-   "size": 13427,
+   "size": 13449,
    "externals": [
     "express",
     "bcrypt",
@@ -3620,7 +3621,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 398,
-   "size": 20523,
+   "size": 20534,
    "externals": [
     "express",
     "zod"
@@ -3728,7 +3729,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 605,
-   "size": 31154,
+   "size": 31187,
    "externals": [
     "express",
     "zod",
@@ -3770,7 +3771,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 384,
-   "size": 22863,
+   "size": 22885,
    "externals": [
     "express",
     "bcrypt",
@@ -3812,7 +3813,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 164,
-   "size": 9185,
+   "size": 9196,
    "externals": [
     "express",
     "zod"
@@ -4042,8 +4043,8 @@ window.GENESIS_MINDMAP = {
    "role": "Operacoes.",
    "security": "",
    "planned": false,
-   "lines": 152,
-   "size": 9837,
+   "lines": 156,
+   "size": 10181,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -4309,7 +4310,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 45,
-   "size": 2183,
+   "size": 2190,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/lang.js",
@@ -4396,19 +4397,20 @@ window.GENESIS_MINDMAP = {
    "role": "Etapa D.",
    "security": "",
    "planned": false,
-   "lines": 55,
-   "size": 2823,
+   "lines": 56,
+   "size": 2934,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js"
    ],
    "usedBy": [
     "backend/src/middleware/auth.js",
+    "backend/src/routes/admin.js",
     "backend/src/routes/auth.js",
     "backend/src/routes/establishments.js",
     "backend/src/routes/refresh.js"
    ],
-   "inbound": 4,
+   "inbound": 5,
    "outbound": 1
   },
   {
@@ -4490,7 +4492,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 34,
-   "size": 1946,
+   "size": 1957,
    "externals": [
     "bcrypt"
    ],
@@ -4736,7 +4738,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 71,
-   "size": 4883,
+   "size": 4908,
    "externals": [],
    "dependsOn": [],
    "usedBy": [
@@ -5187,7 +5189,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 55,
-   "size": 2438,
+   "size": 2449,
    "externals": [],
    "dependsOn": [
     "backend/src/utils/prisma.js",
@@ -5890,8 +5892,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 111,
-   "size": 7076,
+   "lines": 118,
+   "size": 7638,
    "externals": [
     "node:test",
     "node:assert"
@@ -6099,7 +6101,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 85,
-   "size": 4959,
+   "size": 4970,
    "externals": [
     "node:test",
     "node:assert",
@@ -7366,7 +7368,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 280,
-   "size": 14938,
+   "size": 14946,
    "externals": [
     "react",
     "lucide-react",
@@ -7953,7 +7955,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 90,
-   "size": 5566,
+   "size": 5573,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -7978,7 +7980,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 363,
-   "size": 22037,
+   "size": 22247,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -8004,7 +8006,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 52,
-   "size": 4213,
+   "size": 4224,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -8028,8 +8030,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 1256,
-   "size": 80735,
+   "lines": 1271,
+   "size": 82822,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -8051,8 +8053,8 @@ window.GENESIS_MINDMAP = {
    "role": "Traducao PT/EN.",
    "security": "",
    "planned": false,
-   "lines": 234,
-   "size": 16463,
+   "lines": 238,
+   "size": 17190,
    "externals": [],
    "dependsOn": [
     "frontend/src/i18n/core.js"
@@ -8331,7 +8333,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 164,
-   "size": 7221,
+   "size": 7225,
    "externals": [
     "react",
     "react-router-dom"
@@ -8499,7 +8501,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 205,
-   "size": 11819,
+   "size": 11830,
    "externals": [
     "react"
    ],
@@ -8628,12 +8630,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Localizacao no mapa nas Definicoes.",
-   "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8.",
+   "notes": "31/10/2026 E1 2.a parte: confirmar antes de gravar, precisao, fora de Mocambique, morada; verify_system 52.",
    "role": "Etapa C.",
    "security": "",
    "planned": false,
-   "lines": 72,
-   "size": 3739,
+   "lines": 98,
+   "size": 6411,
    "externals": [
     "react",
     "lucide-react"
@@ -8645,9 +8647,10 @@ window.GENESIS_MINDMAP = {
     "frontend/src/components/ui/index.js"
    ],
    "usedBy": [
+    "frontend/src/pages/owner/Onboarding.jsx",
     "frontend/src/pages/owner/Settings.jsx"
    ],
-   "inbound": 1,
+   "inbound": 2,
    "outbound": 4
   },
   {
@@ -8663,8 +8666,8 @@ window.GENESIS_MINDMAP = {
    "role": "Onboarding do dono.",
    "security": "",
    "planned": false,
-   "lines": 341,
-   "size": 24869,
+   "lines": 344,
+   "size": 25109,
    "externals": [
     "react",
     "react-router-dom",
@@ -8677,13 +8680,14 @@ window.GENESIS_MINDMAP = {
     "frontend/src/i18n/react.jsx",
     "frontend/src/components/ui/index.js",
     "frontend/src/pages/auth/RequestAccount.jsx",
-    "frontend/src/components/HoursEditor.jsx"
+    "frontend/src/components/HoursEditor.jsx",
+    "frontend/src/pages/owner/LocationCard.jsx"
    ],
    "usedBy": [
     "frontend/src/App.jsx"
    ],
    "inbound": 1,
-   "outbound": 7
+   "outbound": 8
   },
   {
    "id": "frontend/src/pages/owner/ProductDrawer.jsx",
@@ -8699,7 +8703,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 269,
-   "size": 19001,
+   "size": 19012,
    "externals": [
     "react",
     "react-router-dom",
@@ -8806,7 +8810,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 593,
-   "size": 40496,
+   "size": 40507,
    "externals": [
     "react",
     "react-router-dom",
@@ -8876,7 +8880,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 724,
-   "size": 50702,
+   "size": 50735,
    "externals": [
     "react",
     "react-router-dom",
@@ -9083,7 +9087,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 513,
-   "size": 30789,
+   "size": 30800,
    "externals": [
     "react",
     "qrcode",
@@ -9160,12 +9164,12 @@ window.GENESIS_MINDMAP = {
    "ext": ".jsx",
    "status": "ok",
    "summary": "Terminal: emparelhar -> perfis (Turno aberto/fechado) -> PIN -> POS.",
-   "notes": "25/10/2026 Fase 12: arranca sem rede com perfis guardados e PIN confirmado no aparelho (fase12.mjs).",
+   "notes": "31/10/2026 E1 2.a parte: explicacao do terminal que perdeu o emparelhamento + storage.persist.",
    "role": "Balcao.",
    "security": "",
    "planned": false,
-   "lines": 261,
-   "size": 13554,
+   "lines": 270,
+   "size": 14521,
    "externals": [
     "react",
     "react-router-dom",
@@ -9278,7 +9282,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 122,
-   "size": 5869,
+   "size": 5891,
    "externals": [
     "axios"
    ],
@@ -9339,7 +9343,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 88,
-   "size": 9150,
+   "size": 9161,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js",
@@ -9567,8 +9571,8 @@ window.GENESIS_MINDMAP = {
    "role": "Painel do dono.",
    "security": "",
    "planned": false,
-   "lines": 54,
-   "size": 3227,
+   "lines": 56,
+   "size": 3462,
    "externals": [],
    "dependsOn": [
     "frontend/src/utils/format.js",
@@ -10322,8 +10326,8 @@ window.GENESIS_MINDMAP = {
    "role": "",
    "security": "",
    "planned": false,
-   "lines": 113,
-   "size": 7511,
+   "lines": 116,
+   "size": 7752,
    "externals": [
     "node:fs",
     "node:path",
@@ -10523,7 +10527,7 @@ window.GENESIS_MINDMAP = {
    "security": "",
    "planned": false,
    "lines": 151,
-   "size": 10185,
+   "size": 10196,
    "externals": [
     "node:fs",
     "node:path",
@@ -12054,6 +12058,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "backend/src/routes/admin.js",
    "target": "backend/src/utils/liveBus.js"
+  },
+  {
+   "source": "backend/src/routes/admin.js",
+   "target": "backend/src/utils/actingTenant.js"
   },
   {
    "source": "backend/src/routes/auth.js",
@@ -13974,6 +13982,10 @@ window.GENESIS_MINDMAP = {
   {
    "source": "frontend/src/pages/owner/Onboarding.jsx",
    "target": "frontend/src/components/HoursEditor.jsx"
+  },
+  {
+   "source": "frontend/src/pages/owner/Onboarding.jsx",
+   "target": "frontend/src/pages/owner/LocationCard.jsx"
   },
   {
    "source": "frontend/src/pages/owner/ProductDrawer.jsx",

@@ -153,7 +153,7 @@ export default function AuditLogPage({ settings, reloadSettings }) {
             <div>
               <KeyValue label={t('Quem')} value={t(open.user_name)} />
               <KeyValue label={t('Tipo')} value={<Badge tone="neutral">{groupLabel(open.group)}</Badge>} />
-              {open.new_value?.terminal_id && <KeyValue label={t('Terminal')} value={open.terminal_name || t('terminal da loja')} />}
+              {open.new_value?.terminal_id && <KeyValue label={t('Terminal')} value={open.terminal_name || t('terminal do estabelecimento')} />}
               {open.ip_address && <KeyValue label={t('Endereço IP')} value={open.ip_address} />}
             </div>
             {sale && (

@@ -42,10 +42,10 @@ api.interceptors.request.use((cfg) => {
 
 export const SESSION_MESSAGES = {
   PASSWORD_CHANGED: 'A senha desta conta foi alterada. Entre de novo.',
-  ACCOUNT_INACTIVE: 'Esta conta foi desactivada. Fale com o dono da loja.',
+  ACCOUNT_INACTIVE: 'Esta conta foi desactivada. Fale com o dono do estabelecimento.',
   SESSION_EXPIRED: 'A sessão expirou. Entre de novo.',
   NO_SESSION: 'Entre para continuar.',
-  TENANT_BLOCKED: 'A conta da loja está suspensa. Contacte o suporte Genesis.',
+  TENANT_BLOCKED: 'A conta do estabelecimento está suspensa. Contacte o suporte Genesis.',
   SESSION_INVALID: 'A sessão deixou de ser válida. Entre de novo.',
   LOCK_TOO_MANY: 'Demasiados PINs errados. Entre de novo com o email e a senha.',
 };

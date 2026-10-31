@@ -187,7 +187,7 @@ export default function LiveMap() {
           {missing.length > 0 && (
             <Card>
               <p className="mb-1 font-medium text-ink">{t('Sem localização')}</p>
-              <p className="mb-2 text-sm text-ink-muted">{t('O dono marca o ponto em Definições > Localização no mapa.')}</p>
+              <p className="mb-2 text-sm text-ink-muted">{t('O dono marca o ponto em Definições › Estabelecimento › «Onde fica o estabelecimento?».')}</p>
               <ul className="text-sm text-ink-2">{missing.slice(0, 12).map((m) => <li key={m.id} className="truncate">{m.name}</li>)}</ul>
             </Card>
           )}

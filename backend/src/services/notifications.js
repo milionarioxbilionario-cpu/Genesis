@@ -11,7 +11,7 @@ const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
 
 const LEVELS = ['critical', 'warning', 'info', 'success'];
-const TYPES = ['cashier_locked', 'shift_attempt_fail', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed'];
+const TYPES = ['cashier_locked', 'shift_attempt_fail', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed', 'no_location'];
 const DEBT_DAYS = 7; // txenekas: 7 dias antes, 1 dia antes e no dia (especificacao 6.5)
 const SHIFT_DAYS = 7; // diferencas de caixa dos ultimos 7 dias
 
@@ -24,7 +24,7 @@ const minutesOf = (hhmm) => { const [h, m] = String(hhmm).split(':').map(Number)
 // de Maputo; dinheiro em centavos. O texto e montado no ecra (lingua de quem ve).
 function buildNotifications({
   now = new Date(), lowStock = [], expiringLots = [], debts = [], closings = [],
-  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00', dayClosed,
+  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00', dayClosed, hasLocation,
 }) {
   const today = dayInMaputo(now);
   const items = [];
@@ -88,6 +88,9 @@ function buildNotifications({
     items.push({ id: `day_closed:${today}`, type: 'day_closed', level: 'info', link: `/app/relatorios?tab=daily&date=${today}`, params: { sales: todaySales.count, revenue: todaySales.revenue, day: today } });
   }
 
+  // 31/10 (fundador: «nao marque como opcional... mas nao se esqueca»): lembrete ate haver ponto no mapa.
+  if (hasLocation === false) items.push({ id: 'no_location', type: 'no_location', level: 'info', link: '/app/definicoes', params: {} });
+
   return items.sort((a, b) => (LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level)) || (TYPES.indexOf(a.type) - TYPES.indexOf(b.type)));
 }
 
@@ -102,7 +105,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
   const dayStart = shiftsDay(sched) ? H.businessDayRange(sched, bday).start : new Date(new Date(now).setHours(0, 0, 0, 0));
   const [snapshot, tenant, debts, closings, cashiers, goalRow, monthAgg, todayAgg, fails] = await Promise.all([
     getTenantAlertSnapshot(tenantId, now),
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { closing_time: true, hours_json: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { closing_time: true, hours_json: true, lat: true } }),
     prisma.debt.findMany({ where: { tenant_id: tenantId, status: { not: 'paid' }, due_date: { lte: new Date(now.getTime() + (DEBT_DAYS + 1) * 86400000) } } }),
     prisma.shiftClosing.findMany({
       where: { tenant_id: tenantId, closed_at: { gte: new Date(now.getTime() - (SHIFT_DAYS + 1) * 86400000) }, NOT: { difference: 0 } },
@@ -131,6 +134,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     goal: goalRow ? { target: goalRow.target_amount, current: Number(monthAgg._sum.total_amount || 0), month, year } : null,
     todaySales: { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) },
     closingTime: tenant?.closing_time || '20:00',
+    hasLocation: tenant ? tenant.lat != null : undefined,
     ...(tenant?.hours_json ? { dayClosed: await closedDay(tenantId, sched, bday, now, { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) }) } : {}),
   });
 }

@@ -28,10 +28,10 @@ test('encomenda ao fornecedor: PT igual ao de antes; EN', () => {
   const items = [{ quantity: 24, product_name: '2M 340ml' }];
   assert.strictEqual(orderMessage({ storeName: 'Loja', supplierName: 'Zé', items }),
     'Olá Zé, daqui fala Loja.\nGostaria de encomendar:\n- 24 × 2M 340ml\n\nPode confirmar o preço e quando entrega? Obrigado.');
-  assert.strictEqual(orderMessage({ storeName: '', items }).split('\n')[0], 'Olá, daqui fala a loja.');
+  assert.strictEqual(orderMessage({ storeName: '', items }).split('\n')[0], 'Olá, daqui fala o seu cliente.');
   const en = orderMessage({ storeName: 'Loja', supplierName: 'Zé', items, lang: 'en' });
   assert.strictEqual(en, 'Hello Zé, this is Loja.\nI would like to order:\n- 24 × 2M 340ml\n\nCan you confirm the price and when you deliver? Thank you.');
-  assert.strictEqual(orderMessage({ items, lang: 'en' }).split('\n')[0], 'Hello, this is the store.');
+  assert.strictEqual(orderMessage({ items, lang: 'en' }).split('\n')[0], 'Hello, this is your customer.');
 });
 
 test('alertas: PT igual; EN', () => {

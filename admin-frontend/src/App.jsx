@@ -107,7 +107,7 @@ function RequireAdmin({ children }) {
 const NAV = [
   { to: '/', label: 'Visão geral', icon: LayoutDashboard, end: true },
   { to: '/pedidos', label: 'Pedidos de conta', icon: Inbox },
-  { to: '/lojas', label: 'Estabelecimentos', icon: Store },
+  { to: '/estabelecimentos', label: 'Estabelecimentos', icon: Store },
   { to: '/mapa', label: 'Mapa ao vivo', icon: Globe2 },
   { to: '/catalogos', label: 'Catálogos-mestre', icon: BookOpen },
   { to: '/sugestoes', label: 'Sugestões', icon: Lightbulb },
@@ -172,23 +172,23 @@ function Overview() {
       {!data ? <Spinner /> : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label={t('Receita mensal recorrente')} value={money(data.mrr)} hint={t('{n} loja(s) activa(s)', { n: data.active })} />
+            <Stat label={t('Receita mensal recorrente')} value={money(data.mrr)} hint={t('{n} estabelecimento(s) activo(s)', { n: data.active })} />
             <Stat label={t('Em teste')} value={String(data.trial)} hint={t('{n} a terminar em 7 dias', { n: data.trials_ending_soon })} />
             <Stat label={t('Pedidos pendentes')} value={String(data.pending)} />
             <Stat label={t('Suspensas / bloqueadas')} value={String(data.suspended + data.blocked)} tone={data.suspended + data.blocked ? 'danger' : undefined} />
           </div>
           {data.catalog_suggestions > 0 && (
-            <Alert tone="info" className="mt-4" title={t('{n} produto(s) novo(s) nas lojas', { n: data.catalog_suggestions })}>
-              {t('As lojas acrescentaram produtos que não estão no catálogo-mestre.')} <NavLink to="/sugestoes" className="font-medium text-accent-text underline">{t('Ver sugestões')}</NavLink>
+            <Alert tone="info" className="mt-4" title={t('{n} produto(s) novo(s) nos estabelecimentos', { n: data.catalog_suggestions })}>
+              {t('Os estabelecimentos acrescentaram produtos que não estão no catálogo-mestre.')} <NavLink to="/sugestoes" className="font-medium text-accent-text underline">{t('Ver sugestões')}</NavLink>
             </Alert>
           )}
           {data.lost_requests_30d > 0 && (
             <Alert tone="info" className="mt-4" title={t('{n} pedido(s) de clientes fora do catálogo (30 dias)', { n: data.lost_requests_30d })}>
-              {t('Produtos que os clientes pediram nas lojas e que elas não têm.')} <NavLink to="/pedidos-clientes" className="font-medium text-accent-text underline">{t('Ver pedidos')}</NavLink>
+              {t('Produtos que os clientes pediram nos estabelecimentos e que eles não têm.')} <NavLink to="/pedidos-clientes" className="font-medium text-accent-text underline">{t('Ver pedidos')}</NavLink>
             </Alert>
           )}
           <Card className="mt-4">
-            <CardHeader title={t('Lojas na plataforma')} description={t('Últimos 6 meses (activas, em teste e suspensas).')} />
+            <CardHeader title={t('Estabelecimentos na plataforma')} description={t('Últimos 6 meses (activas, em teste e suspensas).')} />
             <div className="flex h-40 items-end gap-3">
               {data.growth.map((g) => (
                 <div key={g.month} className="flex flex-1 flex-col items-center gap-1.5">
@@ -210,13 +210,24 @@ function Requests() {
   const toast = useToast();
   const { t } = useI18n();
   const { data, loading, error, reload } = useLoad('/api/admin/requests');
+  const confirm = useConfirm();
   const [approved, setApproved] = useState(null);
   const [rejecting, setRejecting] = useState(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState('');
   async function approve(x) {
     setBusy(x.id);
-    try { const r = await api.post(`/api/admin/requests/${x.id}/approve`); setApproved({ ...r.data, name: x.name, phone: x.phone, owner_name: x.owner_name }); reload(); } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
+    try {
+      let r;
+      try { r = await api.post(`/api/admin/requests/${x.id}/approve`); } catch (err) {
+        // 31/10: o e-mail ja e de um dono -> juntar este estabelecimento a conta dele.
+        if (err?.response?.data?.code !== 'EMAIL_IS_OWNER') throw err;
+        if (!(await confirm({ title: t('Juntar à conta que já existe?'), message: errorMessage(err) + ' ' + t('O dono entra com a senha que já tem e passa a ver este estabelecimento na lista dele.'), confirmLabel: t('Juntar') }))) return;
+        r = await api.post(`/api/admin/requests/${x.id}/approve`, { join_existing: true });
+      }
+      if (r.data.joined) { toast(t('Estabelecimento juntado à conta de {name}.', { name: r.data.owner_name })); reload(); return; }
+      setApproved({ ...r.data, name: x.name, phone: x.phone, owner_name: x.owner_name }); reload();
+    } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
   async function reject() {
     setBusy(rejecting.id);
@@ -284,11 +295,11 @@ function Tenants() {
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Toolbar>
         <Segmented value={filter} onChange={setFilter} options={[{ value: 'live', label: t('Activas e em teste') }, { value: 'problem', label: t('Suspensas') }, { value: 'all', label: t('Todas') }]} />
-        <Input aria-label={t('Pesquisar')} placeholder={t('Pesquisar loja, dono ou telefone')} value={q} onChange={(e) => setQ(e.target.value)} className="ml-auto w-72" />
+        <Input aria-label={t('Pesquisar')} placeholder={t('Pesquisar estabelecimento, dono ou telefone')} value={q} onChange={(e) => setQ(e.target.value)} className="ml-auto w-72" />
       </Toolbar>
       <Table
         columns={[
-          { key: 'name', header: t('Loja'), render: (x) => <div><p className="text-ink">{x.name}</p><p className="text-xs text-ink-muted">{t(TYPES[x.business_type] || x.business_type)} · {x.location}</p></div> },
+          { key: 'name', header: t('Estabelecimento'), render: (x) => <div><p className="text-ink">{x.name}</p><p className="text-xs text-ink-muted">{t(TYPES[x.business_type] || x.business_type)} · {x.location}</p></div> },
           { key: 'status', header: t('Estado'), render: (x) => <Badge tone={STATUS[x.status]?.tone}>{STATUS[x.status] ? t(STATUS[x.status].label) : x.status}</Badge> },
           { key: 'trial', header: t('Teste / activa até'), render: (x) => {
             const until = x.status === 'trial' ? x.trial_ends_at : x.status === 'active' ? x.subscription_until : null;
@@ -300,7 +311,7 @@ function Tenants() {
         rows={rows}
         loading={loading && !data}
         onRowClick={(x) => setSelected(x.id)}
-        empty={<p className="py-10 text-center text-ink-muted">{t('Nenhuma loja.')}</p>}
+        empty={<p className="py-10 text-center text-ink-muted">{t('Nenhum estabelecimento.')}</p>}
       />
       {selected && <TenantDrawer id={selected} onClose={() => setSelected(null)} onChanged={reload} />}
     </>
@@ -332,7 +343,7 @@ function TenantDrawer({ id, onClose, onChanged }) {
     } catch (err) { if (tab) tab.close(); toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
   return (
-    <Drawer open onClose={onClose} title={s?.name || t('Loja')} description={s ? `${t(TYPES[s.business_type] || s.business_type)} · ${s.location}` : ''}>
+    <Drawer open onClose={onClose} title={s?.name || t('Estabelecimento')} description={s ? `${t(TYPES[s.business_type] || s.business_type)} · ${s.location}` : ''}>
       {!s ? <Spinner /> : (
         <div className="flex flex-col gap-5">
           <div>
@@ -374,12 +385,12 @@ function TenantDrawer({ id, onClose, onChanged }) {
                 {s.status === 'active' ? t('Renovar (pagamento recebido)') : t('Activar subscrição (pagamento recebido)')}
               </Button>
             )}
-            {['active', 'trial'].includes(s.status) && <Button variant="danger-ghost" loading={busy === 'suspend'} onClick={() => act('suspend', t('Suspender'), { confirm: t('Todas as sessões e terminais da loja deixam de funcionar de imediato.'), danger: true })}>{t('Suspender (pagamento em atraso)')}</Button>}
+            {['active', 'trial'].includes(s.status) && <Button variant="danger-ghost" loading={busy === 'suspend'} onClick={() => act('suspend', t('Suspender'), { confirm: t('Todas as sessões e terminais do estabelecimento deixam de funcionar de imediato.'), danger: true })}>{t('Suspender (pagamento em atraso)')}</Button>}
             {s.status === 'suspended' && <Button loading={busy === 'unsuspend'} onClick={() => act('unsuspend', t('Reactivar'))}>{t('Reactivar')}</Button>}
             {s.status === 'blocked' ? <Button loading={busy === 'unblock'} onClick={() => act('unblock', t('Desbloquear'))}>{t('Desbloquear')}</Button>
               : s.status !== 'deleted' && <Button variant="danger-ghost" loading={busy === 'block'} onClick={() => act('block', t('Bloquear'), { confirm: t('Bloqueio por abuso ou fraude.'), danger: true, body: { reason: 'Bloqueio administrativo' } })}>{t('Bloquear')}</Button>}
-            {s.status === 'deleted' ? <Button loading={busy === 'restore'} onClick={() => act('restore', t('Recuperar'))}>{t('Recuperar loja')}</Button>
-              : <Button variant="danger-ghost" loading={busy === 'delete'} onClick={() => act('delete', t('Eliminar'), { confirm: t('Desactiva todas as contas da loja. Os dados ficam guardados e a loja pode ser recuperada.'), danger: true })}>{t('Eliminar')}</Button>}
+            {s.status === 'deleted' ? <Button loading={busy === 'restore'} onClick={() => act('restore', t('Recuperar'))}>{t('Recuperar estabelecimento')}</Button>
+              : <Button variant="danger-ghost" loading={busy === 'delete'} onClick={() => act('delete', t('Eliminar'), { confirm: t('Desactiva todas as contas do estabelecimento. Os dados ficam guardados e o estabelecimento pode ser recuperado.'), danger: true })}>{t('Eliminar')}</Button>}
           </div>
         </div>
       )}
@@ -414,13 +425,13 @@ function Catalogs() {
     try {
       if (open.id) await api.put('/api/admin/master-catalog/' + open.id, body);
       else await api.post('/api/admin/master-catalog', { ...body, business_type: type });
-      toast(open.id ? t('Produto actualizado. As lojas novas já o recebem assim.') : t('Produto acrescentado ao catálogo-mestre.'));
+      toast(open.id ? t('Produto actualizado. Os estabelecimentos novos já o recebem assim.') : t('Produto acrescentado ao catálogo-mestre.'));
       setOpen(null); reload();
     } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(false); }
   }
   return (
     <>
-      <PageHeader title={t('Catálogos-mestre')} description={t('Produtos sugeridos às lojas novas no onboarding, por tipo de negócio. Toque num produto para o editar.')} />
+      <PageHeader title={t('Catálogos-mestre')} description={t('Produtos sugeridos aos estabelecimentos novos no onboarding, por tipo de negócio. Toque num produto para o editar.')} />
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Toolbar>
         <Select aria-label={t('Tipo de negócio')} value={type} onChange={(e) => setType(e.target.value)} className="w-56">
@@ -429,7 +440,7 @@ function Catalogs() {
         <Input aria-label={t('Procurar no catálogo')} placeholder={t('Procurar…')} value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-64" />
         <Button variant="primary" className="ml-auto" onClick={() => setOpen({ ...EMPTY_MASTER })}>{t('Novo produto')}</Button>
       </Toolbar>
-      <Alert tone="info" className="mb-4">{t('As alterações valem para as lojas novas. As lojas que já existem mantêm os seus produtos e preços.')}</Alert>
+      <Alert tone="info" className="mb-4">{t('As alterações valem para os estabelecimentos novos. Os estabelecimentos que já existem mantêm os seus produtos e preços.')}</Alert>
       <Table
         columns={[
           { key: 'name', header: t('Produto'), render: (p) => <div className="flex items-center gap-3"><ProductImage product={{ name: p.product_name, category: p.category, icon: p.icon }} size={32} /><div><p className="text-ink">{p.product_name}</p><p className="text-xs text-ink-muted">{p.product_name_en || <span className="italic">{t('sem nome em inglês')}</span>} · {p.category}{p.barcode ? ' · ' + p.barcode : ''}</p></div></div> },
@@ -497,7 +508,7 @@ function LostRequests() {
   const { data, error, loading } = useLoad('/api/admin/lost-requests?days=' + days);
   return (
     <>
-      <PageHeader title={t('Pedidos de clientes')} description={t('O que os clientes pediram nas lojas e não havia, escrito pelos caixistas fora do catálogo da loja. Ajuda a decidir o que pôr no catálogo-mestre.')} />
+      <PageHeader title={t('Pedidos de clientes')} description={t('O que os clientes pediram nos estabelecimentos e não havia, escrito pelos caixistas fora do catálogo do estabelecimento. Ajuda a decidir o que pôr no catálogo-mestre.')} />
       <Toolbar>
         <Segmented value={days} onChange={setDays} options={[{ value: '30', label: t('30 dias') }, { value: '90', label: t('90 dias') }, { value: '365', label: t('1 ano') }]} />
         {data && <span className="text-sm text-ink-muted">{t('{n} pedido(s)', { n: data.total_requests })}</span>}
@@ -584,7 +595,7 @@ function Suggestions() {
         suggested_cost: open.cost, suggested_sell: open.sell, barcode: open.barcode?.trim() || null, icon: open.icon || null,
         also_types: open.also_types || [],
       });
-      toast((open.also_types || []).length ? t('Acrescentado a {n} tipos de negócio.', { n: 1 + open.also_types.length }) : t('Acrescentado ao catálogo-mestre. As lojas novas deste tipo já o recebem.'));
+      toast((open.also_types || []).length ? t('Acrescentado a {n} tipos de negócio.', { n: 1 + open.also_types.length }) : t('Acrescentado ao catálogo-mestre. Os estabelecimentos novos deste tipo já o recebem.'));
       setOpen(null); reload();
     } catch (err) { toast(errorMessage(err), 'danger'); } finally { setBusy(''); }
   }
@@ -594,7 +605,7 @@ function Suggestions() {
   }
   return (
     <>
-      <PageHeader title={t('Sugestões do catálogo')} description={t('Produtos que as lojas acrescentaram e que não estão no catálogo-mestre. Ao acrescentar, as lojas novas desse tipo passam a recebê-los no início.')} />
+      <PageHeader title={t('Sugestões do catálogo')} description={t('Produtos que os estabelecimentos acrescentaram e que não estão no catálogo-mestre. Ao acrescentar, os estabelecimentos novos desse tipo passam a recebê-los no início.')} />
       {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
       <Table
         columns={[
@@ -615,7 +626,7 @@ function Suggestions() {
         open={Boolean(open)}
         onClose={() => setOpen(null)}
         title={t('Acrescentar ao catálogo-mestre')}
-        description={open ? t('{type} · pedido por {n} loja(s)', { type: t(TYPES[open.business_type] || open.business_type), n: open.stores }) : ''}
+        description={open ? t('{type} · pedido por {n} estabelecimento(s)', { type: t(TYPES[open.business_type] || open.business_type), n: open.stores }) : ''}
         footer={open && (
           <>
             <Button variant="danger-ghost" className="mr-auto" loading={busy === 'dismiss'} onClick={() => dismiss(open)}>{t('Ignorar')}</Button>
@@ -626,7 +637,7 @@ function Suggestions() {
       >
         {open && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-ink-2">{t('Pode corrigir o nome e os preços antes de acrescentar (ficam como sugestão para as lojas novas).')}</p>
+            <p className="text-sm text-ink-2">{t('Pode corrigir o nome e os preços antes de acrescentar (ficam como sugestão para os estabelecimentos novos).')}</p>
             <Input label={t('Nome')} value={open.product_name} onChange={(e) => setOpen({ ...open, product_name: e.target.value })} />
             <Input label={t('Nome em inglês')} value={open.product_name_en || ''} maxLength={120} onChange={(e) => setOpen({ ...open, product_name_en: e.target.value })} />
             <Input label={t('Categoria')} value={open.category} onChange={(e) => setOpen({ ...open, category: e.target.value })} />
@@ -634,7 +645,7 @@ function Suggestions() {
               <MoneyInput label={t('Preço de compra sugerido')} valueCents={open.cost} onChangeCents={(v) => setOpen({ ...open, cost: v })} />
               <MoneyInput label={t('Preço de venda sugerido')} valueCents={open.sell} onChangeCents={(v) => setOpen({ ...open, sell: v })} />
             </div>
-            <KeyValue label={t('Preços de venda nas lojas')} value={open.min_sell === open.max_sell ? money(open.min_sell) : `${money(open.min_sell)} – ${money(open.max_sell)}`} />
+            <KeyValue label={t('Preços de venda nos estabelecimentos')} value={open.min_sell === open.max_sell ? money(open.min_sell) : `${money(open.min_sell)} – ${money(open.max_sell)}`} />
             <Input label={t('Código de barras')} value={open.barcode || ''} onChange={(e) => setOpen({ ...open, barcode: e.target.value })} inputClassName="num" hint={open.barcode ? t('Veio do estabelecimento que criou o produto. Corrija se estiver errado.') : undefined} />
             <fieldset>
               <legend className="mb-1.5 text-sm font-medium text-ink">{t('Acrescentar também a')}</legend>
@@ -670,7 +681,7 @@ function Audit() {
         columns={[
           { key: 'when', header: t('Quando'), render: (a) => <span className="whitespace-nowrap">{dateTime(a.created_at)}</span> },
           { key: 'action', header: t('Acção'), render: (a) => <span className="font-medium text-ink">{a.action}</span> },
-          { key: 'tenant', header: t('Loja'), render: (a) => a.tenant_name || '—' },
+          { key: 'tenant', header: t('Estabelecimento'), render: (a) => a.tenant_name || '—' },
           { key: 'user', header: t('Por'), render: (a) => <span className="text-ink-2">{a.user_name}</span> },
         ]}
         rows={data || []}
@@ -691,7 +702,9 @@ export default function App() {
               <Route element={<RequireAdmin><Shell /></RequireAdmin>}>
                 <Route index element={<Overview />} />
                 <Route path="pedidos" element={<Requests />} />
-                <Route path="lojas" element={<Tenants />} />
+                <Route path="estabelecimentos" element={<Tenants />} />
+                {/* 31/10: o endereco antigo continua a abrir (links guardados). */}
+                <Route path="lojas" element={<Navigate to="/estabelecimentos" replace />} />
                 <Route path="mapa" element={<Suspense fallback={null}><LiveMap /></Suspense>} />
                 <Route path="catalogos" element={<Catalogs />} />
                 <Route path="sugestoes" element={<Suggestions />} />

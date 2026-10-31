@@ -67,7 +67,7 @@ try {
   await dr.getByLabel('Preço de venda sugerido').fill('52,50');
   await shot(page, 'm1-editar-catalogo');
   await dr.getByRole('button', { name: 'Guardar' }).click();
-  await page.getByText('Produto actualizado. As lojas novas já o recebem assim.').waitFor({ timeout: T });
+  await page.getByText('Produto actualizado. Os estabelecimentos novos já o recebem assim.').waitFor({ timeout: T });
   await page.locator('tbody tr', { hasText: NAME + ' 1L' }).waitFor({ timeout: T });
   ok(/52,50 MT/.test(await page.locator('tbody tr', { hasText: NAME + ' 1L' }).textContent()), 'tabela mostra 52,50 MT');
   o = await onboarding();

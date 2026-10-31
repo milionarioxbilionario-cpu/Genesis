@@ -18,7 +18,7 @@ const EN = {
   'É válido por 15 minutos. Se não foi você, ignore esta mensagem e mude a sua senha.': 'It is valid for 15 minutes. If this was not you, ignore this message and change your password.',
   // Lista de compras -> fornecedor
   'Olá{name}, daqui fala {store}.': 'Hello{name}, this is {store}.',
-  'a loja': 'the store',
+  'o seu cliente': 'your customer',
   'Gostaria de encomendar:': 'I would like to order:',
   'Pode confirmar o preço e quando entrega? Obrigado.': 'Can you confirm the price and when you deliver? Thank you.',
   // Alertas
@@ -31,7 +31,7 @@ const EN = {
   'gestor': 'manager',
   'Olá {name}, todos os produtos estão dentro do normal.': 'Hello {name}, all products are within normal levels.',
   'Olá {name}, Genesis reportou alertas operacionais: {list}': 'Hello {name}, Genesis reported operational alerts: {list}',
-  'Genesis: teste de ligação WhatsApp da loja {name}.': 'Genesis: WhatsApp connection test for the store {name}.',
+  'Genesis: teste de ligação WhatsApp do estabelecimento {name}.': 'Genesis: WhatsApp connection test for the business {name}.',
   // Relatorios por WhatsApp
   'Relatório diário {day}': 'Daily report {day}',
   ' (até agora)': ' (so far)',

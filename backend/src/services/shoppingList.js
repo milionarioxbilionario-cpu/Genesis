@@ -27,7 +27,7 @@ function waPhone(phone) {
 function orderMessage({ storeName, supplierName, items, lang = 'pt' }) {
   const lines = items.map((it) => `- ${qtyText(it.quantity, it.unit)} × ${it.product_name}`);
   return [
-    tr(lang, 'Olá{name}, daqui fala {store}.', { name: supplierName ? ' ' + supplierName : '', store: storeName || tr(lang, 'a loja') }),
+    tr(lang, 'Olá{name}, daqui fala {store}.', { name: supplierName ? ' ' + supplierName : '', store: storeName || tr(lang, 'o seu cliente') }),
     tr(lang, 'Gostaria de encomendar:'),
     ...lines,
     '',
