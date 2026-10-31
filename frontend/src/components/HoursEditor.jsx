@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, X } from 'lucide-react';
 import { useI18n } from '../i18n/react';
-import { Button, IconButton, Segmented, Select, cx } from './ui';
+import { Button, IconButton, Select, cx } from './ui';
 
 // Horario de funcionamento (31/10/2026; o servidor valida em backend/src/utils/hours.js).
 // O fundador: «e se for 24/24h? segunda fecha as 20h, sexta nao fecha, domingo
@@ -73,11 +73,15 @@ export default function HoursEditor({ value, onChange }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Segmented className="w-full" value={s.mode} onChange={setMode} options={[
-        { value: 'same', label: t('Todos os dias igual') },
-        { value: '24h', label: t('Aberto 24 horas') },
-        { value: 'custom', label: t('Horário por dia') },
-      ]} />
+      {/* Em coluna no telemovel, em linha no PC: os 3 nomes nunca saem do ecra. */}
+      <div role="radiogroup" aria-label={t('Horário')} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {[['same', t('Todos os dias igual')], ['24h', t('Aberto 24 horas')], ['custom', t('Horário por dia')]].map(([v, label]) => (
+          <button key={v} type="button" role="radio" aria-checked={s.mode === v} onClick={() => setMode(v)}
+            className={cx('h-10 rounded border px-3 text-sm font-medium', s.mode === v ? 'border-accent bg-accent-soft text-accent' : 'border-border-strong bg-surface text-ink-2 hover:bg-subtle')}>
+            {label}
+          </button>
+        ))}
+      </div>
 
       {s.mode === 'same' && (
         <Intervals t={t} list={sameList} onChange={(list) => set({ days: Object.fromEntries(Object.keys(DEFAULT_SCHEDULE.days).map((d) => [d, list])) })} />
