@@ -239,4 +239,5 @@ addTranslations('en', {
   'Subscrição paga': 'Subscription paid',
   'O que entra a verde e o que sai a vermelho (cancelamentos, perdas, txenekas, despesas), com os turnos, no momento em que acontecem. Hora de Maputo: {h}.': 'Money in shows green and money out red (cancellations, losses, txenekas, expenses), with shifts, as they happen. Maputo time: {h}.',
   'À espera do próximo movimento…': 'Waiting for the next movement…',
+  'O Mapbox recusou as imagens de satélite a esta conta (limite ou faturação da conta Mapbox). Mostro o mapa normal; na conta Mapbox veja o uso e a faturação.': 'Mapbox refused satellite images for this account (Mapbox account limit or billing). Showing the normal map; check usage and billing in the Mapbox account.',
 });

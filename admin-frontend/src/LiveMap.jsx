@@ -70,6 +70,9 @@ export default function LiveMap() {
   const modeRef = useRef('map');
   const [clock, setClock] = useState(() => new Date());
   const [ready, setReady] = useState(false);
+  // 31/10: o Mapbox recusou as imagens de satelite a esta chave (429 = limite da conta) — visto num ensaio
+  // isolado, tambem com o estilo oficial de satelite. Em vez de um mapa «bugado», aviso e volta ao mapa.
+  const [satRefused, setSatRefused] = useState(false);
 
   useEffect(() => { const i = setInterval(() => setClock(new Date()), 30000); return () => clearInterval(i); }, []);
 
@@ -88,6 +91,10 @@ export default function LiveMap() {
       mapboxgl.accessToken = TOKEN;
       const map = new mapboxgl.Map({ container: box.current, style: STYLE_URL, projection: 'globe', center: MOZ.center, zoom: MOZ.zoom, pitch: 45, bearing: -10, attributionControl: true });
       map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+      map.on('error', (e) => {
+        const x = e && e.error;
+        if (x && [401, 402, 403, 429].includes(x.status) && String(x.url || '').includes('mapbox.satellite')) { setSatRefused(true); setStyle('map'); }
+      });
       map.on('style.load', () => {
         try {
           if (!map.getSource(SAT)) map.addSource(SAT, { type: 'raster', url: 'mapbox://mapbox.satellite', tileSize: 256 });
@@ -148,6 +155,7 @@ export default function LiveMap() {
     <div className="flex flex-col gap-4">
       <PageHeader title={t('Mapa ao vivo')} description={t('O que entra a verde e o que sai a vermelho (cancelamentos, perdas, txenekas, despesas), com os turnos, no momento em que acontecem. Hora de Maputo: {h}.', { h: hh })} />
       {error && <Alert tone="danger">{error}</Alert>}
+      {satRefused && <Alert tone="warning">{t('O Mapbox recusou as imagens de satélite a esta conta (limite ou faturação da conta Mapbox). Mostro o mapa normal; na conta Mapbox veja o uso e a faturação.')}</Alert>}
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <div className="relative overflow-hidden rounded-lg border border-border bg-subtle" style={{ height: 'min(70vh, 640px)' }}>
           {/* h-full (nao absolute): o CSS do Mapbox poe o contentor em position:relative. */}
