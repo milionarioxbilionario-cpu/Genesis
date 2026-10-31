@@ -167,6 +167,8 @@ model Sale {
   daily_number    Int?
   /// Fase 15.2: IVA incluido no total (centavos, depois do desconto).
   vat_amount      Int        @default(0)
+  /// E2 (31/10/2026): terminal de onde saiu a venda (null = antes disto ou do painel).
+  terminal_id     String?
   cashier         User       @relation("CashierSales", fields: [cashier_user_id], references: [id])
   tenant          Tenant     @relation(fields: [tenant_id], references: [id])
   items           SaleItem[]

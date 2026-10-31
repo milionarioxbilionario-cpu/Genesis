@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { DoorOpen, Fingerprint, Monitor, Plus, Trash2 } from 'lucide-react';
 import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
-import { useSession } from '../../utils/session';
+import { useSession, isManager } from '../../utils/session';
 import { passkeyFlag } from '../../components/PanelLock';
 import { rememberPin } from '../../utils/offlinePin';
 import { receiptPreviewHtml } from '../../utils/receiptPrinter';
@@ -26,20 +26,25 @@ const TABS = [
   { value: 'audit', label: 'Auditoria' },
 ];
 
+// E2: o gerente ve so o operacional (o servidor recusa o resto).
+const MANAGER_TABS = TABS.filter((x) => ['store', 'terminals', 'audit'].includes(x.value));
+
 export default function Settings() {
   const { t } = useI18n();
+  const { user } = useSession();
+  const manager = isManager(user);
   const [params, setParams] = useSearchParams();
   const tab = params.get('tab') || 'store';
   const settings = useApi('/api/settings');
   return (
     <>
       <PageHeader title={t('Definições')} />
-      <Tabs className="mb-6" value={tab} onChange={(v) => setParams({ tab: v })} items={TABS.map((x) => ({ ...x, label: t(x.label) }))} />
+      <Tabs className="mb-6" value={tab} onChange={(v) => setParams({ tab: v })} items={(manager ? MANAGER_TABS : TABS).map((x) => ({ ...x, label: t(x.label) }))} />
       {settings.error && <Alert tone="danger" className="mb-4">{settings.error}</Alert>}
       {!settings.data && tab !== 'audit' && tab !== 'terminals' ? <Skeleton className="h-40 w-full max-w-2xl" /> : (
         <div className="max-w-3xl">
-          {tab === 'store' && <Store s={settings.data} reload={settings.reload} />}
-          {tab === 'costs' && (
+          {tab === 'store' && (manager ? <ManagerStore s={settings.data} reload={settings.reload} /> : <Store s={settings.data} reload={settings.reload} />)}
+          {tab === 'costs' && !manager && (
             <>
               <h2 className="mb-1 text-lg font-semibold text-ink">{t('Custos fixos')}</h2>
               <p className="mb-3 text-sm text-ink-muted">{t('O que paga todos os meses (renda, água e luz fixas...). Descontado no lucro de cada mês.')}</p>
@@ -47,12 +52,58 @@ export default function Settings() {
               <Expenses />
             </>
           )}
-          {tab === 'discounts' && <Discounts s={settings.data} reload={settings.reload} />}
+          {tab === 'discounts' && !manager && <Discounts s={settings.data} reload={settings.reload} />}
           {tab === 'terminals' && <Terminals />}
           {tab === 'audit' && <AuditLogPage settings={settings.data} reloadSettings={settings.reload} />}
         </div>
       )}
     </>
+  );
+}
+
+// E2: o que o gerente muda — a mensagem do recibo, o horario, as validades e a venda personalizada.
+function ManagerStore({ s, reload }) {
+  const toast = useToast();
+  const { t } = useI18n();
+  const [footer, setFooter] = useState(s.store?.receipt_footer || '');
+  const [hours, setHours] = useState({ ...s.hours, schedule: scheduleFrom(s.hours) });
+  const [alertDays, setAlertDays] = useState(String(s.expiry_alert_days ?? 7));
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  async function save(kind) {
+    setBusy(kind); setError('');
+    try {
+      if (kind === 'footer') await api.put('/api/settings/store', { receipt_footer: footer.trim() || null });
+      else if (kind === 'expiry') await api.put('/api/settings/expiry-alert', { expiry_alert_days: Number(alertDays) });
+      else await api.put('/api/settings/hours', { schedule: hours.schedule });
+      toast(t('Alterações guardadas.'));
+      forgetReceiptInfo();
+      reload();
+    } catch (err) { setError(errorMessage(err)); } finally { setBusy(''); }
+  }
+  return (
+    <div className="flex flex-col gap-4">
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Card>
+        <CardHeader title={t('Mensagem no fim do recibo')} description={t('O nome, o contacto e o NUIT do estabelecimento são do dono.')} />
+        <Input aria-label={t('Mensagem no fim do recibo')} maxLength={160} value={footer} onChange={(e) => setFooter(e.target.value)} placeholder={t('Obrigado pela preferência!')} />
+        <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'footer'} onClick={() => save('footer')}>{t('Guardar')}</Button></div>
+      </Card>
+      <Card>
+        <CardHeader title={t('Horário')} description={t('Quando está aberto. Serve para o relatório e o aviso de fecho do dia; o balcão pode vender sempre.')} />
+        <HoursEditor value={hours.schedule} onChange={(schedule) => setHours({ ...hours, schedule })} />
+        <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'hours'} onClick={() => save('hours')}>{t('Guardar')}</Button></div>
+      </Card>
+      <Card>
+        <CardHeader title={t('Validades')} description={t('Quantos dias antes da data de validade um lote aparece nos alertas. No dia seguinte à validade, o que não se vendeu é registado como perda automaticamente.')} />
+        <div className="flex items-end gap-3">
+          <Input label={t('Avisar com')} inputMode="numeric" value={alertDays} onChange={(e) => setAlertDays(e.target.value.replace(/\D/g, '').slice(0, 2))} className="w-32" inputClassName="num text-right" />
+          <span className="pb-2 text-base text-ink-2">{t('dias de antecedência')}</span>
+          <Button className="ml-auto" variant="primary" loading={busy === 'expiry'} disabled={!(Number(alertDays) >= 1 && Number(alertDays) <= 90)} onClick={() => save('expiry')}>{t('Guardar')}</Button>
+        </div>
+      </Card>
+      <CustomItemsCard s={s} reload={reload} />
+    </div>
   );
 }
 
@@ -555,6 +606,9 @@ function Terminals() {
   const toast = useToast();
   const confirm = useConfirm();
   const { t } = useI18n();
+  // E2: eliminar um terminal de vez e do dono (o gerente revoga e reactiva).
+  const { user } = useSession();
+  const manager = isManager(user);
   const terminals = useApi('/api/owner/terminals');
   const cashiers = useApi('/api/owner/cashiers');
   const [members, setMembers] = useState(null); // { terminal, ids }
@@ -626,7 +680,7 @@ function Terminals() {
             <span className="flex flex-wrap justify-end gap-1">
               {x.revoked_at ? (<>
                 <Button size="sm" variant="ghost" onClick={() => reactivate(x)}>{t('Reactivar')}</Button>
-                <Button size="sm" variant="danger-ghost" onClick={() => remove(x)}>{t('Eliminar')}</Button>
+                {!manager && <Button size="sm" variant="danger-ghost" onClick={() => remove(x)}>{t('Eliminar')}</Button>}
               </>) : (<>
                 <Button size="sm" variant="ghost" onClick={() => setMembers({ terminal: x, ids: x.member_ids || [] })}>{t('Perfis')}</Button>
                 <Button size="sm" variant="ghost" onClick={() => repair(x)}>{t('Novo código')}</Button>

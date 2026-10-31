@@ -4,7 +4,7 @@ import { Area, AreaChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } f
 import { ArrowDownRight, ArrowUpRight, Target } from 'lucide-react';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
-import { useSession } from '../../utils/session';
+import { useSession, isManager } from '../../utils/session';
 import { money, pct, time, errorMessage, PAYMENT_LABEL, isMoneyHidden } from '../../utils/format';
 import { locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
@@ -75,7 +75,8 @@ export default function Home() {
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <TodayCard today={o.today} />
-            <GoalCard month={o.month} onEdit={openGoal} />
+            {/* E2: a meta e do dono; o gerente ve o progresso. */}
+            <GoalCard month={o.month} onEdit={isManager(user) ? null : openGoal} />
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <CashiersCard cashiers={o.cashiers} />
@@ -120,10 +121,11 @@ function TodayCard({ today }) {
           )}
         </span>
       </div>
-      <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-[#2B6A57] pt-4">
+      {/* E2: o lucro nao chega ao gerente (o servidor corta-o): ficam 2 colunas. */}
+      <dl className={'mt-5 grid gap-3 border-t border-[#2B6A57] pt-4 ' + (typeof today.gross_profit === 'number' ? 'grid-cols-3' : 'grid-cols-2')}>
         <div><dt className="text-xs text-[#CFE3DB]">{t('Vendas')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpInt value={today.sales_count} /></dd></div>
         <div><dt className="text-xs text-[#CFE3DB]">{t('Ticket médio')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpMoney cents={today.average_ticket} /></dd></div>
-        <div><dt className="text-xs text-[#CFE3DB]">{t('Lucro bruto')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpMoney cents={today.gross_profit} /></dd></div>
+        {typeof today.gross_profit === 'number' && <div><dt className="text-xs text-[#CFE3DB]">{t('Lucro bruto')}</dt><dd className="mt-0.5 whitespace-nowrap text-md font-semibold sm:text-lg"><CountUpMoney cents={today.gross_profit} /></dd></div>}
       </dl>
       {today.sales_count > 0 && (
         <div className="-mx-2 mt-3 h-20" aria-hidden="true">
@@ -175,12 +177,12 @@ function GoalCard({ month, onEdit }) {
     <Card className="reveal" style={{ animationDelay: '60ms' }}>
       <CardHeader
         title={t('Meta de {month}', { month: monthName })}
-        action={<Button size="sm" variant="ghost" onClick={onEdit}>{month.has_goal ? t('Alterar') : t('Definir')}</Button>}
+        action={onEdit ? <Button size="sm" variant="ghost" onClick={onEdit}>{month.has_goal ? t('Alterar') : t('Definir')}</Button> : null}
       />
       {!month.has_goal ? (
         <div className="flex flex-col items-start gap-3">
           <p className="text-base text-ink-muted">{t('Já vendeu {v} este mês. Defina quanto quer vender para ver o progresso e quando lá chega.', { v: money(month.revenue) })}</p>
-          <Button variant="primary" icon={Target} onClick={onEdit}>{t('Definir a meta')}</Button>
+          {onEdit ? <Button variant="primary" icon={Target} onClick={onEdit}>{t('Definir a meta')}</Button> : <p className="text-sm text-ink-muted">{t('O dono ainda não definiu a meta deste mês.')}</p>}
         </div>
       ) : (
         <>

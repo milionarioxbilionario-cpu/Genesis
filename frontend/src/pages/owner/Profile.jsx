@@ -5,12 +5,36 @@ import api, { trackOwnCredentialChange } from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { date, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
+import { useSession, isManager } from '../../utils/session';
 import { Alert, Badge, Button, Card, CardHeader, Dialog, Input, PageHeader, Skeleton, useToast } from '../../components/ui';
 
 // Fase 16: perfil do dono — conta, senha, e-mail (codigo no actual e no novo),
 // WhatsApp dos alertas, plano e aniversario (definido uma vez; o presente so se
 // explica depois de definido).
 export default function Profile() {
+  const { user } = useSession();
+  // E2: o gerente so muda a propria senha (o resto do perfil e do dono).
+  if (isManager(user)) return <ManagerProfile user={user} />;
+  return <OwnerProfile />;
+}
+
+function ManagerProfile({ user }) {
+  const { t } = useI18n();
+  return (
+    <>
+      <PageHeader title={t('Perfil')} description={t('A sua conta de gerente.')} />
+      <div className="grid max-w-4xl grid-cols-1 gap-4">
+        <Card>
+          <CardHeader title={user.name} description={user.email} />
+          <p className="text-sm text-ink-muted">{t('O dono criou esta conta. Para mudar o nome ou o e-mail, fale com ele.')}</p>
+        </Card>
+        <PasswordCard />
+      </div>
+    </>
+  );
+}
+
+function OwnerProfile() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi('/api/profile');

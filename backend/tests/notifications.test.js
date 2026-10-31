@@ -115,3 +115,11 @@ test('31/10: lembrete «marque o estabelecimento no mapa» so quando falta o pon
   assert.ok(!buildNotifications({ ...base, hasLocation: true }).some((n) => n.type === 'no_location'), 'com ponto: nada');
   assert.ok(!buildNotifications(base).some((n) => n.type === 'no_location'), 'sem informacao: nada (testes antigos)');
 });
+
+test('E2: produtos do gerente sem custo — um aviso para o dono, com ate 3 nomes', () => {
+  const none = buildNotifications({ now: NOW, costMissing: [] });
+  assert.ok(!none.some((n) => n.type === 'cost_missing'));
+  const items = buildNotifications({ now: NOW, costMissing: [{ id: 'a', name: 'Arroz' }, { id: 'b', name: 'Feijao' }, { id: 'c', name: 'Oleo' }, { id: 'd', name: 'Sal' }] });
+  const n = items.find((i) => i.type === 'cost_missing');
+  assert.deepStrictEqual({ level: n.level, link: n.link, params: n.params }, { level: 'warning', link: '/app/produtos', params: { count: 4, names: ['Arroz', 'Feijao', 'Oleo'] } });
+});

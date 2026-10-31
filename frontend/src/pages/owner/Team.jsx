@@ -5,16 +5,28 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, date, isoDay, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
+import { useSession, isManager } from '../../utils/session';
+import ManagersCard from '../../components/ManagersCard';
 import { Alert, Badge, Button, Dialog, Drawer, Input, MoneyInput, PageHeader, Select, Table, Tabs, Toolbar, useConfirm, useToast } from '../../components/ui';
 
 export default function Team() {
   const { t } = useI18n();
+  const { user } = useSession();
   const [tab, setTab] = useState('cashiers');
+  // E2: o gerente gere caixistas e guardas; os gerentes e a folha salarial sao do dono.
+  if (isManager(user)) {
+    return (
+      <>
+        <PageHeader title={t('Equipa')} description={t('Caixistas e guardas que entram no terminal com o PIN.')} />
+        <Cashiers />
+      </>
+    );
+  }
   return (
     <>
-      <PageHeader title={t('Equipa')} description={t('Caixistas que vendem no terminal e trabalhadores na folha salarial.')} />
-      <Tabs className="mb-5" value={tab} onChange={setTab} items={[{ value: 'cashiers', label: t('Caixistas') }, { value: 'employees', label: t('Trabalhadores') }]} />
-      {tab === 'cashiers' ? <Cashiers /> : <Employees />}
+      <PageHeader title={t('Equipa')} description={t('Caixistas que vendem no terminal, gerentes e trabalhadores na folha salarial.')} />
+      <Tabs className="mb-5" value={tab} onChange={setTab} items={[{ value: 'cashiers', label: t('Caixistas') }, { value: 'managers', label: t('Gerentes') }, { value: 'employees', label: t('Trabalhadores') }]} />
+      {tab === 'cashiers' ? <Cashiers /> : tab === 'managers' ? <ManagersCard tenantId={user?.tenant_id} /> : <Employees />}
     </>
   );
 }

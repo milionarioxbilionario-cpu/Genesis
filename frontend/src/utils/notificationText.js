@@ -26,6 +26,8 @@ export function notificationTitle(n) {
     case 'goal_reached': return t('Meta atingida');
     case 'day_closed': return t('Fecho do dia');
     case 'no_location': return t('Marque o estabelecimento no mapa');
+    // E2: produtos que o gerente criou (ele nao ve custos) e ainda tem custo 0.
+    case 'cost_missing': return t('Produtos sem custo');
     default: return n.type;
   }
 }
@@ -50,6 +52,7 @@ export function notificationDetail(n) {
     case 'goal_reached': return t('{month}: {current} vendidos, meta {target}.', { month: monthName(p.month), current: money(p.current), target: money(p.target) });
     case 'day_closed': return t('Hoje: {n} venda(s), {v}. Ver o relatório do dia.', { n: p.sales, v: money(p.revenue) });
     case 'no_location': return t('Definições › Estabelecimento › «Onde fica o estabelecimento?». Use o telemóvel no local ou cole o link do Google Maps.');
+    case 'cost_missing': return t('O gerente criou {n} produto(s) sem o custo ({names}). Ponha o preço de compra para o lucro sair certo.', { n: p.count, names: (p.names || []).join(', ') });
     default: return '';
   }
 }

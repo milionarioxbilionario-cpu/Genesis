@@ -101,7 +101,8 @@ router.post('/', asyncHandler(async (req, res) => {
   const tid = tenantId(req);
   const data = listSchema.parse(req.body);
   await supplierOf(tid, data.supplier_id);
-  const items = await resolveItems(tid, data.items);
+  // E2: o gerente nao escreve custos (fica o custo actual de cada produto).
+  const items = await resolveItems(tid, req.user.role === 'manager' ? data.items.map(({ unit_cost, ...i }) => i) : data.items);
   const list = await prisma.$transaction(async (tx) => {
     const l = await tx.shoppingList.create({ data: { tenant_id: tid, name: data.name, supplier_id: data.supplier_id || null, created_by: req.user.userId } });
     await tx.shoppingListItem.createMany({ data: items.map((it) => ({ ...it, tenant_id: tid, list_id: l.id })) });
@@ -119,7 +120,9 @@ router.put('/:id', asyncHandler(async (req, res) => {
   if (before.status === 'received') throw httpError(409, 'Lista já recebida: não pode ser alterada', 'LIST_RECEIVED');
   const data = listSchema.parse(req.body);
   await supplierOf(tid, data.supplier_id);
-  const items = await resolveItems(tid, data.items);
+  // E2: o gerente nao escreve custos; o que o dono ja tinha posto na lista fica.
+  const kept = new Map(before.items.map((b) => [b.product_id, b.unit_cost]));
+  const items = await resolveItems(tid, req.user.role === 'manager' ? data.items.map(({ unit_cost, ...i }) => ({ ...i, unit_cost: kept.get(i.product_id) ?? undefined })) : data.items);
   const list = await prisma.$transaction(async (tx) => {
     await tx.shoppingListItem.deleteMany({ where: { tenant_id: tid, list_id: before.id } });
     await tx.shoppingListItem.createMany({ data: items.map((it) => ({ ...it, tenant_id: tid, list_id: before.id })) });

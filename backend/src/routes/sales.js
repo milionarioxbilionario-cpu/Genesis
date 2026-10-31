@@ -3,10 +3,9 @@ const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
 const { attachPeople } = require('../utils/peopleNames');
-const bcrypt = require('bcrypt');
 const { getShiftLock } = require('../utils/shiftLock');
 const { shiftStatus } = require('../utils/shift');
-const { AUTH_PIN_FAIL_ACTIONS } = require('../utils/authPin');
+const { AUTH_PIN_FAIL_ACTIONS, loadAuthorizers, matchAuthorizer } = require('../utils/authPin');
 const { applyTenantRls, isSqliteUrl } = require('../utils/tenantRls');
 const { normalizePaymentMethod } = require('../utils/paymentMethods');
 const { addLot, consumeLots } = require('../utils/stockLots');
@@ -99,7 +98,8 @@ router.get('/', async (req, res) => {
 
     // O caixista ja nao lista vendas por aqui: no terminal a lista exige o PIN
     // do dono (POST /api/pos/sales) — via o total e acertava o fecho cego.
-    const isOwner = req.user.role === 'owner';
+    // E2: o gerente ve a lista como o dono (sem custos: middleware/auth.js corta-os).
+    const isOwner = req.user.role === 'owner' || req.user.role === 'manager';
     if (!isOwner) return res.status(403).json({ error: 'A lista de vendas exige o PIN do dono.', code: 'SALES_NEED_PIN' });
     const cashierId = isOwner
       ? (typeof req.query.cashier_id === 'string' && req.query.cashier_id ? req.query.cashier_id : null)
@@ -131,12 +131,9 @@ router.get('/cancel-pin-status', async (req, res) => {
      return res.status(400).json({ error: 'Tenant não identificado' });
    }
 
-   const tenant = await prisma.tenant.findUnique({
-     where: { id: tenantId },
-     select: { cancel_pin_hash: true }
-   });
-
-   return res.json({ configured: Boolean(tenant && tenant.cancel_pin_hash) });
+   // E2: tambem conta o PIN de um gerente activo.
+   const authorizers = await loadAuthorizers(prisma, tenantId);
+   return res.json({ configured: authorizers.any });
  } catch (err) {
    console.error('Get cancel pin status error', err);
    return res.status(500).json({ error: 'Erro ao consultar PIN de cancelamento' });
@@ -250,22 +247,24 @@ router.post('/', async (req, res) => {
 
      // POLITICA DE DESCONTOS: ate discount_free_pct% do subtotal e livre; acima
      // disso exige o PIN de autorizacao do dono (o mesmo dos cancelamentos).
-     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, cancel_pin_hash: true, vat_mode: true, vat_rate_std: true } });
+     const tenantPolicy = await tx.tenant.findUnique({ where: { id: tenantId }, select: { discount_free_pct: true, vat_mode: true, vat_rate_std: true } });
      const freeLimit = Math.floor(subtotal * (tenantPolicy?.discount_free_pct ?? 10) / 100);
      let discountAuthorized = false;
      if (discountAmount > freeLimit) {
        if (!data.authorization_pin) {
-         throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono`, 'DISCOUNT_NEEDS_PIN', { pct: tenantPolicy?.discount_free_pct ?? 10 });
+         throw httpError(403, `Desconto acima de ${tenantPolicy?.discount_free_pct ?? 10}% exige o PIN de autorização do dono ou de um gerente`, 'DISCOUNT_NEEDS_PIN', { pct: tenantPolicy?.discount_free_pct ?? 10 });
        }
-       if (!tenantPolicy?.cancel_pin_hash) throw httpError(400, 'PIN de autorização não configurado neste estabelecimento', 'AUTH_PIN_NOT_SET');
+       // E2: o PIN do dono ou o de um gerente activo deste estabelecimento.
+       const authorizers = await loadAuthorizers(tx, tenantId);
+       if (!authorizers.any) throw httpError(400, 'PIN de autorização não configurado neste estabelecimento', 'AUTH_PIN_NOT_SET');
        const recentFails = await tx.auditLog.count({ where: { tenant_id: tenantId, action: { in: AUTH_PIN_FAIL_ACTIONS }, created_at: { gt: new Date(Date.now() - CANCEL_TENANT_WINDOW_MS) } } });
        if (recentFails >= CANCEL_MAX_PER_TENANT) throw httpError(429, 'Demasiados PINs errados neste estabelecimento. Espere 15 minutos.', 'TENANT_CANCEL_LOCKED');
-       if (!(await bcrypt.compare(data.authorization_pin, tenantPolicy.cancel_pin_hash))) {
+       discountAuthorized = await matchAuthorizer(authorizers, data.authorization_pin);
+       if (!discountAuthorized) {
          const pinErr = httpError(403, 'PIN de autorização inválido', 'INVALID_AUTH_PIN');
          pinErr.recordDiscountPinFail = true; // gravado FORA da transaccao (catch)
          throw pinErr;
        }
-       discountAuthorized = true;
      }
 
      const totalAmount = subtotal - discountAmount;
@@ -356,6 +355,8 @@ router.post('/', async (req, res) => {
          id: saleId,
          tenant_id: tenantId,
          cashier_user_id: sellerUserId,
+         // E2: o terminal da sessao do caixista (ou o da fila sem rede).
+         terminal_id: req.user.tid || null,
          total_amount: totalAmount,
          total_cost: totalCost,
          discount_amount: discountAmount,
@@ -449,7 +450,7 @@ router.post('/', async (req, res) => {
      if (discountAuthorized) {
        await tx.auditLog.create({ data: {
          tenant_id: tenantId, user_id: callerUserId, action: 'DISCOUNT_AUTHORIZED', entity_type: 'sale', entity_id: sale.id,
-         new_value: JSON.stringify({ subtotal, discount_amount: discountAmount, free_limit: freeLimit }), ip_address: req.ip || '0.0.0.0',
+         new_value: JSON.stringify({ subtotal, discount_amount: discountAmount, free_limit: freeLimit, ...discountAuthorized }), ip_address: req.ip || '0.0.0.0',
        } });
      }
 
@@ -532,13 +533,14 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
       return res.status(429).json({ error: 'Demasiados PINs errados neste estabelecimento. Espere 15 minutos.', code: 'TENANT_CANCEL_LOCKED' });
     }
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cancel_pin_hash: true } });
-    if (!tenant || !tenant.cancel_pin_hash) {
+    // E2: o PIN do dono ou o de um gerente activo deste estabelecimento.
+    const authorizers = await loadAuthorizers(prisma, tenantId);
+    if (!authorizers.any) {
       return res.status(400).json({ error: 'PIN de cancelamento não configurado para este tenant' });
     }
 
-    const pinOk = await bcrypt.compare(body.pin, tenant.cancel_pin_hash);
-    if (!pinOk) {
+    const authorizedBy = await matchAuthorizer(authorizers, body.pin);
+    if (!authorizedBy) {
       // FORA de qualquer transacao: esta linha tem de sobreviver ao erro.
       await prisma.auditLog.create({
         data: {
@@ -585,7 +587,7 @@ router.post('/:id/cancel', cancelLimiter, async (req, res) => {
           entity_type: 'sale',
           entity_id: id,
           old_value: JSON.stringify({ status: 'completed', total_amount: sale.total_amount }),
-          new_value: JSON.stringify({ status: 'cancelled', reason: body.reason || null }),
+          new_value: JSON.stringify({ status: 'cancelled', reason: body.reason || null, ...authorizedBy }),
           ip_address: req.ip || '0.0.0.0',
         },
       });

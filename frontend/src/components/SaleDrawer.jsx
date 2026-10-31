@@ -68,8 +68,9 @@ export default function SaleDrawer({ sale, onClose }) {
           <div className="my-2 border-t border-border" />
           {sale.discount_amount > 0 && <KeyValue label={t('Desconto')} value={'−' + money(sale.discount_amount)} />}
           <KeyValue label={t('Total')} value={money(sale.total_amount)} strong />
-          <KeyValue label={t('Custo dos produtos')} value={money(sale.total_cost)} />
-          <KeyValue label={t('Margem')} value={money(sale.total_amount - sale.total_cost)} tone="positive" />
+          {/* E2: o gerente nao recebe o custo (o servidor corta-o). */}
+          {typeof sale.total_cost === 'number' && <KeyValue label={t('Custo dos produtos')} value={money(sale.total_cost)} />}
+          {typeof sale.total_cost === 'number' && <KeyValue label={t('Margem')} value={money(sale.total_amount - sale.total_cost)} tone="positive" />}
           {sale.payments?.length ? sale.payments.map((p) => <KeyValue key={p.method} label={PAYMENT_LABEL[p.method] || p.method} value={money(p.amount)} />) : <KeyValue label={PAYMENT_LABEL[sale.payment_method] || sale.payment_method} value={money(sale.amount_received)} />}
           {sale.change_given > 0 && <KeyValue label={t('Troco')} value={money(sale.change_given)} />}
         </>

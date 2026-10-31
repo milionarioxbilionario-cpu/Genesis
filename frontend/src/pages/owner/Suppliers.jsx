@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, dateTime, errorMessage } from '../../utils/format';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import { Alert, Button, Drawer, Input, MoneyInput, PageHeader, Table, useToast } from '../../components/ui';
 import { formatQty, lineAmount } from '../../utils/units';
 
@@ -13,6 +14,8 @@ export default function Suppliers() {
   const toast = useToast();
   const { t } = useI18n();
   const suppliers = useApi('/api/inventory/suppliers');
+  // E2: o custo de entrega e as compras em dinheiro sao do dono.
+  const seesCosts = useSeesCosts();
   const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -35,12 +38,12 @@ export default function Suppliers() {
 
   return (
     <>
-      <PageHeader title={t('Fornecedores')} description={t('O custo de entrega por visita é deduzido no relatório mensal.')} actions={<Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ name: '', phone: '', delivery_cost_per_visit: 0 }); }}>{t('Novo fornecedor')}</Button>} />
+      <PageHeader title={t('Fornecedores')} description={seesCosts ? t('O custo de entrega por visita é deduzido no relatório mensal.') : t('Contactos dos fornecedores e o que se comprou a cada um.')} actions={<Button variant="primary" icon={Plus} onClick={() => { setError(''); setEditing({ name: '', phone: '', delivery_cost_per_visit: 0 }); }}>{t('Novo fornecedor')}</Button>} />
       <Table
         columns={[
           { key: 'name', header: t('Fornecedor') },
           { key: 'phone', header: t('Contacto'), render: (s) => <span className="num text-ink-2">{s.phone || '—'}</span> },
-          { key: 'delivery', header: t('Entrega por visita'), align: 'right', render: (s) => money(s.delivery_cost_per_visit) },
+          ...(seesCosts ? [{ key: 'delivery', header: t('Entrega por visita'), align: 'right', render: (s) => money(s.delivery_cost_per_visit) }] : []),
           { key: 'actions', header: '', align: 'right', render: (s) => <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setViewing(s); }}>{t('Compras')}</Button> },
         ]}
         rows={suppliers.data || []}
@@ -56,7 +59,7 @@ export default function Suppliers() {
             {error && <Alert tone="danger">{error}</Alert>}
             <Input label={t('Nome')} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} autoFocus />
             <Input label={t('Telefone')} inputMode="tel" value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} />
-            <MoneyInput label={t('Custo de entrega por visita')} valueCents={editing.delivery_cost_per_visit} onChangeCents={(v) => setEditing({ ...editing, delivery_cost_per_visit: v })} />
+            {seesCosts && <MoneyInput label={t('Custo de entrega por visita')} valueCents={editing.delivery_cost_per_visit} onChangeCents={(v) => setEditing({ ...editing, delivery_cost_per_visit: v })} />}
           </div>
         )}
       </Drawer>
@@ -67,7 +70,7 @@ export default function Suppliers() {
             {entries.data.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div><p className="text-ink">{formatQty(e.quantity, e.product?.unit)} × {e.product?.name}</p><p className="text-xs text-ink-muted">{dateTime(e.created_at)}</p></div>
-                <span className="num font-medium">{money(lineAmount(e.quantity, e.unit_cost, e.product?.unit))}</span>
+                {seesCosts && <span className="num font-medium">{money(lineAmount(e.quantity, e.unit_cost, e.product?.unit))}</span>}
               </li>
             ))}
           </ul>

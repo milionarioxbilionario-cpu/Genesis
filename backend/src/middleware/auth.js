@@ -31,6 +31,7 @@ const ESTABLISHMENT_ESCAPE = /^\/api\/establishments(\/switch|\/home)?\/?$/;
 
 const { resolveActingTenant } = require('../utils/actingTenant');
 const { closedState } = require('../utils/tenantStatus');
+const { managerShape } = require('../utils/managerPolicy');
 // Encerrado: o balcao ainda envia o que ficou na fila (vendas, perdas, pedidos, fecho do turno).
 const CLOSED_POS_SYNC = /^\/api\/(sales|shrinkage_records|demand_captures|pos\/shift\/close)\/?$/;
 
@@ -79,6 +80,13 @@ const authMiddleware = async (req, res, next) => {
     const shown = req.headers['x-genesis-establishment'];
     if (shown && !escape && shown !== req.user.tenantId) {
       return res.status(409).json({ error: 'Mudou de estabelecimento noutra janela. A actualizar…', code: 'ESTABLISHMENT_CHANGED' });
+    }
+
+    // E2: ao gerente nunca chegam custo, lucro, margem, salario, renda, despesas
+    // nem a conta do dono (a forma de cada rota + o corte por nome do campo).
+    if (req.user.role === 'manager') {
+      const json = res.json.bind(res);
+      res.json = (body) => json(managerShape(req.method, req.originalUrl, body));
     }
 
     if (req.user.scope && !isScopeAllowed(req.user.scope, req.method, req.originalUrl)) {

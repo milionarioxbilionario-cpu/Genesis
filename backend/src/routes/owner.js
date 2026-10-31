@@ -23,7 +23,7 @@ const { reqLang, tr } = require('../utils/lang');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
 const { loadOwnerNotifications } = require('../services/notifications');
 const { ownerOverview } = require('../services/overview');
-const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange, tenantDayRange } = require('../services/reports');
+const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, TIMELINE_TYPES, goalsHistory, dayRange, tenantDayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
 const { invalidateSessionUser } = require('../utils/sessionUser');
 const { asyncHandler, httpError } = require('../utils/http');
@@ -33,6 +33,7 @@ const { monthCloseStatus, monthKey } = require('../services/monthClose');
 const { GROUPS, GROUP_KEYS, groupOf, actionFilter, periodStart, retentionCutoff, RETENTION_OPTIONS } = require('../utils/auditGroups');
 const { lineAmount } = require('../utils/units');
 const { openStream, publish } = require('../utils/liveBus');
+const { MANAGER_HIDDEN_ACTIONS, managerLiveEvent } = require('../utils/managerPolicy');
 // 31/10: tudo o que mexe no dinheiro do dia (verde entra, vermelho sai) e os turnos.
 const OWNER_LIVE = new Set(['sale', 'cancel', 'loss', 'debt', 'debt_payment', 'expense', 'stock_in', 'shift_open', 'shift_close', 'shift_fail']);
 
@@ -45,9 +46,11 @@ const tenantOf = (req) => req.user.tenantId;
 // Etapa C: vendas e cancelamentos ao vivo, so desta loja (aviso no painel).
 router.get('/live', (req, res) => {
   const tenantId = tenantOf(req);
+  // E2: o gerente recebe o mesmo, sem despesas, lucro nem custos (utils/managerPolicy.js).
+  const post = req.user.role === 'manager' ? managerLiveEvent : (e) => e;
   openStream(req, res, {
     filter: (e) => e.tenant_id === tenantId && OWNER_LIVE.has(e.type),
-    shape: (e) => ({
+    shape: (e) => post({
       type: e.type, sale_id: e.sale_id || null, daily_number: e.daily_number ?? null, total: e.total ?? null, profit: e.profit ?? null, payment_method: e.payment_method || null,
       name: e.name || e.product_name || e.cashier_name || e.label || null, reason: e.reason || null,
       declared: e.declared ?? null, expected: e.expected ?? null, attempt: e.attempt ?? null, locked: e.locked ?? null, difference: e.difference ?? null, at: e.at,
@@ -150,6 +153,8 @@ router.get('/audit', asyncHandler(async (req, res) => {
     if (!id || Number.isNaN(d.getTime())) throw httpError(400, 'Cursor inválido', 'BAD_CURSOR');
     where.AND = [{ OR: [{ created_at: { lt: d } }, { created_at: d, id: { lt: id } }] }];
   }
+  // E2: o gerente nao ve custos, salarios, impostos nem a conta do dono (depois do cursor, que poe o seu AND).
+  if (req.user.role === 'manager') where.AND = [...(where.AND || []), { action: { notIn: MANAGER_HIDDEN_ACTIONS } }];
   const rows = await prisma.auditLog.findMany({ where, orderBy: [{ created_at: 'desc' }, { id: 'desc' }], take: q.limit + 1 });
   const page = rows.slice(0, q.limit);
   const last = page[page.length - 1];
@@ -540,7 +545,9 @@ router.get('/reports/timeline', asyncHandler(async (req, res) => {
   const start = (await tenantDayRange(tenantOf(req), q.from)).start; const end = (await tenantDayRange(tenantOf(req), q.to)).end;
   if (end < start) throw httpError(400, 'Intervalo de datas inválido', 'BAD_RANGE');
   if (end - start > 92 * 86400000) throw httpError(400, 'Máximo de 3 meses por rastreio', 'RANGE_TOO_LARGE');
-  const types = q.types ? q.types.split(',').filter(Boolean) : undefined;
+  let types = q.types ? q.types.split(',').filter(Boolean) : undefined;
+  // E2: as despesas sao do dono (o gerente nao as ve no rastreio).
+  if (req.user.role === 'manager') types = (types || TIMELINE_TYPES).filter((t) => t !== 'expense');
   res.json(await timeline(tenantOf(req), start, end, { ...(types ? { types } : {}), cashierId: q.cashier_id || null, page: q.page, pageSize: q.page_size }));
 }));
 

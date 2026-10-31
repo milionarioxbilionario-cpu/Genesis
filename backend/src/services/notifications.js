@@ -11,7 +11,7 @@ const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
 
 const LEVELS = ['critical', 'warning', 'info', 'success'];
-const TYPES = ['cashier_locked', 'shift_attempt_fail', 'debt_due', 'stock_low', 'lot_expiring', 'shift_difference', 'goal_reached', 'day_closed', 'no_location'];
+const TYPES = ['cashier_locked', 'shift_attempt_fail', 'debt_due', 'stock_low', 'lot_expiring', 'cost_missing', 'shift_difference', 'goal_reached', 'day_closed', 'no_location'];
 const DEBT_DAYS = 7; // txenekas: 7 dias antes, 1 dia antes e no dia (especificacao 6.5)
 const SHIFT_DAYS = 7; // diferencas de caixa dos ultimos 7 dias
 
@@ -24,7 +24,7 @@ const minutesOf = (hhmm) => { const [h, m] = String(hhmm).split(':').map(Number)
 // de Maputo; dinheiro em centavos. O texto e montado no ecra (lingua de quem ve).
 function buildNotifications({
   now = new Date(), lowStock = [], expiringLots = [], debts = [], closings = [],
-  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00', dayClosed, hasLocation,
+  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00', dayClosed, hasLocation, costMissing = [],
 }) {
   const today = dayInMaputo(now);
   const items = [];
@@ -62,6 +62,9 @@ function buildNotifications({
     const level = l.days_left <= 0 ? 'critical' : l.days_left <= 2 ? 'warning' : 'info';
     items.push({ id: `lot_expiring:${l.lot_id}`, type: 'lot_expiring', level, link: '/app/produtos?tab=stock', params: { name: l.name, quantity: l.quantity, days_left: l.days_left } });
   }
+
+  // E2: produtos que o gerente criou (sem ver custos) e ainda tem custo 0: o lucro sai errado.
+  if (costMissing.length) items.push({ id: 'cost_missing', type: 'cost_missing', level: 'warning', link: '/app/produtos', params: { count: costMissing.length, names: costMissing.slice(0, 3).map((p) => p.name) } });
 
   for (const s of closings) {
     if (!s.difference) continue;
@@ -123,6 +126,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     return { id: f.id, at: f.created_at, cashier: v.cashierName || '—', declared: v.declared ?? 0, expected: v.expected ?? 0, attempt: v.attempt || 1 };
   });
   const locks = await Promise.all(cashiers.map((c) => getShiftLock(prisma, tenantId, c.id)));
+  const costMissing = await managerProductsWithoutCost(tenantId);
   return buildNotifications({
     now,
     lowStock: snapshot.lowStockProducts,
@@ -135,8 +139,20 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     todaySales: { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) },
     closingTime: tenant?.closing_time || '20:00',
     hasLocation: tenant ? tenant.lat != null : undefined,
+    costMissing,
     ...(tenant?.hours_json ? { dayClosed: await closedDay(tenantId, sched, bday, now, { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) }) } : {}),
   });
+}
+
+// E2: produtos criados por um gerente (CREATE_PRODUCT feito por ele) ainda sem custo.
+// Pelo autor e nao pelo texto do JSON: na BD real o new_value e jsonb (com espacos).
+async function managerProductsWithoutCost(tenantId) {
+  const managers = await prisma.user.findMany({ where: { tenant_id: tenantId, role: 'manager' }, select: { id: true } });
+  if (!managers.length) return [];
+  const created = await prisma.auditLog.findMany({ where: { tenant_id: tenantId, action: 'CREATE_PRODUCT', user_id: { in: managers.map((m) => m.id) } }, select: { entity_id: true }, orderBy: { created_at: 'desc' }, take: 300 });
+  const ids = [...new Set(created.map((c) => c.entity_id).filter(Boolean))];
+  if (!ids.length) return [];
+  return prisma.product.findMany({ where: { tenant_id: tenantId, id: { in: ids }, is_active: true, cost_price: 0 }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
 }
 
 // Que dia de vendas fechou agora (horario novo)? O de hoje, depois do ultimo fecho;

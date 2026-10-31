@@ -507,4 +507,4 @@ async function totalReport(tenantId) {
   return { total_revenue: Number(agg._sum.total_amount || 0), sales_count: agg._count, since: first?.created_at || null };
 }
 
-module.exports = { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, restockFor, dayKey, dayRange, tenantDayRange };
+module.exports = { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, TIMELINE_TYPES, goalsHistory, restockFor, dayKey, dayRange, tenantDayRange, summarize };

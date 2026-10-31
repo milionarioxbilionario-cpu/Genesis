@@ -69,7 +69,7 @@ Legenda:
 | R8/L5 Códigos de barras verdadeiros no catálogo-mestre | ⏳ | E4 |
 | R9 Horário 24h, por dia, depois da meia-noite | ⏳ | E1 |
 | R10 Apagar ou encerrar um estabelecimento | ⏳ | E1 |
-| R11/L13/L14 Painel geral dedicado, hub, gerentes | ⏳ (o actual é só uma tabela) | E2 |
+| R11/L13/L14 Painel geral dedicado, hub, gerentes | ✅ no servidor (verify 53/54); ⏳ e2e no site real; fica «Mudar o principal» | E2 |
 | R15 Modo escuro | ⏳ | E5 |
 | R16 Movimento fluido, sem parecer IA | ⏳ | E5 |
 | L2 Admin com o design novo e comparações | 🟡 parcial | E6 |
@@ -239,7 +239,7 @@ Legenda:
 - capturas a 390, 768 e 1440 px;
 - publicar e repetir em genesismz.com.
 
-### E2. Painel geral dedicado e gerentes (R11, L10, L13, L14, L17)
+### E2. Painel geral dedicado e gerentes (R11, L10, L13, L14, L17) — feita a parte principal em 31/10 (ver Mapa Mental, Parte B); por fazer: L10, L17, «Mudar o principal», relatório consolidado por WhatsApp
 - **Quando aparece:** quando o dono tem 2 ou mais estabelecimentos. Ao criar o 2.º, uma mensagem: «Parabéns: activou o Painel geral e o Hub. Daqui vê todos os seus estabelecimentos juntos, entra em cada um e cria os gerentes».
 - **Ao entrar** (dono com 2 ou mais): o **hub**, «Em qual estabelecimento deseja entrar?», no estilo do ecrã de perfis do terminal. Cada cartão mostra:
   - o nome, o ícone do tipo e a cidade;
@@ -396,3 +396,62 @@ Só depois de todas as etapas acima e do Prompt Mestre, quando o fundador escolh
   - WhatsApp oficial;
   - Brevo;
   - números de pagamento.
+
+---
+
+## Anexo E2 — desenho detalhado (escrito antes de começar, 31/10)
+
+### Gerente (papel `manager`)
+- **Conta própria:** e-mail + senha, criada pelo dono, `User.role = 'manager'` com `tenant_id` = o estabelecimento que gere. Entra em /entrar e vai directo ao painel desse estabelecimento. Não vê o seletor de estabelecimentos, o hub nem o painel geral. Não tem o bloqueio por PIN do painel (é do dono).
+- **Servidor = lista fechada** (`utils/managerPolicy.js`, aplicada em `middleware/rbac.js`): uma rota do dono só passa para o gerente se estiver na lista. O resto dá 403, mesmo que o ecrã se esqueça de esconder.
+  - **Pode:**
+    - Início;
+    - vendas, recibos e reimpressão;
+    - txenekas (criar e receber pagamentos);
+    - caixistas e guardas (criar, PIN, desbloquear, desactivar) e terminais (emparelhar, novo código, perfis, revogar);
+    - produtos (criar, editar o preço de venda, stock, lotes; sem custos);
+    - fornecedores e entradas de stock (sem custo: usa-se o custo actual do produto);
+    - listas de compras;
+    - relatórios diário e semanal e o rastreio;
+    - metas (ver) e avisos;
+    - Definições: só horário, mensagem do recibo, venda personalizada e alerta de validade.
+  - **Não pode:**
+    - relatório mensal com o lucro líquido e o total;
+    - custos fixos, despesas e salários (trabalhadores e folha);
+    - impostos;
+    - PIN de autorização do dono;
+    - dados do estabelecimento (contacto e WhatsApp do dono);
+    - localização;
+    - estabelecimentos, perfil, plano e bloqueio do dono;
+    - painel antigo `/api/dashboard`.
+- **Respostas sem números sensíveis:** para o gerente, todas as respostas JSON e o canal ao vivo saem sem custo, lucro, margem, salário, renda nem deduções. São cortadas no servidor, pelo nome do campo, em todo o JSON.
+- **Autorizar** cancelamentos e descontos acima do limite: com o PIN do próprio gerente (`User.pin_hash`), gravado no rastreio com o nome dele. O PIN do dono continua a valer.
+- **E se…?**
+  - Gerente desactivado: a sessão acaba no pedido seguinte (`invalidateSessionUser`).
+  - O dono muda a senha do gerente: o `pv` muda e as sessões antigas caem.
+  - O gerente tenta `act` noutro estabelecimento: recusado (só donos têm `act`).
+  - Tenta rotas do admin: recusado pela origem e pelo papel.
+  - O e-mail já existe noutra conta: 409, porque o e-mail é único em todo o Genesis.
+  - Estabelecimento encerrado ou suspenso: igual ao dono (só consulta, ou 403).
+
+### Painel geral (só o dono com 2 ou mais estabelecimentos)
+- **Barra própria:** Visão geral · Estabelecimentos · Relatórios · Rastreio · Stock geral · Gerentes · Mapa.
+- **Cada número é lido DENTRO do contexto do estabelecimento respectivo** (`prisma.runWithTenant`), só depois de confirmar o acesso (`ownerTenantIds`). Somas feitas na memória do servidor.
+- **Visão geral:**
+  - hoje, 7 dias e mês: vendas, n.º de vendas e lucro bruto;
+  - comparação com ontem à mesma hora, com a semana anterior e com o mês anterior;
+  - cartão por estabelecimento («aberto agora» pelo horário);
+  - lista ao vivo de todos: estabelecimento, terminal, caixista, valor.
+- **Estabelecimentos:** lista com o estado e as acções Entrar, Acrescentar, Copiar catálogo, Encerrar e Reabrir.
+- **Rastreio geral:** a linha do tempo de todos juntos (por página), com a coluna «Estabelecimento».
+- **Stock geral:** a acabar e a expirar em todos, somados pelo mesmo produto (código de barras, ou nome) e com o detalhe por estabelecimento.
+- **Relatórios:** diário, semanal e mensal de todos e por estabelecimento.
+- **Gerentes:** lista de todos (com o estabelecimento), criar (escolhendo o estabelecimento), nova senha, PIN, desactivar.
+- **Mapa:** os estabelecimentos do dono, com pinos e bolhas ao vivo (canal que junta só os estabelecimentos dele). A versão completa é a E7.
+- **Hub** («Em qual estabelecimento deseja entrar?»): ao entrar, o dono com 2 ou mais vê cartões (nome, tipo, cidade, vendas de hoje, aberto/fechado) e o cartão «Painel geral».
+- **Parabéns:** ao criar o 2.º estabelecimento, uma mensagem única: «Activou o Painel geral e o Hub…».
+- **Provas:**
+  - verify_system 53: gerente rota a rota, com 403 onde deve, sem campos sensíveis em nenhuma resposta, sem `act` e com o PIN de autorização próprio;
+  - verify_system 54: painel geral, com somas iguais às de cada estabelecimento, rastreio e stock geral, e outro dono recusado;
+  - e2e `etapaE2.mjs` (dono, hub, painel geral; gerente com o ecrã reduzido);
+  - capturas a 390, 768 e 1440 px.

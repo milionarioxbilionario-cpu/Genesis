@@ -90,7 +90,9 @@ const SERVER_FILES = ['routes/auth.js', 'routes/pos.js', 'routes/owner.js', 'rou
   // 9.5: venda, turno e terminal.
   'routes/sales.js', 'utils/shift.js', 'middleware/terminalAuth.js', 'middleware/posWriteAuth.js',
   // 12.4: bloqueio do painel do dono.
-  'routes/panelLock.js'];
+  'routes/panelLock.js',
+  // E2 (31/10): gerentes e painel geral.
+  'routes/managers.js', 'routes/group.js'];
 test('mensagens de erro do servidor (dono, conta, terminal) tem ingles', () => {
   const en = new Set(knownKeys('en'));
   const BACK = path.join(SRC, '..', '..', 'backend', 'src');

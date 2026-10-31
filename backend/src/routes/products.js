@@ -80,6 +80,10 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
   try {
     const data = createProductSchema.parse(req.body);
     const tenantId = req.user.tenantId;
+    // E2: o gerente nao ve nem define custos. O produto fica com custo 0 e o dono
+    // e avisado no sino (services/notifications.js, cost_missing) para o completar.
+    const byManager = req.user.role === 'manager';
+    if (byManager) data.cost_price = 0;
     const lots = data.lots
       ? data.lots.map((l) => ({ quantity: l.quantity, expiry_date: l.expiry_date || null }))
       : (data.stock_qty > 0 ? [{ quantity: data.stock_qty, expiry_date: data.has_expiry ? data.expiry_date || null : null }] : []);
@@ -119,7 +123,7 @@ router.post('/', auth, requireRole('owner'), async (req, res) => {
       await recordCatalogSuggestions(tx, { tenantId, products: [created] });
       await tx.auditLog.create({ data: {
         tenant_id: tenantId, user_id: req.user.userId, action: 'CREATE_PRODUCT', entity_type: 'product', entity_id: created.id,
-        new_value: JSON.stringify({ name: created.name, sell_price: created.sell_price, cost_price: created.cost_price, stock_qty: stockQty, lots, supplier_id: data.supplier_id || null }),
+        new_value: JSON.stringify({ name: created.name, sell_price: created.sell_price, cost_price: created.cost_price, stock_qty: stockQty, lots, supplier_id: data.supplier_id || null, ...(byManager ? { by_manager: true } : {}) }),
         ip_address: req.ip || '0.0.0.0',
       } });
       return created;
@@ -207,6 +211,8 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     const data = productUpdateSchema.parse(req.body);
     const tenantId = req.user.tenantId;
     const id = req.params.id;
+    // E2: o custo e do dono (o gerente muda o preco de venda, o stock, os lotes).
+    if (req.user.role === 'manager') delete data.cost_price;
 
     // Fetch existing product
     const existing = await prisma.product.findUnique({ where: { id } });
@@ -336,6 +342,8 @@ router.patch('/:id/stock', auth, requireRole('owner'), async (req, res) => {
       reason: z.string().min(3).max(200).optional().default('manual_adjustment')
     });
     const data = deltaSchema.parse(req.body);
+    // E2: o gerente nao escreve custos; fica o custo actual do produto.
+    if (req.user.role === 'manager') delete data.unit_cost;
 
     const updated = await prisma.$transaction(async (tx) => {
       const before = await tx.product.findFirst({ where: { id: productId, tenant_id: tenantId } });

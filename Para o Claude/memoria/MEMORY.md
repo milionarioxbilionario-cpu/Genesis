@@ -8,3 +8,4 @@
 - [Site: estilo e tom](site-estilo-e-tom.md) — branco destaque/verde acompanha; textos para o cliente, sem jargão técnico
 - [Foco no POS puro](foco-pos-puro.md) — 27/10: modos restaurante/hotel/farmácia/clínica/combustível/nhonguista/arrendamento só DEPOIS do plano e do Prompt Mestre; no site «Brevemente + Avise-me»
 - [Lista «E se…?»](lista-e-se.md) — obrigatória antes de dar por feito; testar sempre também no 2.º estabelecimento
+- [AuditLog é jsonb](auditlog-jsonb.md) — na BD real new_value/old_value são jsonb: nunca contains de texto JSON; filtrar por colunas

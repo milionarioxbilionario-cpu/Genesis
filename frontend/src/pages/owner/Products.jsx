@@ -7,6 +7,7 @@ import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
 import { foldText, productMatches } from '../../utils/search';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import ShoppingLists from './ShoppingLists';
 import ProductDrawer, { EMPTY_PRODUCT, LotRows, emptyLot, filledLots, lotQty, qtyLabel } from './ProductDrawer';
 import { formatQty, isMeasured, parseQty } from '../../utils/units';
@@ -19,19 +20,21 @@ export default function Products() {
   const [params, setParams] = useSearchParams();
   const tab = params.get('tab') || 'catalog';
   const products = useApi('/api/products');
+  // E2: o gerente nao ve custos (nem o historico de custos).
+  const seesCosts = useSeesCosts();
   return (
     <>
-      <PageHeader title={t('Produtos')} description={t('Catálogo, stock e custos de compra.')} />
+      <PageHeader title={t('Produtos')} description={seesCosts ? t('Catálogo, stock e custos de compra.') : t('Catálogo e stock.')} />
       <Tabs className="mb-5" value={tab} onChange={(v) => setParams({ tab: v })} items={[
         { value: 'catalog', label: t('Catálogo'), count: products.data?.filter((p) => p.is_active).length },
         { value: 'stock', label: t('Stock') },
         { value: 'shopping', label: t('Lista de compras') },
-        { value: 'prices', label: t('Histórico de custos') },
+        ...(seesCosts ? [{ value: 'prices', label: t('Histórico de custos') }] : []),
       ]} />
       {tab === 'catalog' && <Catalog products={products} />}
       {tab === 'stock' && <Stock products={products} />}
       {tab === 'shopping' && <ShoppingLists products={products} />}
-      {tab === 'prices' && <PriceHistory />}
+      {tab === 'prices' && seesCosts && <PriceHistory />}
     </>
   );
 }
@@ -41,7 +44,8 @@ function Catalog({ products }) {
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState(null);
   // 31/10: copiar de outro estabelecimento do mesmo dono (so aparece com 2 ou mais).
-  const establishments = useApi('/api/establishments');
+  const seesCosts = useSeesCosts();
+  const establishments = useApi(seesCosts ? '/api/establishments' : null);
   const others = (establishments.data || []).filter((e) => !e.is_current);
   const [copying, setCopying] = useState(false);
   const list = useMemo(() => { const f = foldText(q); return (products.data || []).filter((p) => p.is_active && (productMatches(p, f) || (p.barcode || '').includes(q.trim()))); }, [products.data, q]);
@@ -50,8 +54,8 @@ function Catalog({ products }) {
     { key: 'name', header: t('Produto'), render: (p) => <div className="flex items-center gap-3"><ProductImage product={p} size={36} /><div><p className="text-ink">{p.name}</p>{p.barcode && <p className="num text-xs text-ink-muted">{p.barcode}</p>}</div></div> },
     { key: 'category', header: t('Categoria'), render: (p) => <span className="text-ink-2">{p.category}</span> },
     { key: 'sell', header: t('Preço'), align: 'right', render: (p) => (isMeasured(p.unit) ? `${money(p.sell_price)} / ${p.unit}` : money(p.sell_price)) },
-    { key: 'cost', header: t('Custo'), align: 'right', render: (p) => <span className="text-ink-2">{money(p.cost_price)}</span> },
-    { key: 'margin', header: t('Margem'), align: 'right', render: (p) => (p.sell_price > 0 ? <span className={p.sell_price <= p.cost_price ? 'text-danger' : 'text-ink-2'}>{Math.round(((p.sell_price - p.cost_price) / p.sell_price) * 100)}%</span> : '—') },
+    ...(seesCosts ? [{ key: 'cost', header: t('Custo'), align: 'right', render: (p) => <span className="text-ink-2">{money(p.cost_price)}</span> },
+    { key: 'margin', header: t('Margem'), align: 'right', render: (p) => (p.sell_price > 0 ? <span className={p.sell_price <= p.cost_price ? 'text-danger' : 'text-ink-2'}>{Math.round(((p.sell_price - p.cost_price) / p.sell_price) * 100)}%</span> : '—') }] : []),
     { key: 'stock', header: t('Stock'), align: 'right', render: (p) => <Badge tone={stockTone(p)}>{isMeasured(p.unit) ? qtyLabel(p.stock_qty, p.unit, t) : int(p.stock_qty)}</Badge> },
   ];
 
@@ -85,6 +89,7 @@ const emptyAdjust = (p) => ({ product_id: p ? p.id : '', op: 'add', lots: [empty
 function Stock({ products }) {
   const toast = useToast();
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   const entries = useApi('/api/inventory/stock');
   const suppliers = useApi('/api/inventory/suppliers');
   const alerts = useApi('/api/owner/alerts');
@@ -179,7 +184,7 @@ function Stock({ products }) {
               { key: 'created_at', header: t('Data'), render: (e) => dateTime(e.created_at) },
               { key: 'product', header: t('Produto'), render: (e) => e.product?.name },
               { key: 'quantity', header: t('Qtd.'), align: 'right', render: (e) => <span className={e.quantity < 0 ? 'text-danger' : 'text-positive'}>{e.quantity > 0 ? '+' : ''}{formatQty(e.quantity, e.product?.unit)}</span> },
-              { key: 'unit_cost', header: t('Custo un.'), align: 'right', render: (e) => money(e.unit_cost) },
+              ...(seesCosts ? [{ key: 'unit_cost', header: t('Custo un.'), align: 'right', render: (e) => money(e.unit_cost) }] : []),
             ]}
             rows={entries.data || []}
             loading={entries.loading && !entries.data}
@@ -214,7 +219,7 @@ function Stock({ products }) {
                 <LotRows lots={form.lots} onChange={set('lots')} withExpiry expiryRequired={Boolean(product?.has_expiry)} unit={unit} />
                 {addTotal > 0 && product && <p className="mt-2 text-sm text-ink-2">{t('Fica com')} <span className="num font-medium text-ink">{qtyLabel(product.stock_qty + addTotal, unit, t)}</span></p>}
               </section>
-              <MoneyInput label={t('Custo unitário')} hint={t('Quanto pagou por unidade. Se mudou, o custo do produto é actualizado.')} valueCents={form.unit_cost} onChangeCents={set('unit_cost')} />
+              {seesCosts && <MoneyInput label={t('Custo unitário')} hint={t('Quanto pagou por unidade. Se mudou, o custo do produto é actualizado.')} valueCents={form.unit_cost} onChangeCents={set('unit_cost')} />}
               <Select label={t('Fornecedor (opcional)')} hint={t('Se comprou a um fornecedor, o custo de entrega dele entra no relatório mensal.')} value={form.supplier_id} onChange={(e) => set('supplier_id')(e.target.value)}>
                 <option value="">{t('Sem fornecedor')}</option>
                 {(suppliers.data || []).filter((s) => s.is_active !== false).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}

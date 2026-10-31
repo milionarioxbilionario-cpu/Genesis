@@ -270,6 +270,9 @@ app.use('/api/verify', verifyRoutes);
 app.use('/api/guard', guardRoutes);
 // Etapa D: varios estabelecimentos do mesmo dono + painel geral.
 app.use('/api/establishments', establishmentRoutes);
+// E2 (31/10): gerentes criados pelo dono e o painel geral (todos os estabelecimentos).
+app.use('/api/managers', require('./routes/managers'));
+app.use('/api/group', require('./routes/group'));
 // Etapa A: «Avise-me quando estiver pronto» (publico, sem sessao).
 app.use('/api/waitlist', require('./routes/waitlist'));
 

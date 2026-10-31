@@ -2192,6 +2192,11 @@ async function test40() {
   } finally {
     await prisma.posTerminalMember.deleteMany({ where: { tenant_id: t } });
     await prisma.tenant.update({ where: { id: t }, data: { vat_mode: 'none', vat_rate_std: 16, inss_employer_pct: 0, subscription_until: null, custom_items_enabled: true } });
+    // O estado do estabelecimento fica em cache: perto da BD a seccao seguinte
+    // comecava dentro desse tempo e ainda via «subscricao em atraso» (402).
+    await sleep(STATUS_CACHE_MS + 200);
+    // Esta seccao fecha o turno do caixista: as seguintes (42...) vendem com ele.
+    await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('POST', '/api/pos/shift/open', { pin: PIN }).catch(() => {});
   }
 }
 
@@ -2910,7 +2915,266 @@ async function test52() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45, 46: test46, 47: test47, 48: test48, 49: test49, 50: test50, 51: test51, 52: test52 };
+// E2 (31/10): procura nomes de campos sensiveis em qualquer nivel (independente
+// de utils/managerPolicy.js, para nao testar a regra com ela propria).
+const LEAK_RE = /cost|profit|margin|lucro|custo(s)?$|salar|payroll|deduc|expense|despesa|investment|(^|_)rent(_|$)|stock_value|losses_total|losses_by_reason/i;
+function leaks(v, path = '', out = []) {
+  if (Array.isArray(v)) v.forEach((x, i) => leaks(x, path + '[' + i + ']', out));
+  else if (v && typeof v === 'object' && !(v instanceof Date)) {
+    for (const [k, x] of Object.entries(v)) { if (LEAK_RE.test(k)) out.push(path + '.' + k); leaks(x, path + '.' + k, out); }
+  }
+  return out;
+}
+const isoDay = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+async function test53() {
+  section(53, 'E2: gerente — entra com e-mail e senha, so as rotas da lista (403 no resto), nenhum custo/lucro nas respostas, sem act, PIN de autorizacao proprio com o nome no rastreio, senha nova e desactivar cortam logo');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  const email = 'gerente-' + crypto.randomBytes(4).toString('hex') + '@teste.local';
+  const pw = 'Gerente-' + crypto.randomBytes(5).toString('hex');
+  const MPIN = '8642';
+  let bId = null; let otherTenant = null;
+  try {
+    // Dados com custos em todo o lado: venda, entrada com validade, fornecedor, perda, despesa.
+    const sup = await owner.req('POST', '/api/inventory/suppliers', { name: 'Fornecedor E2', phone: '840000123', delivery_cost_per_visit: 5000 });
+    await owner.req('POST', '/api/inventory/stock', { product_id: ctx.product.id, unit_cost: 6000, supplier_id: sup.data?.id, lots: [{ quantity: 4, expiry_date: isoDay(new Date(Date.now() + 86400000)) }] });
+    const s1 = await owner.req('POST', '/api/sales', saleBody());
+    const term = await cashierTerminal();
+    await term.req('POST', '/api/shrinkage_records', { id: crypto.randomUUID(), product_id: ctx.product.id, quantity: 1, reason: 'broken' });
+    await owner.req('POST', '/api/settings/expenses', { date: isoDay(), category: 'Limpeza', description: 'E2', amount: 1500 });
+    await owner.req('POST', '/api/shopping-lists', { name: 'Lista E2', items: [{ product_id: ctx.product.id, quantity: 3 }] });
+
+    // Criar (so o dono). E-mail unico em todo o Genesis; PIN diferente do dono.
+    const dup = await owner.req('POST', '/api/managers', { name: 'Gerente Teste', email: ctx.owner.email, password: pw });
+    ok(dup.status === 409 && dup.data?.code === 'EMAIL_IN_USE', 'e-mail de outra conta: 409', dup);
+    const samePin = await owner.req('POST', '/api/managers', { name: 'Gerente Teste', email, password: pw, pin: PIN });
+    ok(samePin.status === 409 && samePin.data?.code === 'PIN_TAKEN', 'PIN igual ao do dono: 409 (o rastreio ficava ambiguo)', samePin);
+    ok((await owner.req('POST', '/api/managers', { name: 'Gerente Teste', email, password: 'curta' })).status === 400, 'senha com menos de 8: 400');
+    const cr = await owner.req('POST', '/api/managers', { name: 'Gerente Teste', email, password: pw, pin: MPIN });
+    ok(cr.status === 201 && cr.data.tenant_id === t && cr.data.has_pin && cr.data.establishment === ctx.tenant.name && !JSON.stringify(cr.data).includes('hash'), 'dono cria o gerente (e-mail, senha, PIN), sem hashes na resposta', cr);
+    const managerId = cr.data?.id;
+    const list = await owner.req('GET', '/api/managers');
+    ok(list.status === 200 && list.data.some((m) => m.id === managerId && m.is_active), 'lista de gerentes do dono');
+    const cashierSees = await client(signAccessToken(ctx.cashier, { scope: 'pos' })).req('GET', '/api/managers');
+    ok(cashierSees.status === 403, 'caixista nao chega aos gerentes', cashierSees.status);
+
+    // Entrar com e-mail e senha.
+    const g = client();
+    const login = await g.req('POST', '/api/auth/login', { email, password: pw });
+    ok(login.status === 200 && login.data?.user?.role === 'manager', 'gerente entra em /entrar com e-mail e senha', login.status);
+    const me = (await g.req('GET', '/api/auth/me')).data;
+    ok(me?.user?.role === 'manager' && me.user.tenant_id === t && !me.user.lock, '/me: gerente no seu estabelecimento, sem o bloqueio do painel do dono', me?.user);
+
+    // O que pode ver: 200 e nenhum campo de custo/lucro/salario em nenhuma resposta.
+    const day = isoDay();
+    const allowed = ['/api/owner/overview', '/api/owner/sales?page=1', '/api/products', '/api/products/' + ctx.product.id + '/lots', '/api/owner/reports/daily', '/api/owner/reports/weekly',
+      `/api/owner/reports/timeline?from=${day}&to=${day}`, '/api/owner/audit?period=today', '/api/owner/notifications', '/api/owner/alerts', '/api/inventory/stock',
+      '/api/inventory/suppliers', '/api/settings', '/api/owner/tenant', '/api/owner/cashiers', '/api/owner/terminals', '/api/shopping-lists', '/api/shopping-lists/suggestion', '/api/sales',
+      '/api/owner/shift-closings', '/api/owner/debts', '/api/owner/goals/current', '/api/owner/goals/history'];
+    if (sup.data?.id) allowed.push('/api/inventory/suppliers/' + sup.data.id + '/entries');
+    for (const p of allowed) {
+      const r = await g.req('GET', p);
+      const found = r.status === 200 ? leaks(r.data) : [];
+      ok(r.status === 200 && found.length === 0, `gerente GET ${p.split('?')[0]}: 200, sem custos nem lucros`, r.status === 200 ? found.slice(0, 5) : r);
+    }
+    const daily = (await g.req('GET', '/api/owner/reports/daily')).data;
+    ok(daily && daily.gross_revenue >= 10000 && Array.isArray(daily.losses) && daily.losses.length >= 1 && daily.losses.every((l) => l.value === undefined), 'relatorio do gerente: receita sim; perdas so com quantidades (o valor e a custo)', daily && daily.losses);
+    const tl = (await g.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}`)).data;
+    ok(tl && !tl.rows.some((e) => e.type === 'expense') && tl.rows.filter((e) => e.type === 'loss' || e.type === 'stock').every((e) => e.amount === undefined), 'rastreio do gerente: sem despesas; perdas e compras sem valor', tl && tl.rows.map((e) => e.type));
+    const tlOwner = (await owner.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}`)).data;
+    ok(tlOwner.rows.some((e) => e.type === 'expense') && tlOwner.rows.some((e) => e.type === 'sale' && typeof e.profit === 'number'), 'o dono continua a ver despesas e lucro no rastreio');
+    const st = (await g.req('GET', '/api/settings')).data;
+    ok(st && !st.store.phone && !st.store.email && st.taxes === undefined && st.fixed_costs === undefined && st.hours, 'definicoes do gerente: horario sim; contacto do dono, impostos e custos fixos nao', st);
+    const tn = (await g.req('GET', '/api/owner/tenant')).data;
+    ok(tn && tn.name && tn.phone === undefined && tn.email === undefined && tn.subscription_price === undefined && tn.trial_ends_at === undefined, 'estabelecimento do gerente: sem contacto do dono nem plano', tn);
+    const al = (await g.req('GET', '/api/owner/alerts')).data;
+    ok(al && al.expiringLots.length >= 1 && al.expiringLots.every((l) => l.value === undefined), 'validades do gerente: os lotes sem o valor (a custo)', al && al.expiringLots);
+
+    // O que e do dono: 403 (mesmo que o ecra se esqueca de esconder).
+    const denied = [['GET', '/api/owner/reports/monthly'], ['GET', '/api/owner/reports/total'], ['GET', '/api/owner/employees'], ['GET', '/api/owner/payroll'], ['GET', '/api/settings/fixed-costs'], ['GET', '/api/settings/expenses'],
+      ['PUT', '/api/settings/store', { name: 'Hack' }], ['PUT', '/api/settings/authorization-pin', { pin: '1111', password: 'x' }], ['PUT', '/api/settings/location', { lat: 1, lng: 1 }], ['PUT', '/api/settings/taxes', { vat_mode: 'none' }],
+      ['GET', '/api/profile'], ['PUT', '/api/profile/email', { email: 'x@y.z' }], ['GET', '/api/dashboard/summary'], ['GET', '/api/establishments'], ['POST', '/api/establishments', { name: 'X', business_type: 'mercearia', location: 'Y' }],
+      ['GET', '/api/group/overview'], ['GET', '/api/managers'], ['POST', '/api/managers', { name: 'Outro', email: 'o@t.local', password: 'abcdefgh1' }], ['GET', '/api/owner/month-close'], ['DELETE', '/api/products/' + ctx.product.id],
+      ['GET', '/api/inventory/price-history'], ['POST', '/api/owner/goals', { target_amount: 100 }], ['GET', '/api/lock/status'], ['POST', '/api/onboarding/complete', {}], ['POST', '/api/catalogs/bottle_store/import', {}]];
+    for (const [m, p, b] of denied) {
+      const r = await g.req(m, p, b);
+      ok(r.status === 403, `gerente ${m} ${p}: 403`, r.status);
+    }
+    // A mensagem do recibo sim (so ela): o resto dos dados do estabelecimento e do dono.
+    const rf = await g.req('PUT', '/api/settings/store', { receipt_footer: 'Volte sempre (gerente)' });
+    const tf = await prisma.tenant.findUnique({ where: { id: t }, select: { receipt_footer: true, name: true } });
+    ok(rf.status === 200 && tf.receipt_footer === 'Volte sempre (gerente)' && tf.name === ctx.tenant.name, 'gerente muda a mensagem do recibo (so isso)', rf);
+    const both = await g.req('PUT', '/api/settings/store', { receipt_footer: 'x', phone: '849999999' });
+    ok(both.status === 403 && both.data?.code === 'MANAGER_FORBIDDEN', 'gerente com a mensagem + o telefone do dono: 403', both);
+    const adm = await client(signAccessToken(await prisma.user.findUnique({ where: { id: managerId } })), { Origin: ADMIN_ORIGIN }).req('GET', '/api/admin/tenants');
+    ok(adm.status === 403, 'gerente no admin: 403', adm.status);
+
+    // Sem custos nas escritas: produto novo com custo 0 (o dono e avisado), entrada e edicao sem mexer no custo.
+    const np = await g.req('POST', '/api/products', { name: 'Produto do Gerente E2', category: 'Geral', sell_price: 5000, cost_price: 999, stock_qty: 3 });
+    ok(np.status === 201 && np.data.cost_price === undefined, 'gerente cria um produto (a resposta nao traz custo)', np);
+    ok((await prisma.product.findUnique({ where: { id: np.data.id } })).cost_price === 0, 'o custo que o gerente mandou foi ignorado (fica 0)');
+    const notesO = (await owner.req('GET', '/api/owner/notifications')).data.items;
+    ok(notesO.some((n) => n.type === 'cost_missing' && n.params.names.includes('Produto do Gerente E2')), 'o dono e avisado no sino: produto criado pelo gerente sem custo', notesO.map((n) => n.type));
+    const notesG = (await g.req('GET', '/api/owner/notifications')).data.items;
+    ok(!notesG.some((n) => n.type === 'cost_missing' || n.type === 'no_location'), 'o gerente nao ve o aviso de custos nem o do mapa');
+    const before = await prisma.product.findUnique({ where: { id: ctx.product.id } });
+    const se = await g.req('POST', '/api/inventory/stock', { product_id: ctx.product.id, quantity: 2, unit_cost: 1 });
+    const afterSe = await prisma.product.findUnique({ where: { id: ctx.product.id } });
+    ok(se.status === 201 && afterSe.cost_price === before.cost_price && afterSe.stock_qty === before.stock_qty + 2, 'entrada de stock do gerente: stock +2, custo do produto intacto', { status: se.status, before: before.cost_price, after: afterSe.cost_price });
+    const ed = await g.req('PATCH', '/api/products/' + ctx.product.id, { cost_price: 1, sell_price: 10000 });
+    ok(ed.status === 200 && (await prisma.product.findUnique({ where: { id: ctx.product.id } })).cost_price === before.cost_price, 'editar: o custo mandado pelo gerente e ignorado', ed.status);
+    const sp = await g.req('POST', '/api/inventory/suppliers', { name: 'Fornecedor do Gerente', delivery_cost_per_visit: 9999 });
+    ok(sp.status === 201 && (await prisma.supplier.findUnique({ where: { id: sp.data.id } })).delivery_cost_per_visit === 0, 'fornecedor criado pelo gerente: custo de entrega 0 (e do dono)');
+
+    // Sem `act` noutro estabelecimento (mesmo do mesmo dono).
+    const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + '-G', business_type: 'mercearia', location: 'Matola' });
+    bId = cb.data?.id;
+    const mUser = await prisma.user.findUnique({ where: { id: managerId } });
+    const forged = await client(signAccessToken(mUser, { act: bId })).req('GET', '/api/products');
+    ok(forged.status === 403, 'gerente com token forjado act=outro estabelecimento do dono: 403', forged);
+    ok((await g.req('POST', '/api/establishments/switch', { tenant_id: bId })).status === 403, 'gerente nao troca de estabelecimento');
+
+    // PIN de autorizacao do gerente: cancelamento (no painel) e desconto (no terminal), com o nome no rastreio.
+    const wrong = await g.req('POST', `/api/sales/${s1.data.id}/cancel`, { pin: '0000', reason: 'teste' });
+    ok(wrong.status === 403, 'cancelar com PIN errado: 403', wrong.status);
+    const canc = await g.req('POST', `/api/sales/${s1.data.id}/cancel`, { pin: MPIN, reason: 'teste E2' });
+    ok(canc.status === 200, 'gerente cancela com o seu PIN', canc);
+    const ca = await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'CANCEL_SALE', entity_id: s1.data.id } });
+    const cav = ca ? JSON.parse(ca.new_value) : {};
+    ok(ca && ca.user_id === managerId && cav.authorized_by === 'manager' && cav.manager_name === 'Gerente Teste', 'rastreio: cancelamento autorizado pelo gerente, com o nome dele', cav);
+    const disc = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID(), discount_amount: 2500, total_amount: 7500, amount_received: 7500, authorization_pin: MPIN }));
+    ok(disc.status === 201, 'desconto de 25% no terminal autorizado com o PIN do gerente', disc);
+    const da = disc.data?.id ? await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'DISCOUNT_AUTHORIZED', entity_id: disc.data.id } }) : null;
+    ok(da && JSON.parse(da.new_value).manager_name === 'Gerente Teste', 'rastreio: desconto autorizado pelo gerente (com o nome)', da && da.new_value);
+    const ownerPinStill = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID(), discount_amount: 2500, total_amount: 7500, amount_received: 7500, authorization_pin: PIN }));
+    ok(ownerPinStill.status === 201, 'o PIN do dono continua a valer');
+    await owner.req('PUT', `/api/managers/${managerId}`, { pin: null });
+    const off = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID(), discount_amount: 2500, total_amount: 7500, amount_received: 7500, authorization_pin: MPIN }));
+    ok(off.status === 403 && off.data?.code === 'INVALID_AUTH_PIN', 'o dono tira o PIN ao gerente: deixa de autorizar', off);
+
+    // Ao vivo: a venda chega ao gerente sem o lucro.
+    const live = await readSse('/api/owner/live', { Cookie: 'token=' + g.jar.get('token') }, 1, 20000, () => owner.req('POST', '/api/sales', saleBody()));
+    const ev = live.events.find((e) => e.type === 'sale');
+    ok(live.status === 200 && ev && ev.data.total === 10000 && ev.data.profit === undefined, 'canal ao vivo do gerente: a venda, sem lucro', live);
+
+    // A propria senha; depois o dono muda a senha e desactiva.
+    const own = await g.req('PUT', '/api/profile/password', { current_password: pw, new_password: pw + 'Z' });
+    ok(own.status === 200, 'o gerente muda a propria senha', own);
+    const reset = await owner.req('PUT', `/api/managers/${managerId}`, { password: pw + 'Y' });
+    ok(reset.status === 200, 'dono poe uma senha nova ao gerente', reset);
+    ok((await g.req('GET', '/api/owner/overview')).status === 401, 'senha nova: a sessao aberta do gerente cai');
+    const g2 = client();
+    ok((await g2.req('POST', '/api/auth/login', { email, password: pw + 'Y' })).status === 200, 'entra com a senha nova');
+    await owner.req('PUT', `/api/managers/${managerId}`, { is_active: false });
+    ok((await g2.req('GET', '/api/owner/overview')).status === 401, 'desactivado: a sessao acaba no pedido seguinte');
+    ok((await client().req('POST', '/api/auth/login', { email, password: pw + 'Y' })).status === 401, 'desactivado: nao entra');
+
+    // Outro dono nao ve nem mexe nos gerentes deste.
+    otherTenant = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-O', owner_name: 'Outro', business_type: 'bottle_store', location: 'Teste', phone: '840000008', status: 'active', onboarding_completed: true } });
+    const other = await prisma.user.create({ data: { tenant_id: otherTenant.id, role: 'owner', name: 'Outro Dono', email: 'outro-' + crypto.randomBytes(4).toString('hex') + '@teste.local', password_hash: await bcrypt.hash(crypto.randomBytes(10).toString('hex'), 10), is_active: true } });
+    const oc = client(signAccessToken(other));
+    ok(!(await oc.req('GET', '/api/managers')).data.some((m) => m.id === managerId), 'outro dono nao ve este gerente');
+    ok((await oc.req('PUT', `/api/managers/${managerId}`, { is_active: true })).status === 404, 'outro dono nao reactiva este gerente (404)');
+    ok((await oc.req('POST', '/api/managers', { tenant_id: t, name: 'Intruso', email: 'intruso-' + crypto.randomBytes(3).toString('hex') + '@t.local', password: 'abcdefgh1' })).status === 404, 'outro dono nao cria gerentes no estabelecimento deste (404)');
+  } finally {
+    await dropTenant(bId);
+    await dropTenant(otherTenant && otherTenant.id);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+  }
+}
+
+async function test54() {
+  section(54, 'E2: painel geral — somas iguais as de cada estabelecimento, ultimas vendas com terminal e perfil, rastreio, stock e relatorios de todos, canal ao vivo so do dono; outro dono, gerente e caixista fora');
+  const t = ctx.tenant.id;
+  const owner = ownerClient();
+  let bId = null; let cTenant = null;
+  try {
+    const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + '-B2', business_type: 'mercearia', location: 'Matola' });
+    ok(cb.status === 201, '2.o estabelecimento', cb);
+    bId = cb.data.id;
+    const sw = client(signAccessToken(ctx.owner));
+    await sw.req('POST', '/api/establishments/switch', { tenant_id: bId });
+    // O mesmo produto (mesmo nome) em B, sem stock: o stock geral junta-os.
+    await sw.req('POST', '/api/products', { name: 'Cerveja Teste', category: 'Bebidas', sell_price: 9000, cost_price: 5000, stock_qty: 0, min_stock: 5 });
+    await sw.req('POST', '/api/products', { name: 'Arroz B2', category: 'Mercearia', sell_price: 5000, cost_price: 3000, stock_qty: 10 });
+    const prodB = await prisma.product.findFirst({ where: { tenant_id: bId, name: 'Arroz B2' } });
+    const saleB = await sw.req('POST', '/api/sales', { items: [{ product_id: prodB.id, quantity: 2, unit_sell_price: 5000, unit_cost_price: 0 }], total_amount: 10000, payment_method: 'cash', amount_received: 10000 });
+    ok(saleB.status === 201, 'venda em B', saleB);
+    // Venda num terminal de A: o painel geral mostra o terminal e o perfil.
+    const term = await cashierTerminal();
+    const saleT = await term.req('POST', '/api/sales', saleBody({ id: crypto.randomUUID() }));
+    ok(saleT.status === 201, 'venda no terminal de A', saleT);
+    ok((await prisma.sale.findUnique({ where: { id: saleT.data.id } })).terminal_id, 'a venda guarda o terminal de onde saiu');
+
+    const ov = await owner.req('GET', '/api/group/overview');
+    ok(ov.status === 200 && ov.data.establishments.length === 2, 'painel geral: os 2 estabelecimentos', ov.status);
+    const light = await owner.req('GET', '/api/group/overview?light=1');
+    ok(light.status === 200 && light.data.totals.today.revenue === ov.data.totals.today.revenue && light.data.establishments.every((e) => e.month.net_profit === null), 'hub (modo leve): hoje igual, sem lucro liquido', light.data && light.data.totals.today);
+    const a = ov.data.establishments.find((e) => e.id === t);
+    const b = ov.data.establishments.find((e) => e.id === bId);
+    const oa = (await owner.req('GET', '/api/owner/overview')).data;
+    const ob = (await sw.req('GET', '/api/owner/overview')).data;
+    ok(a && a.today.revenue === oa.today.revenue && a.today.count === oa.today.sales_count && a.today.profit === oa.today.gross_profit, 'hoje de A = o Inicio de A', { geral: a && a.today, inicio: oa.today });
+    ok(b && b.today.revenue === ob.today.revenue && b.today.revenue === 10000 && b.today.profit === 4000, 'hoje de B = o Inicio de B (100 MT, lucro 40 MT)', b && b.today);
+    ok(a.month.revenue === oa.month.revenue && b.month.revenue === ob.month.revenue, 'mes de cada um = o Inicio de cada um');
+    const tot = ov.data.totals;
+    ok(tot.today.revenue === a.today.revenue + b.today.revenue && tot.month.revenue === a.month.revenue + b.month.revenue && tot.week.revenue === a.week.revenue + b.week.revenue, 'totais = soma dos estabelecimentos (hoje, 7 dias, mes)', tot);
+    ok(typeof a.month.net_profit === 'number' && typeof tot.month.net_profit === 'number' && 'change_pct' in tot.today && typeof a.open_now === 'boolean', 'lucro liquido do mes, comparacoes e «aberto agora»', { net: tot.month.net_profit, open: a.open_now });
+
+    const rec = await owner.req('GET', '/api/group/recent?limit=10');
+    const rb = rec.data.find((s) => s.id === saleB.data.id);
+    const rt = rec.data.find((s) => s.id === saleT.data.id);
+    ok(rec.status === 200 && rb && rb.establishment === ctx.tenant.name + '-B2' && rb.items.some((i) => i.product_name === 'Arroz B2'), 'ultimas vendas: a de B com o estabelecimento e o que se vendeu', rb);
+    ok(rt && rt.terminal && rt.cashier === ctx.cashier.name && rt.establishment === ctx.tenant.name, 'ultimas vendas: a do terminal com o nome do terminal e do caixista', rt);
+
+    const day = isoDay();
+    const tl = await owner.req('GET', `/api/group/timeline?from=${day}&to=${day}&page_size=100`);
+    const tla = (await owner.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}&page_size=200`)).data;
+    const tlb = (await sw.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}&page_size=200`)).data;
+    ok(tl.status === 200 && tl.data.total === tla.total + tlb.total && tl.data.rows.some((e) => e.tenant_id === bId && e.establishment) && tl.data.rows.some((e) => e.tenant_id === t), 'rastreio geral: os dois juntos, cada linha com o estabelecimento; total = soma', { geral: tl.data && tl.data.total, a: tla.total, b: tlb.total });
+    const sorted = tl.data.rows.every((e, i, arr) => i === 0 || new Date(arr[i - 1].at) >= new Date(e.at));
+    ok(sorted, 'rastreio geral por ordem (mais recente primeiro)');
+
+    const sg = await owner.req('GET', '/api/group/stock');
+    const beer = sg.data.low.find((g) => g.name === 'Cerveja Teste');
+    const inA = beer && beer.per.find((p) => p.tenant_id === t);
+    const inB = beer && beer.per.find((p) => p.tenant_id === bId);
+    ok(sg.status === 200 && beer && inA && inB && inB.qty === 0 && inB.low && inA.qty > 0 && beer.total === inA.qty + inB.qty, 'stock geral: «Cerveja Teste: N em A, 0 em B» (somado pelo nome)', beer);
+    ok(sg.data.low.every((g) => g.per.length === 2), 'stock geral: cada produto mostra os 2 estabelecimentos');
+
+    const rg = await owner.req('GET', '/api/group/reports?period=daily');
+    const da = (await owner.req('GET', '/api/owner/reports/daily')).data;
+    const db = (await sw.req('GET', '/api/owner/reports/daily')).data;
+    ok(rg.status === 200 && rg.data.totals.gross_revenue === da.gross_revenue + db.gross_revenue && rg.data.totals.gross_profit === da.gross_profit + db.gross_profit, 'relatorio diario de todos = soma dos relatorios de cada um', { geral: rg.data && rg.data.totals, a: da.gross_revenue, b: db.gross_revenue });
+    const rm = await owner.req('GET', '/api/group/reports?period=monthly');
+    ok(rm.status === 200 && typeof rm.data.totals.net_profit === 'number' && rm.data.establishments.length === 2, 'relatorio mensal de todos (com lucro liquido)', rm.status);
+
+    const ownerCookie = { Cookie: 'token=' + signAccessToken(ctx.owner) };
+    const live = await readSse('/api/group/live', ownerCookie, 1, 20000, () => sw.req('POST', '/api/sales', { items: [{ product_id: prodB.id, quantity: 1, unit_sell_price: 5000, unit_cost_price: 0 }], total_amount: 5000, payment_method: 'cash', amount_received: 5000 }));
+    const ev = live.events.find((e) => e.type === 'sale');
+    ok(live.status === 200 && ev && ev.data.tenant_id === bId && ev.data.establishment === ctx.tenant.name + '-B2' && ev.data.total === 5000, 'canal geral: a venda de B chega com o nome do estabelecimento', live);
+
+    // Fora: outro dono so ve os seus; gerente, caixista e suporte recusados.
+    cTenant = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-C2', owner_name: 'Outro', business_type: 'bottle_store', location: 'Teste', phone: '840000007', status: 'active', onboarding_completed: true } });
+    const other = await prisma.user.create({ data: { tenant_id: cTenant.id, role: 'owner', name: 'Outro Dono', email: 'outro2-' + crypto.randomBytes(4).toString('hex') + '@teste.local', password_hash: await bcrypt.hash(crypto.randomBytes(10).toString('hex'), 10), is_active: true } });
+    const oc = client(signAccessToken(other));
+    const ovO = await oc.req('GET', '/api/group/overview');
+    ok(ovO.status === 200 && ovO.data.establishments.length === 1 && ovO.data.establishments[0].id === cTenant.id, 'outro dono: o painel geral so tem o dele', ovO.data && ovO.data.establishments.map((e) => e.id));
+    const oLive = await readSse('/api/group/live', { Cookie: 'token=' + signAccessToken(other) }, 1, 6000, () => sw.req('POST', '/api/sales', { items: [{ product_id: prodB.id, quantity: 1, unit_sell_price: 5000, unit_cost_price: 0 }], total_amount: 5000, payment_method: 'cash', amount_received: 5000 }));
+    ok(oLive.status === 200 && !oLive.events.some((e) => e.data.tenant_id === bId), 'outro dono: o canal geral nao traz as vendas deste');
+    const mgr = await prisma.user.create({ data: { tenant_id: t, role: 'manager', name: 'Gerente 54', email: 'gerente54-' + crypto.randomBytes(4).toString('hex') + '@teste.local', password_hash: await bcrypt.hash(crypto.randomBytes(10).toString('hex'), 10), is_active: true } });
+    for (const [who, c] of [['gerente', client(signAccessToken(mgr))], ['caixista', client(signAccessToken(ctx.cashier, { scope: 'pos' }))], ['suporte', client(signAccessToken(ctx.owner, { scope: 'support' }))]]) {
+      ok((await c.req('GET', '/api/group/overview')).status === 403, `${who}: painel geral 403`);
+    }
+  } finally {
+    await dropTenant(bId);
+    await dropTenant(cTenant && cTenant.id);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45, 46: test46, 47: test47, 48: test48, 49: test49, 50: test50, 51: test51, 52: test52, 53: test53, 54: test54 };
 
 (async () => {
   await prisma.ready();

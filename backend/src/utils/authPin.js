@@ -30,4 +30,22 @@ async function checkAuthorizationPin({ req, tenantId, pin, failAction, entityTyp
   }
 }
 
-module.exports = { checkAuthorizationPin, AUTH_PIN_FAIL_ACTIONS, AUTH_PIN_MAX_PER_TENANT };
+// E2 (31/10): cancelamentos e descontos acima do limite aceitam o PIN do dono OU
+// o PIN de autorizacao de um GERENTE activo (User.pin_hash). O dono «desliga» um
+// gerente tirando-lhe o PIN. `client` e o prisma ou o tx da transaccao.
+async function loadAuthorizers(client, tenantId) {
+  const tenant = await client.tenant.findUnique({ where: { id: tenantId }, select: { cancel_pin_hash: true } });
+  const managers = await client.user.findMany({ where: { tenant_id: tenantId, role: 'manager', is_active: true, pin_hash: { not: null } }, select: { id: true, name: true, pin_hash: true } });
+  return { ownerHash: tenant?.cancel_pin_hash || null, managers, any: Boolean(tenant?.cancel_pin_hash) || managers.length > 0 };
+}
+
+// Quem autorizou: { authorized_by: 'owner' } | { authorized_by: 'manager', manager_id, manager_name } | null.
+async function matchAuthorizer(authorizers, pin) {
+  if (authorizers.ownerHash && await bcrypt.compare(pin, authorizers.ownerHash)) return { authorized_by: 'owner' };
+  for (const m of authorizers.managers) {
+    if (await bcrypt.compare(pin, m.pin_hash)) return { authorized_by: 'manager', manager_id: m.id, manager_name: m.name };
+  }
+  return null;
+}
+
+module.exports = { checkAuthorizationPin, loadAuthorizers, matchAuthorizer, AUTH_PIN_FAIL_ACTIONS, AUTH_PIN_MAX_PER_TENANT };

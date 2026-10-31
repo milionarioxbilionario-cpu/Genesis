@@ -3,7 +3,7 @@ import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-route
 import { BarChart3, ChevronsLeft, ChevronsRight, ChevronsUpDown, Eye, EyeOff, HandCoins, House, LogOut, Menu, Package, Receipt, Settings, Truck, Users, WifiOff, X } from 'lucide-react';
 import { PrivacyContext, usePrivacy, usePrivacyState } from '../utils/privacy';
 import api, { saveLanguage } from '../utils/api';
-import { useSession, FullPageSpinner } from '../utils/session';
+import { useSession, FullPageSpinner, isManager } from '../utils/session';
 import { BrandMark, cx, IconButton, LanguageSwitch } from '../components/ui';
 import { useI18n } from '../i18n/react';
 import '../i18n/en/owner';
@@ -12,6 +12,7 @@ import NotificationBell from '../components/NotificationBell';
 import LiveSales from '../components/LiveSales';
 import EstablishmentSwitcher from '../components/EstablishmentSwitcher';
 import BirthdayDialog from '../components/BirthdayDialog';
+import GroupCongrats from '../components/GroupCongrats';
 
 // Navegacao do dono: 8 seccoes, sem duplicados. Cada funcao da especificacao
 // vive num so sitio (ex.: Metas no Inicio; Terminais e Auditoria nas Definicoes).
@@ -52,6 +53,9 @@ function Sidebar({ tenant, onNavigate, collapsed = false, onToggle }) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const support = user?.scope === 'support';
+  // E2: o gerente trabalha so no seu estabelecimento (sem trocar nem painel geral).
+  const manager = isManager(user);
+  const fixed = support || manager;
   const [switching, setSwitching] = useState(false);
   return (
     <div className="flex h-full flex-col">
@@ -59,12 +63,12 @@ function Sidebar({ tenant, onNavigate, collapsed = false, onToggle }) {
         {!collapsed && <BrandMark />}
         {!collapsed && (
           // Etapa D: tocar no nome abre os estabelecimentos (trocar, painel geral, acrescentar).
-          <button type="button" disabled={support} onClick={() => setSwitching(true)} className="min-w-0 flex-1 rounded text-left hover:bg-subtle disabled:hover:bg-transparent" aria-label={t('Os seus estabelecimentos')}>
-            <p className="flex items-center gap-1 truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}{!support && <ChevronsUpDown size={14} className="shrink-0 text-ink-muted" />}</p>
+          <button type="button" disabled={fixed} onClick={() => setSwitching(true)} className="min-w-0 flex-1 rounded text-left hover:bg-subtle disabled:hover:bg-transparent" aria-label={t('Os seus estabelecimentos')}>
+            <p className="flex items-center gap-1 truncate text-base font-semibold leading-5 text-ink">{tenant?.name || 'Genesis'}{!fixed && <ChevronsUpDown size={14} className="shrink-0 text-ink-muted" />}</p>
             <p className="truncate text-xs text-ink-muted">{tenant?.location || t('Gestão comercial')}</p>
           </button>
         )}
-        {!support && <EstablishmentSwitcher open={switching} onClose={() => setSwitching(false)} />}
+        {!fixed && <EstablishmentSwitcher open={switching} onClose={() => setSwitching(false)} />}
         {onToggle && <IconButton label={collapsed ? t('Mostrar o menu') : t('Esconder o menu')} icon={collapsed ? ChevronsRight : ChevronsLeft} size="sm" onClick={onToggle} />}
       </div>
       <nav className={cx('flex-1 overflow-y-auto py-3', collapsed ? 'px-2' : 'px-3')} aria-label={t('Navegação principal')}>
@@ -103,7 +107,7 @@ function Sidebar({ tenant, onNavigate, collapsed = false, onToggle }) {
           ) : (
             <NavLink to="/app/perfil" onClick={onNavigate} className="min-w-0 rounded hover:text-accent" title={t('Perfil')}>
               <p className="truncate text-sm font-medium text-ink">{user?.name}</p>
-              <p className="truncate text-xs text-ink-muted">{t('Dono')} · {t('Perfil')}</p>
+              <p className="truncate text-xs text-ink-muted">{manager ? t('Gerente') : t('Dono')} · {t('Perfil')}</p>
             </NavLink>
           )}
           <IconButton label={t('Sair')} icon={LogOut} size="sm" onClick={async () => { await logout(); navigate('/entrar'); }} />
@@ -138,7 +142,8 @@ export default function AppShell() {
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   if (loading) return <FullPageSpinner />;
-  if (tenant && tenant.onboarding_completed === false && user?.scope !== 'support') return <Navigate to="/onboarding" replace />;
+  // A configuracao inicial e do dono; o gerente espera por ela (aviso em baixo).
+  if (tenant && tenant.onboarding_completed === false && user?.scope !== 'support' && !isManager(user)) return <Navigate to="/onboarding" replace />;
 
   const current = NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
   const trialDays = tenant?.status === 'trial' && tenant.trial_ends_at
@@ -170,6 +175,9 @@ export default function AppShell() {
         {user?.tenant?.status === 'closed' && (
           <div className="no-print bg-ink-2 px-4 py-1.5 text-center text-sm font-medium text-white">{t('Este estabelecimento está encerrado: só consulta. Pode reabri-lo nos 30 dias seguintes, na lista dos seus estabelecimentos.')}</div>
         )}
+        {isManager(user) && tenant && tenant.onboarding_completed === false && (
+          <div className="no-print bg-warning px-4 py-1.5 text-center text-sm font-medium text-white">{t('O dono ainda está a configurar este estabelecimento. Alguns dados podem faltar.')}</div>
+        )}
         {user?.scope === 'support' && (
           <div className="no-print bg-info px-4 py-1.5 text-center text-sm font-medium text-white">{t('Modo suporte Genesis — só leitura. Nenhuma alteração é possível.')}</div>
         )}
@@ -190,8 +198,8 @@ export default function AppShell() {
             )}
             {!online && <span className="flex items-center gap-1.5 text-warning"><WifiOff size={15} /> {t('Sem ligação')}</span>}
             <PrivacyToggle />
-            {user?.role === 'owner' && <NotificationBell />}
-            {user?.role === 'owner' && !user?.scope && online && !sessionOffline && <LiveSales />}
+            {(user?.role === 'owner' || isManager(user)) && <NotificationBell />}
+            {(user?.role === 'owner' || isManager(user)) && !user?.scope && online && !sessionOffline && <LiveSales />}
           </div>
         </header>
         <main className="print-full mx-auto max-w-content px-4 py-6 lg:px-8 lg:py-8">
@@ -201,6 +209,7 @@ export default function AppShell() {
         </main>
         {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <MonthCloseDialog />}
         {tenant?.onboarding_completed && user?.role === 'owner' && user?.scope !== 'support' && <BirthdayDialog />}
+        {tenant?.onboarding_completed && user?.role === 'owner' && !user?.scope && <GroupCongrats />}
       </div>
     </div>
     </PrivacyContext.Provider>

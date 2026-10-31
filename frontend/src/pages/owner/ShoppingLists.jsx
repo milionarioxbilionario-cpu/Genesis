@@ -5,6 +5,7 @@ import useApi from '../../utils/useApi';
 import { money, int, date, errorMessage } from '../../utils/format';
 import { locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import { Alert, Badge, Button, Drawer, IconButton, Input, KeyValue, Select, Table, Toolbar, useConfirm, useToast } from '../../components/ui';
 import { formatQty, isMeasured, lineAmount, parseQty, qtyInput } from '../../utils/units';
 
@@ -21,6 +22,8 @@ export default function ShoppingLists({ products }) {
   const { t } = useI18n();
   const lists = useApi('/api/shopping-lists');
   const suppliers = useApi('/api/inventory/suppliers');
+  // E2: o gerente faz a lista so com quantidades (o custo e do dono).
+  const seesCosts = useSeesCosts();
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -121,7 +124,7 @@ export default function ShoppingLists({ products }) {
           { key: 'supplier', header: t('Fornecedor'), render: (l) => <span className="text-ink-2">{l.supplier_name || '—'}</span> },
           { key: 'status', header: t('Estado'), render: (l) => <Badge tone={STATUS[l.status]?.tone}>{statusLabel(l.status)}</Badge> },
           { key: 'items', header: t('Produtos'), align: 'right', render: (l) => int(l.item_count) },
-          { key: 'total', header: t('Total'), align: 'right', render: (l) => money(l.totals.total) },
+          ...(seesCosts ? [{ key: 'total', header: t('Total'), align: 'right', render: (l) => money(l.totals.total) }] : []),
         ]}
         rows={lists.data || []}
         loading={lists.loading && !lists.data}
@@ -147,7 +150,7 @@ export default function ShoppingLists({ products }) {
             {readOnly && <Alert tone="info">{t('Lista recebida. A entrada no stock regista-se em Produtos → Stock → Entrada de stock, com o custo e a validade de cada lote.')}</Alert>}
             <Input label={t('Nome da lista')} value={editing.name} disabled={readOnly} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             <Select label={t('Fornecedor')} value={editing.supplier_id} disabled={readOnly} onChange={(e) => setEditing({ ...editing, supplier_id: e.target.value })}
-              hint={supplier ? (supplier.phone ? t('WhatsApp {phone} · entrega {v}', { phone: supplier.phone, v: money(supplier.delivery_cost_per_visit) }) : t('Sem telefone: no WhatsApp escolhe o contacto')) : t('Sem fornecedor, o WhatsApp pede para escolher o contacto.')}>
+              hint={supplier ? (supplier.phone ? (seesCosts ? t('WhatsApp {phone} · entrega {v}', { phone: supplier.phone, v: money(supplier.delivery_cost_per_visit) }) : t('WhatsApp {phone}', { phone: supplier.phone })) : t('Sem telefone: no WhatsApp escolhe o contacto')) : t('Sem fornecedor, o WhatsApp pede para escolher o contacto.')}>
               <option value="">{t('Sem fornecedor')}</option>
               {(suppliers.data || []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </Select>
@@ -163,7 +166,7 @@ export default function ShoppingLists({ products }) {
                     <li key={it.product_id} className="flex items-center gap-3 px-3 py-2">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-ink">{it.product_name}</p>
-                        <p className="num text-xs text-ink-muted">{money(it.unit_cost)} × {formatQty(it.quantity, it.unit)} = {money(lineAmount(it.quantity, it.unit_cost, it.unit))}{it.reason === 'pedido por clientes sem stock' ? ' · ' + t('pedido por clientes') : ''}</p>
+                        <p className="num text-xs text-ink-muted">{seesCosts ? <>{money(it.unit_cost)} × {formatQty(it.quantity, it.unit)} = {money(lineAmount(it.quantity, it.unit_cost, it.unit))}</> : formatQty(it.quantity, it.unit)}{it.reason === 'pedido por clientes sem stock' ? ' · ' + t('pedido por clientes') : ''}</p>
                       </div>
                       <Input aria-label={t('Quantidade de {name}', { name: it.product_name })} inputMode="numeric" className="w-20" inputClassName="num text-right" disabled={readOnly}
                         value={it.qty_text ?? qtyInput(it.quantity, it.unit)} onChange={(e) => { const v = isMeasured(it.unit) ? e.target.value.replace(/[^\d.,]/g, '').slice(0, 9) : e.target.value.replace(/\D/g, '').slice(0, 5); setItem(it.product_id, { qty_text: v, quantity: parseQty(v, it.unit) || 0 }); }} />
@@ -183,11 +186,11 @@ export default function ShoppingLists({ products }) {
               )}
             </div>
 
-            <div className="rounded border border-border p-3">
+            {seesCosts && <div className="rounded border border-border p-3">
               <KeyValue label={t('Investimento (ao custo)')} value={money(investment)} />
               <KeyValue label={t('Entrega do fornecedor')} value={money(delivery)} />
               <KeyValue label={t('Total')} value={money(investment + delivery)} strong />
-            </div>
+            </div>}
             {editing.id && editing.status === 'sent' && <Button onClick={() => setStatus('received')} loading={busy === 'status'}>{t('Marcar como recebida')}</Button>}
           </div>
         )}

@@ -63,9 +63,11 @@ try {
   ok(await page.getByText('por configurar').isVisible(), 'seletor: o 2.o aparece «por configurar»');
   await shot(page, 'D-03-seletor');
   await page.getByRole('button', { name: 'Painel geral' }).click();
-  await page.getByRole('heading', { name: 'Painel geral' }).waitFor({ timeout: T });
-  await page.getByRole('cell', { name: /Mercearia da Matola/ }).waitFor({ timeout: T });
-  ok(await page.getByRole('cell', { name: new RegExp(nameA) }).count() >= 1, 'Painel geral: os dois estabelecimentos');
+  // E2 (31/10): o painel geral tem barra propria (/geral) e um cartao por estabelecimento.
+  await page.waitForURL('**/geral', { timeout: T });
+  await page.getByRole('heading', { name: 'Visão geral' }).waitFor({ timeout: T });
+  await page.getByText('Mercearia da Matola').first().waitFor({ timeout: 2 * T });
+  ok(await page.getByText(nameA).count() >= 1, 'Painel geral: os dois estabelecimentos');
   await shot(page, 'D-04-painel-geral');
   // Isolamento visto no browser: os produtos do 1.o nao aparecem no 2.o.
   const prods = await page.evaluate(async () => {

@@ -52,6 +52,8 @@ router.get('/suppliers', auth, requireRole('owner'), async (req, res) => {
 router.post('/suppliers', auth, requireRole('owner'), async (req, res) => {
   try {
     const data = supplierSchema.parse(req.body);
+    // E2: o custo de entrega entra nas deducoes do mes (do dono): o gerente nao o escreve.
+    if (req.user.role === 'manager') data.delivery_cost_per_visit = 0;
     const supplier = await prisma.supplier.create({
       data: {
         tenant_id: req.user.tenantId,
@@ -86,14 +88,19 @@ router.get('/stock', auth, requireRole('owner'), async (req, res) => {
   }
 });
 
+// E2: o gerente regista a entrada sem custo — usa-se o custo actual do produto.
+const managerStockEntrySchema = stockEntrySchema.extend({ unit_cost: z.number().int().nonnegative().optional() });
+
 router.post('/stock', auth, requireRole('owner'), async (req, res) => {
   try {
-    const data = stockEntrySchema.parse(req.body);
+    const byManager = req.user.role === 'manager';
+    const data = (byManager ? managerStockEntrySchema : stockEntrySchema).parse(req.body);
 
     const product = await prisma.product.findFirst({ where: { id: data.product_id, tenant_id: req.user.tenantId } });
     if (!product) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
+    if (byManager) data.unit_cost = product.cost_price;
     if (data.supplier_id) {
       const supplier = await prisma.supplier.findFirst({ where: { id: data.supplier_id, tenant_id: req.user.tenantId } });
       if (!supplier) return res.status(400).json({ error: 'Fornecedor não pertence a este estabelecimento' });
@@ -168,6 +175,7 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
 router.put('/suppliers/:id', auth, requireRole('owner'), async (req, res) => {
   try {
     const data = supplierSchema.partial().parse(req.body);
+    if (req.user.role === 'manager') delete data.delivery_cost_per_visit;
     const own = await prisma.supplier.findFirst({ where: { id: req.params.id, tenant_id: req.user.tenantId } });
     if (!own) return res.status(404).json({ error: 'Fornecedor não encontrado' });
     const supplier = await prisma.supplier.update({ where: { id: own.id }, data: { ...data, phone: data.phone === null ? '' : data.phone } });

@@ -1137,7 +1137,7 @@
       "status": "ok",
       "summary": "Verificacao unica do PIN de autorizacao do dono no terminal; limite partilhado de 5 falhas/loja/15 min.",
       "role": "Seguranca do balcao.",
-      "notes": "09/10/2026: verify_system 271/271 + flows.mjs (todos os fluxos) no browser."
+      "notes": "31/10/2026 E2: PIN do dono ou de um gerente activo (cancelar/descontos); verify_system 53."
     },
     "backend/src/utils/sessionScopes.js": {
       "status": "ok",
@@ -1526,7 +1526,7 @@
       "status": "ok",
       "summary": "Notificacoes do sino do dono, calculadas na leitura: stock (3 niveis), validades, chenecas 7/1/0, fecho de turno, caixista bloqueado, meta, fecho do dia.",
       "role": "Operacoes.",
-      "notes": "18/10/2026 Fase 10.1 (sino do dono): notifications.test 7/7; verify_system 31 23/23; sino.mjs 12/12; regressao idioma_dono 35/35 e flows 40/40. Publicado 9cb2e61 (18/10): sino.mjs 12/12 no site."
+      "notes": "31/10/2026 E2: aviso cost_missing (produtos do gerente sem custo); verify 31/53."
     },
     "frontend/src/components/NotificationBell.jsx": {
       "status": "ok",
@@ -1821,12 +1821,6 @@
       "role": "Etapa D.",
       "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
     },
-    "frontend/src/pages/owner/GroupPanel.jsx": {
-      "status": "ok",
-      "summary": "Painel geral de todos os estabelecimentos.",
-      "role": "Etapa D.",
-      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
-    },
     "backend/src/utils/ownerSelf.js": {
       "status": "ok",
       "summary": "A conta do dono (PIN, senha, lingua, Face ID) lida no estabelecimento de casa.",
@@ -1880,6 +1874,42 @@
       "summary": "E2E das correccoes de 31/10 (2.o estabelecimento, esqueci o PIN, dois separadores, horario, guarda, copiar).",
       "role": "Prova no browser.",
       "notes": "31/10/2026 E1: 11/11 em genesismz.com, sem erros de JS."
+    },
+    "backend/src/utils/managerPolicy.js": {
+      "status": "ok",
+      "notes": "31/10/2026 E2: lista fechada de rotas do gerente + corte de campos sensiveis; unitarios 6/6; verify_system 53."
+    },
+    "backend/src/routes/managers.js": {
+      "status": "ok",
+      "notes": "31/10/2026 E2: gerentes do dono (criar, senha, PIN, desactivar); verify_system 53."
+    },
+    "backend/src/routes/group.js": {
+      "status": "ok",
+      "notes": "31/10/2026 E2: painel geral: somas dentro de cada estabelecimento; verify_system 54."
+    },
+    "frontend/src/layouts/GroupShell.jsx": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: painel geral com barra propria; build; e2e etapaE2 por correr."
+    },
+    "frontend/src/pages/group/GroupPages.jsx": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: 7 paginas do painel geral; build; e2e por correr."
+    },
+    "frontend/src/pages/group/Hub.jsx": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: hub «Em qual estabelecimento deseja entrar?»; build; e2e por correr."
+    },
+    "frontend/src/components/ManagersCard.jsx": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: gerentes (Equipa e painel geral); build; e2e por correr."
+    },
+    "frontend/src/components/GroupCongrats.jsx": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: mensagem Parabens ao 2.o estabelecimento; build."
+    },
+    "frontend/src/utils/establishments.js": {
+      "status": "partial",
+      "notes": "31/10/2026 E2: entrar num estabelecimento, hub, ultima escolha."
     }
   }
 }

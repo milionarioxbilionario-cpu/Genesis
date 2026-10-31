@@ -79,7 +79,7 @@ export default function EstablishmentSwitcher({ open, onClose }) {
               )}
             </button>
           ))}
-          {list && list.length > 1 && <Button className="mt-2" icon={LayoutGrid} onClick={() => { onClose(); navigate('/app/geral'); }}>{t('Painel geral')}</Button>}
+          {list && list.length > 1 && <Button className="mt-2" icon={LayoutGrid} onClick={() => { onClose(); navigate('/geral'); }}>{t('Painel geral')}</Button>}
           <Button className="mt-1" icon={Plus} onClick={() => setAdding({ client_id: newUuid(), name: '', business_type: types[0]?.value || 'mercearia', location: '' })}>{t('Acrescentar estabelecimento')}</Button>
         </div>
       )}

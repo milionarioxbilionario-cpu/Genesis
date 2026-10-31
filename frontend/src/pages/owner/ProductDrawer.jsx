@@ -7,6 +7,7 @@ import { int, errorMessage } from '../../utils/format';
 import { formatQty, isMeasured, parseQty, qtyInput } from '../../utils/units';
 import { photoToDataUrl } from '../../utils/imageResize';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import BarcodeScanner from '../../components/BarcodeScanner';
 import { Button, Drawer, IconButton, Input, MoneyInput, PRODUCT_ICONS, ProductImage, Select, Skeleton, categoryIcon, cx, useConfirm, useToast, Alert } from '../../components/ui';
 
@@ -52,6 +53,8 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
   const toast = useToast();
   const confirm = useConfirm();
   const { t } = useI18n();
+  // E2: o gerente nao ve nem escreve o custo; remover produtos e do dono.
+  const seesCosts = useSeesCosts();
   const [, setParams] = useSearchParams();
   const suppliers = useApi('/api/inventory/suppliers');
   const outletTenant = (useOutletContext() || {}).tenant;
@@ -120,7 +123,7 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
         : t('Para produtos que ainda não tem. Se não estiver no catálogo do Genesis, avisamos a equipa para o acrescentar.')}
       footer={(
         <>
-          {editing?.id && <Button variant="danger-ghost" className="mr-auto" onClick={() => remove(editing)}>{t('Remover')}</Button>}
+          {editing?.id && seesCosts && <Button variant="danger-ghost" className="mr-auto" onClick={() => remove(editing)}>{t('Remover')}</Button>}
           <Button onClick={close}>{t('Cancelar')}</Button>
           {editing?.id && <Button icon={Boxes} loading={saving} disabled={!canSave} onClick={() => save(true)}>{t('Stock')}</Button>}
           <Button variant="primary" loading={saving} disabled={!canSave} onClick={() => save(false)}>{t('Guardar')}</Button>
@@ -150,11 +153,11 @@ export default function ProductDrawer({ editing, setEditing, products, entry = f
           <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onCode={(code) => { set('barcode')(code); return { ok: true, message: t('Código lido: {code}', { code }) }; }} />
           <datalist id="categorias">{categories.map((c) => <option key={c} value={c} />)}</datalist>
           <IconPicker product={editing} value={editing.icon} onChange={set('icon')} />
-          <div className="grid grid-cols-2 gap-3">
-            <MoneyInput label={measured ? t('Preço de compra (por {unit})', { unit }) : t('Preço de compra')} hint={measured ? t('Quanto paga por {unit}', { unit }) : t('Quanto paga por unidade')} valueCents={editing.cost_price} onChangeCents={set('cost_price')} />
+          <div className={seesCosts ? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+            {seesCosts && <MoneyInput label={measured ? t('Preço de compra (por {unit})', { unit }) : t('Preço de compra')} hint={measured ? t('Quanto paga por {unit}', { unit }) : t('Quanto paga por unidade')} valueCents={editing.cost_price} onChangeCents={set('cost_price')} />}
             <MoneyInput label={measured ? t('Preço de venda (por {unit})', { unit }) : t('Preço de venda')} hint={t('Quanto cobra ao cliente')} valueCents={editing.sell_price} onChangeCents={set('sell_price')} />
           </div>
-          {editing.sell_price > 0 && editing.sell_price <= editing.cost_price && <Alert tone="warning">{t('O preço de venda não cobre o custo.')}</Alert>}
+          {seesCosts && editing.sell_price > 0 && editing.sell_price <= editing.cost_price && <Alert tone="warning">{t('O preço de venda não cobre o custo.')}</Alert>}
           {withVat && (
             <Select label={t('IVA')} hint={t('O preço de venda já inclui o IVA.')} value={editing.vat_rate === 0 ? '0' : '16'} onChange={(e) => set('vat_rate')(e.target.value === '0' ? 0 : null)}>
               <option value="16">{t('Taxa normal ({pct}%)', { pct: vatStd })}</option>

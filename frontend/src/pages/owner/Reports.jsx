@@ -8,6 +8,7 @@ import PdfButton from '../../components/PdfButton';
 import { money, int, isoDay, date, dateTime, monthName, PAYMENT_LABEL, axisMoney, workedText } from '../../utils/format';
 import { getLang, locale } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import SaleDrawer from '../../components/SaleDrawer';
 import { Alert, Badge, Button, Card, CardHeader, Input, KeyValue, PageHeader, Pagination, ProgressBar, Select, Skeleton, Stat, Table, Tabs, Toolbar, cx } from '../../components/ui';
 import { formatHuman, formatQty } from '../../utils/units';
@@ -32,13 +33,15 @@ export default function Reports() {
   const tab = params.get('tab') || 'daily';
   const day = params.get('date') || isoDay();
   const go = (next) => setParams({ tab: next.tab || tab, ...(next.date || (next.tab || tab) === 'daily' ? { date: next.date || day } : {}) });
+  // E2: o gerente ve vendas e quantidades (sem lucro, custos nem o mensal).
+  const seesCosts = useSeesCosts();
   return (
     <>
       <PageHeader title={t('Relatórios')} description={t('Tudo o que aconteceu no estabelecimento, com o porquê de cada valor.')} />
-      <Tabs className="no-print mb-5" value={tab} onChange={(v) => go({ tab: v })} items={[{ value: 'daily', label: t('Diário') }, { value: 'weekly', label: t('Semanal') }, { value: 'monthly', label: t('Mensal') }]} />
+      <Tabs className="no-print mb-5" value={tab} onChange={(v) => go({ tab: v })} items={[{ value: 'daily', label: t('Diário') }, { value: 'weekly', label: t('Semanal') }, ...(seesCosts ? [{ value: 'monthly', label: t('Mensal') }] : [])]} />
       {tab === 'daily' && <Daily day={day} setDay={(d) => go({ tab: 'daily', date: d })} />}
       {tab === 'weekly' && <Weekly openDay={(d) => go({ tab: 'daily', date: d })} />}
-      {tab === 'monthly' && <Monthly />}
+      {tab === 'monthly' && seesCosts && <Monthly />}
     </>
   );
 }
@@ -46,7 +49,18 @@ export default function Reports() {
 // ------------------------------------------------------------------ comuns
 function Kpis({ r, compareLabel }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   const result = r.gross_profit - r.losses_total;
+  if (!seesCosts) {
+    return (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label={t('Receita')} value={money(r.gross_revenue)} delta={r.compare?.revenue_change_pct ?? undefined} hint={t('{n} venda(s)', { n: int(r.sales_count) }) + (r.compare?.revenue_change_pct != null ? ' · ' + compareLabel : '')} />
+        <Stat label={t('Ticket médio')} value={money(r.average_ticket || 0)} />
+        <Stat label={t('Descontos')} value={r.discounts_total ? '−' + money(r.discounts_total) : money(0)} />
+        <Stat label={t('Cancelado')} value={money(r.cancelled_total || 0)} hint={t('{n} venda(s)', { n: int((r.cancellations || []).length) })} />
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Stat label={t('Receita')} value={money(r.gross_revenue)} delta={r.compare?.revenue_change_pct ?? undefined} hint={t('{n} venda(s)', { n: int(r.sales_count) }) + (r.compare?.revenue_change_pct != null ? ' · ' + compareLabel : '')} />
@@ -59,6 +73,7 @@ function Kpis({ r, compareLabel }) {
 
 function ProductRanking({ title, description, rows, valueKey }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   return (
     <Card padded={false}>
       <div className="p-5 pb-0"><CardHeader title={title} description={description} /></div>
@@ -69,7 +84,7 @@ function ProductRanking({ title, description, rows, valueKey }) {
             { key: 'name', header: t('Produto') },
             { key: 'quantity', header: t('Qtd.'), align: 'right', render: (p) => <span className={valueKey === 'quantity' ? 'font-medium' : ''}>{formatHuman(p.quantity, p.unit)}</span> },
             { key: 'revenue', header: t('Receita'), align: 'right', render: (p) => money(p.revenue) },
-            { key: 'profit', header: t('Lucro'), align: 'right', render: (p) => <span className={valueKey === 'profit' ? 'font-medium' : ''}>{money(p.profit)}</span> },
+            ...(seesCosts ? [{ key: 'profit', header: t('Lucro'), align: 'right', render: (p) => <span className={valueKey === 'profit' ? 'font-medium' : ''}>{money(p.profit)}</span> }] : []),
           ]}
           rows={rows}
           rowKey="product_id"
@@ -82,10 +97,11 @@ function ProductRanking({ title, description, rows, valueKey }) {
 
 function Breakdown({ r }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   return (
     <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <ProductRanking title={t('Mais vendidos')} description={t('Por quantidade. Até 3 lugares; empates partilham o lugar.')} rows={r.top_products} valueKey="quantity" />
-      <ProductRanking title={t('Mais rentáveis')} description={t('Por lucro. Não é o mesmo que vender mais.')} rows={r.top_profitable || []} valueKey="profit" />
+      {seesCosts && <ProductRanking title={t('Mais rentáveis')} description={t('Por lucro. Não é o mesmo que vender mais.')} rows={r.top_profitable || []} valueKey="profit" />}
       <Card>
         <CardHeader title={t('Por forma de pagamento')} />
         {Object.entries(r.by_payment).filter(([k, v]) => v > 0 || k !== 'mobile_money').map(([k, v]) => <KeyValue key={k} label={PAYMENT_LABEL[k] || k} value={money(v)} />)}
@@ -93,9 +109,9 @@ function Breakdown({ r }) {
       </Card>
       <CashierStats rows={r.by_cashier} />
       <Card>
-        <CardHeader title={t('Perdas')} description={r.losses.length ? t('{n} registo(s) · {v} ao custo', { n: r.losses.length, v: money(r.losses_total) }) : undefined} />
+        <CardHeader title={t('Perdas')} description={r.losses.length ? (seesCosts ? t('{n} registo(s) · {v} ao custo', { n: r.losses.length, v: money(r.losses_total) }) : t('{n} registo(s)', { n: r.losses.length })) : undefined} />
         {r.losses.length === 0 ? <p className="text-ink-muted">{t('Nenhuma perda registada.')}</p> : r.losses.slice(0, 8).map((l) => (
-          <KeyValue key={l.id} label={`${formatQty(l.quantity, l.unit)} × ${l.name} · ${lossReason(l.reason)}`} value={'−' + money(l.value)} tone="danger" />
+          <KeyValue key={l.id} label={`${formatQty(l.quantity, l.unit)} × ${l.name} · ${lossReason(l.reason)}`} value={seesCosts ? '−' + money(l.value) : ''} tone="danger" />
         ))}
       </Card>
       {r.by_category.length > 0 && (
@@ -131,6 +147,7 @@ function Breakdown({ r }) {
 
 function Restock({ data, title }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   if (!data) return null;
   return (
     <Card padded={false} className="mt-4">
@@ -138,7 +155,7 @@ function Restock({ data, title }) {
         <CardHeader
           title={title}
           description={t('Ao ritmo das vendas dos últimos {w} dias, para {c} dias. Inclui produtos pedidos quando não havia.', { w: data.window_days, c: data.cover_days })}
-          action={data.items.length > 0 && <span className="num text-base font-semibold text-ink">{money(data.total_investment)}</span>}
+          action={seesCosts && data.items.length > 0 && <span className="num text-base font-semibold text-ink">{money(data.total_investment)}</span>}
         />
       </div>
       <div className="px-5 pb-5">
@@ -148,7 +165,7 @@ function Restock({ data, title }) {
             { key: 'stock', header: t('Stock'), align: 'right', render: (i) => int(i.stock) },
             { key: 'per_day', header: t('Vende/dia'), align: 'right', render: (i) => dec(i.per_day) },
             { key: 'quantity', header: t('Comprar'), align: 'right', render: (i) => <span className="font-medium">{formatQty(i.quantity, i.unit)}</span> },
-            { key: 'investment', header: t('Investimento'), align: 'right', render: (i) => money(i.investment) },
+            ...(seesCosts ? [{ key: 'investment', header: t('Investimento'), align: 'right', render: (i) => money(i.investment) }] : []),
           ]}
           rows={data.items.slice(0, 12)}
           rowKey="product_id"
@@ -227,6 +244,7 @@ function CashierStats({ rows }) {
 
 function Timeline({ from, to }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   const [type, setType] = useState('');
   const [cashierId, setCashierId] = useState('');
   const cashiers = useApi('/api/owner/cashiers');
@@ -237,7 +255,8 @@ function Timeline({ from, to }) {
   const sameDay = from === to;
   const value = (e) => {
     if (e.effect === 'gain') return <span className="num font-medium text-positive">{money(e.amount, { sign: true })}</span>;
-    if (e.effect === 'loss' || e.effect === 'expense') return <span className="num font-medium text-danger">{money(e.amount)}</span>;
+    // E2: ao gerente as perdas chegam sem valor (sao a custo).
+    if (e.effect === 'loss' || e.effect === 'expense') return e.amount == null ? <span className="text-ink-faint">—</span> : <span className="num font-medium text-danger">{money(e.amount)}</span>;
     if (e.type === 'cancelled') return <span className="num text-ink-faint line-through">{money(e.sale.total_amount)}</span>;
     if (e.type === 'shift') return <span className={cx('num', e.amount === 0 ? 'text-ink-muted' : 'text-warning')}>{money(e.amount, { sign: true })}</span>;
     return e.amount ? <span className="num text-ink-muted">{money(e.amount)}</span> : <span className="text-ink-faint">—</span>;
@@ -262,9 +281,9 @@ function Timeline({ from, to }) {
       {error && <Alert tone="danger">{error}</Alert>}
       {data && (
         <p className="mb-2 text-sm text-ink-2">
-          <span className="num text-positive">{money(data.totals.gains, { sign: true })}</span> {t('em vendas')} ·{' '}
-          <span className="num text-danger">{money(data.totals.losses)}</span> {t('em perdas')} ·{' '}
-          {t('lucro do período')} <span className={cx('num font-medium', data.totals.profit < 0 ? 'text-danger' : 'text-ink')}>{money(data.totals.profit)}</span>
+          <span className="num text-positive">{money(data.totals.gains, { sign: true })}</span> {t('em vendas')}
+          {seesCosts && <>{' · '}<span className="num text-danger">{money(data.totals.losses)}</span> {t('em perdas')} ·{' '}
+          {t('lucro do período')} <span className={cx('num font-medium', data.totals.profit < 0 ? 'text-danger' : 'text-ink')}>{money(data.totals.profit)}</span></>}
         </p>
       )}
       <div className={cx('transition-opacity', loading && data && 'opacity-50')} aria-busy={loading}>
@@ -295,6 +314,7 @@ function Timeline({ from, to }) {
 // ------------------------------------------------------------------ diario
 function Daily({ day, setDay }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   const { data, loading, error } = useApi('/api/owner/reports/daily?date=' + day);
   const g = data?.goal_progress;
   return (
@@ -303,7 +323,7 @@ function Daily({ day, setDay }) {
         <Button size="sm" variant="ghost" onClick={() => setDay(shiftDay(day, -1))}>{t('← Dia anterior')}</Button>
         <Input type="date" aria-label={t('Dia')} value={day} max={isoDay()} onChange={(e) => e.target.value && setDay(e.target.value)} className="w-44" />
         <Button size="sm" variant="ghost" disabled={day >= isoDay()} onClick={() => setDay(shiftDay(day, 1))}>{t('Dia seguinte →')}</Button>
-        <ReportPdf kind="daily" data={data} from={day} to={day} labels={{ title: t('Relatório diário'), subtitle: dayLabel(day) + '/' + day.slice(0, 4), period: day.split('-').reverse().join('-'), dayLabel }} />
+        {seesCosts && <ReportPdf kind="daily" data={data} from={day} to={day} labels={{ title: t('Relatório diário'), subtitle: dayLabel(day) + '/' + day.slice(0, 4), period: day.split('-').reverse().join('-'), dayLabel }} />}
       </Toolbar>
       <h2 className="mb-3 text-lg font-semibold capitalize text-ink">{dayLabel(day)}</h2>
       {error && <Alert tone="danger">{error}</Alert>}
@@ -332,6 +352,7 @@ function Daily({ day, setDay }) {
 // ------------------------------------------------------------------ semanal
 function Weekly({ openDay }) {
   const { t } = useI18n();
+  const seesCosts = useSeesCosts();
   const [end, setEnd] = useState(isoDay());
   const start = shiftDay(end, -6);
   const { data, loading, error } = useApi(`/api/owner/reports/weekly?start=${start}&end=${end}`);
@@ -340,7 +361,7 @@ function Weekly({ openDay }) {
       <Toolbar className="no-print">
         <span className="text-sm text-ink-muted">{t('Semana a terminar em')}</span>
         <Input type="date" aria-label={t('Fim da semana')} value={end} max={isoDay()} onChange={(e) => e.target.value && setEnd(e.target.value)} className="w-44" />
-        <ReportPdf kind="weekly" data={data} from={start} to={end} labels={{ title: t('Relatório semanal'), subtitle: t('{a} a {b}', { a: dayLabel(start), b: dayLabel(end) + '/' + end.slice(0, 4) }), period: t('{a} a {b}', { a: start.split('-').reverse().join('-'), b: end.split('-').reverse().join('-') }), dayLabel }} />
+        {seesCosts && <ReportPdf kind="weekly" data={data} from={start} to={end} labels={{ title: t('Relatório semanal'), subtitle: t('{a} a {b}', { a: dayLabel(start), b: dayLabel(end) + '/' + end.slice(0, 4) }), period: t('{a} a {b}', { a: start.split('-').reverse().join('-'), b: end.split('-').reverse().join('-') }), dayLabel }} />}
       </Toolbar>
       {error && <Alert tone="danger">{error}</Alert>}
       {loading || !data ? <Skeleton className="h-40 w-full" /> : (
@@ -363,7 +384,7 @@ function Weekly({ openDay }) {
                 )}
               </div>
             </Card>
-            <Card>
+            {seesCosts && <Card>
               <CardHeader title={t('Melhor e pior dia')} description={t('Pelo resultado (lucro bruto − perdas).')} />
               {data.best_day ? (
                 <>
@@ -371,7 +392,7 @@ function Weekly({ openDay }) {
                   {data.worst_day && data.worst_day.date !== data.best_day.date && <KeyValue label={<span className="capitalize">{t('Pior · {d}', { d: dayLabel(data.worst_day.date) })}</span>} value={money(data.worst_day.gross_profit - data.worst_day.losses)} tone={data.worst_day.gross_profit - data.worst_day.losses < 0 ? 'danger' : undefined} />}
                 </>
               ) : <p className="text-ink-muted">{t('Sem movimento nesta semana.')}</p>}
-            </Card>
+            </Card>}
           </div>
           <Card padded={false} className="mt-4">
             <div className="p-5 pb-0"><CardHeader title={t('Dia a dia')} description={t('Clique num dia para abrir o relatório diário completo.')} /></div>
@@ -381,9 +402,11 @@ function Weekly({ openDay }) {
                   { key: 'date', header: t('Dia'), render: (d) => <span className="capitalize">{dayLabel(d.date)}</span> },
                   { key: 'sales', header: t('Vendas'), align: 'right', render: (d) => int(d.sales) },
                   { key: 'revenue', header: t('Receita'), align: 'right', render: (d) => money(d.revenue) },
-                  { key: 'gross_profit', header: t('Lucro bruto'), align: 'right', render: (d) => money(d.gross_profit) },
-                  { key: 'losses', header: t('Perdas'), align: 'right', render: (d) => (d.losses ? <span className="text-danger">−{money(d.losses)}</span> : '—') },
-                  { key: 'result', header: t('Resultado'), align: 'right', render: (d) => <span className={cx('font-medium', d.gross_profit - d.losses < 0 && 'text-danger')}>{money(d.gross_profit - d.losses)}</span> },
+                  ...(seesCosts ? [
+                    { key: 'gross_profit', header: t('Lucro bruto'), align: 'right', render: (d) => money(d.gross_profit) },
+                    { key: 'losses', header: t('Perdas'), align: 'right', render: (d) => (d.losses ? <span className="text-danger">−{money(d.losses)}</span> : '—') },
+                    { key: 'result', header: t('Resultado'), align: 'right', render: (d) => <span className={cx('font-medium', d.gross_profit - d.losses < 0 && 'text-danger')}>{money(d.gross_profit - d.losses)}</span> },
+                  ] : []),
                 ]}
                 rows={data.by_day}
                 rowKey="date"

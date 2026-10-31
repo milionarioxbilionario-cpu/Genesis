@@ -27,13 +27,14 @@ export function liveText(kind, d, t, hidden) {
   const v = (c) => money(c || 0);
   const n = d.daily_number ? String(d.daily_number).padStart(3, '0') : '';
   switch (kind) {
-    case 'sale': return hidden ? t('Nova venda (n.º {n}).', { n }) : t('Venda n.º {n}: {total} · lucro {profit}', { n, total: v(d.total), profit: v(d.profit) });
+    // E2: ao gerente o servidor nao manda o lucro nem o valor (a custo) das perdas e compras.
+    case 'sale': return hidden ? t('Nova venda (n.º {n}).', { n }) : d.profit == null ? t('Venda n.º {n}: {total}', { n, total: v(d.total) }) : t('Venda n.º {n}: {total} · lucro {profit}', { n, total: v(d.total), profit: v(d.profit) });
     case 'cancel': return hidden ? t('Venda cancelada.') : t('Venda cancelada: {total}', { total: v(d.total) });
-    case 'loss': return hidden ? t('Perda registada.') : t('Perda: {name} −{total}', { name: d.name || '', total: v(d.total) });
+    case 'loss': return hidden ? t('Perda registada.') : d.total == null ? t('Perda: {name}', { name: d.name || '' }) : t('Perda: {name} −{total}', { name: d.name || '', total: v(d.total) });
     case 'debt': return hidden ? t('Nova txeneka.') : t('Txeneka de {name}: −{total}', { name: d.name || '', total: v(d.total) });
     case 'debt_payment': return hidden ? t('Txeneka paga.') : t('Txeneka paga ({name}): +{total}', { name: d.name || '', total: v(d.total) });
     case 'expense': return hidden ? t('Despesa registada.') : t('Despesa: {name} −{total}', { name: d.name || '', total: v(d.total) });
-    case 'stock_in': return hidden ? t('Compra de stock registada.') : t('Compra de stock: {name} −{total}', { name: d.name || '', total: v(d.total) });
+    case 'stock_in': return hidden ? t('Compra de stock registada.') : d.total == null ? t('Compra de stock: {name}', { name: d.name || '' }) : t('Compra de stock: {name} −{total}', { name: d.name || '', total: v(d.total) });
     case 'shift_open': return t('Turno aberto: {name}', { name: d.name || '' });
     case 'shift_close': return hidden || !d.difference ? t('Turno fechado: {name}', { name: d.name || '' }) : t('Turno fechado: {name} (sobra {total})', { name: d.name || '', total: v(d.difference) });
     case 'shift_fail': return hidden ? t('Fecho de turno falhado: {name}', { name: d.name || '' }) : t('Fecho falhado: {name} escreveu {declared}, o Genesis esperava {expected} (tentativa {n}/3)', { name: d.name || '', declared: v(d.declared), expected: v(d.expected), n: d.attempt || 1 });

@@ -1,8 +1,9 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ConfirmProvider, ToastProvider } from './components/ui';
 import { SessionProvider, RequireOwner, useSession, FullPageSpinner } from './utils/session';
 import { I18nProvider } from './i18n/react';
+import { ownerLanding } from './utils/establishments';
 // Code-splitting por area: o terminal POS nao descarrega os graficos do painel
 // (Recharts), e o painel nao descarrega o POS. Requisito: POS < 2 s em 3G.
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -24,7 +25,17 @@ const Team = lazy(() => import('./pages/owner/Team'));
 const Reports = lazy(() => import('./pages/owner/Reports'));
 const Settings = lazy(() => import('./pages/owner/Settings'));
 const Onboarding = lazy(() => import('./pages/owner/Onboarding'));
-const GroupPanel = lazy(() => import('./pages/owner/GroupPanel'));
+// E2: hub (escolher o estabelecimento) e painel geral com barra propria.
+const Hub = lazy(() => import('./pages/group/Hub'));
+const GroupShell = lazy(() => import('./layouts/GroupShell'));
+const groupPage = (name) => lazy(() => import('./pages/group/GroupPages').then((m) => ({ default: m[name] })));
+const GroupOverview = groupPage('GroupOverview');
+const GroupEstablishments = groupPage('GroupEstablishments');
+const GroupReports = groupPage('GroupReports');
+const GroupTimeline = groupPage('GroupTimeline');
+const GroupStock = groupPage('GroupStock');
+const GroupManagers = groupPage('GroupManagers');
+const GroupMap = groupPage('GroupMap');
 
 // Sessao terminou (senha mudou, conta desactivada, expirou): o painel volta ao
 // ecra de entrada com o motivo. O terminal trata o seu proprio caso.
@@ -44,10 +55,18 @@ function SessionEndedListener() {
   return null;
 }
 
+// E2: o dono com 2 ou mais estabelecimentos entra pelo hub ("Em qual estabelecimento...?").
+function OwnerEntry() {
+  const [to, setTo] = useState(null);
+  useEffect(() => { ownerLanding().then(setTo); }, []);
+  return to ? <Navigate to={to} replace /> : <FullPageSpinner />;
+}
+
 function Root() {
   const { loading, user } = useSession();
   if (loading) return <FullPageSpinner />;
-  if (user?.role === 'owner') return <Navigate to="/app" replace />;
+  if (user?.role === 'owner' && !user.scope) return <OwnerEntry />;
+  if (user?.role === 'owner' || user?.role === 'manager') return <Navigate to="/app" replace />;
   if (user?.role === 'cashier') return <Navigate to="/terminal" replace />;
   return <Navigate to="/entrar" replace />;
 }
@@ -75,6 +94,16 @@ export default function App() {
               <Route path="/verify/:saleId" element={<VerifyReceipt />} />
               <Route path="/terminal" element={<Terminal />} />
               <Route path="/onboarding" element={<RequireOwner><Onboarding /></RequireOwner>} />
+              <Route path="/escolher" element={<RequireOwner><Hub /></RequireOwner>} />
+              <Route path="/geral" element={<RequireOwner><GroupShell /></RequireOwner>}>
+                <Route index element={<GroupOverview />} />
+                <Route path="estabelecimentos" element={<GroupEstablishments />} />
+                <Route path="relatorios" element={<GroupReports />} />
+                <Route path="rastreio" element={<GroupTimeline />} />
+                <Route path="stock" element={<GroupStock />} />
+                <Route path="gerentes" element={<GroupManagers />} />
+                <Route path="mapa" element={<GroupMap />} />
+              </Route>
               <Route path="/app" element={<RequireOwner><AppShell /></RequireOwner>}>
                 <Route index element={<Home />} />
                 <Route path="vendas" element={<Sales />} />
@@ -87,7 +116,8 @@ export default function App() {
                 <Route path="relatorios" element={<Reports />} />
                 <Route path="definicoes" element={<Settings />} />
                 <Route path="perfil" element={<Profile />} />
-                <Route path="geral" element={<GroupPanel />} />
+                {/* Etapa D: o painel geral antigo vivia aqui; agora tem barra propria (E2). */}
+                <Route path="geral" element={<Navigate to="/geral" replace />} />
               </Route>
 
               {/* Enderecos antigos (marcadores, links ja partilhados). */}

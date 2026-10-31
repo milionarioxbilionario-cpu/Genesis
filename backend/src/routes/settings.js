@@ -100,6 +100,10 @@ router.get('/', asyncHandler(async (req, res) => {
 
 router.put('/store', asyncHandler(async (req, res) => {
   const data = storeSchema.parse(req.body);
+  // E2: o gerente muda so a mensagem do recibo (nome, contacto e NUIT sao do dono).
+  if (req.user.role === 'manager' && Object.keys(data).some((k) => k !== 'receipt_footer' && data[k] !== undefined)) {
+    throw httpError(403, 'O gerente só pode mudar a mensagem do recibo.', 'MANAGER_FORBIDDEN');
+  }
   const before = await prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { name: true, location: true, phone: true, email: true, nuit: true, receipt_footer: true } });
   const t = await prisma.tenant.update({ where: { id: tenantId(req) }, data });
   await writeAudit({ req, action: 'UPDATE_STORE', entityType: 'tenant', entityId: t.id, oldValue: before, newValue: data });

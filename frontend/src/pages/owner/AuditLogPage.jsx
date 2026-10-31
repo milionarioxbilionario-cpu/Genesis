@@ -5,6 +5,7 @@ import { formatQty } from '../../utils/units';
 import { actionLabel, ALERT_ACTIONS, diffRows, fieldValue } from '../../utils/auditLabels';
 import { t as tr } from '../../i18n/core';
 import { useI18n } from '../../i18n/react';
+import { useSeesCosts } from '../../utils/session';
 import { Alert, Badge, Button, Card, CardHeader, Drawer, KeyValue, Segmented, Select, Skeleton, useConfirm, useToast, cx } from '../../components/ui';
 
 // Auditoria do dono (Fase 8.5, pedido do fundador 10/10/2026): tudo o que
@@ -42,6 +43,7 @@ function summary(a) {
 }
 
 export default function AuditLogPage({ settings, reloadSettings }) {
+  const owner = useSeesCosts();
   const toast = useToast();
   const confirm = useConfirm();
   const { t } = useI18n();
@@ -105,7 +107,8 @@ export default function AuditLogPage({ settings, reloadSettings }) {
   const groupLabel = (key) => { const g = groups.find((x) => x.key === key); return g ? t(g.label) : t('Outros'); };
   return (
     <div className="flex flex-col gap-4">
-      <Card>
+      {/* E2: quanto tempo se guarda e decisao do dono. */}
+      {owner && <Card>
         <CardHeader title={t('Quanto tempo guardar')} description={t('Os registos mais antigos apagam-se sozinhos. Ficam sempre: bloqueios e contagens erradas dos caixistas, reaberturas de turno e o fecho de cada mês.')} />
         <div className="flex flex-wrap items-end gap-3">
           <Select label={t('Guardar')} value={String(months)} disabled={savingRet} onChange={(e) => changeRetention(e.target.value)} className="w-full max-w-xs">
@@ -113,7 +116,7 @@ export default function AuditLogPage({ settings, reloadSettings }) {
           </Select>
           {state.meta?.kept_since && <p className="pb-2 text-sm text-ink-muted">{t('Guardado desde {d}.', { d: date(state.meta.kept_since) })}</p>}
         </div>
-      </Card>
+      </Card>}
 
       <div className="flex flex-wrap items-center gap-2">
         <Segmented value={period} onChange={setPeriod} options={PERIODS.map((p) => ({ ...p, label: t(p.label) }))} />

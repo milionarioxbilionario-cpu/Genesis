@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { SESSION_MESSAGES } from '../../utils/api';
 import { useSession } from '../../utils/session';
+import { ownerLanding } from '../../utils/establishments';
 import { errorMessage } from '../../utils/format';
 import { Alert, Button, Input } from '../../components/ui';
 import AuthLayout from './AuthLayout';
@@ -49,7 +50,11 @@ export default function Login() {
     try { sessionStorage.setItem('genesis.unlocked', '1'); } catch { /* modo privado */ }
     await reload();
     const back = params.get('voltar');
-    navigate(user.tenant && user.tenant.onboarding_completed === false ? '/onboarding' : (back && back.startsWith('/app') ? back : '/app'), { replace: true });
+    // E2: o gerente nunca faz a configuracao inicial (e do dono); o dono com 2 ou
+    // mais estabelecimentos escolhe onde entrar (hub), salvo se vinha de uma pagina.
+    if (user.role === 'owner' && user.tenant && user.tenant.onboarding_completed === false) { navigate('/onboarding', { replace: true }); return; }
+    if (back && (back.startsWith('/app') || back.startsWith('/geral'))) { navigate(back, { replace: true }); return; }
+    navigate(user.role === 'owner' ? await ownerLanding() : '/app', { replace: true });
   }, [navigate, params, reload, t]);
 
   const fail = (err) => {

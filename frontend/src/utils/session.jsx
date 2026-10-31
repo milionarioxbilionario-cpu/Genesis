@@ -31,7 +31,8 @@ export function SessionProvider({ children }) {
       // A lingua da conta manda (9.3). O modo suporte fica com a do aparelho;
       // o caixista no terminal muda o ecra sem mudar a lingua do aparelho.
       if (u?.language && u.scope !== 'support') setLang(u.language, { remember: u.scope !== 'pos' });
-      if (u?.role === 'owner' && !u.scope) {
+      // E2: o gerente tambem usa o painel (so o seu estabelecimento).
+      if ((u?.role === 'owner' || u?.role === 'manager') && !u.scope) {
         setShownEstablishment(u.tenant_id);
         const prev = await loadSnapshot(ME_KEY);
         // Primeira entrada neste aparelho ou outra conta: nada da anterior fica guardado.
@@ -77,13 +78,18 @@ export function FullPageSpinner() {
   return <div className="flex min-h-screen items-center justify-center text-ink-muted"><Spinner /></div>;
 }
 
-// So o dono (ou o Super Admin em modo suporte, que entra como dono so leitura).
+// E2 (31/10): o gerente entra no mesmo painel, com menos (utils/managerPolicy.js no servidor).
+export const isManager = (user) => user?.role === 'manager';
+// Os ecras escondem custos, margens e lucro a quem nao os recebe do servidor.
+export function useSeesCosts() { const { user } = useContext(SessionCtx) || {}; return !isManager(user); }
+
+// So o dono (ou o Super Admin em modo suporte, que entra como dono so leitura) e o gerente.
 export function RequireOwner({ children }) {
   const { loading, user } = useSession();
   const location = useLocation();
   if (loading) return <FullPageSpinner />;
   if (!user) return <Navigate to={'/entrar?voltar=' + encodeURIComponent(location.pathname)} replace />;
   if (user.role === 'cashier' || user.scope === 'pos') return <Navigate to="/terminal" replace />;
-  if (user.role !== 'owner') return <Navigate to="/entrar" replace />;
+  if (user.role !== 'owner' && user.role !== 'manager') return <Navigate to="/entrar" replace />;
   return <PanelLockGate>{children}</PanelLockGate>;
 }

@@ -2286,3 +2286,15 @@ Funcionou: sim (o satélite depende da conta Mapbox).
 - Terminais: o ecrã de emparelhar explica porque um terminal perde a ligação e como voltar a ser o mesmo terminal («Novo código»), sem criar outro.
 - Testes: 37 de 37 e 233 de 233 nas verificações no servidor; unitários todos. Funcionou: sim (falta repetir no site real depois de publicar).
 SITE REAL (31/10, 2.ª parte): publicado e testado em genesismz.com: as correcções 11 de 11 e o mapa/localização 8 de 8. A etapa E1 (tudo o que viu ao criar o 2.º estabelecimento) está fechada. A seguir: o painel geral a sério e os gerentes (E2).
+
+
+=== 31/10/2026 — E2: gerentes e o Painel geral novo (com o «Em qual estabelecimento deseja entrar?») ===
+- GERENTES: já pode criar gerentes (Equipa › Gerentes, ou no Painel geral › Gerentes). Cada gerente entra em genesismz.com/entrar com o e-mail e a senha dele e vai direito ao estabelecimento dele. Vê as vendas, os produtos, o stock, a equipa (caixistas e guardas), os fornecedores, as txenekas e os relatórios de vendas. NÃO vê custos, margens, lucro, salários, renda, despesas, o plano, nem o seu telefone ou e-mail. Não pode apagar produtos, encerrar o estabelecimento nem mudar o seu PIN.
+- Isto está protegido no servidor (não é só esconder no ecrã): testei cada página do dono entrando como gerente — as proibidas respondem «acesso negado» e nas outras não chega nenhum número de custo ou lucro.
+- Se o gerente criar um produto, o custo fica a zero e o sino avisa-o: «O gerente criou N produto(s) sem o custo». Ponha o preço de compra para o lucro sair certo.
+- PIN do gerente (opcional): com ele, o gerente autoriza cancelamentos e descontos grandes, e o rastreio guarda o nome dele. Para desligar, tire-lhe o PIN. O seu PIN continua a valer.
+- Senha nova ou desactivar um gerente: a sessão dele termina na hora.
+- PAINEL GERAL NOVO: tem a sua própria barra (Visão geral, Estabelecimentos, Relatórios, Rastreio geral, Stock geral, Gerentes, Mapa). Hoje, 7 dias e mês de todos, com comparações e o lucro líquido do mês; um cartão por estabelecimento; a lista ao vivo «de onde veio cada valor» (estabelecimento, terminal, quem vendeu e o quê); o stock que está a acabar em todos, com o mesmo produto junto («Coca-Cola: 12 em A, 0 em B»).
+- AO ENTRAR (com 2 ou mais estabelecimentos): aparece «Em qual estabelecimento deseja entrar?», com os cartões de cada um (vendas de hoje, aberto/fechado) e o cartão «Painel geral». Lembra-se da última escolha. Ao criar o 2.º estabelecimento aparece uma vez a mensagem «Parabéns: activou o Painel geral e o Hub».
+- Ficou para depois: «Mudar o principal», vários estabelecimentos no pedido de conta, o aviso de venda abrir a própria venda, o relatório de todos por WhatsApp e o mapa 3D completo.
+- Testes: 608 + 354 + 140 verificações no servidor, todas certas; testes automáticos 144 + 76. Funcionou: sim no servidor de testes; falta repetir no site real depois de publicar.
