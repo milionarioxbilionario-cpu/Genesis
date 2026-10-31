@@ -23,12 +23,14 @@ async function getTenantStatus(tenantId) {
   let status = null;
   let trialEndsAt = null;
   let subscriptionUntil = null;
+  let closedAt = null;
   try {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { status: true, trial_ends_at: true, subscription_until: true },
+      select: { status: true, trial_ends_at: true, subscription_until: true, closed_at: true },
     });
     status = tenant ? tenant.status : null;
+    closedAt = tenant ? tenant.closed_at : null;
     trialEndsAt = tenant ? tenant.trial_ends_at : null;
     subscriptionUntil = tenant ? tenant.subscription_until : null;
   } catch (err) {
@@ -43,7 +45,7 @@ async function getTenantStatus(tenantId) {
     return { blocked: false, status: null, at: now };
   }
 
-  const entry = { blocked: BLOCKED_STATUSES.has(status), status, trialEndsAt, subscriptionUntil, at: now };
+  const entry = { blocked: BLOCKED_STATUSES.has(status), status, trialEndsAt, subscriptionUntil, closedAt, at: now };
   cache.set(tenantId, entry);
   return entry;
 }
@@ -76,8 +78,19 @@ async function isSubscriptionOverdue(tenantId) {
   return subscriptionOverdue(await getTenantStatus(tenantId));
 }
 
+// 31/10: encerrado pelo dono = so consulta. Durante 7 dias os terminais ainda
+// enviam as vendas que ficaram na fila sem rede (o dinheiro ja foi cobrado).
+const CLOSED_SYNC_DAYS = 7;
+async function closedState(tenantId) {
+  if (!tenantId) return { closed: false };
+  const { status, closedAt } = await getTenantStatus(tenantId);
+  if (status !== 'closed') return { closed: false };
+  const syncUntil = closedAt ? new Date(new Date(closedAt).getTime() + CLOSED_SYNC_DAYS * 86400000) : new Date(0);
+  return { closed: true, closedAt, syncOpen: syncUntil > new Date() };
+}
+
 function clearTenantStatusCache() {
   cache.clear();
 }
 
-module.exports = { blockedTenantStatus, isTrialExpired, isSubscriptionOverdue, subscriptionOverdue, clearTenantStatusCache };
+module.exports = { blockedTenantStatus, isTrialExpired, isSubscriptionOverdue, subscriptionOverdue, clearTenantStatusCache, closedState, CLOSED_SYNC_DAYS };

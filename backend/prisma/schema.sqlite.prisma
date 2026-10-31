@@ -72,6 +72,8 @@ model Tenant {
   discount_free_pct     Int                   @default(10)
   opening_time          String?
   closing_time          String?
+  hours_json            String? // 31/10: horario por dia (JSON); opening/closing_time ficam como resumo
+  closed_at             DateTime? // 31/10: encerrado pelo dono
   // Genesis 2.1: avisar X dias antes de um lote expirar.
   expiry_alert_days     Int                   @default(7)
   // Fase 8.5: meses que a auditoria guarda (minimo 2 = este mes + o anterior).
@@ -422,6 +424,7 @@ model PosTerminal {
   created_at   DateTime  @default(now())
   last_seen_at DateTime?
   revoked_at   DateTime?
+  purpose      String    @default("counter") // counter = balcao; exit = saida (guarda)
   tenant       Tenant    @relation(fields: [tenant_id], references: [id])
 
   @@index([tenant_id])

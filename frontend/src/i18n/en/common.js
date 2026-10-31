@@ -355,4 +355,8 @@ addTranslations('en', {
   'Este estabelecimento não é seu.': 'This business is not yours.',
   'Este estabelecimento está bloqueado.': 'This business is blocked.',
   'Não disponível nesta sessão.': 'Not available in this session.',
+  // 31/10: trocar de estabelecimento sem ficar preso
+  'Este estabelecimento está suspenso ou fechado. Fale com a Genesis.': 'This business is suspended or closed. Talk to Genesis.',
+  'Este estabelecimento está suspenso. A voltar ao estabelecimento principal.': 'This business is suspended. Going back to your main business.',
+  'Mudou de estabelecimento noutra janela. A actualizar…': 'You switched business in another window. Refreshing…',
 });

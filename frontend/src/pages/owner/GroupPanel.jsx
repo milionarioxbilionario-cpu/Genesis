@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Store } from 'lucide-react';
-import api from '../../utils/api';
+import api, { announceEstablishmentChange } from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, errorMessage } from '../../utils/format';
 import { forgetOwnerData } from '../../utils/session';
@@ -20,6 +20,7 @@ export default function GroupPanel() {
     setBusy(id); setError('');
     try {
       await api.post('/api/establishments/switch', { tenant_id: id });
+      announceEstablishmentChange(id);
       await forgetOwnerData();
       window.location.assign('/app');
     } catch (err) { setError(errorMessage(err)); setBusy(''); }

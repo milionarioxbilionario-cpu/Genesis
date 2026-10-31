@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, date, isoDay, errorMessage } from '../../utils/format';
@@ -64,7 +65,10 @@ function Cashiers() {
     <>
       <Toolbar>
         <p className="text-sm text-ink-muted">{t('Cada pessoa entra no terminal com um PIN pessoal de 4 dígitos. O caixista vende; o guarda confere os recibos à saída.')}</p>
-        <Button className="ml-auto" variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ name: '', phone: '', pin: '', role: 'cashier' }); }}>{t('Novo perfil')}</Button>
+        <span className="ml-auto flex gap-2">
+          <Button icon={ShieldCheck} onClick={() => { setError(''); setCreating({ name: '', phone: '', pin: '', role: 'guard' }); }}>{t('Novo guarda')}</Button>
+          <Button variant="primary" icon={Plus} onClick={() => { setError(''); setCreating({ name: '', phone: '', pin: '', role: 'cashier' }); }}>{t('Novo caixista')}</Button>
+        </span>
       </Toolbar>
       <Table
         columns={[
@@ -86,7 +90,8 @@ function Cashiers() {
         empty={<p className="py-10 text-center text-ink-muted">{t('Ainda não há caixistas.')}</p>}
       />
 
-      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={t('Novo perfil')}
+      <GuardHelp />
+      <Drawer open={Boolean(creating)} onClose={() => setCreating(null)} title={creating?.role === 'guard' ? t('Novo guarda') : t('Novo caixista')}
         footer={<><Button onClick={() => setCreating(null)}>{t('Cancelar')}</Button><Button variant="primary" loading={busy} disabled={!creating || creating.name.trim().length < 2 || !pinOk(creating.pin)} onClick={create}>{t('Criar')}</Button></>}>
         {creating && (
           <div className="flex flex-col gap-4">
@@ -167,5 +172,18 @@ function Employees() {
         )}
       </Drawer>
     </>
+  );
+}
+
+// 31/10 (o fundador nao encontrou o guarda): o que faz e onde se monta, sempre a vista.
+function GuardHelp() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  return (
+    <div className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-subtle px-4 py-3 sm:flex-row sm:items-center">
+      <ShieldCheck size={20} className="shrink-0 text-accent" />
+      <p className="flex-1 text-sm text-ink-2">{t('Guarda na saída: confere cada recibo com o telemóvel ou um leitor. O mesmo recibo não passa duas vezes, mesmo reimpresso ou editado. Crie o guarda aqui e o terminal da saída em Definições › Terminais.')}</p>
+      <Button size="sm" onClick={() => navigate('/app/definicoes?tab=terminals')}>{t('Terminal do guarda')}</Button>
+    </div>
   );
 }

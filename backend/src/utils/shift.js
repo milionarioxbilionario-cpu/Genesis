@@ -17,6 +17,7 @@
 //    meia-noite fecha como turno do dia em que comecou. O cadeado do terminal
 //    e uma pausa: nao fecha nem abre o turno.
 const prisma = require('./prisma');
+const { publish } = require('./liveBus');
 const { getShiftLock, MAX_ATTEMPTS } = require('./shiftLock');
 const { writeAudit } = require('./audit');
 const { httpError } = require('./http');
@@ -100,6 +101,7 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
     const locked = attemptNo >= MAX_ATTEMPTS;
     await writeAudit({ req, tenantId, action: 'SHIFT_ATTEMPT_FAIL', entityType: 'user', entityId: cashier.id, newValue: { ...detail, attempt: attemptNo } });
     if (locked) await writeAudit({ req, tenantId, action: 'CASHIER_LOCKED', entityType: 'user', entityId: cashier.id, newValue: detail });
+    publish({ type: 'shift_fail', tenant_id: tenantId, cashier_name: cashier.name, declared, expected: win.expectedCash, attempt: attemptNo, locked });
     return {
       status: 400,
       body: {
@@ -120,6 +122,7 @@ async function closeShiftBlind({ req, tenantId, cashier, declared }) {
     data: { tenant_id: tenantId, cashier_user_id: cashier.id, counted_amount: declared, expected_amount: win.expectedCash, difference, shift_day: shiftDay },
   });
   await writeAudit({ req, tenantId, action: 'SHIFT_CLOSING_OK', entityType: 'shift_closing', entityId: record.id, newValue: { ...detail, difference, shift_day: shiftDay } });
+  publish({ type: 'shift_close', tenant_id: tenantId, cashier_name: cashier.name, difference });
   // Depois de aceite (ja nao e cego): a conta do turno. Turno de ontem fechado
   // de madrugada -> o de hoje ja pode comecar.
   const after = await shiftStatus(prisma, tenantId, cashier.id);

@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-30",
+  "updatedAt": "2026-10-31",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -61,9 +61,9 @@
     },
     "backend/src/middleware/auth.js": {
       "status": "ok",
-      "summary": "Valida o JWT do cookie e injecta req.user (userId, role, tenantId).",
+      "summary": "Autenticacao + estabelecimento activo; nunca prende o dono; 409 com dois separadores; encerrado = so leitura.",
       "role": "Autenticacao.",
-      "notes": "25/10/2026 Fase 12: passo 3b — painel do dono bloqueado sem o cookie de desbloqueio (423)."
+      "notes": "31/10/2026 E1: verify_system 47, 51."
     },
     "backend/src/middleware/authOrDevice.js": {
       "status": "ok",
@@ -996,9 +996,9 @@
     },
     "frontend/src/pages/owner/Onboarding.jsx": {
       "status": "ok",
-      "summary": "Assistente de 5 passos no 1.o login: tipo, categorias adicionais, catalogo (com coluna de codigo de barras para o leitor), custos/equipa/fornecedores, horario.",
+      "summary": "Assistente de configuracao: uma so operacao, voltar ao principal, rascunho, copiar de outro, horario a serio.",
       "role": "Onboarding do dono.",
-      "notes": "17/10/2026 Fase 9.4 (paginas do dono em ingles): idioma_dono.mjs 28/28, i18n.test.mjs 9/9, verify_system 15/27 OK; regressao PT (12 testes de browser) passou."
+      "notes": "31/10/2026 E1: verify_system 48; e2e correcoes_3110."
     },
     "frontend/src/pages/pos/PosScreen.jsx": {
       "status": "ok",
@@ -1607,9 +1607,9 @@
     },
     "backend/src/routes/panelLock.js": {
       "status": "ok",
-      "summary": "/api/lock/*: estado, criar/mudar PIN (mudar pede a senha), desbloquear, bloquear, Face ID (WebAuthn/passkeys, @simplewebauthn/server).",
+      "summary": "Bloqueio do painel + «Esqueci o PIN» (senha da conta).",
       "role": "API do bloqueio do painel.",
-      "notes": "25/10/2026 Fase 12: 5 erros em 15 min terminam a sessao; origens do Face ID em WEBAUTHN_ORIGINS."
+      "notes": "31/10/2026 E1: conta da pessoa (ownerSelf); verify_system 46."
     },
     "backend/scripts/backup_db.js": {
       "status": "ok",
@@ -1623,9 +1623,9 @@
     },
     "frontend/src/components/PanelLock.jsx": {
       "status": "ok",
-      "summary": "Ecras de criar PIN, painel bloqueado (PIN/Face ID) e bloqueio ao reabrir e apos 5 min parado.",
+      "summary": "Ecra do PIN do painel + «Esqueci o PIN».",
       "role": "Bloqueio do painel (cliente).",
-      "notes": "25/10/2026 Fase 12: fase12.mjs Chromium e WebKit (parte do bloqueio)."
+      "notes": "31/10/2026 E1: e2e correcoes_3110."
     },
     "frontend/src/utils/offlinePin.js": {
       "status": "ok",
@@ -1793,15 +1793,15 @@
     },
     "frontend/src/components/LiveSales.jsx": {
       "status": "ok",
-      "summary": "Aviso de venda ao vivo no painel do dono.",
+      "summary": "Avisos ao vivo do dono: vendas, perdas, txenekas, despesas, compras, turnos.",
       "role": "Etapa C.",
-      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+      "notes": "31/10/2026 E1: verify_system 48."
     },
     "admin-frontend/src/LiveMap.jsx": {
       "status": "ok",
-      "summary": "Mapa ao vivo do admin (Mapbox 3D).",
+      "summary": "Mapa ao vivo do admin: todos os movimentos (verde/vermelho), turnos e subscricoes; satelite como camada.",
       "role": "Etapa C.",
-      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+      "notes": "31/10/2026 E1: satelite por rever no browser (etapaC.mjs)."
     },
     "backend/src/utils/actingTenant.js": {
       "status": "ok",
@@ -1811,9 +1811,9 @@
     },
     "backend/src/routes/establishments.js": {
       "status": "ok",
-      "summary": "Estabelecimentos do dono: lista, acrescentar, trocar, painel geral.",
+      "summary": "Estabelecimentos: criar (id do aparelho, 30 dias de teste), trocar, voltar a casa, copiar catalogo, encerrar/apagar/reabrir.",
       "role": "Etapa D.",
-      "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
+      "notes": "31/10/2026 E1: verify_system 47, 49, 51."
     },
     "frontend/src/components/EstablishmentSwitcher.jsx": {
       "status": "ok",
@@ -1826,6 +1826,60 @@
       "summary": "Painel geral de todos os estabelecimentos.",
       "role": "Etapa D.",
       "notes": "30/10/2026 Etapa D: verify_system 45 23/23, etapaD.mjs 6/6."
+    },
+    "backend/src/utils/ownerSelf.js": {
+      "status": "ok",
+      "summary": "A conta do dono (PIN, senha, lingua, Face ID) lida no estabelecimento de casa.",
+      "role": "Correccao do PIN «que nao existe» no 2.o estabelecimento.",
+      "notes": "31/10/2026 E1: verify_system 46 20/20."
+    },
+    "backend/src/utils/peopleNames.js": {
+      "status": "ok",
+      "summary": "Nomes de quem vendeu/registou lidos a parte (sem include de User).",
+      "role": "Rastreio e custos do 2.o estabelecimento sem 500.",
+      "notes": "31/10/2026 E1: verify_system 47."
+    },
+    "backend/src/utils/hours.js": {
+      "status": "ok",
+      "summary": "Horario a serio: por dia, 24 h, depois da meia-noite, pausas, feriados, dia de vendas.",
+      "role": "Pedido do fundador: «e se for 24/24?».",
+      "notes": "31/10/2026 E1: tests/hours.test.js 8/8; verify_system 50."
+    },
+    "backend/src/utils/tenantHours.js": {
+      "status": "ok",
+      "summary": "Horario de cada estabelecimento com cache curta por tenant.",
+      "role": "Relatorios, Inicio e avisos usam o dia de vendas.",
+      "notes": "31/10/2026 E1: verify_system 50."
+    },
+    "backend/src/routes/onboarding.js": {
+      "status": "ok",
+      "summary": "Configurar o estabelecimento numa so operacao (tudo ou nada).",
+      "role": "Repetir nao duplica renda/equipa.",
+      "notes": "31/10/2026 E1: verify_system 48 14/14."
+    },
+    "frontend/src/components/HoursEditor.jsx": {
+      "status": "ok",
+      "summary": "Editor de horario (igual / 24 h / por dia, pausas, feriados, horas em 24 h).",
+      "role": "Onboarding e Definicoes.",
+      "notes": "31/10/2026 E1: build OK; e2e correcoes_3110."
+    },
+    "frontend/src/components/CopyCatalogDialog.jsx": {
+      "status": "ok",
+      "summary": "Copiar produtos de outro estabelecimento do mesmo dono.",
+      "role": "R1 do fundador.",
+      "notes": "31/10/2026 E1: verify_system 49."
+    },
+    "backend/tests/hours.test.js": {
+      "status": "ok",
+      "summary": "Testes do horario (24 h, por dia, bar 18h-04h, feriados, recusas).",
+      "role": "Prova do horario.",
+      "notes": "31/10/2026 E1: 8/8."
+    },
+    "frontend/tests/e2e/correcoes_3110.mjs": {
+      "status": "ok",
+      "summary": "E2E das correccoes de 31/10 (2.o estabelecimento, esqueci o PIN, dois separadores, horario, guarda, copiar).",
+      "role": "Prova no browser.",
+      "notes": "31/10/2026 E1: ver Mapa Mental Parte B."
     }
   }
 }

@@ -15,6 +15,7 @@ const bcrypt = require('bcrypt');
 const { z } = require('zod');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../utils/prisma');
+const { peopleNames, attachPeople } = require('../utils/peopleNames');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { sendWhatsAppAlert } = require('../utils/whatsapp');
@@ -22,7 +23,7 @@ const { reqLang, tr } = require('../utils/lang');
 const { getTenantAlertSnapshot, buildAlertSummary } = require('../services/tenantAlerts');
 const { loadOwnerNotifications } = require('../services/notifications');
 const { ownerOverview } = require('../services/overview');
-const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange } = require('../services/reports');
+const { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, dayRange, tenantDayRange } = require('../services/reports');
 const { getShiftLock } = require('../utils/shiftLock');
 const { invalidateSessionUser } = require('../utils/sessionUser');
 const { asyncHandler, httpError } = require('../utils/http');
@@ -31,7 +32,9 @@ const { createPairingCode } = require('../utils/terminals');
 const { monthCloseStatus, monthKey } = require('../services/monthClose');
 const { GROUPS, GROUP_KEYS, groupOf, actionFilter, periodStart, retentionCutoff, RETENTION_OPTIONS } = require('../utils/auditGroups');
 const { lineAmount } = require('../utils/units');
-const { openStream } = require('../utils/liveBus');
+const { openStream, publish } = require('../utils/liveBus');
+// 31/10: tudo o que mexe no dinheiro do dia (verde entra, vermelho sai) e os turnos.
+const OWNER_LIVE = new Set(['sale', 'cancel', 'loss', 'debt', 'debt_payment', 'expense', 'stock_in', 'shift_open', 'shift_close', 'shift_fail']);
 
 const router = express.Router();
 router.use(auth);
@@ -43,8 +46,12 @@ const tenantOf = (req) => req.user.tenantId;
 router.get('/live', (req, res) => {
   const tenantId = tenantOf(req);
   openStream(req, res, {
-    filter: (e) => e.tenant_id === tenantId && (e.type === 'sale' || e.type === 'cancel'),
-    shape: (e) => ({ type: e.type, sale_id: e.sale_id, daily_number: e.daily_number ?? null, total: e.total, profit: e.profit ?? null, payment_method: e.payment_method || null, at: e.at }),
+    filter: (e) => e.tenant_id === tenantId && OWNER_LIVE.has(e.type),
+    shape: (e) => ({
+      type: e.type, sale_id: e.sale_id || null, daily_number: e.daily_number ?? null, total: e.total ?? null, profit: e.profit ?? null, payment_method: e.payment_method || null,
+      name: e.name || e.product_name || e.cashier_name || e.label || null, reason: e.reason || null,
+      declared: e.declared ?? null, expected: e.expected ?? null, attempt: e.attempt ?? null, locked: e.locked ?? null, difference: e.difference ?? null, at: e.at,
+    }),
   });
 });
 // PIN do caixista: exactamente 4 digitos (o teclado do terminal submete ao 4.o).
@@ -125,21 +132,8 @@ async function refNames(tenantId, rows) {
 // recebia "utilizador obrigatorio em falta" e a auditoria inteira dava 500
 // depois de um acesso de suporte.
 const SUPPORT_NAME = 'Equipa Genesis (suporte)';
-async function userNames(tenantId, rows) {
-  const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
-  if (!ids.length) return new Map();
-  const map = new Map((await prisma.user.findMany({ where: { tenant_id: tenantId, id: { in: ids } }, select: { id: true, name: true } })).map((u) => [u.id, u.name]));
-  // Etapa D: o dono de varios estabelecimentos tem a conta na loja «de casa»;
-  // aqui so se acrescentam os donos com acesso a ESTA loja (Membership).
-  const missing = ids.filter((id) => !map.has(id));
-  if (missing.length) {
-    const members = await prisma.system.membership.findMany({ where: { tenant_id: tenantId, user_id: { in: missing } }, select: { user_id: true } });
-    if (members.length) {
-      for (const u of await prisma.system.user.findMany({ where: { id: { in: members.map((m) => m.user_id) } }, select: { id: true, name: true } })) map.set(u.id, u.name);
-    }
-  }
-  return map;
-}
+// Etapa D: o dono de varios estabelecimentos tem a conta no de casa (utils/peopleNames.js).
+const userNames = (tenantId, rows) => peopleNames(tenantId, rows.map((r) => r.user_id));
 const terminalNames = async (tenantId) => new Map((await prisma.posTerminal.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } })).map((t) => [t.id, t.name]));
 
 router.get('/audit', asyncHandler(async (req, res) => {
@@ -182,14 +176,14 @@ router.get('/audit/:id', asyncHandler(async (req, res) => {
   if (l.entity_type === 'sale' && l.entity_id) {
     const sale = await prisma.sale.findFirst({
       where: { id: l.entity_id, tenant_id: tenantId },
-      select: { daily_number: true, status: true, total_amount: true, payment_method: true, cashier: { select: { name: true } },
+      select: { daily_number: true, status: true, total_amount: true, payment_method: true, cashier_user_id: true,
         items: { select: { product_name: true, quantity: true, unit: true, unit_sell_price: true, custom: true } },
         payments: { select: { method: true, amount: true } } },
     });
     if (sale) {
       row.sale = {
         daily_number: sale.daily_number, status: sale.status, total_amount: sale.total_amount, payment_method: sale.payment_method,
-        cashier_name: sale.cashier?.name || null,
+        cashier_name: (await peopleNames(tenantId, [sale.cashier_user_id])).get(sale.cashier_user_id) || null,
         items: sale.items.map((i) => ({ name: i.product_name, quantity: i.quantity, unit: i.unit, unit_price: i.unit_sell_price, line_total: lineAmount(i.quantity, i.unit_sell_price, i.unit), custom: i.custom })),
         payments: sale.payments,
       };
@@ -339,9 +333,10 @@ router.put('/terminals/:id/members', asyncHandler(async (req, res) => {
 }));
 
 router.post('/terminals/pairing-code', asyncHandler(async (req, res) => {
-  const { name } = z.object({ name: z.string().trim().min(2).max(60) }).parse(req.body);
-  const pairing = createPairingCode({ tenantId: tenantOf(req), name, createdBy: req.user.userId });
-  await writeAudit({ req, action: 'TERMINAL_PAIRING_CODE', entityType: 'terminal', newValue: { name } });
+  // 31/10: «Para que e este terminal?» — balcao (vender) ou saida (o guarda confere os recibos).
+  const { name, purpose } = z.object({ name: z.string().trim().min(2).max(60), purpose: z.enum(['counter', 'exit']).optional().default('counter') }).parse(req.body);
+  const pairing = createPairingCode({ tenantId: tenantOf(req), name, createdBy: req.user.userId, purpose });
+  await writeAudit({ req, action: 'TERMINAL_PAIRING_CODE', entityType: 'terminal', newValue: { name, purpose } });
   res.status(201).json(pairing);
 }));
 
@@ -372,16 +367,18 @@ router.get('/sales', asyncHandler(async (req, res) => {
   else if (q.method) where.payment_method = 'mixed';
   if (q.status) where.status = q.status;
   const [rows, total] = await Promise.all([
-    prisma.sale.findMany({ where, include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { id: true, name: true } } }, orderBy: { created_at: 'desc' }, skip: (q.page - 1) * q.page_size, take: q.page_size }),
+    prisma.sale.findMany({ where, include: { items: true, payments: { select: { method: true, amount: true } } }, orderBy: { created_at: 'desc' }, skip: (q.page - 1) * q.page_size, take: q.page_size }),
     prisma.sale.count({ where }),
   ]);
+  await attachPeople(tenantOf(req), rows, [['cashier', 'cashier_user_id']]);
   res.json({ rows, total, page: q.page, page_size: q.page_size });
 }));
 
 router.get('/shift-closings', asyncHandler(async (req, res) => {
   const rows = await prisma.shiftClosing.findMany({
-    where: { tenant_id: tenantOf(req) }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' }, take: 100,
+    where: { tenant_id: tenantOf(req) }, orderBy: { closed_at: 'desc' }, take: 100,
   });
+  await attachPeople(tenantOf(req), rows, [['cashier', 'cashier_user_id']]);
   res.json(rows.map((r) => ({ ...r, cashier_name: r.cashier?.name || '—' })));
 }));
 
@@ -454,6 +451,7 @@ router.post('/debts', asyncHandler(async (req, res) => {
     amount_paid: 0, due_date: new Date(d.due_date), status: 'active', created_by: req.user.userId,
   } });
   await writeAudit({ req, action: 'CREATE_DEBT', entityType: 'debt', entityId: debt.id, newValue: { debtor_name: d.debtor_name, total_amount: d.total_amount } });
+  publish({ type: 'debt', tenant_id: tenantOf(req), total: d.total_amount, name: d.debtor_name });
   res.status(201).json({ ...debt, status: debtStatus(debt), remaining: debt.total_amount });
 }));
 
@@ -471,6 +469,7 @@ router.post('/debts/:id/payment', asyncHandler(async (req, res) => {
     await writeAudit({ db: tx, req, action: 'DEBT_PAYMENT', entityType: 'debt', entityId: debt.id, newValue: { amount } });
     return next;
   });
+  publish({ type: 'debt_payment', tenant_id: tenantId, total: amount, name: updated.debtor_name });
   res.json({ ok: true, debt: { ...updated, status: debtStatus(updated), remaining: updated.total_amount - updated.amount_paid } });
 }));
 
@@ -538,7 +537,7 @@ router.get('/reports/timeline', asyncHandler(async (req, res) => {
     types: z.string().optional(), cashier_id: z.string().uuid().optional(), page: z.coerce.number().int().min(1).default(1),
     page_size: z.coerce.number().int().min(1).max(200).default(50),
   }).parse(req.query);
-  const start = dayRange(q.from).start; const end = dayRange(q.to).end;
+  const start = (await tenantDayRange(tenantOf(req), q.from)).start; const end = (await tenantDayRange(tenantOf(req), q.to)).end;
   if (end < start) throw httpError(400, 'Intervalo de datas inválido', 'BAD_RANGE');
   if (end - start > 92 * 86400000) throw httpError(400, 'Máximo de 3 meses por rastreio', 'RANGE_TOO_LARGE');
   const types = q.types ? q.types.split(',').filter(Boolean) : undefined;

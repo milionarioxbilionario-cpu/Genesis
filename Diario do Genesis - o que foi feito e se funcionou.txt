@@ -2238,3 +2238,36 @@ Antes de mudar a base de dados fiz uma cópia de segurança (C:\Users\CMM\Docume
 - Ainda NÃO fiz: o gerente (pessoa com e-mail e senha que gere sem ver lucros) e o resto da etapa (lista do stock de todos, mapa no painel geral, descontos por número de estabelecimentos). Também falta: o modo de apoio da Genesis e os relatórios por WhatsApp ainda não funcionam para os estabelecimentos extra.
 - Nota: por volta das 5h o computador ficou sem memória e o sistema fechou os servidores de teste (não afectou o site). Passei a usar só um de cada vez.
 - SITE REAL: publicado e testado no genesismz.com: vários estabelecimentos 6 de 6, e repeti os testes do terminal sem internet (20 de 20) para ter a certeza de que nada partiu. Funcionou: sim.
+
+
+=== 31/10/2026 — O que o fundador viu ao criar o 2.º estabelecimento: corrigido (E1, 1.ª parte) ===
+
+O QUE ESTAVA MAL (e porquê)
+Ao criar o 2.º estabelecimento, o painel bloqueou e pediu um PIN «que não existe» ("Ainda não criou o PIN do painel"). O PIN existia: estava guardado no estabelecimento principal, e no 2.º o sistema procurava-o no sítio errado. O mesmo erro, escondido, partia mais coisas no 2.º: mudar a língua, o perfil, o PIN de autorização, o Rastreio e o histórico de custos (depois de mexer no stock). Também:
+- quem tinha o teste acabado num estabelecimento não conseguia trocar para outro;
+- se o principal fosse suspenso, o dono perdia acesso a todos;
+- com o painel aberto em dois separadores, trocar de estabelecimento num fazia o outro gravar no sítio errado sem avisar;
+- carregar duas vezes em «Concluir» no assistente duplicava a renda e a equipa (a renda contava 2 vezes no lucro);
+- o assistente do 2.º não tinha forma de voltar ao principal e ignorava o tipo de negócio escolhido;
+- o 2.º nascia «pago» até à data da conta sem ninguém pagar.
+Eu tinha testado só o caminho feliz no estabelecimento principal. Foi um erro meu.
+
+O QUE FIZ
+- A conta é da pessoa: PIN, senha, língua, Face ID valem em todos os estabelecimentos.
+- «Esqueci o PIN»: no ecrã de bloqueio, escreve a senha da conta, o PIN antigo é apagado e cria um novo na hora.
+- Trocar de estabelecimento nunca prende o dono (teste acabado, suspenso, acesso retirado); se o principal for suspenso, entra nos outros que estão pagos.
+- Dois separadores: se trocar num, o outro recarrega sozinho no estabelecimento certo.
+- Configuração de um estabelecimento: grava tudo de uma vez (ou nada), com «Voltar ao estabelecimento principal», «Sair», o tipo já escolhido e o que escreveu guardado se sair a meio.
+- Copiar os produtos de um estabelecimento para outro: no assistente («De onde vêm os produtos?») e em Produtos («Copiar de outro estabelecimento»). Leva preços, códigos, IVA, unidade (kg, litro) e stock mínimo; o stock fica a zero; não repete o que já existe.
+- Horário a sério: «Todos os dias igual», «Aberto 24 horas» ou «Horário por dia» (cada dia: aberto, fechado ou 24 h, com pausa ao almoço), feriados, e horas em 24 h (o computador mostrava «01:00 AM»). Para um bar das 18h às 4h, a venda da 1h conta para o dia em que abriu.
+- Mapa e avisos ao vivo: além das vendas, aparecem a vermelho as perdas, as txenekas, as despesas e as vendas canceladas, e também as compras de stock, as aberturas e fechos de turno e os fechos falhados (o dono vê o que o caixista escreveu e o que o Genesis esperava). No mapa do admin aparecem também as subscrições pagas, sem lucros nem nomes de pessoas.
+- Satélite: deixou de trocar o mapa inteiro (perdia os pinos e à noite ficava quase preto); agora é uma camada por baixo das ruas e dos prédios.
+- Guarda: na Equipa há «Novo guarda» e uma explicação sempre à vista; em Definições › Terminais há «Terminal do guarda» e a pergunta «Para que é este terminal? Balcão ou Saída». Na saída aparecem só os guardas.
+- Encerrar um estabelecimento (nas Definições do estabelecimento extra): se nunca vendeu é apagado; se já vendeu fica só para consulta e pode reabrir em 30 dias. As vendas que os terminais guardaram sem internet ainda entram durante 7 dias (o dinheiro já foi cobrado). O principal não se encerra (a conta vive nele).
+- Um estabelecimento novo numa conta paga começa com 30 dias de teste; o fundador activa-o quando receber.
+
+PLANO
+Escrevi o plano completo, com a lista «E se…?» obrigatória para cada funcionalidade: «Mapa Mental/Plano 31-10-2026 - corrigir, painel geral e experiencia premium.md». As etapas seguintes: E2 painel geral a sério e gerentes, E4 códigos de barras verdadeiros, E5 modo escuro e movimento, E6 site/admin/mapa mental, E7 mapa ao vivo completo.
+
+SKILLS
+Instalei a «arena» (verifiquei linha a linha: não envia nada para fora, só escreve na sua pasta; precisa de Python, que este PC não tem) e a «frontend-design» oficial da Anthropic (para o desenho não parecer feito por IA).

@@ -13,6 +13,7 @@ const bcrypt = require('bcrypt');
 const { z } = require('zod');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../utils/prisma');
+const { publish } = require('../utils/liveBus');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const terminalAuth = require('../middleware/terminalAuth');
@@ -73,7 +74,9 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
     terminalMemberIds(prisma, id),
   ]);
   // Etapa A: so os perfis deste terminal (sem lista = todos, como antes).
-  const cashiers = memberIds ? allCashiers.filter((c) => memberIds.includes(c.id)) : allCashiers;
+  // 31/10: o terminal da saida mostra so os guardas.
+  const byPurpose = req.terminal.purpose === 'exit' ? allCashiers.filter((c) => c.role === 'guard') : allCashiers;
+  const cashiers = memberIds ? byPurpose.filter((c) => memberIds.includes(c.id)) : byPurpose;
   const profiles = await Promise.all(cashiers.map(async (c) => {
     const [lock, shift] = await Promise.all([getShiftLock(prisma, tenantId, c.id), shiftStatus(prisma, tenantId, c.id)]);
     // O cadeado e uma pausa: o perfil mostra se o turno ficou aberto ou fechado.
@@ -82,7 +85,7 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
   }));
   const sessionUserId = currentPosSession(req, id);
   res.json({
-    terminal: { id, name: req.terminal.name },
+    terminal: { id, name: req.terminal.name, purpose: req.terminal.purpose || 'counter' },
     // 15.1: o recibo leva o logotipo, o telefone, o NUIT e a mensagem final (tambem sem rede).
     store: { name: tenant?.name || 'Loja', location: tenant?.location || '', phone: tenant?.phone || '', nuit: tenant?.nuit || null, receipt_footer: tenant?.receipt_footer || null, logo: tenant?.logo_data || null, discount_free_pct: tenant?.discount_free_pct ?? 10, vat_mode: tenant?.vat_mode || 'none', custom_items_enabled: tenant?.custom_items_enabled !== false },
     cashiers: profiles,
@@ -96,6 +99,8 @@ router.get('/terminal', terminalAuth, asyncHandler(async (req, res) => {
 router.post('/login', terminalAuth, pinLimiter, asyncHandler(async (req, res) => {
   const { cashier_id, pin } = z.object({ cashier_id: z.string().uuid(), pin: z.string().regex(/^\d{4}$/, 'PIN inválido') }).parse(req.body);
   const { tenantId, id: terminalId } = req.terminal;
+  // 31/10: encerrado: ninguem comeca a trabalhar (a fila sem rede continua a enviar).
+  if (req.terminalClosed) throw httpError(403, 'Este estabelecimento foi encerrado pelo dono. As vendas que estavam por enviar continuam a ser enviadas.', 'ESTABLISHMENT_CLOSED');
   const cashier = await prisma.user.findFirst({ where: { id: cashier_id, tenant_id: tenantId, role: { in: ['cashier', 'guard'] }, is_active: true } });
   if (!cashier) throw httpError(404, 'Perfil não encontrado neste terminal', 'CASHIER_NOT_FOUND');
   if (!cashier.pin_hash) throw httpError(400, 'Este caixista ainda não tem PIN. O dono define-o em Equipa.', 'PIN_NOT_SET');
@@ -142,6 +147,7 @@ router.post('/shift/open', auth, requireRole('cashier'), asyncHandler(async (req
   if ((await shiftStatus(prisma, tenantId, userId)).open) throw httpError(409, 'O turno já está aberto.', 'SHIFT_ALREADY_OPEN');
   await checkAuthorizationPin({ req, tenantId, pin, failAction: 'SHIFT_OPEN_PIN_FAIL', entityType: 'user', entityId: userId });
   await writeAudit({ req, tenantId, action: 'SHIFT_OPENED', entityType: 'user', entityId: userId, newValue: { cashierName: req.user.name, terminal: req.user.tid || null } });
+  publish({ type: 'shift_open', tenant_id: tenantId, cashier_name: req.user.name || null });
   res.status(201).json(await getShiftState(tenantId, userId));
 }));
 

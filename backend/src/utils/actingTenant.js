@@ -34,8 +34,21 @@ async function ownerTenantIds(user) {
   return [user.tenant_id, ...rows.map((r) => r.tenant_id).filter((t) => t !== user.tenant_id)].filter(Boolean);
 }
 
+// Estados em que um estabelecimento nao abre (o mesmo que utils/tenantStatus.js + recusados).
+const CLOSED_STATUSES = new Set(['suspended', 'blocked', 'deleted', 'rejected']);
+
+// O 1.o estabelecimento do dono que esteja aberto, fora o de casa (o de casa
+// suspenso nao pode fechar os outros que estao pagos). null se nao houver.
+async function firstOpenEstablishment(user) {
+  const ids = (await ownerTenantIds(user)).filter((id) => id !== user.tenant_id);
+  if (!ids.length) return null;
+  const rows = await prisma.system.tenant.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
+  const open = new Set(rows.filter((t) => !CLOSED_STATUSES.has(t.status)).map((t) => t.id));
+  return ids.find((id) => open.has(id)) || null;
+}
+
 function invalidateActing(userId) {
   for (const k of cache.keys()) if (!userId || k.startsWith(userId + ':')) cache.delete(k);
 }
 
-module.exports = { resolveActingTenant, ownerTenantIds, invalidateActing };
+module.exports = { resolveActingTenant, ownerTenantIds, invalidateActing, firstOpenEstablishment, CLOSED_STATUSES };

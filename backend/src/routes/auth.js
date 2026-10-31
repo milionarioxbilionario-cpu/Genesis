@@ -15,6 +15,8 @@ const { sendPasswordResetEmail } = require('../utils/mailer');
 const { reqLang, pickLang, tr } = require('../utils/lang');
 const { setSessionCookies, verifyAccessToken, clearSessionCookies } = require('../utils/tokens');
 const { readUnlocked, clearUnlocked, needsUnlock, setUnlocked } = require('../utils/panelLock');
+const { updateSelf } = require('../utils/ownerSelf');
+const { firstOpenEstablishment } = require('../utils/actingTenant');
 const { validateSessionClaims, invalidateSessionUser } = require('../utils/sessionUser');
 const { consumeSupportCode } = require('../utils/supportCodes');
 const { writeAudit } = require('../utils/audit');
@@ -305,11 +307,15 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
+    // Etapa D (31/10): o de casa suspenso nao fecha os outros estabelecimentos do
+    // dono que estao abertos — entra no primeiro deles.
+    let act;
     if (user.role !== 'super_admin' && user.tenant && user.tenant.status === 'suspended') {
-      return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
+      act = user.role === 'owner' ? await firstOpenEstablishment(user) : null;
+      if (!act) return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
     }
 
-    const token = setSessionCookies(res, user);
+    const token = setSessionCookies(res, user, { act });
     // Acabou de provar quem e (senha/Google): o painel abre ja, sem pedir o PIN (12.4).
     if (needsUnlock(user)) setUnlocked(res, user);
 
@@ -394,12 +400,16 @@ router.post('/google', googleLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Conta desactivada. Contacte o suporte.' });
     }
 
+    // Etapa D (31/10): o de casa suspenso nao fecha os outros estabelecimentos do
+    // dono que estao abertos — entra no primeiro deles.
+    let act;
     if (user.role !== 'super_admin' && user.tenant && user.tenant.status === 'suspended') {
-      return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
+      act = user.role === 'owner' ? await firstOpenEstablishment(user) : null;
+      if (!act) return res.status(403).json({ error: 'Sua conta está suspensa. Contacte o suporte.' });
     }
 
     // Antes o login Google nao emitia refresh token (diferente do login normal).
-    const token = setSessionCookies(res, user);
+    const token = setSessionCookies(res, user, { act });
     // Acabou de provar quem e (senha/Google): o painel abre ja, sem pedir o PIN (12.4).
     if (needsUnlock(user)) setUnlocked(res, user);
 
@@ -585,7 +595,7 @@ router.get('/me', async (req, res) => {
           ...user,
           scope: payload.scope || null,
           lock,
-          tenant: tenant ? { name: tenant.name, location: tenant.location } : null,
+          tenant: tenant ? { name: tenant.name, location: tenant.location, status: tenant.status } : null,
           home_tenant_id: homeTenantId,
         },
       });
@@ -607,12 +617,10 @@ router.put('/language', authMiddleware, async (req, res) => {
   const parsed = z.object({ language: z.enum(LANGUAGES) }).safeParse(req.body || {});
   if (!parsed.success) return res.status(400).json({ error: 'Língua inválida (pt ou en).', code: 'INVALID_LANGUAGE' });
   try {
-    // tenant_id no filtro: a mesma regra das outras rotas (a RLS e a 2.a linha).
-    const done = await prisma.user.updateMany({
-      where: { id: req.user.userId, tenant_id: req.user.tenantId },
-      data: { language: parsed.data.language },
-    });
-    if (done.count !== 1) return res.status(404).json({ error: 'Conta não encontrada', code: 'USER_NOT_FOUND' });
+    // A lingua e da pessoa: a linha User vive no estabelecimento de casa, mesmo
+    // quando o dono trabalha noutro (utils/ownerSelf.js).
+    const count = await updateSelf(req, { language: parsed.data.language });
+    if (count !== 1) return res.status(404).json({ error: 'Conta não encontrada', code: 'USER_NOT_FOUND' });
     return res.json({ language: parsed.data.language });
   } catch (err) {
     console.error('[auth:language] falha ->', err);

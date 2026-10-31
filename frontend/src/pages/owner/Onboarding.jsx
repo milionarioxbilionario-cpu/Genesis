@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Plus, Trash2 } from 'lucide-react';
-import api, { saveLanguage } from '../../utils/api';
+import { ArrowLeft, Check, LogOut, Plus, Trash2 } from 'lucide-react';
+import api, { announceEstablishmentChange, saveLanguage } from '../../utils/api';
 import { money, errorMessage } from '../../utils/format';
 import { useSession } from '../../utils/session';
 import { useI18n } from '../../i18n/react';
@@ -9,6 +9,7 @@ import '../../i18n/en/auth';
 import '../../i18n/en/owner';
 import { BrandMark, Alert, Button, Card, Input, LanguageSwitch, MoneyInput, Spinner, cx } from '../../components/ui';
 import { BUSINESS_TYPES } from '../auth/RequestAccount';
+import HoursEditor, { DEFAULT_SCHEDULE, scheduleFrom } from '../../components/HoursEditor';
 
 // Nomes dos passos em portugues = chave da traducao.
 const STEPS = ['Tipo de negócio', 'Categorias adicionais', 'Catálogo', 'Custos e equipa', 'Horário'];
@@ -17,28 +18,81 @@ const STEPS = ['Tipo de negócio', 'Categorias adicionais', 'Catálogo', 'Custos
 // Valores escritos em MZN, guardados em centavos (MoneyInput).
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user, logout } = useSession();
   const { t } = useI18n();
   const [step, setStep] = useState(0);
   const [mainType, setMainType] = useState('bottle_store');
   const [extraTypes, setExtraTypes] = useState([]);
   const [catalog, setCatalog] = useState(null);
+  // 31/10 (R1): o catalogo pode vir do Genesis (sugerido) ou de outro estabelecimento do dono.
+  const [source, setSource] = useState('master');
+  const [others, setOthers] = useState([]);
+  useEffect(() => { api.get('/api/establishments', { silent: true }).then(({ data }) => setOthers(data.filter((e) => !e.is_current && e.onboarding_completed))).catch(() => {}); }, []);
   const [rent, setRent] = useState(0);
   // 27/10 (fundador): as linhas comecam abertas, com exemplos — so com o botao «+» ninguem percebia para que serviam.
   const [costs, setCosts] = useState([{ description: '', amount: 0 }]);
   const [employees, setEmployees] = useState([{ name: '', role: '', salary: 0 }]);
   const [suppliers, setSuppliers] = useState([{ name: '', phone: '', delivery: 0 }]);
-  const [hours, setHours] = useState({ opening_time: '08:00', closing_time: '20:00' });
+  // 31/10: horario por dia, 24 h, depois da meia-noite (components/HoursEditor.jsx).
+  const [hours, setHours] = useState({ schedule: DEFAULT_SCHEDULE });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [catalogError, setCatalogError] = useState('');
   const barcodeRefs = useRef(new Map());
+
+  // 31/10: o que ja escreveu fica guardado neste aparelho (por estabelecimento):
+  // sair a meio, voltar ao principal ou a rede cair nao apaga nada.
+  const draftKey = user?.tenant_id ? 'genesis.onboarding.' + user.tenant_id : null;
+  const restored = useRef(false);
+  useEffect(() => {
+    if (!draftKey || restored.current) return;
+    restored.current = true;
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch { d = null; }
+    if (d && typeof d === 'object') {
+      if (d.mainType) setMainType(d.mainType);
+      if (Array.isArray(d.extraTypes)) setExtraTypes(d.extraTypes);
+      if (Array.isArray(d.catalog)) setCatalog(d.catalog);
+      if (typeof d.rent === 'number') setRent(d.rent);
+      if (Array.isArray(d.costs)) setCosts(d.costs);
+      if (Array.isArray(d.employees)) setEmployees(d.employees);
+      if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
+      if (d.hours) setHours({ schedule: scheduleFrom(d.hours) });
+      if (Number.isInteger(d.step)) setStep(d.step);
+      return;
+    }
+    // Sem rascunho: o tipo escolhido ao criar o estabelecimento (ou no pedido de conta) ja vem marcado.
+    api.get('/api/settings', { silent: true }).then(({ data }) => {
+      const bt = data?.store?.business_type;
+      if (bt && BUSINESS_TYPES.some((b) => b.value === bt)) setMainType(bt);
+    }).catch(() => {});
+  }, [draftKey]);
+  useEffect(() => {
+    if (!draftKey || !restored.current) return;
+    try { localStorage.setItem(draftKey, JSON.stringify({ step, mainType, extraTypes, catalog, rent, costs, employees, suppliers, hours })); } catch { /* aparelho sem espaco: segue sem rascunho */ }
+  }, [draftKey, step, mainType, extraTypes, catalog, rent, costs, employees, suppliers, hours]);
+  const clearDraft = () => { try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* nada */ } };
+
+  // Voltar ao estabelecimento principal a meio (o rascunho fica guardado).
+  const isExtra = Boolean(user?.home_tenant_id && user.tenant_id && user.tenant_id !== user.home_tenant_id);
+  async function goHome() {
+    try {
+      await api.post('/api/establishments/home');
+      announceEstablishmentChange(user.home_tenant_id);
+      window.location.assign('/app');
+    } catch (err) { setError(errorMessage(err)); }
+  }
 
   // Catalogo pre-definido (master_catalogs) do tipo principal + adicionais.
   useEffect(() => {
     if (step !== 2 || catalog) return;
     const types = [mainType, ...extraTypes.filter((x) => x !== mainType)];
     setCatalogError('');
+    if (source !== 'master') {
+      api.get('/api/establishments/' + source + '/catalog').then(({ data }) => setCatalog(data.map((p, i) => ({ key: 'c' + i + '-' + p.name.toLowerCase(), include: true, name: p.name, category: p.category || 'Geral', sell: Math.round(Number(p.price_mzn || 0) * 100), cost: Math.round(Number(p.cost_mzn || 0) * 100), stock: '0', barcode: p.barcode || '', image_url: p.image_url || null, icon: p.icon || null, unit: p.unit, vat_rate: p.vat_rate, min_stock: p.min_stock, has_expiry: p.has_expiry }))))
+        .catch((err) => { setCatalogError(errorMessage(err)); setCatalog([]); });
+      return;
+    }
     Promise.all(types.map((x) => api.get('/api/catalogs/' + x).then((r) => r.data.template.sampleProducts).catch(() => null)))
       .then((lists) => {
         if (lists.every((l) => l === null)) setCatalogError('Não foi possível carregar o catálogo sugerido. Pode acrescentar produtos à mão ou voltar e tentar de novo.');
@@ -52,7 +106,7 @@ export default function Onboarding() {
         }
         setCatalog(rows);
       });
-  }, [step, catalog, mainType, extraTypes]);
+  }, [step, catalog, mainType, extraTypes, source]);
 
   const included = useMemo(() => (catalog || []).filter((p) => p.include && p.name.trim() && p.sell > 0), [catalog]);
   const updateRow = (key, patch) => setCatalog((c) => c.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -74,17 +128,24 @@ export default function Onboarding() {
   async function finish() {
     setSaving(true); setError('');
     try {
-      if (rent > 0) await api.post('/api/settings/fixed-costs', { description: t('Renda'), amount: rent, type: 'rent' });
-      for (const c of costs.filter((x) => x.description.trim() && x.amount > 0)) await api.post('/api/settings/fixed-costs', { description: c.description.trim(), amount: c.amount, type: 'other' });
-      for (const e of employees.filter((x) => x.name.trim() && x.role.trim())) await api.post('/api/owner/employees', { name: e.name.trim(), role: e.role.trim(), monthly_salary: e.salary });
-      for (const s of suppliers.filter((x) => x.name.trim())) await api.post('/api/inventory/suppliers', { name: s.name.trim(), phone: s.phone.trim() || null, delivery_cost_per_visit: s.delivery });
-      await api.put('/api/settings/hours', hours);
-      // Por ultimo: importa o catalogo e marca o onboarding como concluido.
-      await api.post(`/api/catalogs/${mainType}/import`, {
-        products: included.map((p) => ({ name: p.name.trim(), price_mzn: p.sell / 100, cost_mzn: p.cost / 100, stock: Number(p.stock) || 0, category: p.category, barcode: p.barcode.trim() || null, image_url: p.image_url, icon: p.icon || null })),
+      // 31/10: tudo num so pedido (tudo ou nada). Antes eram 6+ pedidos e, se um
+      // falhava, «Concluir» outra vez duplicava a renda, os custos e a equipa.
+      await api.post('/api/onboarding/complete', {
+        business_type: mainType,
+        products: included.map((p) => ({ name: p.name.trim(), price_mzn: p.sell / 100, cost_mzn: p.cost / 100, stock: Number(p.stock) || 0, category: p.category, barcode: p.barcode.trim() || null, image_url: p.image_url, icon: p.icon || null, unit: p.unit, vat_rate: p.vat_rate, min_stock: p.min_stock, has_expiry: p.has_expiry })),
+        rent,
+        costs: costs.filter((x) => x.description.trim() && x.amount > 0).map((c) => ({ description: c.description.trim(), amount: c.amount })),
+        employees: employees.filter((x) => x.name.trim() && x.role.trim()).map((e) => ({ name: e.name.trim(), role: e.role.trim(), monthly_salary: e.salary })),
+        suppliers: suppliers.filter((x) => x.name.trim()).map((x) => ({ name: x.name.trim(), phone: x.phone.trim() || null, delivery_cost_per_visit: x.delivery })),
+        hours,
       });
+      clearDraft();
       navigate('/app', { replace: true });
-    } catch (err) { setError(errorMessage(err)); } finally { setSaving(false); }
+    } catch (err) {
+      // Ja estava configurado (ex.: o 1.o clique chegou e a resposta perdeu-se): segue.
+      if (err?.response?.data?.code === 'ONBOARDING_DONE') { clearDraft(); navigate('/app', { replace: true }); return; }
+      setError(errorMessage(err));
+    } finally { setSaving(false); }
   }
 
   const canNext = step !== 2 || (catalog && included.length > 0 && duplicateBarcodes.size === 0);
@@ -93,9 +154,12 @@ export default function Onboarding() {
     <div className="min-h-screen bg-bg">
       <header className="flex h-14 items-center gap-2.5 border-b border-border bg-surface px-6">
         <BrandMark />
-        <span className="font-semibold text-ink">{t('Configurar a loja')}</span>
-        <span className="ml-auto hidden text-sm text-ink-muted sm:inline">{user?.name}</span>
-        <LanguageSwitch className="ml-auto sm:ml-3" onChange={saveLanguage} />
+        <span className="min-w-0 truncate font-semibold text-ink">{t('Configurar o estabelecimento')}{user?.tenant?.name ? ' · ' + user.tenant.name : ''}</span>
+        <span className="ml-auto flex items-center gap-1">
+          {isExtra && <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={goHome}><span className="hidden sm:inline">{t('Voltar ao estabelecimento principal')}</span></Button>}
+          <LanguageSwitch onChange={saveLanguage} />
+          <Button variant="ghost" size="sm" icon={LogOut} onClick={logout} aria-label={t('Sair')}><span className="hidden sm:inline">{t('Sair')}</span></Button>
+        </span>
       </header>
       <div className={cx('mx-auto px-4 py-8', step === 2 ? 'max-w-5xl' : 'max-w-3xl')}>
         <ol className="mb-8 grid grid-cols-5 gap-2" aria-label={t('Progresso')}>
@@ -134,6 +198,15 @@ export default function Onboarding() {
 
         {step === 2 && (
           <Section title={t('O seu catálogo')} description={t('Preços sugeridos para Moçambique — confirme-os com os seus. Desmarque o que não vende. Se tiver leitor de código de barras, clique na coluna “Código de barras” e passe cada produto no leitor: salta sozinho para a linha seguinte.')}>
+            {others.length > 0 && (
+              <Card className="mb-4">
+                <p className="mb-2 font-medium text-ink">{t('De onde vêm os produtos?')}</p>
+                <div className="flex flex-col gap-2">
+                  <Choice checked={source === 'master'} onClick={() => { setSource('master'); setCatalog(null); }}>{t('Catálogo sugerido pelo Genesis para este tipo de negócio')}</Choice>
+                  {others.map((e) => <Choice key={e.id} checked={source === e.id} onClick={() => { setSource(e.id); setCatalog(null); }}>{t('Copiar os produtos de {name}', { name: e.name })}</Choice>)}
+                </div>
+              </Card>
+            )}
             {!catalog ? <div className="flex justify-center py-10"><Spinner /></div> : (
               <>
                 {catalogError && <Alert tone="warning" className="mb-3">{t(catalogError)}</Alert>}
@@ -228,10 +301,7 @@ export default function Onboarding() {
         {step === 4 && (
           <Section title={t('Horário de funcionamento')} description={t('Para que serve: à hora de fecho o Genesis prepara o relatório do dia (o que se vendeu, quem vendeu, o que faltou). Pode mudar depois em Definições.')}>
             <Card>
-              <div className="grid max-w-sm grid-cols-2 gap-4">
-                <Input label={t('Abertura')} type="time" value={hours.opening_time} onChange={(e) => setHours({ ...hours, opening_time: e.target.value })} />
-                <Input label={t('Fecho')} type="time" value={hours.closing_time} onChange={(e) => setHours({ ...hours, closing_time: e.target.value })} />
-              </div>
+              <HoursEditor value={hours.schedule} onChange={(schedule) => setHours({ schedule })} />
               <div className="mt-5 border-t border-border pt-4 text-sm text-ink-2">
                 <p>{t('Resumo: {p} produto(s) · renda {r} · {e} trabalhador(es) · {s} fornecedor(es).', { p: included.length, r: money(rent), e: employees.filter((x) => x.name.trim()).length, s: suppliers.filter((x) => x.name.trim()).length })}</p>
               </div>

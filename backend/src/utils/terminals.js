@@ -24,13 +24,15 @@ const sha256 = (v) => crypto.createHash('sha256').update(String(v)).digest('hex'
 
 // terminalId (Etapa A): codigo para voltar a ligar um terminal que ja existe
 // (o browser perdeu o cookie) — fica o mesmo terminal, com os mesmos perfis.
-function createPairingCode({ tenantId, name, createdBy, terminalId = null }) {
+// purpose (31/10): 'counter' = balcao (caixistas); 'exit' = saida (so os guardas).
+const PURPOSES = ['counter', 'exit'];
+function createPairingCode({ tenantId, name, createdBy, terminalId = null, purpose = 'counter' }) {
   const now = Date.now();
   for (const [code, entry] of pairingCodes) if (entry.expiresAt < now) pairingCodes.delete(code);
   let code;
   do { code = String(crypto.randomInt(100000, 1000000)); } while (pairingCodes.has(code));
   const expiresAt = now + PAIRING_TTL_MS;
-  pairingCodes.set(code, { tenantId, name, createdBy, terminalId, expiresAt });
+  pairingCodes.set(code, { tenantId, name, createdBy, terminalId, purpose: PURPOSES.includes(purpose) ? purpose : 'counter', expiresAt });
   return { code, expires_at: new Date(expiresAt).toISOString() };
 }
 
@@ -43,10 +45,10 @@ function consumePairingCode(code) {
   return entry;
 }
 
-async function createTerminal({ tenantId, name, createdBy }) {
+async function createTerminal({ tenantId, name, createdBy, purpose = 'counter' }) {
   const id = crypto.randomUUID();
   const secret = crypto.randomBytes(32).toString('base64url');
-  const terminal = await prisma.posTerminal.create({ data: { id, tenant_id: tenantId, name, secret_hash: sha256(secret), created_by: createdBy } });
+  const terminal = await prisma.posTerminal.create({ data: { id, tenant_id: tenantId, name, secret_hash: sha256(secret), created_by: createdBy, purpose: PURPOSES.includes(purpose) ? purpose : 'counter' } });
   return { terminal, cookieValue: `${id}.${secret}` };
 }
 
@@ -82,7 +84,7 @@ async function verifyTerminalCookie(value) {
     seenAt.set(id, Date.now());
     prisma.posTerminal.update({ where: { id }, data: { last_seen_at: new Date() } }).catch(() => {});
   }
-  return { id: t.id, tenantId: t.tenant_id, name: t.name };
+  return { id: t.id, tenantId: t.tenant_id, name: t.name, purpose: t.purpose || 'counter' };
 }
 
 function terminalCookieOptions() {
@@ -91,6 +93,6 @@ function terminalCookieOptions() {
   return options;
 }
 
-module.exports = {
+module.exports = { PURPOSES,
   TERMINAL_COOKIE, createPairingCode, consumePairingCode, createTerminal, rotateTerminal, terminalMemberIds, verifyTerminalCookie, terminalCookieOptions,
 };

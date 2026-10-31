@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Copy, Plus, Search } from 'lucide-react';
+import CopyCatalogDialog from '../../components/CopyCatalogDialog';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import { money, int, date, dateTime, errorMessage } from '../../utils/format';
@@ -39,6 +40,10 @@ function Catalog({ products }) {
   const { t } = useI18n();
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState(null);
+  // 31/10: copiar de outro estabelecimento do mesmo dono (so aparece com 2 ou mais).
+  const establishments = useApi('/api/establishments');
+  const others = (establishments.data || []).filter((e) => !e.is_current);
+  const [copying, setCopying] = useState(false);
   const list = useMemo(() => { const f = foldText(q); return (products.data || []).filter((p) => p.is_active && (productMatches(p, f) || (p.barcode || '').includes(q.trim()))); }, [products.data, q]);
 
   const columns = [
@@ -57,8 +62,12 @@ function Catalog({ products }) {
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
           <Input aria-label={t('Pesquisar')} placeholder={t('Pesquisar nome ou código')} value={q} onChange={(e) => setQ(e.target.value)} inputClassName="pl-9" className="pl-9" />
         </div>
-        <Button className="ml-auto" variant="primary" icon={Plus} onClick={() => setEditing({ ...EMPTY_PRODUCT })}>{t('Novo produto')}</Button>
+        <span className="ml-auto flex gap-2">
+          {others.length > 0 && <Button icon={Copy} onClick={() => setCopying(true)}>{t('Copiar de outro estabelecimento')}</Button>}
+          <Button variant="primary" icon={Plus} onClick={() => setEditing({ ...EMPTY_PRODUCT })}>{t('Novo produto')}</Button>
+        </span>
       </Toolbar>
+      <CopyCatalogDialog open={copying} onClose={() => setCopying(false)} onDone={() => products.reload()} others={others} />
       <Table columns={columns} rows={list} loading={products.loading && !products.data} onRowClick={(p) => setEditing({ ...EMPTY_PRODUCT, ...p, barcode: p.barcode || '', icon: p.icon || null })} empty={<p className="py-10 text-center text-ink-muted">{q ? t('Nenhum produto encontrado.') : t('Ainda não há produtos.')}</p>} />
       <ProductDrawer editing={editing} setEditing={setEditing} products={products} />
     </>

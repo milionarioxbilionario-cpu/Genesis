@@ -234,6 +234,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/refresh', refreshRoute);
 // Catálogos públicos (templates) e import (protegido)
 app.use('/api/catalogs', catalogRoutes);
+// 31/10: onboarding numa so operacao (tudo ou nada; nao duplica ao repetir).
+app.use('/api/onboarding', require('./routes/onboarding'));
 // Master catalogs (admin)
 // /api/master_catalogs (antigo) retirado na Fase 8.6: o catalogo-mestre vive em /api/admin/master-catalog.
 // Produtos do tenant

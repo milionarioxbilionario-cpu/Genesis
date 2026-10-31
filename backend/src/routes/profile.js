@@ -16,6 +16,9 @@ const { getMailerConfig, sendMail } = require('../utils/mailer');
 const { tr, reqLang } = require('../utils/lang');
 const { dayInMaputo } = require('../utils/shiftDay');
 const { effectivePlan, giftAvailable, giftWindow } = require('../services/plans');
+// A conta (senha, e-mail, aniversario) e da pessoa e vive no estabelecimento de
+// casa; o plano, o WhatsApp dos alertas e o presente sao do estabelecimento activo.
+const { selfWhere, findSelf, updateSelf, auditSelf } = require('../utils/ownerSelf');
 
 const router = express.Router();
 const emailTaken = async (email) => Boolean(await prisma.system.user.findFirst({ where: { email }, select: { id: true } }));
@@ -26,7 +29,7 @@ const tenantId = (req) => req.user.tenantId;
 
 router.get('/', asyncHandler(async (req, res) => {
   const [u, t] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId(req) }, select: { name: true, email: true, birthday: true, birthday_gift_year: true, lock_pin_hash: true } }),
+    findSelf(req, { name: true, email: true, birthday: true, birthday_gift_year: true, lock_pin_hash: true }),
     prisma.tenant.findUnique({ where: { id: tenantId(req) }, select: { phone: true, plan: true, plan_period: true, premium_from: true, premium_until: true, subscription_price: true, created_at: true } }),
   ]);
   if (!u || !t) throw httpError(404, 'Conta não encontrada');
@@ -53,18 +56,19 @@ const passwordSchema = z.object({
 });
 router.put('/password', asyncHandler(async (req, res) => {
   const data = passwordSchema.parse(req.body);
-  const u = await prisma.user.findUnique({ where: { id: userId(req) } });
+  const u = await findSelf(req);
   if (!u?.password_hash || !(await bcrypt.compare(data.current_password, u.password_hash))) {
-    await writeAudit({ req, action: 'PASSWORD_CHANGE_FAIL', entityType: 'user', entityId: u?.id || userId(req) });
+    await auditSelf(req, 'PASSWORD_CHANGE_FAIL');
     throw httpError(403, 'A senha actual não está certa.', 'WRONG_PASSWORD');
   }
   if (data.current_password === data.new_password) throw httpError(400, 'A senha nova tem de ser diferente da actual.', 'SAME_PASSWORD');
-  const updated = await prisma.user.update({ where: { id: u.id }, data: { password_hash: await bcrypt.hash(data.new_password, 12) } });
+  const updated = await prisma.system.user.update({ where: { id: u.id }, data: { password_hash: await bcrypt.hash(data.new_password, 12) } });
   // A versao da senha (pv) muda: as outras sessoes deixam de valer; esta continua.
   invalidateSessionUser(u.id);
-  setSessionCookies(res, updated);
+  // Continua no mesmo estabelecimento (sem `act` voltava ao de casa).
+  setSessionCookies(res, updated, { act: req.user.tenantId });
   if (updated.lock_pin_hash) setUnlocked(res, updated);
-  await writeAudit({ req, action: 'PASSWORD_CHANGED', entityType: 'user', entityId: u.id });
+  await auditSelf(req, 'PASSWORD_CHANGED');
   res.json({ ok: true });
 }));
 
@@ -85,7 +89,7 @@ function emailBody(lang, code, newEmail) {
 
 router.post('/email/start', asyncHandler(async (req, res) => {
   const data = z.object({ new_email: z.string().trim().toLowerCase().email('E-mail inválido'), password: z.string().min(1, 'Confirme com a sua senha') }).parse(req.body);
-  const u = await prisma.user.findUnique({ where: { id: userId(req) } });
+  const u = await findSelf(req);
   if (!u?.password_hash || !(await bcrypt.compare(data.password, u.password_hash))) throw httpError(403, 'A senha actual não está certa.', 'WRONG_PASSWORD');
   if (data.new_email === String(u.email || '').toLowerCase()) throw httpError(400, 'Esse já é o seu e-mail.', 'SAME_EMAIL');
   // O e-mail e unico em TODO o Genesis: com a RLS, o cliente da loja so via as contas
@@ -106,7 +110,7 @@ router.post('/email/start', asyncHandler(async (req, res) => {
     ]);
     if (!a.ok || !b.ok) { emailChanges.delete(u.id); throw httpError(502, 'Não foi possível enviar os códigos. Tente mais tarde.', 'EMAIL_SEND_FAILED'); }
   }
-  await writeAudit({ req, action: 'EMAIL_CHANGE_STARTED', entityType: 'user', entityId: u.id, newValue: { new_email: data.new_email } });
+  await auditSelf(req, 'EMAIL_CHANGE_STARTED', { newValue: { new_email: data.new_email } });
   // Sem SMTP so fora de producao (testes locais): os codigos vem na resposta.
   res.json({ ok: true, ...(cfg.isConfigured ? {} : { devCodes: { current, next }, devOnly: true }) });
 }));
@@ -122,10 +126,10 @@ router.post('/email/confirm', asyncHandler(async (req, res) => {
   }
   emailChanges.delete(userId(req));
   if (await emailTaken(pending.newEmail)) throw httpError(409, 'Esse e-mail já pertence a outra conta.', 'EMAIL_IN_USE');
-  const before = await prisma.user.findUnique({ where: { id: userId(req) }, select: { email: true } });
-  await prisma.user.update({ where: { id: userId(req) }, data: { email: pending.newEmail } });
+  const before = await findSelf(req, { email: true });
+  if (!(await updateSelf(req, { email: pending.newEmail }))) throw httpError(404, 'Conta não encontrada');
   invalidateSessionUser(userId(req));
-  await writeAudit({ req, action: 'EMAIL_CHANGED', entityType: 'user', entityId: userId(req), oldValue: { email: before?.email }, newValue: { email: pending.newEmail } });
+  await auditSelf(req, 'EMAIL_CHANGED', { oldValue: { email: before?.email }, newValue: { email: pending.newEmail } });
   res.json({ ok: true, email: pending.newEmail });
 }));
 
@@ -146,9 +150,9 @@ router.put('/birthday', asyncHandler(async (req, res) => {
   const age = Number(dayInMaputo(new Date()).slice(0, 4)) - Number(birthday.slice(0, 4));
   if (age < 12 || age > 120) throw httpError(400, 'Data de nascimento fora do possível.', 'BAD_BIRTHDAY');
   // So uma vez: a condicao no UPDATE impede duas definicoes em simultaneo.
-  const r = await prisma.user.updateMany({ where: { id: userId(req), birthday: null }, data: { birthday } });
+  const r = await prisma.system.user.updateMany({ where: { ...selfWhere(req), birthday: null }, data: { birthday } });
   if (r.count !== 1) throw httpError(409, 'A data de aniversário já foi definida e não se pode mudar.', 'BIRTHDAY_LOCKED');
-  await writeAudit({ req, action: 'BIRTHDAY_SET', entityType: 'user', entityId: userId(req), newValue: { birthday } });
+  await auditSelf(req, 'BIRTHDAY_SET', { newValue: { birthday } });
   res.json({ ok: true, birthday });
 }));
 
@@ -156,16 +160,24 @@ router.put('/birthday', asyncHandler(async (req, res) => {
 router.post('/birthday/gift', asyncHandler(async (req, res) => {
   const now = new Date();
   const year = Number(dayInMaputo(now).slice(0, 4));
-  const result = await prisma.$transaction(async (tx) => {
-    const u = await tx.user.findUnique({ where: { id: userId(req) }, select: { id: true, birthday: true, birthday_gift_year: true } });
-    if (!giftAvailable(u, now)) throw httpError(409, 'O presente só se recolhe no dia do aniversário, uma vez por ano.', 'GIFT_NOT_AVAILABLE');
-    const claimed = await tx.user.updateMany({ where: { id: u.id, OR: [{ birthday_gift_year: null }, { birthday_gift_year: { not: year } }] }, data: { birthday_gift_year: year } });
-    if (claimed.count !== 1) throw httpError(409, 'O presente deste ano já foi recolhido.', 'GIFT_NOT_AVAILABLE');
-    const t = await tx.tenant.findUnique({ where: { id: tenantId(req) }, select: { plan: true, plan_period: true, premium_from: true, premium_until: true, created_at: true } });
-    const w = giftWindow(t, now);
-    await tx.tenant.update({ where: { id: tenantId(req) }, data: { premium_from: w.from, premium_until: w.until } });
-    return w;
-  });
+  const u = await findSelf(req, { id: true, birthday: true, birthday_gift_year: true });
+  if (!giftAvailable(u, now)) throw httpError(409, 'O presente só se recolhe no dia do aniversário, uma vez por ano.', 'GIFT_NOT_AVAILABLE');
+  // A condicao no UPDATE impede recolher duas vezes (dois pedidos ao mesmo tempo).
+  const claimed = await prisma.system.user.updateMany({ where: { ...selfWhere(req), OR: [{ birthday_gift_year: null }, { birthday_gift_year: { not: year } }] }, data: { birthday_gift_year: year } });
+  if (claimed.count !== 1) throw httpError(409, 'O presente deste ano já foi recolhido.', 'GIFT_NOT_AVAILABLE');
+  let result;
+  try {
+    result = await prisma.$transaction(async (tx) => {
+      const t = await tx.tenant.findUnique({ where: { id: tenantId(req) }, select: { plan: true, plan_period: true, premium_from: true, premium_until: true, created_at: true } });
+      const w = giftWindow(t, now);
+      await tx.tenant.update({ where: { id: tenantId(req) }, data: { premium_from: w.from, premium_until: w.until } });
+      return w;
+    });
+  } catch (err) {
+    // O Premium nao entrou: o presente volta a estar disponivel.
+    await prisma.system.user.updateMany({ where: { ...selfWhere(req), birthday_gift_year: year }, data: { birthday_gift_year: u.birthday_gift_year ?? null } });
+    throw err;
+  }
   await writeAudit({ req, action: 'BIRTHDAY_GIFT_CLAIMED', entityType: 'tenant', entityId: tenantId(req), newValue: { year, rule: result.rule, premium_from: result.from, premium_until: result.until } });
   res.json({ ok: true, premium_from: result.from, premium_until: result.until, rule: result.rule });
 }));

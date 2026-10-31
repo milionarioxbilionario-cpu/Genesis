@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Fingerprint, Lock, LogOut } from 'lucide-react';
+import { Fingerprint, KeyRound, Lock, LogOut } from 'lucide-react';
 import { browserSupportsWebAuthn, platformAuthenticatorIsAvailable, startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import api from '../utils/api';
 import { useSession } from '../utils/session';
 import { errorMessage } from '../utils/format';
-import { checkOfflinePin, rememberPin } from '../utils/offlinePin';
-import { Alert, BrandMark, Button, PinPad } from './ui';
+import { checkOfflinePin, forgetPin, rememberPin } from '../utils/offlinePin';
+import { Alert, BrandMark, Button, Input, PinPad } from './ui';
 import { useI18n } from '../i18n/react';
 import '../i18n/en/lock';
 
@@ -73,8 +73,15 @@ export default function PanelLockGate({ children }) {
     setLock({ has_pin: true, unlocked: true });
     setLocked(false);
   };
+  // O PIN foi apagado («esqueci o PIN» com a senha): o painel pede logo um novo.
+  const pinCleared = () => {
+    store.set(sessionStorage, OPEN_FLAG, '1');
+    last.current = Date.now();
+    setLock({ has_pin: false, unlocked: true });
+    setLocked(false);
+  };
   if (!lock.has_pin) return offline ? children : <CreatePin user={user} onDone={unlocked} onLogout={logout} />;
-  if (locked) return <LockScreen user={user} offline={offline} onUnlocked={unlocked} onLogout={logout} />;
+  if (locked) return <LockScreen user={user} offline={offline} onUnlocked={unlocked} onPinCleared={pinCleared} onLogout={logout} />;
   return children;
 }
 
@@ -93,8 +100,9 @@ function Shell({ children, onLogout }) {
   );
 }
 
-function LockScreen({ user, offline, onUnlocked, onLogout }) {
+function LockScreen({ user, offline, onUnlocked, onPinCleared, onLogout }) {
   const { t } = useI18n();
+  const [forgot, setForgot] = useState(false);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -115,7 +123,8 @@ function LockScreen({ user, offline, onUnlocked, onLogout }) {
     setBusy(true); setError('');
     try {
       if (offline) { await tryOffline(value); return; }
-      await api.post('/api/lock/unlock', { pin: value }, { silent: true });
+      const { data } = await api.post('/api/lock/unlock', { pin: value }, { silent: true });
+      if (data?.has_pin === false) { await forgetPin(offlineKey); onPinCleared(); return; }
       rememberPin(offlineKey, value);
       onUnlocked();
     } catch (err) {
@@ -142,6 +151,7 @@ function LockScreen({ user, offline, onUnlocked, onLogout }) {
     } finally { setBusy(false); }
   }
 
+  if (forgot) return <ForgotPin offlineKey={offlineKey} offline={offline} onBack={() => setForgot(false)} onCleared={onPinCleared} onLogout={onLogout} />;
   return (
     <Shell onLogout={onLogout}>
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent"><Lock size={20} /></span>
@@ -151,6 +161,49 @@ function LockScreen({ user, offline, onUnlocked, onLogout }) {
       {error && <Alert tone="danger" className="mb-5 w-full text-left">{error}</Alert>}
       <PinPad value={pin} onChange={setPin} onComplete={submit} disabled={busy} length={4} />
       {hasPasskey && <Button className="mt-6" icon={Fingerprint} onClick={withPasskey} disabled={busy}>{t('Usar Face ID / impressão digital')}</Button>}
+      <Button variant="ghost" className="mt-4" onClick={() => setForgot(true)} disabled={busy}>{t('Esqueci o PIN')}</Button>
+    </Shell>
+  );
+}
+
+// Esqueceu o PIN: a senha da conta (a mesma do e-mail) apaga-o e o painel pede
+// um PIN novo. Senha errada conta como um PIN errado (5 terminam a sessao).
+function ForgotPin({ offlineKey, offline, onBack, onCleared, onLogout }) {
+  const { t } = useI18n();
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (busy || !password) return;
+    setBusy(true); setError('');
+    try {
+      await api.post('/api/lock/forgot', { password }, { silent: true });
+      await forgetPin(offlineKey);
+      onCleared();
+    } catch (err) {
+      const d = err?.response?.data || {};
+      if (d.code === 'LOCK_TOO_MANY') { window.dispatchEvent(new CustomEvent('genesis:session-ended', { detail: { code: 'LOCK_TOO_MANY' } })); return; }
+      setPassword('');
+      setError(err?.response
+        ? errorMessage(err) + (typeof d.remaining === 'number' ? ' ' + t('Restam {n} tentativa(s).', { n: d.remaining }) : '')
+        : t('Sem ligação. Para criar um PIN novo precisa de internet.'));
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Shell onLogout={onLogout}>
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent"><KeyRound size={20} /></span>
+      <h1 className="mt-4 text-xl font-semibold tracking-tight text-ink">{t('Esqueceu o PIN?')}</h1>
+      <p className="mb-6 mt-1 text-base text-ink-muted">{t('Escreva a senha da sua conta (a mesma com que entra com o e-mail). O PIN antigo é apagado e cria um novo a seguir.')}</p>
+      {offline && <Alert tone="warning" className="mb-5 w-full text-left">{t('Sem ligação. Para criar um PIN novo precisa de internet.')}</Alert>}
+      {error && <Alert tone="danger" className="mb-5 w-full text-left">{error}</Alert>}
+      <form onSubmit={submit} className="flex w-full flex-col gap-3 text-left">
+        <Input label={t('Senha da conta')} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
+        <Button type="submit" variant="primary" size="lg" block loading={busy} disabled={!password || offline}>{t('Confirmar e criar PIN novo')}</Button>
+      </form>
+      <Button variant="ghost" className="mt-3" onClick={onBack} disabled={busy}>{t('Voltar ao PIN')}</Button>
     </Shell>
   );
 }

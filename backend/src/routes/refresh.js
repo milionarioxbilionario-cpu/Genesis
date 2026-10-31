@@ -3,6 +3,7 @@ const router = express.Router();
 const { setSessionCookies, verifyRefreshToken, REFRESH_COOKIE, clearSessionCookies } = require('../utils/tokens');
 const { validateSessionClaims } = require('../utils/sessionUser');
 const { blockedTenantStatus } = require('../utils/tenantStatus');
+const { resolveActingTenant } = require('../utils/actingTenant');
 
 // Renova a sessao a partir do refresh token.
 //
@@ -33,15 +34,19 @@ router.post('/', async (req, res) => {
     }
     const user = check.user;
 
+    // Etapa D (31/10): conta o estabelecimento ACTIVO. Acesso retirado ou activo
+    // suspenso: volta ao de casa se esse estiver aberto, em vez de terminar a sessao.
+    let act = decoded.act || undefined;
     if (user.role !== 'super_admin' && user.tenant_id) {
-      const blocked = await blockedTenantStatus(user.tenant_id);
-      if (blocked) {
+      const acting = act ? await resolveActingTenant(user, decoded) : user.tenant_id;
+      if (act && (!acting || await blockedTenantStatus(acting))) act = undefined;
+      if (!act && await blockedTenantStatus(user.tenant_id)) {
         clearSessionCookies(res);
         return res.status(403).json({ error: 'Conta suspensa. Contacte o suporte.' });
       }
     }
 
-    const token = setSessionCookies(res, user, { scope: decoded.scope || undefined, tid: decoded.tid || undefined, act: decoded.act || undefined });
+    const token = setSessionCookies(res, user, { scope: decoded.scope || undefined, tid: decoded.tid || undefined, act });
     return res.json({ token });
   } catch (err) {
     console.error('Refresh token error', err.message || err);

@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
+const { lineAmount } = require('../utils/units');
+const { publish } = require('../utils/liveBus');
+const { attachPeople } = require('../utils/peopleNames');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { addLot } = require('../utils/stockLots');
@@ -150,6 +153,7 @@ router.post('/stock', auth, requireRole('owner'), async (req, res) => {
       return { product: updatedProduct, entry: entries[0], lot: created[0], entries, lots: created };
     });
 
+    publish({ type: 'stock_in', tenant_id: req.user.tenantId, total: lineAmount(total, data.unit_cost, product.unit), product_name: product.name });
     return res.status(201).json(result);
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -200,10 +204,11 @@ router.get('/price-history', auth, requireRole('owner'), async (req, res) => {
     if (typeof req.query.product_id === 'string' && req.query.product_id) where.product_id = req.query.product_id;
     const rows = await prisma.productPriceHistory.findMany({
       where,
-      include: { product: { select: { name: true } }, changedBy: { select: { name: true } } },
+      include: { product: { select: { name: true } } },
       orderBy: { changed_at: 'desc' },
       take: 200
     });
+    await attachPeople(req.user.tenantId, rows, [['changedBy', 'changed_by']]);
     return res.json(rows.map((r) => ({
       id: r.id, product_id: r.product_id, product_name: r.product?.name, old_cost: r.old_cost,
       new_cost: r.new_cost, changed_at: r.changed_at, changed_by: r.changedBy?.name || null,

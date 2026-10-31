@@ -3,14 +3,19 @@
 //   GET    /api/lock/status                  tem PIN? esta desbloqueado? chaves de acesso
 //   PUT    /api/lock/pin                     criar (1.a vez) ou mudar (pede a senha) o PIN
 //   POST   /api/lock/unlock                  PIN -> cookie de desbloqueio (5 min deslizantes)
+//   POST   /api/lock/forgot                  esqueceu o PIN: a senha da conta apaga-o e pede um novo
 //   POST   /api/lock/lock                    bloqueia ja (inactividade, sair da app)
 //   POST   /api/lock/passkey/register-options + /passkey/register   (com o painel desbloqueado)
 //   POST   /api/lock/passkey/options          + /passkey/unlock
 //   DELETE /api/lock/passkey/:id
 //
-// 5 PINs errados (ou Face ID falhado com PIN) em 15 minutos terminam a sessao:
-// o dono volta a entrar com o email e a senha. Contagem PROPRIA (PANEL_UNLOCK_FAIL),
-// separada do PIN de autorizacao do balcao.
+// 5 PINs errados (ou Face ID falhado, ou senha errada em «esqueci o PIN») em 15
+// minutos terminam a sessao: o dono volta a entrar com o email e a senha.
+// Contagem PROPRIA (PANEL_UNLOCK_FAIL), separada do PIN de autorizacao do balcao.
+//
+// O PIN, as chaves de acesso e as falhas sao da PESSOA, nao do estabelecimento:
+// vivem no estabelecimento de casa e leem-se com utils/ownerSelf.js, para valerem
+// igual em todos os estabelecimentos do dono.
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { z } = require('zod');
@@ -18,10 +23,10 @@ const prisma = require('../utils/prisma');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
-const { writeAudit } = require('../utils/audit');
 const { clearSessionCookies } = require('../utils/tokens');
 const { invalidateSessionUser } = require('../utils/sessionUser');
 const { setUnlocked, clearUnlocked, readUnlocked } = require('../utils/panelLock');
+const { homeOf, findSelf, updateSelf, auditSelf } = require('../utils/ownerSelf');
 
 const router = express.Router();
 const FAIL_MAX = 5;
@@ -34,24 +39,27 @@ router.use(auth, requireRole('owner'), (req, _res, next) => {
   return next();
 });
 
-const ownerRow = (req) => prisma.user.findFirst({
-  where: { id: req.user.userId, tenant_id: req.user.tenantId },
-  select: { id: true, tenant_id: true, role: true, password_hash: true, lock_pin_hash: true },
-});
+const ownerRow = (req) => findSelf(req, { id: true, tenant_id: true, role: true, password_hash: true, lock_pin_hash: true });
+// Chaves de acesso do dono: no estabelecimento de casa, como a conta.
+const passkeyDb = () => prisma.system.webAuthnCredential;
 
 async function recentFails(req) {
-  return prisma.auditLog.count({ where: { tenant_id: req.user.tenantId, user_id: req.user.userId, action: 'PANEL_UNLOCK_FAIL', created_at: { gt: new Date(Date.now() - FAIL_WINDOW_MS) } } });
+  return prisma.system.auditLog.count({ where: { tenant_id: homeOf(req), user_id: req.user.userId, action: 'PANEL_UNLOCK_FAIL', created_at: { gt: new Date(Date.now() - FAIL_WINDOW_MS) } } });
+}
+
+function tooMany(res) {
+  clearSessionCookies(res);
+  clearUnlocked(res);
+  return httpError(401, 'Demasiadas tentativas erradas. Entre de novo com o email e a senha.', 'LOCK_TOO_MANY');
 }
 
 // Uma falha a mais; a 5.a termina a sessao.
 async function registerFail(req, res, how) {
-  await writeAudit({ req, tenantId: req.user.tenantId, userId: req.user.userId, action: 'PANEL_UNLOCK_FAIL', entityType: 'user', entityId: req.user.userId, newValue: { how } });
+  await auditSelf(req, 'PANEL_UNLOCK_FAIL', { newValue: { how } });
   const fails = await recentFails(req);
   if (fails >= FAIL_MAX) {
-    clearSessionCookies(res);
-    clearUnlocked(res);
-    await writeAudit({ req, tenantId: req.user.tenantId, userId: req.user.userId, action: 'PANEL_LOCK_SIGNED_OUT', entityType: 'user', entityId: req.user.userId });
-    throw httpError(401, 'Demasiadas tentativas erradas. Entre de novo com o email e a senha.', 'LOCK_TOO_MANY');
+    await auditSelf(req, 'PANEL_LOCK_SIGNED_OUT');
+    throw tooMany(res);
   }
   return FAIL_MAX - fails;
 }
@@ -59,7 +67,7 @@ async function registerFail(req, res, how) {
 router.get('/status', asyncHandler(async (req, res) => {
   const user = await ownerRow(req);
   if (!user) throw httpError(404, 'Conta não encontrada', 'USER_NOT_FOUND');
-  const passkeys = await prisma.webAuthnCredential.findMany({ where: { tenant_id: req.user.tenantId, user_id: user.id }, select: { id: true, name: true, created_at: true, last_used_at: true }, orderBy: { created_at: 'asc' } });
+  const passkeys = await passkeyDb().findMany({ where: { tenant_id: homeOf(req), user_id: user.id }, select: { id: true, name: true, created_at: true, last_used_at: true }, orderBy: { created_at: 'asc' } });
   res.json({ has_pin: Boolean(user.lock_pin_hash), unlocked: !user.lock_pin_hash || Boolean(readUnlocked(req, user)), passkeys });
 }));
 
@@ -72,9 +80,9 @@ router.put('/pin', asyncHandler(async (req, res) => {
     if (!password || !(await bcrypt.compare(password, user.password_hash))) throw httpError(403, 'Senha incorrecta.', 'INVALID_PASSWORD');
   }
   const lock_pin_hash = await bcrypt.hash(pin, 10);
-  await prisma.user.updateMany({ where: { id: user.id, tenant_id: req.user.tenantId }, data: { lock_pin_hash } });
+  if (!(await updateSelf(req, { lock_pin_hash }))) throw httpError(404, 'Conta não encontrada', 'USER_NOT_FOUND');
   invalidateSessionUser(user.id);
-  await writeAudit({ req, tenantId: req.user.tenantId, userId: user.id, action: user.lock_pin_hash ? 'PANEL_PIN_CHANGED' : 'PANEL_PIN_CREATED', entityType: 'user', entityId: user.id });
+  await auditSelf(req, user.lock_pin_hash ? 'PANEL_PIN_CHANGED' : 'PANEL_PIN_CREATED');
   setUnlocked(res, { ...user, lock_pin_hash });
   res.json({ ok: true });
 }));
@@ -82,17 +90,35 @@ router.put('/pin', asyncHandler(async (req, res) => {
 router.post('/unlock', asyncHandler(async (req, res) => {
   const { pin } = z.object({ pin: pinSchema }).parse(req.body || {});
   const user = await ownerRow(req);
-  if (!user || !user.lock_pin_hash) throw httpError(400, 'Ainda não criou o PIN do painel.', 'LOCK_PIN_NOT_SET');
-  if ((await recentFails(req)) >= FAIL_MAX) {
-    clearSessionCookies(res); clearUnlocked(res);
-    throw httpError(401, 'Demasiadas tentativas erradas. Entre de novo com o email e a senha.', 'LOCK_TOO_MANY');
-  }
+  if (!user) throw httpError(404, 'Conta não encontrada', 'USER_NOT_FOUND');
+  // Sem PIN nao ha nada a desbloquear (o painel abre e pede para criar um).
+  if (!user.lock_pin_hash) return res.json({ ok: true, has_pin: false });
+  if ((await recentFails(req)) >= FAIL_MAX) throw tooMany(res);
   if (!(await bcrypt.compare(pin, user.lock_pin_hash))) {
     const remaining = await registerFail(req, res, 'pin');
     return res.status(403).json({ error: 'PIN incorrecto.', code: 'INVALID_LOCK_PIN', remaining });
   }
   setUnlocked(res, user);
   res.json({ ok: true });
+}));
+
+// Esqueceu o PIN: a senha da conta prova quem e (a mesma senha que abre o painel
+// num aparelho novo). O PIN antigo e apagado e o painel pede logo um novo.
+// Senha errada conta como as falhas do PIN (5 em 15 min terminam a sessao).
+router.post('/forgot', asyncHandler(async (req, res) => {
+  const { password } = z.object({ password: z.string().min(1, 'Escreva a senha da conta').max(200) }).parse(req.body || {});
+  const user = await ownerRow(req);
+  if (!user) throw httpError(404, 'Conta não encontrada', 'USER_NOT_FOUND');
+  if ((await recentFails(req)) >= FAIL_MAX) throw tooMany(res);
+  if (!user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
+    const remaining = await registerFail(req, res, 'password');
+    return res.status(403).json({ error: 'A senha não está certa.', code: 'INVALID_PASSWORD', remaining });
+  }
+  await updateSelf(req, { lock_pin_hash: null });
+  invalidateSessionUser(user.id);
+  await auditSelf(req, 'PANEL_PIN_RESET');
+  clearUnlocked(res);
+  res.json({ ok: true, has_pin: false });
 }));
 
 router.post('/lock', (req, res) => {
@@ -128,7 +154,7 @@ router.post('/passkey/register-options', asyncHandler(async (req, res) => {
   const user = await ownerRow(req);
   if (!user?.lock_pin_hash || !readUnlocked(req, user)) throw httpError(423, 'Desbloqueie o painel primeiro.', 'PANEL_LOCKED');
   const { rpID } = relyingParty(req);
-  const existing = await prisma.webAuthnCredential.findMany({ where: { tenant_id: req.user.tenantId, user_id: user.id }, select: { id: true, transports: true } });
+  const existing = await passkeyDb().findMany({ where: { tenant_id: homeOf(req), user_id: user.id }, select: { id: true, transports: true } });
   const { generateRegistrationOptions } = await webauthn();
   const options = await generateRegistrationOptions({
     rpName: 'Genesis', rpID,
@@ -157,11 +183,11 @@ router.post('/passkey/register', asyncHandler(async (req, res) => {
   }
   if (!v.verified || !v.registrationInfo) throw httpError(400, 'Não foi possível confirmar o Face ID / impressão digital.', 'WEBAUTHN_FAILED');
   const cred = v.registrationInfo.credential;
-  await prisma.webAuthnCredential.create({ data: {
-    id: cred.id, user_id: user.id, tenant_id: req.user.tenantId, public_key: b64url(cred.publicKey), counter: cred.counter || 0,
+  await passkeyDb().create({ data: {
+    id: cred.id, user_id: user.id, tenant_id: homeOf(req), public_key: b64url(cred.publicKey), counter: cred.counter || 0,
     transports: (body.response?.response?.transports || []).join(',') || null, name: body.name || null,
   } });
-  await writeAudit({ req, tenantId: req.user.tenantId, userId: user.id, action: 'PASSKEY_ADDED', entityType: 'user', entityId: user.id, newValue: { name: body.name || null } });
+  await auditSelf(req, 'PASSKEY_ADDED', { newValue: { name: body.name || null } });
   res.status(201).json({ ok: true });
 }));
 
@@ -169,7 +195,7 @@ router.post('/passkey/options', asyncHandler(async (req, res) => {
   const user = await ownerRow(req);
   if (!user?.lock_pin_hash) throw httpError(400, 'Ainda não criou o PIN do painel.', 'LOCK_PIN_NOT_SET');
   const { rpID } = relyingParty(req);
-  const creds = await prisma.webAuthnCredential.findMany({ where: { tenant_id: req.user.tenantId, user_id: user.id }, select: { id: true, transports: true } });
+  const creds = await passkeyDb().findMany({ where: { tenant_id: homeOf(req), user_id: user.id }, select: { id: true, transports: true } });
   if (!creds.length) throw httpError(404, 'Este aparelho ainda não tem Face ID registado.', 'NO_PASSKEY');
   const { generateAuthenticationOptions } = await webauthn();
   const options = await generateAuthenticationOptions({ rpID, userVerification: 'required', allowCredentials: creds.map((c) => ({ id: c.id, transports: c.transports ? c.transports.split(',') : undefined })) });
@@ -181,12 +207,9 @@ router.post('/passkey/unlock', asyncHandler(async (req, res) => {
   const { response } = z.object({ response: z.any() }).parse(req.body || {});
   const user = await ownerRow(req);
   if (!user?.lock_pin_hash) throw httpError(400, 'Ainda não criou o PIN do painel.', 'LOCK_PIN_NOT_SET');
-  if ((await recentFails(req)) >= FAIL_MAX) {
-    clearSessionCookies(res); clearUnlocked(res);
-    throw httpError(401, 'Demasiadas tentativas erradas. Entre de novo com o email e a senha.', 'LOCK_TOO_MANY');
-  }
+  if ((await recentFails(req)) >= FAIL_MAX) throw tooMany(res);
   const { origin, rpID } = relyingParty(req);
-  const cred = response?.id ? await prisma.webAuthnCredential.findFirst({ where: { id: String(response.id), tenant_id: req.user.tenantId, user_id: user.id } }) : null;
+  const cred = response?.id ? await passkeyDb().findFirst({ where: { id: String(response.id), tenant_id: homeOf(req), user_id: user.id } }) : null;
   if (!cred) throw httpError(404, 'Este Face ID não está registado nesta conta.', 'NO_PASSKEY');
   const { verifyAuthenticationResponse } = await webauthn();
   let v = null;
@@ -202,7 +225,7 @@ router.post('/passkey/unlock', asyncHandler(async (req, res) => {
     await registerFail(req, res, 'passkey');
     throw httpError(403, 'O Face ID não foi aceite. Use o PIN.', 'WEBAUTHN_FAILED');
   }
-  await prisma.webAuthnCredential.updateMany({ where: { id: cred.id, tenant_id: req.user.tenantId }, data: { counter: v.authenticationInfo.newCounter, last_used_at: new Date() } });
+  await passkeyDb().updateMany({ where: { id: cred.id, tenant_id: homeOf(req) }, data: { counter: v.authenticationInfo.newCounter, last_used_at: new Date() } });
   setUnlocked(res, user);
   res.json({ ok: true });
 }));
@@ -210,9 +233,9 @@ router.post('/passkey/unlock', asyncHandler(async (req, res) => {
 router.delete('/passkey/:id', asyncHandler(async (req, res) => {
   const user = await ownerRow(req);
   if (!user?.lock_pin_hash || !readUnlocked(req, user)) throw httpError(423, 'Desbloqueie o painel primeiro.', 'PANEL_LOCKED');
-  const done = await prisma.webAuthnCredential.deleteMany({ where: { id: String(req.params.id), tenant_id: req.user.tenantId, user_id: user.id } });
+  const done = await passkeyDb().deleteMany({ where: { id: String(req.params.id), tenant_id: homeOf(req), user_id: user.id } });
   if (!done.count) throw httpError(404, 'Não encontrado', 'NOT_FOUND');
-  await writeAudit({ req, tenantId: req.user.tenantId, userId: user.id, action: 'PASSKEY_REMOVED', entityType: 'user', entityId: user.id });
+  await auditSelf(req, 'PASSKEY_REMOVED');
   res.json({ ok: true });
 }));
 

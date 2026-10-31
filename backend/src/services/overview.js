@@ -11,6 +11,9 @@
 //   locked      -> vermelho (problema: 3 contagens erradas no fecho)
 //   short       -> vermelho (problema: fechou hoje com dinheiro a menos)
 const prisma = require('../utils/prisma');
+const { attachPeople } = require('../utils/peopleNames');
+const H = require('../utils/hours');
+const { scheduleOf, shiftsDay } = require('../utils/tenantHours');
 const { shiftStatus, firstActivityAt } = require('../utils/shift');
 const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
@@ -29,12 +32,14 @@ function cashierState({ locked, open, activityToday, lastClosing, today }) {
 }
 
 async function ownerOverview(tenantId, now = new Date()) {
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // 31/10: «hoje» = o dia de vendas (um bar 18h-04h a 1h ainda esta no dia em que abriu).
+  const sched = await scheduleOf(tenantId);
+  const start = shiftsDay(sched) ? H.businessDayRange(sched, H.businessDay(sched, now)).start : new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const yStart = new Date(start.getTime() - 86400000);
   const yNow = new Date(now.getTime() - 86400000);
-  const today = dayInMaputo(now);
+  const today = shiftsDay(sched) ? H.businessDay(sched, now) : dayInMaputo(now);
   const done = { tenant_id: tenantId, status: 'completed' };
 
   // Menos pedidos a BD: o total do mes e as vendas de cada caixista saem das listas ja lidas.
@@ -44,9 +49,10 @@ async function ownerOverview(tenantId, now = new Date()) {
     prisma.sale.aggregate({ where: { ...done, created_at: { gte: yStart, lte: yNow } }, _sum: { total_amount: true }, _count: true }),
     prisma.sale.findMany({ where: { ...done, created_at: { gte: monthStart, lte: now } }, select: { total_amount: true, created_at: true } }),
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month: now.getMonth() + 1, year: now.getFullYear() }, orderBy: { created_at: 'desc' } }),
-    prisma.sale.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, take: 5, select: { id: true, created_at: true, total_amount: true, payment_method: true, status: true, daily_number: true, cashier: { select: { name: true } } } }),
+    prisma.sale.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, take: 5, select: { id: true, created_at: true, total_amount: true, payment_method: true, status: true, daily_number: true, cashier_user_id: true } }),
     prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true } }),
   ]);
+  await attachPeople(tenantId, recent, [['cashier', 'cashier_user_id']]);
 
   const revenue = todaySales.reduce((s, x) => s + x.total_amount, 0);
   const grossProfit = todaySales.reduce((s, x) => s + saleProfit(x), 0);

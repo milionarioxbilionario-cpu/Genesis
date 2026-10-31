@@ -15,9 +15,25 @@ const api = axios.create({ baseURL: '/', withCredentials: true });
 // 9.6: a lingua do ecra vai em cada pedido. O servidor usa-a nas mensagens que
 // escreve para fora (WhatsApp ao fornecedor, alertas, codigo de recuperacao):
 // saem na lingua de quem as gera (backend/src/utils/lang.js).
+// Etapa D (31/10): o estabelecimento que ESTA pagina mostra vai em cada pedido.
+// O cookie da sessao e o mesmo em todos os separadores: trocar de estabelecimento
+// num mudava o outro em silencio e ele passava a gravar no estabelecimento errado.
+// Agora o servidor recusa (409 ESTABLISHMENT_CHANGED) e a pagina recarrega.
+let shownEstablishment = null;
+export function setShownEstablishment(id) { shownEstablishment = id || null; }
+const ESTABLISHMENT_CHANNEL = 'genesis-establishment';
+// Depois de trocar: os outros separadores recarregam logo, sem esperar pelo proximo pedido.
+export function announceEstablishmentChange(id) {
+  try { const c = new BroadcastChannel(ESTABLISHMENT_CHANNEL); c.postMessage(id); c.close(); } catch { /* browser antigo: fica o 409 */ }
+}
+export function onEstablishmentChange(fn) {
+  try { const c = new BroadcastChannel(ESTABLISHMENT_CHANNEL); c.onmessage = (e) => fn(e.data); return () => c.close(); } catch { return () => {}; }
+}
+
 api.interceptors.request.use((cfg) => {
   cfg.headers = cfg.headers || {};
   cfg.headers['X-Genesis-Lang'] = getLang();
+  if (shownEstablishment) cfg.headers['X-Genesis-Establishment'] = shownEstablishment;
   return cfg;
 });
 
@@ -81,6 +97,13 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent('genesis:panel-locked'));
     } else if (status === 403 && code === 'TENANT_BLOCKED' && !cfg.silent) {
       window.dispatchEvent(new CustomEvent('genesis:session-ended', { detail: { code } }));
+    } else if (status === 409 && code === 'ESTABLISHMENT_CHANGED') {
+      window.location.reload();
+    } else if (status === 403 && code === 'ESTABLISHMENT_FORBIDDEN' && !cfg.__home) {
+      // Etapa D: o acesso a este estabelecimento foi retirado. Volta ao de casa
+      // (uma vez) em vez de mostrar erros em todas as paginas.
+      cfg.__home = true;
+      try { await api.post('/api/establishments/home', null, { silent: true, __home: true }); window.location.assign('/app'); } catch { /* fica o erro */ }
     }
     return Promise.reject(error);
   },

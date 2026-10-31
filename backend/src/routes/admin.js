@@ -26,7 +26,8 @@ const { nameKey, groupSuggestions } = require('../utils/catalogSuggestions');
 const { groupLostRequests } = require('../utils/lostRequests');
 const { PLANS, PERIODS, effectivePlan } = require('../services/plans');
 const { BUSINESS_TYPES } = require('../utils/businessTypes');
-const { openStream } = require('../utils/liveBus');
+const { openStream, publish } = require('../utils/liveBus');
+const ADMIN_LIVE = new Set(['sale', 'cancel', 'loss', 'debt', 'debt_payment', 'expense', 'stock_in', 'shift_open', 'shift_close', 'shift_fail', 'subscription']);
 
 const router = express.Router();
 const APP_URL = () => (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -86,13 +87,15 @@ async function mapInfo(id) {
 }
 router.get('/live', (req, res) => {
   openStream(req, res, {
-    filter: (e) => e.type === 'sale' || e.type === 'cancel',
+    // 31/10: o mapa mostra tambem perdas, txenekas, despesas, compras, turnos e subscricoes
+    // — sem lucros dos estabelecimentos, sem nomes de pessoas nem valores do fecho.
+    filter: (e) => ADMIN_LIVE.has(e.type),
     // Nome e ponto vem da cache (refeita a cada minuto). Loja que ainda nao esta
     // na cache: o evento vai sem ponto (o painel actualiza a lista) e a cache refaz-se.
     shape: (e) => {
       const t = mapCache.byId.get(e.tenant_id);
       if (!t) mapInfo(e.tenant_id).catch(() => {});
-      return { type: e.type, tenant_id: e.tenant_id, name: t?.name || null, lat: t?.lat ?? null, lng: t?.lng ?? null, total: e.total, at: e.at };
+      return { type: e.type, tenant_id: e.tenant_id, name: t?.name || null, lat: t?.lat ?? null, lng: t?.lng ?? null, total: e.type.startsWith('shift_') ? null : (e.total ?? null), at: e.at };
     },
   });
   mapInfo('').catch(() => {});
@@ -212,7 +215,14 @@ router.post('/tenants/:tenantId/suspend', asyncHandler((req, res) => setTenantSt
 router.post('/tenants/:tenantId/unsuspend', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'UNSUSPEND_TENANT', to: 'previous' })));
 router.post('/tenants/:tenantId/block', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'BLOCK_TENANT', to: 'blocked', reason: (req.body && req.body.reason) || 'Sem motivo informado' })));
 router.post('/tenants/:tenantId/unblock', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'UNBLOCK_TENANT', to: 'previous' })));
-router.post('/tenants/:tenantId/delete', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'DELETE_TENANT', to: 'deleted', ownersActive: false, allUsers: true })));
+// 31/10: eliminar o estabelecimento PRINCIPAL de um dono que tem outros desactivava
+// o dono e cortava-lhe todos. Agora recusa (o dono encerra os extra no painel dele).
+router.post('/tenants/:tenantId/delete', asyncHandler(async (req, res) => {
+  const owners = await prisma.user.findMany({ where: { tenant_id: req.params.tenantId, role: 'owner' }, select: { id: true } });
+  const others = owners.length ? await prisma.membership.count({ where: { user_id: { in: owners.map((o) => o.id) }, NOT: { tenant_id: req.params.tenantId } } }) : 0;
+  if (others > 0) throw httpError(409, 'Este é o estabelecimento principal de um dono com outros estabelecimentos. Suspenda-o em vez de o eliminar.', 'HOME_WITH_OTHERS');
+  return setTenantStatus(req, res, { action: 'DELETE_TENANT', to: 'deleted', ownersActive: false, allUsers: true });
+}));
 // Recuperar uma loja eliminada reactiva TODAS as contas (antes so os donos:
 // os caixistas ficavam desactivados para sempre).
 router.post('/tenants/:tenantId/restore', asyncHandler((req, res) => setTenantStatus(req, res, { action: 'RESTORE_TENANT', to: 'previous', ownersActive: true, allUsers: true })));
@@ -254,6 +264,7 @@ router.post('/tenants/:tenantId/activate', asyncHandler(async (req, res) => {
   until.setMonth(until.getMonth() + n);
   await prisma.tenant.update({ where: { id: tenant.id }, data: { status: 'active', subscription_until: until } });
   await audit(req, 'ACTIVATE_SUBSCRIPTION', tenant.id, { status: tenant.status, subscription_until: tenant.subscription_until }, { status: 'active', subscription_until: until, months: n });
+  publish({ type: 'subscription', tenant_id: tenant.id, total: (tenant.subscription_price || 0) * n, months: n });
   afterStatusChange();
   res.json({ ok: true, status: 'active', subscription_until: until });
 }));

@@ -38,4 +38,14 @@ addTranslations('en', {
   'Não disponível nesta sessão.': 'Not available in this session.',
   'O PIN tem 4 a 6 dígitos': 'The PIN has 4 to 6 digits',
   'Não encontrado': 'Not found',
+  // Esqueci o PIN (31/10)
+  'Esqueci o PIN': 'I forgot my PIN',
+  'Esqueceu o PIN?': 'Forgot your PIN?',
+  'Escreva a senha da sua conta (a mesma com que entra com o e-mail). O PIN antigo é apagado e cria um novo a seguir.': 'Type your account password (the one you use to sign in with your email). The old PIN is erased and you create a new one next.',
+  'Sem ligação. Para criar um PIN novo precisa de internet.': 'No connection. You need the internet to create a new PIN.',
+  'Senha da conta': 'Account password',
+  'Confirmar e criar PIN novo': 'Confirm and create a new PIN',
+  'Voltar ao PIN': 'Back to the PIN',
+  'A senha não está certa.': 'The password is not right.',
+  'Escreva a senha da conta': 'Type the account password',
 });

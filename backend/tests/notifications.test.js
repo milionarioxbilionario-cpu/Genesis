@@ -97,3 +97,14 @@ test('ordem: criticos primeiro, depois avisos, info e sucesso', () => {
   assert.deepStrictEqual(items.map((i) => i.level), ['critical', 'critical', 'warning', 'info', 'success']);
   assert.deepStrictEqual(items.slice(0, 2).map((i) => i.type), ['cashier_locked', 'lot_expiring']);
 });
+
+test('31/10: com o horario novo, o «fecho do dia» e o dia que o carregador indicar (ou nenhum)', () => {
+  const base = { now: new Date('2026-11-07T10:00:00+02:00'), todaySales: { count: 3, revenue: 9000 }, closingTime: '00:00' };
+  const off = buildNotifications({ ...base, dayClosed: null });
+  assert.ok(!off.some((n) => n.type === 'day_closed'), 'dayClosed null: sem aviso (ex.: 24 h ou ainda aberto)');
+  const prev = buildNotifications({ ...base, dayClosed: { day: '2026-11-06', count: 5, revenue: 15000 } });
+  const n = prev.find((x) => x.type === 'day_closed');
+  assert.ok(n && n.params.day === '2026-11-06' && n.params.sales === 5 && n.link.includes('2026-11-06'), 'fala do dia que fechou (ontem, num bar que fecha as 4h)');
+  // Sem horario novo (dayClosed ausente): como antes.
+  assert.ok(buildNotifications(base).some((x) => x.type === 'day_closed'), 'sem horario novo: a regra antiga');
+});

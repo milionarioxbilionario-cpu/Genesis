@@ -10,6 +10,7 @@
 const express = require('express');
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
+const { attachPeople } = require('../utils/peopleNames');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
@@ -37,7 +38,7 @@ function parseCode(raw) {
 
 const SALE_SELECT = {
   id: true, daily_number: true, created_at: true, total_amount: true, status: true, payment_method: true,
-  cashier: { select: { name: true } },
+  cashier_user_id: true,
   items: { select: { product_name: true, quantity: true, unit: true, unit_sell_price: true } },
 };
 
@@ -69,6 +70,7 @@ router.get('/receipt', asyncHandler(async (req, res) => {
   if (!parsed) throw httpError(400, 'Este código não é de um recibo Genesis.', 'NOT_A_RECEIPT');
   const tenantId = req.user.tenantId;
   const sale = await findSale(tenantId, parsed);
+  if (sale) await attachPeople(tenantId, [sale], [['cashier', 'cashier_user_id']]);
   // Venda de outro estabelecimento: a mesma resposta que «nao existe» (nao se
   // revela nada de fora; a RLS tambem o garante).
   if (!sale) throw httpError(404, 'Recibo não encontrado neste estabelecimento.', 'RECEIPT_NOT_FOUND');

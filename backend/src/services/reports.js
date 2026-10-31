@@ -6,6 +6,9 @@
 //  - lucro liquido mensal = lucro bruto - salarios - renda - outros fixos -
 //    entregas de fornecedores (services/monthlyDeductions.js, ja testado).
 const prisma = require('../utils/prisma');
+const { attachPeople } = require('../utils/peopleNames');
+const H = require('../utils/hours');
+const { scheduleOf, shiftsDay } = require('../utils/tenantHours');
 const { computeMonthlyDeductions, computeMonthlyNetProfit } = require('./monthlyDeductions');
 const { monthVat, ispcEstimate } = require('./tax');
 const { recommendRestock } = require('./restock');
@@ -41,6 +44,14 @@ const dayKey = (d) => {
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
 };
 
+// 31/10: com o dia de vendas a acabar depois da meia-noite (ex.: bar 18h-04h),
+// o «dia» vai das 04:00 as 04:00 de Maputo. Fim a meia-noite = o dia de sempre.
+async function tenantDayRange(tenantId, dateStr) {
+  const s = await scheduleOf(tenantId);
+  if (!shiftsDay(s)) return dayRange(dateStr);
+  return H.businessDayRange(s, dateStr || H.businessDay(s));
+}
+
 function dayRange(dateStr) {
   const [y, m, d] = String(dateStr || dayKey(new Date())).split('-').map(Number);
   const start = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
@@ -52,11 +63,16 @@ function dayRange(dateStr) {
 async function summarize(tenantId, start, end) {
   const range = { gte: start, lte: end };
   const [sales, cancelled, closings, demand, shrinkage] = await Promise.all([
-    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: range }, include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { name: true } } } }),
-    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'cancelled', created_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { created_at: 'desc' } }),
-    prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' } }),
+    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'completed', created_at: range }, include: { items: true, payments: { select: { method: true, amount: true } } } }),
+    prisma.sale.findMany({ where: { tenant_id: tenantId, status: 'cancelled', created_at: range }, orderBy: { created_at: 'desc' } }),
+    prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, closed_at: range }, orderBy: { closed_at: 'desc' } }),
     prisma.demandCapture.findMany({ where: { tenant_id: tenantId, requested_at: range }, include: { product: { select: { name: true, sell_price: true } } }, orderBy: { requested_at: 'asc' } }),
     prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } } }, orderBy: { recorded_at: 'desc' } }),
+  ]);
+  await Promise.all([
+    attachPeople(tenantId, sales, [['cashier', 'cashier_user_id']]),
+    attachPeople(tenantId, cancelled, [['cashier', 'cashier_user_id']]),
+    attachPeople(tenantId, closings, [['cashier', 'cashier_user_id']]),
   ]);
 
   const byPayment = Object.fromEntries(PAYMENT_METHODS.map((m) => [m, 0]));
@@ -198,7 +214,7 @@ const bestWorst = (days, key) => {
 };
 
 async function dailyReport(tenantId, dateStr) {
-  const { start, end } = dayRange(dateStr);
+  const { start, end } = await tenantDayRange(tenantId, dateStr);
   const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
   const prev = { start: new Date(start.getTime() - 86400000), end: new Date(end.getTime() - 86400000) };
   const [report, goal, monthToDate, previous] = await Promise.all([
@@ -216,7 +232,7 @@ async function dailyReport(tenantId, dateStr) {
     accumulated_pct: Math.round((monthToDate.revenue / target) * 1000) / 10,
   } : null;
   return {
-    date: dayKey(start),
+    date: dateStr || dayKey(start),
     ...report,
     goal_progress,
     compare: { previous_date: dayKey(prev.start), previous_revenue: previous.revenue, previous_sales: previous.sales, revenue_change_pct: pctChange(report.gross_revenue, previous.revenue) },
@@ -224,8 +240,8 @@ async function dailyReport(tenantId, dateStr) {
 }
 
 async function weeklyReport(tenantId, startStr, endStr) {
-  const end = dayRange(endStr).end;
-  const start = startStr ? dayRange(startStr).start : new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6);
+  const end = (await tenantDayRange(tenantId, endStr)).end;
+  const start = startStr ? (await tenantDayRange(tenantId, startStr)).start : new Date(end.getTime() + 1 - 7 * 86400000);
   const span = end.getTime() - start.getTime() + 1;
   const [report, previous, restock] = await Promise.all([
     summarize(tenantId, start, end),
@@ -385,16 +401,23 @@ async function timeline(tenantId, start, end, { types = TIMELINE_TYPES, page = 1
   const none = Promise.resolve([]);
   const [sales, losses, entries, debts, payments, shifts, demand, suppliers, expenses] = await Promise.all([
     want('sale') || want('cancelled')
-      ? prisma.sale.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true, cashier: { select: { id: true, name: true } } } })
+      ? prisma.sale.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), created_at: range, status: { in: [want('sale') && 'completed', want('cancelled') && 'cancelled'].filter(Boolean) } }, include: { items: true } })
       : none,
-    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
-    want('stock') ? prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: range }, include: { product: { select: { name: true, unit: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('loss') ? prisma.shrinkageRecord.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), recorded_at: range }, include: { product: { select: { name: true, barcode: true, cost_price: true, unit: true } } } }) : none,
+    want('stock') ? prisma.stockEntry.findMany({ where: { tenant_id: tenantId, created_at: range }, include: { product: { select: { name: true, unit: true } } } }) : none,
     want('debt') ? prisma.debt.findMany({ where: { tenant_id: tenantId, created_at: range } }) : none,
     want('debt_payment') ? prisma.debtPayment.findMany({ where: { paid_at: range, debt: { tenant_id: tenantId } }, include: { debt: { select: { debtor_name: true } } } }) : none,
-    want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), closed_at: range }, include: { cashier: { select: { name: true } } } }) : none,
-    want('demand') ? prisma.demandCapture.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), requested_at: range }, include: { product: { select: { name: true } }, recordedBy: { select: { name: true } } } }) : none,
+    want('shift') ? prisma.shiftClosing.findMany({ where: { tenant_id: tenantId, ...byCashier('cashier_user_id'), closed_at: range } }) : none,
+    want('demand') ? prisma.demandCapture.findMany({ where: { tenant_id: tenantId, ...byCashier('recorded_by'), requested_at: range }, include: { product: { select: { name: true } } } }) : none,
     want('stock') ? prisma.supplier.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true } }) : none,
     want('expense') ? prisma.expense.findMany({ where: { tenant_id: tenantId, date: range } }) : none,
+  ]);
+  await Promise.all([
+    attachPeople(tenantId, sales, [['cashier', 'cashier_user_id']]),
+    attachPeople(tenantId, losses, [['recordedBy', 'recorded_by']]),
+    attachPeople(tenantId, entries, [['recordedBy', 'recorded_by']]),
+    attachPeople(tenantId, shifts, [['cashier', 'cashier_user_id']]),
+    attachPeople(tenantId, demand, [['recordedBy', 'recorded_by']]),
   ]);
   // Validade do lote de onde saiu cada perda.
   const lotIds = losses.map((l) => l.lot_id).filter(Boolean);
@@ -484,4 +507,4 @@ async function totalReport(tenantId) {
   return { total_revenue: Number(agg._sum.total_amount || 0), sales_count: agg._count, since: first?.created_at || null };
 }
 
-module.exports = { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, restockFor, dayKey, dayRange };
+module.exports = { dailyReport, weeklyReport, monthlyReport, totalReport, timeline, goalsHistory, restockFor, dayKey, dayRange, tenantDayRange };

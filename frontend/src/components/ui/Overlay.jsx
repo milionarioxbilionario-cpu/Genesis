@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { cx } from './cx';
 import { Button, IconButton } from './Button';
 import { useI18n } from '../../i18n/react';
@@ -100,6 +100,12 @@ export const useConfirm = () => useContext(ConfirmCtx);
 
 // ---------------------------------------------------------------- Toast
 const ToastCtx = createContext(() => {});
+// Icone e cor de cada tom (31/10: avisos ao vivo de compras = aviso, turnos = informacao).
+const TOAST_ICON = { danger: [AlertCircle, 'text-danger'], warning: [AlertTriangle, 'text-warning'], info: [Info, 'text-info'], positive: [CheckCircle2, 'text-positive'] };
+function ToastIcon({ tone }) {
+  const [Icon, color] = TOAST_ICON[tone] || TOAST_ICON.positive;
+  return <Icon size={18} className={cx('mt-0.5 shrink-0', color)} />;
+}
 
 export function ToastProvider({ children }) {
   const [items, setItems] = useState([]);
@@ -115,9 +121,7 @@ export function ToastProvider({ children }) {
         <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(92vw,380px)] flex-col gap-2" aria-live="polite">
           {items.map((t) => (
             <div key={t.id} className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-border bg-surface px-4 py-3 text-base text-ink shadow-pop">
-              {t.tone === 'danger'
-                ? <AlertCircle size={18} className="mt-0.5 shrink-0 text-danger" />
-                : <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-positive" />}
+              <ToastIcon tone={t.tone} />
               <span>{t.message}</span>
             </div>
           ))}

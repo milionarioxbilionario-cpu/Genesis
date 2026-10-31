@@ -167,6 +167,9 @@ export default function AppShell() {
             {t('Sem ligação — a mostrar os dados guardados neste aparelho. Só consulta: nada pode ser alterado até a internet voltar.')}
           </div>
         )}
+        {user?.tenant?.status === 'closed' && (
+          <div className="no-print bg-ink-2 px-4 py-1.5 text-center text-sm font-medium text-white">{t('Este estabelecimento está encerrado: só consulta. Pode reabri-lo nos 30 dias seguintes, na lista dos seus estabelecimentos.')}</div>
+        )}
         {user?.scope === 'support' && (
           <div className="no-print bg-info px-4 py-1.5 text-center text-sm font-medium text-white">{t('Modo suporte Genesis — só leitura. Nenhuma alteração é possível.')}</div>
         )}

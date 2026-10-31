@@ -1711,6 +1711,8 @@ async function test32() {
     await prisma.user.update({ where: { id: ctx.owner.id }, data: { lock_pin_hash: null } });
     await prisma.webAuthnCredential.deleteMany({ where: { tenant_id: t } });
     require('../src/utils/sessionUser').invalidateSessionUser();
+    // O servidor guarda a conta em memoria uns segundos: esperar que esqueca o PIN apagado aqui.
+    await sleep(Number(process.env.SESSION_USER_CACHE_MS || 5000) + 1500);
   }
 }
 
@@ -1738,7 +1740,8 @@ async function test33() {
     const after = (await owner.req('GET', '/api/owner/overview')).data;
     ok(after.today.revenue === before.data.today.revenue + 10000 && after.today.sales_count === before.data.today.sales_count + 1, 'hoje: +100 MT e +1 venda', [before.data.today.revenue, after.today.revenue]);
     ok(after.today.gross_profit === before.data.today.gross_profit + 4000, 'lucro bruto de hoje: +40 MT (100 - 60 de custo)', [before.data.today.gross_profit, after.today.gross_profit]);
-    ok(after.today.by_hour.length === new Date().getHours() + 1 && after.today.by_hour.reduce((s, h) => s + h.revenue, 0) === after.today.revenue, 'grafico por hora soma o total de hoje');
+    // O servidor trabalha na hora de Maputo (index.js: TZ); este processo pode estar noutra.
+    ok(after.today.by_hour.length === ((new Date().getUTCHours() + 2) % 24) + 1 && after.today.by_hour.reduce((s, h) => s + h.revenue, 0) === after.today.revenue, 'grafico por hora soma o total de hoje', { horas: after.today.by_hour.length, agora: new Date().getHours(), soma: after.today.by_hour.reduce((s, h) => s + h.revenue, 0), hoje: after.today.revenue });
     ok(after.recent_sales[0]?.id === sale.data?.id && after.recent_sales.length <= 5 && after.recent_sales[0].cashier === ctx.cashier.name, 'a venda e a 1.a das ultimas vendas, com o nome do caixista', after.recent_sales[0]);
     const carlos = after.cashiers.find((c) => c.id === ctx.cashier.id);
     ok(carlos?.state === 'working' && carlos.today_sales >= 1, 'caixista que entrou e vendeu hoje: «a trabalhar» (verde)', carlos);
@@ -2493,7 +2496,369 @@ async function test45() {
   }
 }
 
-const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45 };
+async function test46() {
+  section(46, '31/10: a conta e da pessoa — no 2.o estabelecimento o PIN do painel, «esqueci o PIN» (senha), lingua, perfil, PIN de autorizacao e Face ID funcionam');
+  const t = ctx.tenant.id;
+  const LOCK_PIN = '1357';
+  let bId = null;
+  const pinOf = async (id) => (await prisma.tenant.findUnique({ where: { id }, select: { cancel_pin_hash: true } })).cancel_pin_hash;
+  // As falhas de outras seccoes (32) contam na janela de 15 min: comecar limpo.
+  await prisma.auditLog.deleteMany({ where: { tenant_id: t, user_id: ctx.owner.id, action: { in: ['PANEL_UNLOCK_FAIL', 'PANEL_LOCK_SIGNED_OUT'] } } });
+  try {
+    const owner = ownerClient();
+    ok((await owner.req('PUT', '/api/lock/pin', { pin: LOCK_PIN })).status === 200, 'PIN do painel criado no estabelecimento de casa');
+    const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + '-B', business_type: 'mercearia', location: 'Matola' });
+    ok(cb.status === 201, '2.o estabelecimento criado', cb);
+    bId = cb.data.id;
+    const b = ownerClient();
+    ok((await b.req('POST', '/api/lock/unlock', { pin: LOCK_PIN })).status === 200, 'desbloquear em casa');
+    ok((await b.req('POST', '/api/establishments/switch', { tenant_id: bId })).status === 200, 'trocar para o 2.o');
+    const st = await b.req('GET', '/api/lock/status');
+    ok(st.status === 200 && st.data.has_pin === true && st.data.unlocked === true, 'no 2.o: o painel sabe que o PIN existe (antes: 404 / «ainda nao criou o PIN»)', st);
+    await b.req('POST', '/api/lock/lock');
+    ok((await b.req('GET', '/api/products')).status === 423, 'no 2.o: bloqueado sem o desbloqueio');
+    const wrong = await b.req('POST', '/api/lock/unlock', { pin: '0000' });
+    ok(wrong.status === 403 && wrong.data?.code === 'INVALID_LOCK_PIN' && wrong.data.remaining === 4, 'no 2.o: PIN errado = 403 com as tentativas que restam', wrong);
+    const failRows = await prisma.auditLog.findMany({ where: { user_id: ctx.owner.id, action: 'PANEL_UNLOCK_FAIL' }, select: { tenant_id: true } });
+    ok(failRows.length === 1 && failRows[0].tenant_id === t, 'a falha fica no estabelecimento de casa (a mesma contagem em todos)', failRows);
+    const right = await b.req('POST', '/api/lock/unlock', { pin: LOCK_PIN });
+    ok(right.status === 200 && (await b.req('GET', '/api/products')).status === 200, 'no 2.o: o PIN certo desbloqueia (antes: «Ainda nao criou o PIN do painel»)', right);
+    // Lingua e perfil: da pessoa.
+    const lang = await b.req('PUT', '/api/auth/language', { language: 'en' });
+    ok(lang.status === 200 && (await b.req('GET', '/api/auth/me')).data?.user?.language === 'en', 'no 2.o: mudar a lingua funciona (antes: 404)', lang);
+    await b.req('PUT', '/api/auth/language', { language: 'pt' });
+    const prof = await b.req('GET', '/api/profile');
+    ok(prof.status === 200 && prof.data.name === ctx.owner.name && prof.data.has_lock_pin === true, 'no 2.o: o perfil abre com o nome do dono', prof);
+    // PIN de autorizacao: confirmado com a senha da pessoa, guardado so no 2.o.
+    const pinA = await pinOf(t);
+    const ap = await b.req('PUT', '/api/settings/authorization-pin', { pin: '4321', owner_password: OWNER_PW });
+    ok(ap.status === 200, 'no 2.o: definir o PIN de autorizacao com a senha do dono (antes: «senha incorrecta»)', ap);
+    ok(Boolean(await pinOf(bId)) && (await pinOf(t)) === pinA, 'o PIN de autorizacao fica so no 2.o (o de casa nao muda)');
+    // Face ID: as chaves sao da pessoa.
+    const cred = 'teste-' + crypto.randomUUID();
+    await prisma.webAuthnCredential.create({ data: { id: cred, user_id: ctx.owner.id, tenant_id: t, public_key: 'x' } });
+    const fid = await b.req('POST', '/api/lock/passkey/options', undefined, { Origin: 'http://localhost:5180' });
+    ok(fid.status === 200 && fid.data?.allowCredentials?.some((c) => c.id === cred), 'no 2.o: o Face ID registado em casa e encontrado', fid.status);
+    // Esqueci o PIN: a senha da conta apaga-o e pede um novo.
+    await b.req('POST', '/api/lock/lock');
+    const fw = await b.req('POST', '/api/lock/forgot', { password: 'senha-errada-1' });
+    ok(fw.status === 403 && fw.data?.code === 'INVALID_PASSWORD' && fw.data.remaining === 3, 'esqueci o PIN com a senha errada: 403 e conta como falha', fw);
+    const fr = await b.req('POST', '/api/lock/forgot', { password: OWNER_PW });
+    ok(fr.status === 200 && fr.data.has_pin === false, 'esqueci o PIN com a senha certa: PIN apagado', fr);
+    const st2 = (await b.req('GET', '/api/lock/status')).data;
+    ok(st2.has_pin === false && (await b.req('GET', '/api/products')).status === 200, 'sem PIN o painel abre (e a app pede logo um PIN novo)', st2);
+    ok((await b.req('PUT', '/api/lock/pin', { pin: '2468' })).status === 200 && (await b.req('GET', '/api/lock/status')).data.has_pin === true, 'PIN novo criado sem pedir o antigo');
+    ok((await prisma.auditLog.count({ where: { tenant_id: t, user_id: ctx.owner.id, action: 'PANEL_PIN_RESET' } })) === 1, 'rastreio: PANEL_PIN_RESET no estabelecimento de casa');
+    // Outro dono nao reinicia o PIN deste.
+    const res = await client().req('POST', '/api/lock/forgot', { password: OWNER_PW });
+    ok(res.status === 401, 'sem sessao: 401');
+  } finally {
+    await prisma.user.update({ where: { id: ctx.owner.id }, data: { lock_pin_hash: null, language: 'pt' } });
+    await prisma.webAuthnCredential.deleteMany({ where: { user_id: ctx.owner.id } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, user_id: ctx.owner.id, action: { in: ['PANEL_UNLOCK_FAIL', 'PANEL_LOCK_SIGNED_OUT', 'PANEL_PIN_RESET', 'PANEL_PIN_CREATED', 'PANEL_PIN_CHANGED', 'CREATE_ESTABLISHMENT'] } } });
+    await dropTenant(bId);
+    require('../src/utils/sessionUser').invalidateSessionUser();
+    await sleep(Number(process.env.SESSION_USER_CACHE_MS || 5000) + 1500);
+  }
+}
+
+async function test47() {
+  section(47, '31/10: o dono nunca fica preso — trocar com o activo em teste acabado/suspenso, voltar a casa, de casa suspensa entra no outro; Rastreio e historico de custos do 2.o com o nome do dono');
+  const t = ctx.tenant.id;
+  let bId = null;
+  const today = new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10);
+  const setStatus = async (id, data) => { await prisma.tenant.update({ where: { id }, data }); await sleep(STATUS_CACHE_MS + 500); };
+  const before = await prisma.tenant.findUnique({ where: { id: t }, select: { status: true, trial_ends_at: true } });
+  try {
+    const owner = ownerClient();
+    const cid = crypto.randomUUID();
+    const cb = await owner.req('POST', '/api/establishments', { client_id: cid, name: ctx.tenant.name + '-B', business_type: 'mercearia', location: 'Matola' });
+    ok(cb.status === 201 && cb.data.id === cid, '2.o estabelecimento criado com o id do aparelho', cb);
+    bId = cb.data.id;
+    const again = await owner.req('POST', '/api/establishments', { client_id: cid, name: ctx.tenant.name + '-B', business_type: 'mercearia', location: 'Matola' });
+    ok(again.status === 200 && again.data.id === cid && again.data.repeated === true, 'repetir o pedido (rede caiu) devolve o mesmo, sem duplicar', again);
+    ok((await prisma.membership.count({ where: { tenant_id: cid } })) === 1, 'um so estabelecimento criado');
+    const nb = await prisma.tenant.findUnique({ where: { id: bId }, select: { status: true, trial_ends_at: true, subscription_until: true } });
+    ok(nb.status === 'trial' && nb.subscription_until === null && nb.trial_ends_at > new Date(), 'o novo comeca em teste (nao herda «activa ate» sem pagar)', nb);
+    await prisma.tenant.update({ where: { id: bId }, data: { onboarding_completed: true } });
+    const b = ownerClient();
+    ok((await b.req('POST', '/api/establishments/switch', { tenant_id: bId })).status === 200, 'trocar para o 2.o');
+    // Nomes do dono no 2.o: produto, entrada de stock, ajuste e mudanca de custo feitos pelo dono.
+    const np = await b.req('POST', '/api/products', { name: 'Feijao B', category: 'Mercearia', sell_price: 9000, cost_price: 6000, stock_qty: 5 });
+    const prod = await prisma.product.findFirst({ where: { tenant_id: bId, name: 'Feijao B' } });
+    ok((np.status === 201 || np.status === 200) && prod, 'produto do dono no 2.o', np);
+    ok((await b.req('POST', '/api/inventory/stock', { product_id: prod.id, quantity: 10, unit_cost: 6500 })).status < 300, 'entrada de stock pelo dono no 2.o');
+    ok((await b.req('PATCH', '/api/products/' + prod.id + '/stock', { delta: -1, reason: 'contagem' })).status < 300, 'ajuste de stock pelo dono no 2.o');
+    const tl = await b.req('GET', '/api/owner/reports/timeline?from=' + today + '&to=' + today);
+    const stockEv = tl.data?.rows?.find((e) => e.type === 'stock');
+    ok(tl.status === 200 && stockEv && stockEv.who === ctx.owner.name, 'Rastreio do 2.o abre e mostra o dono pelo nome (antes: 500)', tl.status === 200 ? stockEv : tl);
+    const ph = await b.req('GET', '/api/inventory/price-history?product_id=' + prod.id);
+    ok(ph.status === 200 && ph.data.length >= 1 && ph.data[0].changed_by === ctx.owner.name, 'historico de custos do 2.o abre com o nome do dono (antes: 500)', ph.status === 200 ? ph.data[0] : ph);
+    // Dois separadores: a pagina que ainda mostra casa nao grava no 2.o.
+    const stale = await b.req('POST', '/api/products', { name: 'Separador antigo', category: 'X', sell_price: 100, cost_price: 50, stock_qty: 1 }, { 'X-Genesis-Establishment': t });
+    ok(stale.status === 409 && stale.data?.code === 'ESTABLISHMENT_CHANGED', 'separador que mostra outro estabelecimento: 409 e nada gravado', stale);
+    ok(!(await prisma.product.findFirst({ where: { name: 'Separador antigo' } })), 'o produto do separador antigo nao ficou em lado nenhum');
+    ok((await b.req('GET', '/api/products', undefined, { 'X-Genesis-Establishment': bId })).status === 200, 'separador certo: 200');
+    const sl = await b.req('GET', '/api/owner/sales?page=1&page_size=20');
+    ok(sl.status === 200, 'lista de vendas do 2.o abre', sl.status);
+    // Teste acabado no 2.o: trocar para casa continua a funcionar (antes: 402).
+    await setStatus(bId, { status: 'trial', trial_ends_at: new Date(Date.now() - 86400000) });
+    ok((await b.req('POST', '/api/products', { name: 'X', category: 'Y', sell_price: 100, cost_price: 50, stock_qty: 1 })).status === 402, 'no 2.o com o teste acabado: criar = 402 (so leitura)');
+    const sw = await b.req('POST', '/api/establishments/switch', { tenant_id: t });
+    ok(sw.status === 200, 'com o teste acabado no 2.o, trocar para casa = 200 (antes: 402)', sw);
+    // 2.o suspenso: a lista diz, trocar para ele e recusado sem expulsar o dono.
+    await setStatus(bId, { status: 'suspended' });
+    const list = (await b.req('GET', '/api/establishments')).data;
+    ok(list.find((e) => e.id === bId)?.available === false, 'lista: o 2.o aparece como indisponivel');
+    const sw2 = await b.req('POST', '/api/establishments/switch', { tenant_id: bId });
+    ok(sw2.status === 403 && sw2.data?.code === 'ESTABLISHMENT_UNAVAILABLE', 'trocar para o suspenso: 403 ESTABLISHMENT_UNAVAILABLE (nao termina a sessao)', sw2);
+    // Quem ja estava no 2.o quando foi suspenso: volta a casa.
+    const stuck = client(signAccessToken(ctx.owner, { act: bId }));
+    const sp = await stuck.req('GET', '/api/products');
+    ok(sp.status === 403 && sp.data?.code === 'ESTABLISHMENT_FORBIDDEN', 'no 2.o suspenso: 403 ESTABLISHMENT_FORBIDDEN (o painel volta a casa)', sp);
+    const home = await stuck.req('POST', '/api/establishments/home');
+    ok(home.status === 200 && (await stuck.req('GET', '/api/products')).status === 200, 'voltar a casa funciona mesmo com o activo suspenso', home);
+    // De casa suspensa: o login entra no 2.o que esta aberto.
+    await setStatus(bId, { status: 'active' });
+    await setStatus(t, { status: 'suspended' });
+    const lg = client();
+    const li = await lg.req('POST', '/api/auth/login', { email: ctx.owner.email, password: OWNER_PW });
+    const me = await lg.req('GET', '/api/auth/me');
+    ok(li.status === 200 && me.data?.user?.tenant_id === bId, 'de casa suspensa: o login entra no 2.o (antes: conta suspensa)', { login: li.status, tenant: me.data?.user?.tenant_id });
+    // Refresh com o activo suspenso: volta a casa se estiver aberta.
+    await setStatus(t, { status: before.status, trial_ends_at: before.trial_ends_at });
+    await setStatus(bId, { status: 'suspended' });
+    const rf = client(); rf.jar.set('refreshToken', require('../src/utils/tokens').signRefreshToken(ctx.owner, { act: bId }));
+    const r = await rf.req('POST', '/api/refresh');
+    const me2 = await rf.req('GET', '/api/auth/me');
+    ok(r.status === 200 && me2.data?.user?.tenant_id === t, 'refresh com o 2.o suspenso: continua, no de casa', { refresh: r.status, tenant: me2.data?.user?.tenant_id });
+  } finally {
+    await prisma.tenant.update({ where: { id: t }, data: { status: before.status, trial_ends_at: before.trial_ends_at } });
+    await dropTenant(bId);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+    await sleep(STATUS_CACHE_MS + 500);
+  }
+}
+
+async function test48() {
+  section(48, '31/10: configurar o estabelecimento numa so operacao (tudo ou nada, repetir nao duplica) e eventos ao vivo de perdas, txenekas, despesas, compras e turnos (dono com valores; admin sem lucros nem nomes)');
+  const t = ctx.tenant.id;
+  const made = [];
+  const counts = async (id) => ({ fixed: await prisma.fixedCost.count({ where: { tenant_id: id } }), emp: await prisma.employee.count({ where: { tenant_id: id } }), sup: await prisma.supplier.count({ where: { tenant_id: id } }), prod: await prisma.product.count({ where: { tenant_id: id } }) });
+  const body = (products) => ({
+    business_type: 'mercearia', products,
+    rent: 4000000, costs: [{ description: 'Luz', amount: 300000 }], employees: [{ name: 'Ana Teste', role: 'Ajudante', monthly_salary: 900000 }],
+    suppliers: [{ name: 'Fornecedor Teste', phone: '840000000', delivery_cost_per_visit: 50000 }], hours: { opening_time: '07:00', closing_time: '21:00' },
+  });
+  const goodProducts = [{ name: 'Arroz 1kg', price_mzn: 95, cost_mzn: 70, stock: 10, category: 'Mercearia', barcode: '6009876543210' }, { name: 'Oleo 1L', price_mzn: 150, cost_mzn: 120, stock: 5, category: 'Mercearia', barcode: null }];
+  try {
+    const owner = ownerClient();
+    const newEst = async (suffix) => {
+      const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + suffix, business_type: 'mercearia', location: 'Matola' });
+      made.push(cb.data.id);
+      const c = ownerClient();
+      await c.req('POST', '/api/establishments/switch', { tenant_id: cb.data.id });
+      return { id: cb.data.id, c };
+    };
+    const { id: bId, c: b } = await newEst('-B');
+    const bad = await b.req('POST', '/api/onboarding/complete', body([goodProducts[0], { ...goodProducts[1], barcode: '123' }]));
+    ok(bad.status === 400 && bad.data?.code === 'INVALID_CATALOG', 'codigo de barras curto: 400 a dizer o produto', bad);
+    const c0 = await counts(bId);
+    ok(c0.fixed === 0 && c0.emp === 0 && c0.sup === 0 && c0.prod === 0, 'com o erro nada ficou gravado (antes: renda, custos e equipa ja estavam gravados)', c0);
+    const done = await b.req('POST', '/api/onboarding/complete', body(goodProducts));
+    ok(done.status === 201 && done.data.imported === 2, 'configuracao concluida numa so operacao', done);
+    const c1 = await counts(bId);
+    ok(c1.fixed === 2 && c1.emp === 1 && c1.sup === 1 && c1.prod === 2, 'renda + 1 custo, 1 trabalhador, 1 fornecedor, 2 produtos', c1);
+    const tb = await prisma.tenant.findUnique({ where: { id: bId }, select: { onboarding_completed: true, business_type: true, opening_time: true, closing_time: true } });
+    ok(tb.onboarding_completed && tb.business_type === 'mercearia' && tb.opening_time === '07:00' && tb.closing_time === '21:00', 'tipo e horario gravados', tb);
+    const again = await b.req('POST', '/api/onboarding/complete', body(goodProducts));
+    ok(again.status === 409 && again.data?.code === 'ONBOARDING_DONE', 'repetir (duplo clique, resposta perdida): 409', again);
+    ok(JSON.stringify(await counts(bId)) === JSON.stringify(c1), 'repetir nao duplica a renda, a equipa nem os produtos');
+    // Dois pedidos ao mesmo tempo: so um grava.
+    const { id: cId, c: cc } = await newEst('-C');
+    const [r1, r2] = await Promise.all([cc.req('POST', '/api/onboarding/complete', body(goodProducts)), cc.req('POST', '/api/onboarding/complete', body(goodProducts))]);
+    ok([r1.status, r2.status].sort().join(',') === '201,409', 'dois pedidos ao mesmo tempo: um 201 e um 409', [r1.status, r2.status]);
+    const cC = await counts(cId);
+    ok(cC.fixed === 2 && cC.emp === 1 && cC.prod === 2, 'e os dados ficaram uma so vez', cC);
+
+    // Eventos ao vivo no estabelecimento de casa.
+    const ownerCookie = { Cookie: 'token=' + signAccessToken(ctx.owner) };
+    const adminHeaders = { Cookie: 'token=' + signAccessToken(ctx.admin), Origin: ADMIN_ORIGIN };
+    const today = new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10);
+    const make = async () => {
+      await owner.req('POST', '/api/owner/debts', { debtor_name: 'Cliente Teste', debtor_phone: '840000001', total_amount: 25000, due_date: today });
+      await owner.req('POST', '/api/settings/expenses', { date: today, category: 'Limpeza', description: 'Detergente', amount: 12000 });
+      const st = await owner.req('POST', '/api/inventory/stock', { product_id: ctx.product.id, quantity: 2, unit_cost: ctx.product.cost_price });
+      if (st.status >= 300) ok(false, 'entrada de stock aceite', st);
+      const sh = await owner.req('POST', '/api/shrinkage_records', { product_id: ctx.product.id, quantity: 1, reason: 'broken' });
+      if (sh.status >= 300) ok(false, 'perda aceite', sh);
+    };
+    const live = await readSse('/api/owner/live', ownerCookie, 4, 150000, make);
+    const kinds = live.events.map((e) => e.type);
+    ok(['debt', 'expense', 'stock_in', 'loss'].every((k) => kinds.includes(k)), 'dono recebe txeneka, despesa, compra de stock e perda ao vivo', kinds);
+    const debtEv = live.events.find((e) => e.type === 'debt');
+    const lossEv = live.events.find((e) => e.type === 'loss');
+    ok(debtEv?.data.total === 25000 && debtEv.data.name === 'Cliente Teste', 'txeneka ao dono: valor e nome', debtEv?.data);
+    ok(lossEv?.data.total === ctx.product.cost_price && Boolean(lossEv.data.name), 'perda ao dono: valor ao custo e produto', lossEv?.data);
+    const adm = await readSse('/api/admin/live', adminHeaders, 4, 150000, make);
+    const aDebt = adm.events.find((e) => e.type === 'debt');
+    ok(adm.status === 200 && ['debt', 'expense', 'stock_in', 'loss'].every((k) => adm.events.some((e) => e.type === k)), 'admin recebe os mesmos movimentos no mapa', adm.events.map((e) => e.type));
+    ok(Boolean(aDebt) && aDebt.data.total === 25000 && !('profit' in aDebt.data) && !JSON.stringify(adm.events).includes('Cliente Teste'), 'admin: valores sim, lucro e nomes de pessoas nao', aDebt && aDebt.data);
+  } finally {
+    for (const m of ['fixedCost', 'employee', 'supplier']) await prisma[m].deleteMany({ where: { tenant_id: { in: made } } });
+    for (const id of made) await dropTenant(id);
+    await prisma.debt.deleteMany({ where: { tenant_id: t, debtor_name: 'Cliente Teste' } });
+    await prisma.expense.deleteMany({ where: { tenant_id: t, description: 'Detergente' } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+  }
+}
+
+async function test49() {
+  section(49, '31/10: copiar o catalogo de outro estabelecimento (precos, unidade, IVA; sem stock; sem repetir; so do mesmo dono; RLS)');
+  const t = ctx.tenant.id;
+  let bId = null; let cTenant = null; let other = null;
+  try {
+    const owner = ownerClient();
+    // Um produto ao kg com IVA isento no estabelecimento de casa.
+    const kg = await owner.req('POST', '/api/products', { name: 'Carne moida (kg)', category: 'Talho', sell_price: 45000, cost_price: 30000, stock_qty: 5000, unit: 'kg', vat_rate: 0 });
+    ok(kg.status === 201 || kg.status === 200, 'produto ao kg em casa', kg);
+    const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + '-B', business_type: 'mercearia', location: 'Matola' });
+    bId = cb.data.id;
+    const b = ownerClient();
+    await b.req('POST', '/api/establishments/switch', { tenant_id: bId });
+    const list = await b.req('GET', '/api/establishments/' + t + '/catalog');
+    const kgRow = list.data?.find((p) => p.name === 'Carne moida (kg)');
+    ok(list.status === 200 && kgRow && kgRow.unit === 'kg' && kgRow.vat_rate === 0 && kgRow.stock === 0, 'a lista da origem traz unidade e IVA, sem stock', kgRow);
+    const op = crypto.randomUUID();
+    const cp = await b.req('POST', '/api/establishments/copy-catalog', { from: t, op_id: op });
+    const nHome = await prisma.product.count({ where: { tenant_id: t, is_active: true } });
+    ok(cp.status === 201 && cp.data.copied === nHome && cp.data.skipped === 0, 'copia todos os produtos activos de casa', { copied: cp.data?.copied, home: nHome });
+    const copiedKg = await prisma.product.findFirst({ where: { tenant_id: bId, name: 'Carne moida (kg)' } });
+    ok(copiedKg && copiedKg.unit === 'kg' && copiedKg.vat_rate === 0 && copiedKg.sell_price === 45000 && copiedKg.cost_price === 30000 && copiedKg.stock_qty === 0, 'no 2.o: o mesmo preco, ao kg, isento, stock a zero', copiedKg);
+    const again = await b.req('POST', '/api/establishments/copy-catalog', { from: t, op_id: op });
+    ok(again.status === 200 && again.data.repeated === true && (await prisma.product.count({ where: { tenant_id: bId } })) === nHome, 'repetir com o mesmo pedido nao copia duas vezes');
+    const second = await b.req('POST', '/api/establishments/copy-catalog', { from: t, op_id: crypto.randomUUID() });
+    ok(second.status === 201 && second.data.copied === 0 && second.data.skipped === nHome, 'copiar outra vez: tudo salta (ja existe)', second.data);
+    ok((await b.req('POST', '/api/establishments/copy-catalog', { from: bId, op_id: crypto.randomUUID() })).data?.code === 'SAME_ESTABLISHMENT', 'copiar de si proprio: recusado');
+    // Outro dono nao copia o catalogo deste.
+    cTenant = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-C', owner_name: 'Outro', business_type: 'bottle_store', location: 'Teste', phone: '840000009', status: 'active', onboarding_completed: true } });
+    other = await prisma.user.create({ data: { tenant_id: cTenant.id, role: 'owner', name: 'Outro Dono', email: 'outro-' + crypto.randomBytes(4).toString('hex') + '@teste.local', password_hash: await bcrypt.hash(crypto.randomBytes(10).toString('hex'), 10), is_active: true } });
+    const oc = client(signAccessToken(other));
+    ok((await oc.req('GET', '/api/establishments/' + t + '/catalog')).status === 403, 'outro dono: ver o catalogo deste = 403');
+    ok((await oc.req('POST', '/api/establishments/copy-catalog', { from: t, op_id: crypto.randomUUID() })).status === 403, 'outro dono: copiar deste = 403');
+    ok((await prisma.product.count({ where: { tenant_id: cTenant.id } })) === 0, 'nada foi copiado para o outro');
+  } finally {
+    const kgIds = (await prisma.product.findMany({ where: { tenant_id: t, name: 'Carne moida (kg)' }, select: { id: true } })).map((p) => p.id);
+    for (const m of ['stockLot', 'stockEntry', 'productPriceHistory']) await prisma[m].deleteMany({ where: { product_id: { in: kgIds } } });
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, entity_id: { in: kgIds } } });
+    await prisma.product.deleteMany({ where: { id: { in: kgIds } } });
+    if (other) await prisma.user.delete({ where: { id: other.id } });
+    await dropTenant(bId);
+    await dropTenant(cTenant && cTenant.id);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: 'CREATE_ESTABLISHMENT' } });
+  }
+}
+
+async function test50() {
+  section(50, '31/10: horario a serio (24 h, por dia, depois da meia-noite, feriados; o pedido antigo continua) e terminal da saida so com guardas');
+  const t = ctx.tenant.id;
+  const before = await prisma.tenant.findUnique({ where: { id: t }, select: { opening_time: true, closing_time: true, hours_json: true } });
+  let guardId = null; let termId = null;
+  try {
+    const owner = ownerClient();
+    const legacy = await owner.req('PUT', '/api/settings/hours', { opening_time: '07:30', closing_time: '21:00' });
+    ok(legacy.status === 200 && legacy.data.schedule?.mode === 'same' && legacy.data.schedule.days['3'][0][0] === '07:30', 'pedido antigo (abre/fecha) continua a funcionar', legacy.data);
+    const h24 = await owner.req('PUT', '/api/settings/hours', { schedule: { mode: '24h' } });
+    ok(h24.status === 200 && h24.data.opening_time === '00:00' && h24.data.closing_time === '23:59', '24 horas: resumo 00:00-23:59', h24.data);
+    const g = await owner.req('GET', '/api/settings');
+    ok(g.data?.hours?.schedule?.mode === '24h', 'as Definicoes devolvem o horario novo');
+    const bar = await owner.req('PUT', '/api/settings/hours', { schedule: { mode: 'custom', days: { 5: [['18:00', '04:00']], 6: [['18:00', '04:00']], 0: [] , 1: [['08:00', '12:00'], ['14:00', '20:00']] } } });
+    ok(bar.status === 200 && bar.data.schedule.day_end === '04:00', 'bar 18h-04h: o fim do dia de vendas fica nas 04:00 sozinho', bar.data?.schedule);
+    const bad = await owner.req('PUT', '/api/settings/hours', { schedule: { mode: 'custom', days: { 1: [['08:00', '14:00'], ['13:00', '18:00']] } } });
+    ok(bad.status === 400 && bad.data?.code === 'INVALID_HOURS', 'periodos sobrepostos: 400 com a razao', bad);
+    ok((await owner.req('PUT', '/api/settings/hours', { schedule: { mode: 'custom', days: {} } })).status === 400, 'nenhum dia aberto: 400');
+    // Terminal da saida: so os guardas.
+    const guard = await owner.req('POST', '/api/owner/cashiers', { name: 'Guarda Saida', pin: '4826', role: 'guard' });
+    guardId = guard.data?.id;
+    ok(guard.status === 201, 'guarda criado', guard);
+    const pc = await owner.req('POST', '/api/owner/terminals/pairing-code', { name: 'Saida principal', purpose: 'exit' });
+    ok(pc.status === 201 && pc.data.code, 'codigo para um terminal da saida', pc);
+    const term = client();
+    const pr = await term.req('POST', '/api/pos/pair', { code: pc.data.code });
+    termId = pr.data?.terminal?.id;
+    const tp = await term.req('GET', '/api/pos/terminal');
+    ok(tp.status === 200 && tp.data.terminal.purpose === 'exit' && tp.data.cashiers.length >= 1 && tp.data.cashiers.every((c) => c.role === 'guard'), 'o terminal da saida mostra so os guardas', tp.data?.cashiers);
+    const list = (await owner.req('GET', '/api/owner/terminals')).data;
+    ok(list.find((x) => x.id === termId)?.purpose === 'exit', 'a lista de terminais diz «saida»');
+  } finally {
+    await prisma.tenant.update({ where: { id: t }, data: before });
+    if (termId) await prisma.posTerminal.deleteMany({ where: { id: termId } });
+    if (guardId) { await prisma.auditLog.deleteMany({ where: { tenant_id: t, entity_id: guardId } }); await prisma.user.deleteMany({ where: { id: guardId } }); }
+  }
+}
+
+async function test51() {
+  section(51, '31/10: encerrar/apagar estabelecimento (sem vendas = apagado; com vendas = so consulta, fila sem rede aceite 7 dias, reabrir 30 dias; principal protegido; admin nao elimina o principal de quem tem outros)');
+  const t = ctx.tenant.id;
+  const made = [];
+  try {
+    const owner = ownerClient();
+    const mk = async (suffix) => {
+      const cb = await owner.req('POST', '/api/establishments', { name: ctx.tenant.name + suffix, business_type: 'mercearia', location: 'Matola' });
+      made.push(cb.data.id);
+      await prisma.tenant.update({ where: { id: cb.data.id }, data: { onboarding_completed: true } });
+      return { id: cb.data.id, name: ctx.tenant.name + suffix };
+    };
+    // Principal: nao se encerra.
+    const home = await owner.req('POST', '/api/establishments/' + t + '/close', { password: OWNER_PW, confirm_name: ctx.tenant.name });
+    ok(home.status === 400 && home.data?.code === 'HOME_ESTABLISHMENT', 'o principal nao se encerra (a conta vive nele)', home);
+    // B sem vendas: apagado.
+    const B = await mk('-B');
+    ok((await owner.req('POST', '/api/establishments/' + B.id + '/close', { password: 'errada-123', confirm_name: B.name })).data?.code === 'WRONG_PASSWORD', 'senha errada: recusado');
+    ok((await owner.req('POST', '/api/establishments/' + B.id + '/close', { password: OWNER_PW, confirm_name: 'outro nome' })).data?.code === 'NAME_MISMATCH', 'nome errado: recusado');
+    const del = await owner.req('POST', '/api/establishments/' + B.id + '/close', { password: OWNER_PW, confirm_name: B.name.toUpperCase() });
+    ok(del.status === 200 && del.data.status === 'deleted', 'sem vendas: apagado', del);
+    ok(!(await owner.req('GET', '/api/establishments')).data.some((e) => e.id === B.id), 'o apagado sai da lista do dono');
+    // C com vendas: encerrado, so consulta.
+    const C = await mk('-C');
+    const c = ownerClient();
+    await c.req('POST', '/api/establishments/switch', { tenant_id: C.id });
+    await c.req('POST', '/api/products', { name: 'Pao C', category: 'Padaria', sell_price: 1000, cost_price: 600, stock_qty: 50 });
+    const prod = await prisma.product.findFirst({ where: { tenant_id: C.id, name: 'Pao C' } });
+    const cash = await c.req('POST', '/api/owner/cashiers', { name: 'Caixa C', pin: '3579' });
+    const cashierC = await prisma.user.findUnique({ where: { id: cash.data.id } });
+    const pos = client(signAccessToken(cashierC, { scope: 'pos' }));
+    const sale1 = await pos.req('POST', '/api/sales', { id: crypto.randomUUID(), items: [{ product_id: prod.id, quantity: 1, unit_sell_price: 1000, unit_cost_price: 0 }], total_amount: 1000, payment_method: 'cash', amount_received: 1000 });
+    ok(sale1.status === 201, 'venda no C antes de encerrar', sale1);
+    const cl = await c.req('POST', '/api/establishments/' + C.id + '/close', { password: OWNER_PW, confirm_name: C.name });
+    ok(cl.status === 200 && cl.data.status === 'closed' && cl.data.reopen_until, 'com vendas: encerrado (so consulta), reabre ate 30 dias', cl.data);
+    await sleep(STATUS_CACHE_MS + 500);
+    const listC = (await owner.req('GET', '/api/establishments')).data.find((e) => e.id === C.id);
+    ok(listC && listC.status === 'closed', 'a lista mostra o encerrado');
+    const ro = ownerClient();
+    ok((await ro.req('POST', '/api/establishments/switch', { tenant_id: C.id })).status === 200 && (await ro.req('GET', '/api/products')).status === 200, 'entrar no encerrado para consultar: 200');
+    const w = await ro.req('POST', '/api/products', { name: 'Novo', category: 'X', sell_price: 100, cost_price: 50, stock_qty: 1 });
+    ok(w.status === 403 && w.data?.code === 'ESTABLISHMENT_CLOSED', 'no encerrado nao se cria nada (403)', w);
+    const sync = await pos.req('POST', '/api/sales', { id: crypto.randomUUID(), items: [{ product_id: prod.id, quantity: 1, unit_sell_price: 1000, unit_cost_price: 0 }], total_amount: 1000, payment_method: 'cash', amount_received: 1000 });
+    ok(sync.status === 201, 'venda que estava na fila sem rede: aceite (7 dias)', sync);
+    // Reabrir.
+    const re = await owner.req('POST', '/api/establishments/' + C.id + '/reopen');
+    ok(re.status === 200 && ['trial', 'active'].includes(re.data.status), 'reabrir: volta ao estado anterior', re.data);
+    await sleep(STATUS_CACHE_MS + 500);
+    ok((await ro.req('POST', '/api/products', { name: 'Depois de reabrir', category: 'X', sell_price: 100, cost_price: 50, stock_qty: 1 })).status < 300, 'depois de reabrir volta a poder criar');
+    // Admin: eliminar o principal de um dono com outros = recusado.
+    const adm = client(signAccessToken(ctx.admin), { Origin: ADMIN_ORIGIN });
+    const ad = await adm.req('POST', '/api/admin/tenants/' + t + '/delete');
+    ok(ad.status === 409 && ad.data?.code === 'HOME_WITH_OTHERS', 'admin: eliminar o principal de quem tem outros = 409', ad);
+    ok((await prisma.user.findUnique({ where: { id: ctx.owner.id } })).is_active === true, 'o dono continua activo');
+  } finally {
+    for (const id of made) await dropTenant(id);
+    await prisma.auditLog.deleteMany({ where: { tenant_id: t, action: { in: ['CREATE_ESTABLISHMENT', 'ESTABLISHMENT_CLOSED', 'ESTABLISHMENT_DELETED', 'ESTABLISHMENT_CLOSE_FAIL'] } } });
+    await sleep(STATUS_CACHE_MS + 500);
+  }
+}
+
+const TESTS = { 2: test2, 3: test3, 4: test4, 5: test5, 6: test6, 7: test7, 8: test8, 9: test9, 10: test10, 11: test11, 12: test12, 13: test13, 14: test14, 15: test15, 16: test16, 17: test17, 18: test18, 19: test19, 20: test20, 21: test21, 22: test22, 23: test23, 24: test24, 25: test25, 26: test26, 27: test27, 28: test28, 29: test29, 30: test30, 31: test31, 32: test32, 33: test33, 34: test34, 35: test35, 36: test36, 37: test37, 38: test38, 39: test39, 40: test40, 41: test41, 42: test42, 43: test43, 44: test44, 45: test45, 46: test46, 47: test47, 48: test48, 49: test49, 50: test50, 51: test51 };
 
 (async () => {
   await prisma.ready();

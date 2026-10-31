@@ -3,6 +3,9 @@
 // «lido»: cada uma existe enquanto a situacao existe (repor o stock, receber a
 // txeneka ou desbloquear o caixista tira-a do sino).
 const prisma = require('../utils/prisma');
+const { attachPeople } = require('../utils/peopleNames');
+const H = require('../utils/hours');
+const { scheduleOf, shiftsDay } = require('../utils/tenantHours');
 const { getTenantAlertSnapshot } = require('./tenantAlerts');
 const { getShiftLock } = require('../utils/shiftLock');
 const { dayInMaputo } = require('../utils/fefo');
@@ -21,7 +24,7 @@ const minutesOf = (hhmm) => { const [h, m] = String(hhmm).split(':').map(Number)
 // de Maputo; dinheiro em centavos. O texto e montado no ecra (lingua de quem ve).
 function buildNotifications({
   now = new Date(), lowStock = [], expiringLots = [], debts = [], closings = [],
-  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00',
+  failedAttempts = [], lockedCashiers = [], goal = null, todaySales = null, closingTime = '20:00', dayClosed,
 }) {
   const today = dayInMaputo(now);
   const items = [];
@@ -74,9 +77,14 @@ function buildNotifications({
     items.push({ id: `goal_reached:${goal.year}-${goal.month}`, type: 'goal_reached', level: 'success', link: '/app', params: { target: goal.target, current: goal.current, month: goal.month, year: goal.year } });
   }
 
-  // Fecho do dia: a partir da hora de fecho da loja, se houve vendas hoje.
+  // Fecho do dia: a partir do ultimo fecho do dia de vendas, se houve vendas.
+  // 31/10: com o horario novo (dayClosedAt), 24 h ou dia fechado = sem este aviso;
+  // um bar que fecha as 4h ve-o as 4h, nao as 20h.
   const nowMinutes = minutesOf(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Maputo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now));
-  if (todaySales && todaySales.count > 0 && nowMinutes >= minutesOf(closingTime || '20:00')) {
+  if (dayClosed !== undefined) {
+    // Horario novo: o carregador ja decidiu que dia fechou (ou null).
+    if (dayClosed && dayClosed.count > 0) items.push({ id: `day_closed:${dayClosed.day}`, type: 'day_closed', level: 'info', link: `/app/relatorios?tab=daily&date=${dayClosed.day}`, params: { sales: dayClosed.count, revenue: dayClosed.revenue, day: dayClosed.day } });
+  } else if (todaySales && todaySales.count > 0 && nowMinutes >= minutesOf(closingTime || '20:00')) {
     items.push({ id: `day_closed:${today}`, type: 'day_closed', level: 'info', link: `/app/relatorios?tab=daily&date=${today}`, params: { sales: todaySales.count, revenue: todaySales.revenue, day: today } });
   }
 
@@ -88,14 +96,17 @@ function buildNotifications({
 async function loadOwnerNotifications(tenantId, now = new Date()) {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
-  const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+  // 31/10: o dia de vendas do horario (um bar 18h-04h a 1h ainda esta no dia em que abriu).
+  const sched = await scheduleOf(tenantId);
+  const bday = H.businessDay(sched, now);
+  const dayStart = shiftsDay(sched) ? H.businessDayRange(sched, bday).start : new Date(new Date(now).setHours(0, 0, 0, 0));
   const [snapshot, tenant, debts, closings, cashiers, goalRow, monthAgg, todayAgg, fails] = await Promise.all([
     getTenantAlertSnapshot(tenantId, now),
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { closing_time: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { closing_time: true, hours_json: true } }),
     prisma.debt.findMany({ where: { tenant_id: tenantId, status: { not: 'paid' }, due_date: { lte: new Date(now.getTime() + (DEBT_DAYS + 1) * 86400000) } } }),
     prisma.shiftClosing.findMany({
       where: { tenant_id: tenantId, closed_at: { gte: new Date(now.getTime() - (SHIFT_DAYS + 1) * 86400000) }, NOT: { difference: 0 } },
-      include: { cashier: { select: { name: true } } }, orderBy: { closed_at: 'desc' },
+      orderBy: { closed_at: 'desc' },
     }),
     prisma.user.findMany({ where: { tenant_id: tenantId, role: 'cashier', is_active: true }, select: { id: true, name: true } }),
     prisma.saleGoal.findFirst({ where: { tenant_id: tenantId, month, year }, orderBy: { created_at: 'desc' } }),
@@ -103,6 +114,7 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: dayStart, lte: now } }, _sum: { total_amount: true }, _count: true }),
     prisma.auditLog.findMany({ where: { tenant_id: tenantId, action: 'SHIFT_ATTEMPT_FAIL', created_at: { gte: new Date(now.getTime() - (SHIFT_DAYS + 1) * 86400000) } }, orderBy: { created_at: 'desc' }, take: 20 }),
   ]);
+  await attachPeople(tenantId, closings, [['cashier', 'cashier_user_id']]);
   const failedAttempts = fails.map((f) => {
     let v = {}; try { v = JSON.parse(f.new_value || '{}'); } catch { v = {}; }
     return { id: f.id, at: f.created_at, cashier: v.cashierName || '—', declared: v.declared ?? 0, expected: v.expected ?? 0, attempt: v.attempt || 1 };
@@ -119,7 +131,21 @@ async function loadOwnerNotifications(tenantId, now = new Date()) {
     goal: goalRow ? { target: goalRow.target_amount, current: Number(monthAgg._sum.total_amount || 0), month, year } : null,
     todaySales: { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) },
     closingTime: tenant?.closing_time || '20:00',
+    ...(tenant?.hours_json ? { dayClosed: await closedDay(tenantId, sched, bday, now, { count: todayAgg._count, revenue: Number(todayAgg._sum.total_amount || 0) }) } : {}),
   });
+}
+
+// Que dia de vendas fechou agora (horario novo)? O de hoje, depois do ultimo fecho;
+// ou o de ontem, nas 6 horas a seguir ao fecho dele, quando fechou no fim do dia.
+async function closedDay(tenantId, sched, bday, now, today) {
+  const close = H.lastCloseOf(sched, bday);
+  if (close && now >= close) return { day: bday, ...today };
+  const prev = new Date(Date.parse(bday + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+  const prevClose = H.lastCloseOf(sched, prev);
+  if (!prevClose || now < prevClose || now - prevClose > 6 * 3600000) return null;
+  const r = H.businessDayRange(sched, prev);
+  const agg = await prisma.sale.aggregate({ where: { tenant_id: tenantId, status: 'completed', created_at: { gte: r.start, lte: r.end } }, _sum: { total_amount: true }, _count: true });
+  return { day: prev, count: agg._count, revenue: Number(agg._sum.total_amount || 0) };
 }
 
 module.exports = { buildNotifications, loadOwnerNotifications, stockLevel, LEVELS, TYPES };

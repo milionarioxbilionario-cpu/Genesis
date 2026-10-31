@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
-import { Fingerprint, Monitor, Plus, Trash2 } from 'lucide-react';
+import { DoorOpen, Fingerprint, Monitor, Plus, Trash2 } from 'lucide-react';
 import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
 import { useSession } from '../../utils/session';
 import { passkeyFlag } from '../../components/PanelLock';
@@ -10,6 +10,7 @@ import { forgetReceiptInfo } from '../../components/SaleDrawer';
 import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import AuditLogPage from './AuditLogPage';
+import HoursEditor, { scheduleFrom } from '../../components/HoursEditor';
 import LocationCard from './LocationCard';
 import { money, date, dateTime, isoDay, errorMessage } from '../../utils/format';
 import { locale } from '../../i18n/core';
@@ -60,7 +61,7 @@ function Store({ s, reload }) {
   const { t } = useI18n();
   const { reloadTenant } = useOutletContext();
   const [store, setStore] = useState(s.store);
-  const [hours, setHours] = useState(s.hours);
+  const [hours, setHours] = useState({ ...s.hours, schedule: scheduleFrom(s.hours) });
   const [alertDays, setAlertDays] = useState(String(s.expiry_alert_days ?? 7));
   const [closeDay, setCloseDay] = useState(String(s.month_close_day ?? 1));
   const [busy, setBusy] = useState('');
@@ -71,7 +72,7 @@ function Store({ s, reload }) {
       if (kind === 'store') await api.put('/api/settings/store', { name: store.name, location: store.location, phone: store.phone, email: store.email || null, nuit: store.nuit || null, receipt_footer: store.receipt_footer || null });
       else if (kind === 'expiry') await api.put('/api/settings/expiry-alert', { expiry_alert_days: Number(alertDays) });
       else if (kind === 'close') await api.put('/api/settings/month-close', { month_close_day: Number(closeDay) });
-      else await api.put('/api/settings/hours', hours);
+      else await api.put('/api/settings/hours', { schedule: hours.schedule });
       toast(t('Alterações guardadas.'));
       forgetReceiptInfo();
       reload(); reloadTenant?.();
@@ -93,14 +94,12 @@ function Store({ s, reload }) {
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'store'} onClick={() => save('store')}>{t('Guardar')}</Button></div>
       </Card>
       <LocationCard s={s} reload={reload} />
+      <CloseEstablishmentCard />
       <LogoCard s={s} store={store} reload={reload} />
       <TaxesCard s={s} reload={reload} />
       <Card>
-        <CardHeader title={t('Horário')} description={t('Usado no fecho do dia.')} />
-        <div className="grid max-w-sm grid-cols-2 gap-4">
-          <Input label={t('Abertura')} type="time" value={hours.opening_time} onChange={(e) => setHours({ ...hours, opening_time: e.target.value })} />
-          <Input label={t('Fecho')} type="time" value={hours.closing_time} onChange={(e) => setHours({ ...hours, closing_time: e.target.value })} />
-        </div>
+        <CardHeader title={t('Horário')} description={t('Quando está aberto. Serve para o relatório e o aviso de fecho do dia; o balcão pode vender sempre.')} />
+        <HoursEditor value={hours.schedule} onChange={(schedule) => setHours({ ...hours, schedule })} />
         <div className="mt-4 flex justify-end"><Button variant="primary" loading={busy === 'hours'} onClick={() => save('hours')}>{t('Guardar')}</Button></div>
       </Card>
       <ReportSchedule s={s} reload={reload} />
@@ -561,6 +560,8 @@ function Terminals() {
   const [members, setMembers] = useState(null); // { terminal, ids }
   const [name, setName] = useState('');
   const [asking, setAsking] = useState(false);
+  // 31/10: «Para que e este terminal?» — balcao (vender) ou saida (o guarda confere os recibos).
+  const [purpose, setPurpose] = useState('counter');
   const [pairing, setPairing] = useState(null);
   const [left, setLeft] = useState(0);
   const [error, setError] = useState('');
@@ -577,8 +578,8 @@ function Terminals() {
   async function generate() {
     setError('');
     try {
-      const res = await api.post('/api/owner/terminals/pairing-code', { name: name.trim() });
-      setAsking(false); setPairing({ ...res.data, name: name.trim() }); setName('');
+      const res = await api.post('/api/owner/terminals/pairing-code', { name: name.trim(), purpose });
+      setAsking(false); setPairing({ ...res.data, name: name.trim() }); setName(''); setPurpose('counter');
     } catch (err) { setError(errorMessage(err)); }
   }
   // Etapa A: o browser do balcao perdeu a ligacao -> codigo novo para o MESMO terminal.
@@ -608,12 +609,15 @@ function Terminals() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <p className="text-base text-ink-2">{t('Computadores e tablets do balcão onde os caixistas vendem com o PIN.')}</p>
-        <Button variant="primary" icon={Plus} onClick={() => { setError(''); setAsking(true); }}>{t('Emparelhar terminal')}</Button>
+        <p className="text-base text-ink-2">{t('Computadores, tablets e telemóveis do estabelecimento: no balcão os caixistas vendem; na saída o guarda confere os recibos. Cada pessoa entra com o seu PIN.')}</p>
+        <span className="flex shrink-0 gap-2">
+          <Button icon={DoorOpen} onClick={() => { setError(''); setPurpose('exit'); setName(t('Saída')); setAsking(true); }}>{t('Terminal do guarda')}</Button>
+          <Button variant="primary" icon={Plus} onClick={() => { setError(''); setPurpose('counter'); setAsking(true); }}>{t('Emparelhar terminal')}</Button>
+        </span>
       </div>
       <Table
         columns={[
-          { key: 'name', header: t('Terminal'), render: (x) => <span className="flex items-center gap-2"><Monitor size={15} className="text-ink-muted" />{x.name}</span> },
+          { key: 'name', header: t('Terminal'), render: (x) => <span className="flex items-center gap-2">{x.purpose === 'exit' ? <DoorOpen size={15} className="text-ink-muted" /> : <Monitor size={15} className="text-ink-muted" />}{x.name}{x.purpose === 'exit' && <Badge tone="info">{t('Saída (guarda)')}</Badge>}</span> },
           { key: 'created_at', header: t('Emparelhado'), render: (x) => dateTime(x.created_at) },
           { key: 'last_seen_at', header: t('Última actividade'), render: (x) => dateTime(x.last_seen_at) },
           { key: 'state', header: t('Estado'), render: (x) => (x.revoked_at ? <Badge>{t('Revogado')}</Badge> : <Badge tone="positive">{t('Activo')}</Badge>) },
@@ -638,7 +642,16 @@ function Terminals() {
       <Dialog open={asking} size="sm" title={t('Emparelhar terminal')} onClose={() => setAsking(false)}
         footer={<><Button onClick={() => setAsking(false)}>{t('Cancelar')}</Button><Button variant="primary" disabled={name.trim().length < 2} onClick={generate}>{t('Gerar código')}</Button></>}>
         {error && <Alert tone="danger" className="mb-3">{error}</Alert>}
-        <Input label={t('Nome do terminal')} placeholder={t('Ex.: Balcão principal')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-ink">{t('Para que é este terminal?')}</p>
+            <Segmented className="w-full" value={purpose} onChange={setPurpose} options={[{ value: 'counter', label: t('Balcão: vender') }, { value: 'exit', label: t('Saída: guarda') }]} />
+            <p className="mt-1.5 text-sm text-ink-muted">{purpose === 'exit'
+              ? t('Na saída aparecem só os guardas. O guarda lê o QR ou o código de barras do recibo com a câmara ou um leitor; um recibo que já passou fica vermelho se voltar.')
+              : t('No balcão aparecem os caixistas (ou só os que escolher em «Perfis»).')}</p>
+          </div>
+          <Input label={t('Nome do terminal')} placeholder={purpose === 'exit' ? t('Ex.: Saída principal') : t('Ex.: Balcão principal')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </div>
       </Dialog>
       <Dialog open={Boolean(members)} size="sm" title={members ? t('Perfis de {name}', { name: members.terminal.name }) : ''} onClose={() => setMembers(null)}
         footer={<><Button onClick={() => setMembers(null)}>{t('Cancelar')}</Button><Button variant="primary" onClick={saveMembers}>{t('Guardar')}</Button></>}>
@@ -669,5 +682,42 @@ function Terminals() {
         )}
       </Dialog>
     </>
+  );
+}
+
+// 31/10 (R10): encerrar este estabelecimento (so os extra; o principal guarda a conta).
+// Nunca vendeu: e apagado (sai da lista). Tem historico: fica so para consulta e
+// pode reabrir em 30 dias. Confirma-se com o nome escrito e a senha da conta.
+function CloseEstablishmentCard() {
+  const { t } = useI18n();
+  const { user } = useSession();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (!user?.home_tenant_id || user.tenant_id === user.home_tenant_id || user.tenant?.status === 'closed') return null;
+  const target = user.tenant?.name || '';
+  async function closeIt() {
+    setBusy(true); setError('');
+    try {
+      await api.post('/api/establishments/' + user.tenant_id + '/close', { password, confirm_name: name });
+      window.location.assign('/app');
+    } catch (err) { setError(errorMessage(err)); setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader title={t('Encerrar este estabelecimento')} description={t('Se nunca vendeu, é apagado. Se já tem vendas, fica só para consulta (relatórios e rastreio guardados) e pode reabri-lo nos 30 dias seguintes.')} />
+      <Button variant="danger-ghost" onClick={() => { setOpen(true); setError(''); setName(''); setPassword(''); }}>{t('Encerrar…')}</Button>
+      <Dialog open={open} size="sm" title={t('Encerrar {name}', { name: target })} onClose={() => setOpen(false)}
+        footer={<><Button onClick={() => setOpen(false)}>{t('Cancelar')}</Button><Button variant="danger" loading={busy} disabled={name.trim().toLowerCase() !== target.trim().toLowerCase() || !password} onClick={closeIt}>{t('Encerrar')}</Button></>}>
+        {error && <Alert tone="danger" className="mb-3">{error}</Alert>}
+        <div className="flex flex-col gap-3">
+          <Alert tone="warning">{t('Antes de encerrar: ligue à internet os terminais que estiveram sem rede, para enviarem as vendas que guardaram. Durante 7 dias ainda as aceitamos.')}</Alert>
+          <Input label={t('Escreva o nome do estabelecimento: {name}', { name: target })} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
+          <Input label={t('Senha da conta')} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+      </Dialog>
+    </Card>
   );
 }

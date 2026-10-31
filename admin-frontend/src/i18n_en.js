@@ -225,4 +225,18 @@ addTranslations('en', {
   'Estabelecimento sem localização': 'Business without location',
   'Sem localização': 'Without location',
   'O dono marca o ponto em Definições > Localização no mapa.': 'The owner sets the point in Settings > Location on the map.',
+  // 31/10: mapa ao vivo com perdas, txenekas, despesas, compras, turnos e subscricoes
+  'Venda': 'Sale',
+  'Venda cancelada': 'Sale cancelled',
+  'Perda de stock': 'Stock loss',
+  'Txeneka': 'Txeneka',
+  'Txeneka paga': 'Txeneka paid',
+  'Despesa': 'Expense',
+  'Compra de stock': 'Stock purchase',
+  'Turno aberto': 'Shift opened',
+  'Turno fechado': 'Shift closed',
+  'Fecho de turno falhado': 'Shift close failed',
+  'Subscrição paga': 'Subscription paid',
+  'O que entra a verde e o que sai a vermelho (cancelamentos, perdas, txenekas, despesas), com os turnos, no momento em que acontecem. Hora de Maputo: {h}.': 'Money in shows green and money out red (cancellations, losses, txenekas, expenses), with shifts, as they happen. Maputo time: {h}.',
+  'À espera do próximo movimento…': 'Waiting for the next movement…',
 });

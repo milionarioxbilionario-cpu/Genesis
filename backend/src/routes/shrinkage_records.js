@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
+const { lineAmount } = require('../utils/units');
+const { publish } = require('../utils/liveBus');
 const { applyTenantRls } = require('../utils/tenantRls');
 const { consumeLots } = require('../utils/stockLots');
 
@@ -20,6 +22,7 @@ const schema = z.object({
 });
 
 router.post('/', async (req, res) => {
+  let lossLive = null; // para o mapa e o aviso ao dono, depois de gravado
   try {
     const data = schema.parse(req.body);
     const tenantId = (req.user && req.user.tenantId) ? req.user.tenantId : null;
@@ -88,9 +91,11 @@ router.post('/', async (req, res) => {
         }
       });
 
+      lossLive = { value: lineAmount(data.quantity, unitCost || 0, product.unit), product_name: product.name, reason: data.reason };
       return { recId: rec.id, newStock: newQty };
     });
 
+    if (!result.existed && lossLive) publish({ type: 'loss', tenant_id: tenantId, total: lossLive.value, product_name: lossLive.product_name, reason: lossLive.reason });
     return res.status(result.existed ? 200 : 201).json(result);
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: 'Dados inválidos', details: err.errors });

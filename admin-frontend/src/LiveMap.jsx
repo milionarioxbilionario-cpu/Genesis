@@ -10,6 +10,11 @@ import { Alert, Button, Card, PageHeader } from '@ui';
 //  - venda: bolha verde «+X MT» por cima do pino; cancelamento: vermelha «−X MT»;
 //  - luz do mapa conforme a hora de Maputo (madrugada, dia, fim de tarde, noite);
 //  - «Satelite»: imagem de satelite com os predios em 3D.
+// 31/10 (o fundador: «a visao satelite fica bugada»): o satelite trocava o estilo
+// inteiro (setStyle) e, a noite, a luz «noite» deixava a imagem quase preta.
+// Agora e uma camada de imagem por baixo das ruas, dos nomes e dos predios do
+// estilo Standard: mostrar/esconder nao recarrega nada nem perde os pinos, e
+// no satelite a luz nunca fica mais escura do que o fim de tarde.
 // O mapbox-gl so se carrega nesta pagina (import dinamico): o resto do painel fica leve.
 const TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/', withCredentials: true });
@@ -23,7 +28,34 @@ export function lightFor(hour) {
   if (hour >= 17 && hour < 19) return 'dusk';
   return 'night';
 }
-const STYLES = { map: 'mapbox://styles/mapbox/standard', satellite: 'mapbox://styles/mapbox/standard-satellite' };
+const STYLE_URL = 'mapbox://styles/mapbox/standard';
+const SAT = 'genesis-satelite';
+// Luz para o modo escolhido: no satelite a noite fica no fim de tarde (a imagem e de dia).
+export function lightForMode(hour, mode) {
+  const l = lightFor(hour);
+  return mode === 'satellite' && l === 'night' ? 'dusk' : l;
+}
+function applyMode(map, mode, hour) {
+  try {
+    if (map.getLayer(SAT)) map.setLayoutProperty(SAT, 'visibility', mode === 'satellite' ? 'visible' : 'none');
+    map.setConfigProperty('basemap', 'lightPreset', lightForMode(hour, mode));
+  } catch { /* estilo ainda a carregar: o style.load aplica */ }
+}
+// 31/10: tudo o que mexe no dinheiro dos estabelecimentos (verde entra, vermelho
+// sai, ambar compra de stock) e os turnos. Sem lucros nem nomes de pessoas.
+export const LIVE_KINDS = {
+  sale: { sign: '+', color: '#047857', label: 'Venda' },
+  cancel: { sign: '−', color: '#b91c1c', label: 'Venda cancelada' },
+  loss: { sign: '−', color: '#b91c1c', label: 'Perda de stock' },
+  debt: { sign: '−', color: '#b91c1c', label: 'Txeneka' },
+  debt_payment: { sign: '+', color: '#047857', label: 'Txeneka paga' },
+  expense: { sign: '−', color: '#b91c1c', label: 'Despesa' },
+  stock_in: { sign: '−', color: '#b45309', label: 'Compra de stock' },
+  shift_open: { sign: '', color: '#44403c', label: 'Turno aberto' },
+  shift_close: { sign: '', color: '#44403c', label: 'Turno fechado' },
+  shift_fail: { sign: '', color: '#b91c1c', label: 'Fecho de turno falhado' },
+  subscription: { sign: '+', color: '#0B4D3B', label: 'Subscrição paga' },
+};
 
 export default function LiveMap() {
   const { t } = useI18n();
@@ -35,6 +67,7 @@ export default function LiveMap() {
   const [feed, setFeed] = useState([]);
   const [error, setError] = useState(TOKEN ? '' : t('Falta a chave do Mapbox (VITE_MAPBOX_TOKEN).'));
   const [style, setStyle] = useState('map');
+  const modeRef = useRef('map');
   const [clock, setClock] = useState(() => new Date());
   const [ready, setReady] = useState(false);
 
@@ -53,18 +86,24 @@ export default function LiveMap() {
       const [{ default: mapboxgl }] = await Promise.all([import('mapbox-gl'), import('mapbox-gl/dist/mapbox-gl.css')]);
       if (!alive) return;
       mapboxgl.accessToken = TOKEN;
-      const map = new mapboxgl.Map({ container: box.current, style: STYLES[style], projection: 'globe', center: MOZ.center, zoom: MOZ.zoom, pitch: 45, bearing: -10, attributionControl: true });
+      const map = new mapboxgl.Map({ container: box.current, style: STYLE_URL, projection: 'globe', center: MOZ.center, zoom: MOZ.zoom, pitch: 45, bearing: -10, attributionControl: true });
       map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-      map.on('style.load', () => { try { map.setConfigProperty('basemap', 'lightPreset', lightFor(maputoHour())); } catch { /* estilo sem luz configuravel */ } });
+      map.on('style.load', () => {
+        try {
+          if (!map.getSource(SAT)) map.addSource(SAT, { type: 'raster', url: 'mapbox://mapbox.satellite', tileSize: 256 });
+          // slot 'bottom': por cima do chao do mapa, por baixo das ruas, nomes e predios 3D.
+          if (!map.getLayer(SAT)) map.addLayer({ id: SAT, type: 'raster', source: SAT, slot: 'bottom', layout: { visibility: 'none' }, paint: { 'raster-fade-duration': 200 } });
+        } catch { /* sem satelite: fica o mapa */ }
+        applyMode(map, modeRef.current, maputoHour());
+      });
       mapRef.current = { map, mapboxgl };
       setReady(true); // os pinos so se desenham agora (os dados podem ter chegado antes do mapa)
     })().catch((err) => setError(t('Não foi possível abrir o mapa: {e}', { e: err.message })));
     return () => { alive = false; mapRef.current?.map.remove(); mapRef.current = null; markers.current.clear(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { mapRef.current?.map.setStyle(STYLES[style]); }, [style]);
-  // Luz: muda com o relogio.
-  useEffect(() => { try { mapRef.current?.map.setConfigProperty('basemap', 'lightPreset', lightFor(maputoHour(clock))); } catch { /* ainda a carregar */ } }, [clock]);
+  // Mapa/satelite e luz (com o relogio): sem recarregar o estilo.
+  useEffect(() => { modeRef.current = style; if (mapRef.current) applyMode(mapRef.current.map, style, maputoHour(clock)); }, [style, clock]);
 
   // Pinos.
   useEffect(() => {
@@ -87,19 +126,19 @@ export default function LiveMap() {
     const es = new EventSource('/api/admin/live', { withCredentials: true });
     const on = (kind) => (ev) => {
       let d; try { d = JSON.parse(ev.data); } catch { return; }
-      setFeed((f) => [{ ...d, kind, key: d.at + Math.random() }, ...f].slice(0, 20));
+      setFeed((f) => [{ ...d, kind, key: d.at + Math.random() }, ...f].slice(0, 30));
       if (kind === 'sale') setPoints((ps) => ps.map((p) => (p.id === d.tenant_id ? { ...p, today_total: p.today_total + d.total, today_count: p.today_count + 1 } : p)));
       const mk = markers.current.get(d.tenant_id);
       if (!mk) return;
       const b = document.createElement('div');
-      b.textContent = (kind === 'sale' ? '+' : '−') + money(d.total);
-      b.style.cssText = `position:absolute;bottom:20px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 12px Inter,sans-serif;padding:2px 6px;border-radius:6px;color:#fff;background:${kind === 'sale' ? '#047857' : '#b91c1c'};transition:transform 2.4s ease-out,opacity 2.4s ease-out;opacity:1`;
+      const k = LIVE_KINDS[kind];
+      b.textContent = d.total != null ? k.sign + money(d.total) : t(k.label);
+      b.style.cssText = `position:absolute;bottom:20px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 12px Inter,sans-serif;padding:2px 6px;border-radius:6px;color:#fff;background:${k.color};transition:transform 2.4s cubic-bezier(.2,.8,.2,1),opacity 2.4s ease-out;opacity:1`;
       mk.getElement().appendChild(b);
       requestAnimationFrame(() => { b.style.transform = 'translate(-50%,-36px)'; b.style.opacity = '0'; });
       setTimeout(() => b.remove(), 2600);
     };
-    es.addEventListener('sale', on('sale'));
-    es.addEventListener('cancel', on('cancel'));
+    for (const kind of Object.keys(LIVE_KINDS)) es.addEventListener(kind, on(kind));
     return () => es.close();
   }, []);
 
@@ -107,7 +146,7 @@ export default function LiveMap() {
   const total = points.reduce((s, p) => s + p.today_total, 0);
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={t('Mapa ao vivo')} description={t('Vendas a verde e cancelamentos a vermelho, no momento em que acontecem. Hora de Maputo: {h}.', { h: hh })} />
+      <PageHeader title={t('Mapa ao vivo')} description={t('O que entra a verde e o que sai a vermelho (cancelamentos, perdas, txenekas, despesas), com os turnos, no momento em que acontecem. Hora de Maputo: {h}.', { h: hh })} />
       {error && <Alert tone="danger">{error}</Alert>}
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <div className="relative overflow-hidden rounded-lg border border-border bg-subtle" style={{ height: 'min(70vh, 640px)' }}>
@@ -126,12 +165,12 @@ export default function LiveMap() {
           </Card>
           <Card>
             <p className="mb-2 font-medium text-ink">{t('Agora')}</p>
-            {feed.length === 0 ? <p className="text-sm text-ink-muted">{t('À espera da próxima venda…')}</p> : (
+            {feed.length === 0 ? <p className="text-sm text-ink-muted">{t('À espera do próximo movimento…')}</p> : (
               <ul className="flex flex-col gap-1.5" aria-live="polite">
                 {feed.map((e) => (
                   <li key={e.key} className="flex justify-between gap-2 text-sm">
-                    <span className="truncate text-ink-2">{e.name || t('Estabelecimento sem localização')}</span>
-                    <span className={'num shrink-0 font-medium ' + (e.kind === 'sale' ? 'text-positive' : 'text-danger')}>{e.kind === 'sale' ? '+' : '−'}{money(e.total)}</span>
+                    <span className="min-w-0"><span className="block truncate text-ink-2">{e.name || t('Estabelecimento sem localização')}</span><span className="block truncate text-xs text-ink-muted">{t(LIVE_KINDS[e.kind].label)}</span></span>
+                    {e.total != null && <span className="num shrink-0 font-medium" style={{ color: LIVE_KINDS[e.kind].color }}>{LIVE_KINDS[e.kind].sign}{money(e.total)}</span>}
                   </li>
                 ))}
               </ul>

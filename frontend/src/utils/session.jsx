@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import api from './api';
+import api, { setShownEstablishment, onEstablishmentChange } from './api';
 import { Spinner } from '../components/ui';
 import PanelLockGate from '../components/PanelLock';
 import { setLang } from '../i18n/core';
@@ -32,6 +32,7 @@ export function SessionProvider({ children }) {
       // o caixista no terminal muda o ecra sem mudar a lingua do aparelho.
       if (u?.language && u.scope !== 'support') setLang(u.language, { remember: u.scope !== 'pos' });
       if (u?.role === 'owner' && !u.scope) {
+        setShownEstablishment(u.tenant_id);
         const prev = await loadSnapshot(ME_KEY);
         // Primeira entrada neste aparelho ou outra conta: nada da anterior fica guardado.
         if (!prev || prev.data?.id !== u.id) await forgetOwnerData();
@@ -50,6 +51,8 @@ export function SessionProvider({ children }) {
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+  // Etapa D: outro separador trocou de estabelecimento -> este recarrega com o novo.
+  useEffect(() => onEstablishmentChange((id) => { if (state.user?.role === 'owner' && id !== state.user.tenant_id) window.location.reload(); }), [state.user]);
   // A rede voltou: confirma a sessao no servidor.
   useEffect(() => {
     if (!state.offline) return undefined;

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
+const { attachPeople } = require('../utils/peopleNames');
 const bcrypt = require('bcrypt');
 const { getShiftLock } = require('../utils/shiftLock');
 const { shiftStatus } = require('../utils/shift');
@@ -106,10 +107,11 @@ router.get('/', async (req, res) => {
     const where = cashierId ? { tenant_id: tenantId, cashier_user_id: cashierId } : { tenant_id: tenantId };
     const sales = await prisma.sale.findMany({
       where,
-      include: { items: true, payments: { select: { method: true, amount: true } }, cashier: { select: { id: true, name: true } } },
+      include: { items: true, payments: { select: { method: true, amount: true } } },
       orderBy: { created_at: 'desc' },
       take: 20
     });
+    await attachPeople(tenantId, sales, [['cashier', 'cashier_user_id']]);
 
     if (isOwner) return res.json(sales);
     return res.json(sales.map(({ total_cost, items, ...sale }) => ({

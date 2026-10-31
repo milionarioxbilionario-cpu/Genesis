@@ -8,6 +8,10 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { z } = require('zod');
 const prisma = require('../utils/prisma');
+const { findSelf } = require('../utils/ownerSelf');
+const H = require('../utils/hours');
+const { forgetSchedule } = require('../utils/tenantHours');
+const { publish } = require('../utils/liveBus');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/rbac');
 const { asyncHandler, httpError } = require('../utils/http');
@@ -75,7 +79,7 @@ router.get('/', asyncHandler(async (req, res) => {
     store: { name: t.name, location: t.location, phone: t.phone, email: t.email, business_type: t.business_type, nuit: t.nuit || null, receipt_footer: t.receipt_footer || null, has_logo: Boolean(t.logo_data) },
     // Etapa C: ponto no mapa (null = ainda por configurar).
     geo: t.lat != null && t.lng != null ? { lat: t.lat, lng: t.lng, address: t.address || null } : null,
-    hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00' },
+    hours: { opening_time: t.opening_time || '08:00', closing_time: t.closing_time || '20:00', schedule: H.parse(t) },
     discount_free_pct: t.discount_free_pct,
     custom_items_enabled: t.custom_items_enabled !== false,
     expiry_alert_days: t.expiry_alert_days,
@@ -135,12 +139,24 @@ router.put('/logo', asyncHandler(async (req, res) => {
   res.json({ ok: true, has_logo: Boolean(logo) });
 }));
 
+// 31/10: horario por dia, 24 h, depois da meia-noite, pausas e feriados ({ schedule }).
+// O pedido antigo ({ opening_time, closing_time }) continua a funcionar (igual todos os dias).
 router.put('/hours', asyncHandler(async (req, res) => {
-  const data = hoursSchema.parse(req.body);
+  const schedule = hoursFromBody(req.body);
+  const data = { ...H.summary(schedule), hours_json: JSON.stringify(schedule) };
   await prisma.tenant.update({ where: { id: tenantId(req) }, data });
-  await writeAudit({ req, action: 'UPDATE_HOURS', entityType: 'tenant', entityId: tenantId(req), newValue: data });
-  res.json({ ok: true, ...data });
+  forgetSchedule(tenantId(req));
+  await writeAudit({ req, action: 'UPDATE_HOURS', entityType: 'tenant', entityId: tenantId(req), newValue: { mode: schedule.mode, day_end: schedule.day_end, opening_time: data.opening_time, closing_time: data.closing_time } });
+  res.json({ ok: true, opening_time: data.opening_time, closing_time: data.closing_time, schedule });
 }));
+
+function hoursFromBody(body) {
+  if (body && body.schedule) {
+    try { return H.normalize(body.schedule); } catch (err) { throw httpError(400, err.message, 'INVALID_HOURS'); }
+  }
+  const legacy = hoursSchema.parse(body);
+  return H.fromLegacy(legacy.opening_time, legacy.closing_time);
+}
 
 router.put('/discount', asyncHandler(async (req, res) => {
   const data = discountSchema.parse(req.body);
@@ -234,7 +250,8 @@ router.put('/month-close', asyncHandler(async (req, res) => {
 // exige a senha do dono: uma sessao aberta esquecida nao chega.
 router.put('/authorization-pin', asyncHandler(async (req, res) => {
   const { pin, owner_password } = pinSchema.parse(req.body);
-  const me = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  // A senha e da pessoa (estabelecimento de casa); o PIN fica neste estabelecimento.
+  const me = await findSelf(req, { password_hash: true });
   if (!me || !(await bcrypt.compare(owner_password, me.password_hash))) {
     await writeAudit({ req, action: 'AUTH_PIN_CHANGE_FAIL', entityType: 'tenant', entityId: tenantId(req) });
     throw httpError(401, 'Senha do dono incorrecta', 'BAD_PASSWORD');
@@ -333,6 +350,7 @@ router.post('/expenses', asyncHandler(async (req, res) => {
     data: { tenant_id: tenantId(req), date: expenseDate(data.date), kind: data.kind, entity: data.entity, category: data.category, description: data.description, amount: data.amount, created_by: req.user.userId },
   });
   await writeAudit({ req, action: 'CREATE_EXPENSE', entityType: 'expense', entityId: expense.id, newValue: data });
+  publish({ type: 'expense', tenant_id: tenantId(req), total: data.amount, label: data.description || data.category || null });
   res.status(201).json(expense);
 }));
 
