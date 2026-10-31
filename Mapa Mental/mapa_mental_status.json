@@ -1801,7 +1801,7 @@
       "status": "ok",
       "summary": "Mapa ao vivo do admin: todos os movimentos (verde/vermelho), turnos e subscricoes; satelite como camada.",
       "role": "Etapa C.",
-      "notes": "31/10/2026 E1: satelite por rever no browser (etapaC.mjs)."
+      "notes": "31/10/2026 E1: todos os movimentos ao vivo; satelite recusado pelo Mapbox (429, conta do fundador) -> aviso e volta ao mapa, confirmado em producao."
     },
     "backend/src/utils/actingTenant.js": {
       "status": "ok",
@@ -1861,7 +1861,7 @@
       "status": "ok",
       "summary": "Editor de horario (igual / 24 h / por dia, pausas, feriados, horas em 24 h).",
       "role": "Onboarding e Definicoes.",
-      "notes": "31/10/2026 E1: build OK; e2e correcoes_3110."
+      "notes": "31/10/2026 E1: escolhas em coluna no telemovel (0 px a mais a 390), em linha no PC; e2e em producao."
     },
     "frontend/src/components/CopyCatalogDialog.jsx": {
       "status": "ok",
@@ -1879,7 +1879,7 @@
       "status": "ok",
       "summary": "E2E das correccoes de 31/10 (2.o estabelecimento, esqueci o PIN, dois separadores, horario, guarda, copiar).",
       "role": "Prova no browser.",
-      "notes": "31/10/2026 E1: ver Mapa Mental Parte B."
+      "notes": "31/10/2026 E1: 11/11 em genesismz.com, sem erros de JS."
     }
   }
 }

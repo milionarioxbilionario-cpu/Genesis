@@ -2271,3 +2271,8 @@ Escrevi o plano completo, com a lista «E se…?» obrigatória para cada funcio
 
 SKILLS
 Instalei a «arena» (verifiquei linha a linha: não envia nada para fora, só escreve na sua pasta; precisa de Python, que este PC não tem) e a «frontend-design» oficial da Anthropic (para o desenho não parecer feito por IA).
+
+SITE REAL (31/10): publicado e testado em genesismz.com. As correcções de hoje: 11 de 11, sem erros. Vários estabelecimentos: 6 de 6. Os 41 fluxos principais (vender, terminal, relatórios...): todos passaram. Mapa do admin: abre, mostra os pinos e as vendas ao vivo.
+Nos testes apanhei e corrigi mais 3 coisas antes de chegarem a si: (1) no telemóvel, as escolhas do horário saíam do ecrã; (2) ao trocar de estabelecimento, a página recarregava em vez de ir para o Início; (3) o satélite.
+SATÉLITE: descobri a causa do «bugado». O Mapbox está a recusar as imagens de satélite à sua conta (resposta 429 = limite da conta). Testei à parte, até com o estilo de satélite oficial do Mapbox, e acontece o mesmo; o mapa normal funciona. Agora, quando isto acontece, o mapa avisa em português e volta ao mapa normal. Para o satélite voltar: na conta Mapbox (kleytonvelichane3@gmail.com) ver o uso e a faturação.
+Funcionou: sim (o satélite depende da conta Mapbox).
