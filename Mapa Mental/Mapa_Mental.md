@@ -1380,3 +1380,4 @@ As senhas estão em **bcrypt custo 12** (`bcrypt.hash(password, 12)`), um hash d
 - **Decisões:** juntar só a contas de dono activas; o lembrete do mapa aparece só quando falta o ponto.
 - Segue-se: publicar e e2e em produção; depois **E2 — painel geral dedicado e gerentes**.
 
+- **E1 (2.ª parte) publicada `22f9169`:** no site real `correcoes_3110.mjs` 11/11 (o último passo do onboarding mostra o cartão «Onde fica o estabelecimento?») e `etapaC.mjs` 8/8 (o link do Google Maps mostra o ponto e só grava com «Guardar este ponto»; 1 erro de JS passageiro numa corrida, a seguinte limpa). Contas de teste apagadas. **E1 fechada.** Segue-se a E2 (painel geral dedicado + gerentes).
