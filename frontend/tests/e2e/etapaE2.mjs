@@ -49,6 +49,22 @@ try {
     return r.status;
   });
   ok(made === 201, '2.o estabelecimento criado', made);
+  // L17: o aviso ao vivo de uma venda abre a propria venda.
+  await page.getByText('Hoje até agora').first().waitFor({ timeout: T });
+  await page.waitForTimeout(2500); // o canal ao vivo liga-se
+  const sold = await page.evaluate(async () => {
+    const products = await (await fetch('/api/products', { credentials: 'same-origin' })).json();
+    const p = products.find((x) => x.is_active && x.stock_qty > 0 && (!x.unit || x.unit === 'un'));
+    const r = await fetch('/api/sales', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ product_id: p.id, quantity: 1, unit_sell_price: p.sell_price, unit_cost_price: 0 }], total_amount: p.sell_price, payment_method: 'cash', amount_received: p.sell_price }) });
+    return { status: r.status, id: (await r.json()).id };
+  });
+  ok(sold.status === 201, 'venda feita (para o aviso ao vivo)', sold);
+  await page.getByRole('button', { name: /^Venda n\.º/ }).first().click({ timeout: T });
+  await page.waitForURL(new RegExp('/app/vendas\\?venda=' + sold.id), { timeout: T });
+  await page.getByRole('heading', { name: /^Venda n\.º/ }).first().waitFor({ timeout: T });
+  ok(true, 'L17: tocar no aviso da venda abre a própria venda');
+  await shot(page, 'E2-00-aviso-abre-venda');
+
   // Ao entrar de novo (abrir a app): o hub.
   await page.goto(BASE + '/inicio');
   await page.waitForURL('**/escolher', { timeout: T });

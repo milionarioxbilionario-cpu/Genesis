@@ -1888,28 +1888,28 @@
       "notes": "31/10/2026 E2: painel geral: somas dentro de cada estabelecimento; verify_system 54."
     },
     "frontend/src/layouts/GroupShell.jsx": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: painel geral com barra propria; build; e2e etapaE2 por correr."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "frontend/src/pages/group/GroupPages.jsx": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: 7 paginas do painel geral; build; e2e por correr."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "frontend/src/pages/group/Hub.jsx": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: hub «Em qual estabelecimento deseja entrar?»; build; e2e por correr."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "frontend/src/components/ManagersCard.jsx": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: gerentes (Equipa e painel geral); build; e2e por correr."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "frontend/src/components/GroupCongrats.jsx": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: mensagem Parabens ao 2.o estabelecimento; build."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "frontend/src/utils/establishments.js": {
-      "status": "partial",
-      "notes": "31/10/2026 E2: entrar num estabelecimento, hub, ultima escolha."
+      "status": "ok",
+      "notes": "01/11/2026 E2: confirmado no site real (etapaE2.mjs 24/24)."
     },
     "backend/src/middleware/posWriteAuth.js": {
       "status": "broken",

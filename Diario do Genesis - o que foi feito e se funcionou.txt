@@ -2311,3 +2311,4 @@ SITE REAL (31/10, 2.ª parte): publicado e testado em genesismz.com: as correcç
 - Novo: tocar no aviso de uma venda abre essa venda (antes abria a lista).
 - Testes: 149 + 82 verificações no servidor, todas certas. Funcionou: sim no servidor; falta repetir no site real depois de publicar.
 - Nota: o relógio deste computador está cerca de 1 hora atrasado. A app usa a hora do servidor (certa), mas convém acertar a hora do Windows.
+- Publicado e repetido no site real: 24 de 24 (gerente, Painel geral, hub e o aviso da venda que abre a venda). Funcionou: sim.
