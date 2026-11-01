@@ -260,6 +260,10 @@ router.put('/authorization-pin', asyncHandler(async (req, res) => {
     await writeAudit({ req, action: 'AUTH_PIN_CHANGE_FAIL', entityType: 'tenant', entityId: tenantId(req) });
     throw httpError(401, 'Senha do dono incorrecta', 'BAD_PASSWORD');
   }
+  // E2: o PIN do dono nao pode ser o de um gerente activo (o rastreio diria «dono»
+  // no que o gerente autorizou, e o PIN dele passava nas accoes so do dono).
+  const managers = await prisma.user.findMany({ where: { tenant_id: tenantId(req), role: 'manager', is_active: true, pin_hash: { not: null } }, select: { pin_hash: true } });
+  for (const m of managers) if (await bcrypt.compare(pin, m.pin_hash)) throw httpError(409, 'Este PIN já é de um gerente deste estabelecimento. Escolha outro.', 'PIN_TAKEN');
   await prisma.tenant.update({ where: { id: tenantId(req) }, data: { cancel_pin_hash: await bcrypt.hash(pin, 10) } });
   await writeAudit({ req, action: 'AUTH_PIN_CHANGED', entityType: 'tenant', entityId: tenantId(req) });
   res.json({ ok: true, configured: true });

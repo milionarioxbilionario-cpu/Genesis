@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: c0ebfffb-5761-4d6b-b8f3-8118785ad444
-  modified: 2026-10-27T16:27:26.381Z
+  modified: 2026-11-01T11:45:45.186Z
 ---
 
 Desde 27/10/2026 o fundador trabalha por **etapas** (plano `Para o Claude/planos/kind-sleeping-squid.md`: etapa A correcções rápidas, depois menu B–N).
@@ -27,3 +27,4 @@ Antes (25/10): «faz tudo sem parar e avisa no fim de cada etapa» — continua 
 
 **Update 2026-10-31:** o fundador reclamou que «não faço nada direito» (Etapa D falhou no 2.º estabelecimento). Pediu: plano completo («pensar como arquitecto: e se...?»), corrigir tudo, modo escuro, movimento fluido, publicar e um PDF com o que fiz e como verificar. Plano novo: `Mapa Mental/Plano 31-10-2026 - corrigir, painel geral e experiencia premium.md` (etapas E1 correcções, E2 painel geral + gerentes, E4 códigos de barras, E5 escuro/movimento, E6 site/admin/mapa mental, E7 mapa ao vivo). Ver [[lista-e-se]].
 - Limite de uso: workflows com 8–9 agentes esgotaram o limite de 5 h duas vezes sem devolver resultados (só 1 de 17 acabou). Preferir trabalho directo (ler o código eu mesmo) e, se usar agentes, poucos e focados.
+- **01/11 (3.ª vez):** mesmo com o ultracode ligado, uma revisão de segurança com só 8 agentes (3 revisores + 5 verificadores) gastou ~1,46 M tokens (os agentes herdam o esforço máximo da sessão) e esgotou o limite de 5 h; 2 agentes falharam. Os achados foram bons (fugas reais), mas o custo é proibitivo nesta conta. Regra: no máximo 2–3 agentes por workflow, `effort: 'medium'` explícito em cada `agent()`, sem fase de verificação por agente (verificar eu mesmo com testes).

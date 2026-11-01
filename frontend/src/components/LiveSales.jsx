@@ -58,7 +58,9 @@ export default function LiveSales() {
       const { hidden: h, t: tr, toast: push, navigate: go } = ref.current;
       const text = liveText(kind, d, tr, h);
       if (!text) return;
-      push(<button type="button" className="text-left" onClick={() => go(LIVE[kind].to)}>{text}</button>, LIVE[kind].tone);
+      // E2 (L17): o aviso de uma venda abre a propria venda.
+      const to = d.sale_id && (kind === 'sale' || kind === 'cancel') ? '/app/vendas?venda=' + d.sale_id : LIVE[kind].to;
+      push(<button type="button" className="text-left" onClick={() => go(to)}>{text}</button>, LIVE[kind].tone);
     };
     for (const kind of Object.keys(LIVE)) es.addEventListener(kind, show(kind));
     return () => es.close();

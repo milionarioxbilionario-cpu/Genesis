@@ -181,7 +181,7 @@ function GoalCard({ month, onEdit }) {
       />
       {!month.has_goal ? (
         <div className="flex flex-col items-start gap-3">
-          <p className="text-base text-ink-muted">{t('Já vendeu {v} este mês. Defina quanto quer vender para ver o progresso e quando lá chega.', { v: money(month.revenue) })}</p>
+          <p className="text-base text-ink-muted">{onEdit ? t('Já vendeu {v} este mês. Defina quanto quer vender para ver o progresso e quando lá chega.', { v: money(month.revenue) }) : t('Já vendeu {v} este mês.', { v: money(month.revenue) })}</p>
           {onEdit ? <Button variant="primary" icon={Target} onClick={onEdit}>{t('Definir a meta')}</Button> : <p className="text-sm text-ink-muted">{t('O dono ainda não definiu a meta deste mês.')}</p>}
         </div>
       ) : (

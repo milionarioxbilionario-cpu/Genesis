@@ -14,7 +14,7 @@
 const id = '[^/?#]+';
 const ALLOW = [
   // Inicio, vendas, avisos, rastreio, turnos
-  ['GET', `^/api/owner/(live|tenant|overview|sales|shift-closings|debts|goals/current|goals/history|notifications|alerts|audit|audit/${id})$`],
+  ['GET', `^/api/owner/(live|tenant|overview|sales|sales/${id}|shift-closings|debts|goals/current|goals/history|notifications|alerts|audit|audit/${id})$`],
   ['GET', '^/api/owner/reports/(daily|weekly|timeline)$'],
   // Equipa: caixistas e guardas; terminais
   ['GET', '^/api/owner/(cashiers|terminals)$'],
@@ -79,6 +79,8 @@ const MANAGER_HIDDEN_ACTIONS = [
   'PASSWORD_CHANGED', 'PASSWORD_CHANGE_FAIL', 'EMAIL_CHANGE_STARTED', 'EMAIL_CHANGED', 'BIRTHDAY_SET', 'PASSKEY_ADDED', 'PASSKEY_REMOVED',
   'CREATE_ESTABLISHMENT', 'ESTABLISHMENT_CLOSED', 'ESTABLISHMENT_DELETED', 'ESTABLISHMENT_REOPENED', 'ESTABLISHMENT_CLOSE_FAIL', 'COPY_CATALOG',
   'MANAGER_CREATED', 'MANAGER_UPDATED',
+  // O envio do relatorio leva o WhatsApp do dono («to»).
+  'REPORT_SENT', 'REPORT_SEND_FAILED',
 ];
 
 function stripSensitive(value, depth = 0) {
@@ -96,12 +98,24 @@ function stripSensitive(value, depth = 0) {
 // Rotas em que o custo vem com nome neutro: as perdas e as entradas de stock
 // valem a preco de CUSTO; o «total» da lista de compras e o investimento.
 const withoutKeys = (o, keys) => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !keys.includes(k)));
+// Sugestoes de compra: o servidor ordena pelo investimento (quantidade x custo) e os
+// parados pelo valor a custo; mesmo sem os valores, a ORDEM deixava deduzir custos.
+const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''));
+function managerRestock(x) {
+  if (!x || typeof x !== 'object') return x;
+  return {
+    ...x,
+    ...(Array.isArray(x.items) ? { items: [...x.items].sort((a, b) => (b.quantity || 0) - (a.quantity || 0) || byName(a, b)) } : {}),
+    ...(Array.isArray(x.slow_movers) ? { slow_movers: [...x.slow_movers].sort((a, b) => (b.stock || 0) - (a.stock || 0) || byName(a, b)) } : {}),
+  };
+}
 function managerReport(r) {
   if (!r || typeof r !== 'object') return r;
-  const out = { ...r };
+  // O melhor e o pior dia escolhem-se pelo lucro: nao vao para o gerente.
+  const out = withoutKeys(r, ['best_day', 'worst_day']);
   if (Array.isArray(out.losses)) out.losses = out.losses.map((l) => withoutKeys(l, ['value']));
   if (Array.isArray(out.by_day)) out.by_day = out.by_day.map((d) => withoutKeys(d, ['losses']));
-  for (const k of ['best_day', 'worst_day']) if (out[k]) out[k] = withoutKeys(out[k], ['losses']);
+  if (out.restock) out.restock = managerRestock(out.restock);
   return out;
 }
 function managerTimeline(t) {
@@ -142,7 +156,11 @@ const SHAPES = [
   ['GET', /^\/api\/owner\/alerts$/, (a) => (a && typeof a === 'object' ? { ...a, expiringLots: (a.expiringLots || []).map((l) => withoutKeys(l, ['value'])), expiredProducts: (a.expiredProducts || []).map((l) => withoutKeys(l, ['value'])) } : a)],
   ['GET', /^\/api\/settings$/, managerSettings],
   ['GET', /^\/api\/shopping-lists$/, (rows) => (Array.isArray(rows) ? rows.map(listTotalsUnits) : rows)],
+  ['GET', /^\/api\/shopping-lists\/suggestion$/, managerRestock],
   ['GET', /^\/api\/shopping-lists\/[^/]+$/, listTotalsUnits],
+  // Guardar a lista devolve-a com os totais (o total e a entrega sao a custo).
+  ['POST', /^\/api\/shopping-lists$/, listTotalsUnits],
+  ['PUT', /^\/api\/shopping-lists\/[^/]+$/, listTotalsUnits],
   // O sino: a localizacao e os custos sao do dono (o gerente nao os muda).
   ['GET', /^\/api\/owner\/notifications$/, managerNotifications],
 ];

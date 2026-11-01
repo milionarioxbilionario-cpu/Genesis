@@ -73,6 +73,8 @@ const authMiddleware = async (req, res, next) => {
       scope: decoded.scope || null,
       tid: decoded.tid || null,
     };
+    // O canal ao vivo volta a validar a sessao com isto a cada batimento (utils/liveBus.js).
+    req.sessionClaims = decoded;
 
     // Etapa D (31/10): a pagina diz que estabelecimento mostra. Se o dono trocou
     // noutro separador, este pedido iria para o estabelecimento errado: 409 e a

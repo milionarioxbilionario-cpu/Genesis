@@ -224,8 +224,10 @@ router.get('/reports', asyncHandler(async (req, res) => {
 // a ligar-se de 5 em 5 s se cair, e ai le a lista outra vez).
 const GROUP_LIVE = new Set(['sale', 'cancel', 'loss', 'debt', 'debt_payment', 'expense', 'stock_in', 'shift_open', 'shift_close', 'shift_fail']);
 router.get('/live', asyncHandler(async (req, res) => {
-  const { names } = await groupOf(req);
+  const { user, names } = await groupOf(req);
   openStream(req, res, {
+    // Acesso retirado a um dos estabelecimentos: o canal fecha (e volta a ligar com a lista nova).
+    recheck: async () => { const ids = await ownerTenantIds(user); return [...names.keys()].every((id) => ids.includes(id)); },
     filter: (e) => names.has(e.tenant_id) && GROUP_LIVE.has(e.type),
     shape: (e) => ({
       type: e.type, tenant_id: e.tenant_id, establishment: names.get(e.tenant_id), sale_id: e.sale_id || null, daily_number: e.daily_number ?? null,

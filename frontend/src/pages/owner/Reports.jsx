@@ -173,7 +173,7 @@ function Restock({ data, title }) {
         />
         {data.slow_movers.length > 0 && (
           <Alert tone="info" className="mt-3" title={t('Não reforçar')}>
-            {t('Quase não se venderam:')} {data.slow_movers.slice(0, 6).map((s) => t('{name} ({n} em stock, {v} parado)', { name: s.name, n: int(s.stock), v: money(s.stock_value) })).join(' · ')}.
+            {t('Quase não se venderam:')} {data.slow_movers.slice(0, 6).map((s) => (seesCosts ? t('{name} ({n} em stock, {v} parado)', { name: s.name, n: int(s.stock), v: money(s.stock_value) }) : t('{name} ({n} em stock)', { name: s.name, n: int(s.stock) }))).join(' · ')}.
           </Alert>
         )}
       </div>
@@ -340,7 +340,7 @@ function Daily({ day, setDay }) {
               </div>
               <ProgressBar className="mt-3" value={g.accumulated_pct} />
             </Card>
-          ) : <Alert tone="info" className="mt-4">{t('Sem meta para este mês. Defina-a no Início para ver quanto cada dia vale da meta.')}</Alert>}
+          ) : <Alert tone="info" className="mt-4">{seesCosts ? t('Sem meta para este mês. Defina-a no Início para ver quanto cada dia vale da meta.') : t('O dono ainda não definiu a meta deste mês.')}</Alert>}
           <Breakdown r={data} />
           <Timeline from={day} to={day} />
         </>

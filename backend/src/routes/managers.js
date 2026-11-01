@@ -111,6 +111,9 @@ router.put('/:id', asyncHandler(async (req, res) => {
   // Senha nova: a versao (pv) muda e as sessoes abertas do gerente caem.
   if (data.password) update.password_hash = await bcrypt.hash(data.password, 12);
   if (data.pin !== undefined) update.pin_hash = data.pin ? await bcrypt.hash(data.pin, 10) : null;
+  // Reactivar sem PIN novo tira o antigo: enquanto esteve inactivo, o mesmo PIN pode
+  // ter sido dado a outra pessoa (o rastreio ficava ambiguo). O dono define outro.
+  else if (data.is_active === true && !m.is_active && m.pin_hash) update.pin_hash = null;
   const saved = await prisma.system.user.update({ where: { id: m.id }, data: update });
   invalidateSessionUser(m.id);
   await writeAudit({

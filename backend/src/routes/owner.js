@@ -173,7 +173,8 @@ router.get('/audit', asyncHandler(async (req, res) => {
 
 router.get('/audit/:id', asyncHandler(async (req, res) => {
   const tenantId = tenantOf(req);
-  const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId } });
+  // E2: o detalhe esconde ao gerente o mesmo que a lista (404, como se nao existisse).
+  const l = await prisma.auditLog.findFirst({ where: { id: req.params.id, tenant_id: tenantId, ...(req.user.role === 'manager' ? { action: { notIn: MANAGER_HIDDEN_ACTIONS } } : {}) } });
   if (!l) throw httpError(404, 'Registo não encontrado', 'AUDIT_NOT_FOUND');
   const [terminals, users, refs] = await Promise.all([terminalNames(tenantId), userNames(tenantId, [l]), refNames(tenantId, [l])]);
   const row = auditRow(l, terminals, users, refs);
@@ -377,6 +378,15 @@ router.get('/sales', asyncHandler(async (req, res) => {
   ]);
   await attachPeople(tenantOf(req), rows, [['cashier', 'cashier_user_id']]);
   res.json({ rows, total, page: q.page, page_size: q.page_size });
+}));
+
+// E2 (L17): uma venda (o aviso ao vivo abre-a no painel). So deste estabelecimento.
+router.get('/sales/:id', asyncHandler(async (req, res) => {
+  const id = z.string().uuid().parse(req.params.id);
+  const sale = await prisma.sale.findFirst({ where: { id, tenant_id: tenantOf(req) }, include: { items: true, payments: { select: { method: true, amount: true } } } });
+  if (!sale) throw httpError(404, 'Venda não encontrada', 'SALE_NOT_FOUND');
+  await attachPeople(tenantOf(req), [sale], [['cashier', 'cashier_user_id']]);
+  res.json(sale);
 }));
 
 router.get('/shift-closings', asyncHandler(async (req, res) => {

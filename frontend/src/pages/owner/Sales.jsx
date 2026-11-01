@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../../utils/api';
 import useApi from '../../utils/useApi';
 import SaleDrawer from '../../components/SaleDrawer';
 import { money, dateTime, isoDay, PAYMENT_LABEL } from '../../utils/format';
@@ -25,6 +27,14 @@ function SalesTable() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const cashiers = useApi('/api/owner/cashiers');
+  // E2 (L17): ?venda=<id> abre essa venda (vem do aviso ao vivo).
+  const [params, setParams] = useSearchParams();
+  const openId = params.get('venda');
+  useEffect(() => {
+    if (!openId) return;
+    api.get('/api/owner/sales/' + openId).then((r) => setSelected(r.data)).catch(() => {});
+  }, [openId]);
+  const closeSale = () => { setSelected(null); if (openId) setParams({}, { replace: true }); };
   const query = useMemo(() => {
     const p = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE) });
     // «Até hoje» vai sem limite: com o relogio do aparelho atrasado (ja aconteceu), o
@@ -64,7 +74,7 @@ function SalesTable() {
       <Table columns={columns} rows={data?.rows || []} loading={loading && !data} onRowClick={setSelected} empty={<p className="py-10 text-center text-ink-muted">{t('Sem vendas neste período.')}</p>} />
       {data && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPage={setPage} />}
 
-      <SaleDrawer sale={selected} onClose={() => setSelected(null)} />
+      <SaleDrawer sale={selected} onClose={closeSale} />
     </>
   );
 }

@@ -53,3 +53,22 @@ test('canal ao vivo do gerente: sem despesas; perdas e entradas sem valor; venda
   assert.deepStrictEqual(managerLiveEvent({ type: 'stock_in', total: 900 }), { type: 'stock_in', total: null });
   assert.deepStrictEqual(managerLiveEvent({ type: 'sale', total: 100, profit: 40 }), { type: 'sale', total: 100 });
 });
+
+test('revisao 31/10: listas guardadas so com unidades; sugestoes e relatorio sem ordem pelo custo; envios de relatorio escondidos', () => {
+  const list = { id: 'l', totals: { units: 1, investment: 400, delivery: 50, total: 450 }, supplier: { name: 'S', delivery_cost_per_visit: 50 } };
+  for (const [m, u] of [['POST', '/api/shopping-lists'], ['PUT', '/api/shopping-lists/l1']]) {
+    const out = managerShape(m, u, list);
+    assert.deepStrictEqual(out.totals, { units: 1 }, m + ' ' + u);
+    assert.strictEqual(out.supplier.delivery_cost_per_visit, undefined);
+  }
+  const sug = managerShape('GET', '/api/shopping-lists/suggestion', { items: [{ name: 'B', quantity: 2, investment: 900 }, { name: 'A', quantity: 5, investment: 100 }], slow_movers: [{ name: 'Z', stock: 1, stock_value: 999 }, { name: 'Y', stock: 9, stock_value: 1 }], total_investment: 1000 });
+  assert.deepStrictEqual(sug.items.map((i) => i.name), ['A', 'B']);
+  assert.deepStrictEqual(sug.slow_movers.map((i) => i.name), ['Y', 'Z']);
+  assert.strictEqual(sug.total_investment, undefined);
+  const week = managerShape('GET', '/api/owner/reports/weekly', { gross_revenue: 1, best_day: { date: 'x' }, worst_day: { date: 'y' }, restock: { items: [{ name: 'B', quantity: 1 }, { name: 'A', quantity: 3 }] } });
+  assert.strictEqual(week.best_day, undefined);
+  assert.strictEqual(week.worst_day, undefined);
+  assert.deepStrictEqual(week.restock.items.map((i) => i.name), ['A', 'B']);
+  const { MANAGER_HIDDEN_ACTIONS } = require('../src/utils/managerPolicy');
+  assert.ok(MANAGER_HIDDEN_ACTIONS.includes('REPORT_SENT') && MANAGER_HIDDEN_ACTIONS.includes('REPORT_SEND_FAILED'));
+});

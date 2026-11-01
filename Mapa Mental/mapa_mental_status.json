@@ -1,7 +1,7 @@
 {
   "$comment": "FONTE DE VERDADE curada do Mapa Mental 3D do Genesis. Editado a MAO. O gerador (scripts/gen_mindmap_data.js) le isto e cruza com o disco: o que nao estiver aqui fica CINZENTO (untracked) - nunca inventa estado. Estados: ok (verde, funciona) | partial (laranja, incompleto) | broken (vermelho, nao roda ou tem falha de seguranca) | planned (azul, ainda nao existe). REGRA: sempre que um ficheiro novo for planeado, entra aqui com planned:true e dependsOn.",
   "version": "1.1",
-  "updatedAt": "2026-10-31",
+  "updatedAt": "2026-11-01",
   "files": {
     "backend/src/index.js": {
       "status": "ok",
@@ -1783,7 +1783,7 @@
       "status": "ok",
       "summary": "Eventos ao vivo (SSE) por loja; cada cliente isolado.",
       "role": "Etapa C.",
-      "notes": "30/10/2026 Etapa C: verify_system 44 14/14, etapaC.mjs 9/9, geo/liveBus testes 8/8."
+      "notes": "01/11/2026 E2: canal ao vivo revalida a sessao a cada batimento e dura no maximo 30 min; verify_system 53."
     },
     "frontend/src/pages/owner/LocationCard.jsx": {
       "status": "ok",
@@ -1910,6 +1910,10 @@
     "frontend/src/utils/establishments.js": {
       "status": "partial",
       "notes": "31/10/2026 E2: entrar num estabelecimento, hub, ultima escolha."
+    },
+    "backend/src/middleware/posWriteAuth.js": {
+      "status": "broken",
+      "notes": "01/11/2026 E2: RISCO CONHECIDO: fila sem rede aceita vendas/perdas com o cookie do terminal em nome de qualquer caixista; proposta: passe da fila por caixista."
     }
   }
 }

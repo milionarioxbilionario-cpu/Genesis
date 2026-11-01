@@ -58,11 +58,16 @@ try {
   await unlockIfNeeded(page);
   await page.getByText('Hoje até agora').first().waitFor({ timeout: T });
   ok((await page.getByRole('button', { name: 'Os seus estabelecimentos' }).innerText()).includes(nameA), 'barra lateral mostra o estabelecimento de casa');
+  // E2: com o 2.o estabelecimento aparece uma vez a mensagem «Parabens» (Painel geral e Hub).
+  await page.getByRole('heading', { name: 'Parabéns!' }).waitFor({ timeout: T });
+  ok(true, 'mensagem «Parabéns» ao ter o 2.º estabelecimento');
+  await shot(page, 'D-02b-parabens');
+  await page.getByRole('button', { name: 'Agora não' }).click();
   await page.getByRole('button', { name: 'Os seus estabelecimentos' }).click();
   await page.getByText('Mercearia da Matola').waitFor({ timeout: T });
   ok(await page.getByText('por configurar').isVisible(), 'seletor: o 2.o aparece «por configurar»');
   await shot(page, 'D-03-seletor');
-  await page.getByRole('button', { name: 'Painel geral' }).click();
+  await page.getByRole('button', { name: 'Painel geral', exact: true }).click();
   // E2 (31/10): o painel geral tem barra propria (/geral) e um cartao por estabelecimento.
   await page.waitForURL('**/geral', { timeout: T });
   await page.getByRole('heading', { name: 'Visão geral' }).waitFor({ timeout: T });

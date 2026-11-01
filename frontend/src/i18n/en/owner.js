@@ -1383,5 +1383,9 @@ addTranslations('en', {
   'Gerente não encontrado': 'Manager not found',
   'O gerente só pode mudar a mensagem do recibo.': 'The manager can only change the receipt message.',
   'Produtos sem custo': 'Products without a cost',
+  'Já vendeu {v} este mês.': 'You have sold {v} this month.',
+  '{name} ({n} em stock)': '{name} ({n} in stock)',
+  'Gerente reactivado. O PIN antigo foi retirado: defina-lhe um novo se ele deve autorizar.': 'Manager reactivated. The old PIN was removed: set a new one if they should authorise.',
+  'Este PIN já é de um gerente deste estabelecimento. Escolha outro.': 'This PIN already belongs to a manager of this business. Choose another.',
   'O gerente criou {n} produto(s) sem o custo ({names}). Ponha o preço de compra para o lucro sair certo.': 'The manager created {n} product(s) without a cost ({names}). Add the purchase price so the profit comes out right.',
 });

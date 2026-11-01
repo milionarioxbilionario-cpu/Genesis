@@ -47,7 +47,7 @@ export default function ManagersCard({ tenantId = null, establishments = null })
     if (m.is_active && !(await confirm({ title: t('Desactivar gerente'), message: t('{name} deixa de entrar no painel e a sessão aberta termina imediatamente.', { name: m.name }), confirmLabel: t('Desactivar'), danger: true }))) return;
     try {
       await api.put('/api/managers/' + m.id, { is_active: !m.is_active });
-      toast(m.is_active ? t('Gerente desactivado.') : t('Gerente reactivado.'));
+      toast(m.is_active ? t('Gerente desactivado.') : m.has_pin ? t('Gerente reactivado. O PIN antigo foi retirado: defina-lhe um novo se ele deve autorizar.') : t('Gerente reactivado.'));
       list.reload();
     } catch (err) { toast(errorMessage(err), 'danger'); }
   }

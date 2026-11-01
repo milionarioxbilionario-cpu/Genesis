@@ -211,8 +211,9 @@ router.patch('/:id', auth, requireRole('owner'), async (req, res) => {
     const data = productUpdateSchema.parse(req.body);
     const tenantId = req.user.tenantId;
     const id = req.params.id;
-    // E2: o custo e do dono (o gerente muda o preco de venda, o stock, os lotes).
-    if (req.user.role === 'manager') delete data.cost_price;
+    // E2: o custo e do dono (o gerente muda o preco de venda, o stock, os lotes), e
+    // tirar o produto do catalogo tambem (is_active: false = o mesmo que remover).
+    if (req.user.role === 'manager') { delete data.cost_price; delete data.is_active; }
 
     // Fetch existing product
     const existing = await prisma.product.findUnique({ where: { id } });

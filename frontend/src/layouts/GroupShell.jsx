@@ -43,7 +43,7 @@ function Nav({ onNavigate }) {
             {t(label)}
           </NavLink>
         ))}
-        <NavLink to="/escolher" onClick={onNavigate} className="mt-3 flex h-9 items-center gap-3 rounded border border-border px-3 text-base text-ink-2 hover:bg-subtle hover:text-ink">
+        <NavLink to="/escolher" onClick={onNavigate} className="mt-3 flex min-h-9 items-center gap-3 rounded border border-border px-3 py-1.5 text-base leading-tight text-ink-2 hover:bg-subtle hover:text-ink">
           <ArrowLeftRight size={17} strokeWidth={1.8} aria-hidden="true" />
           {t('Entrar num estabelecimento')}
         </NavLink>

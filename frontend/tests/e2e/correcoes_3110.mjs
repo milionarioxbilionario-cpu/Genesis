@@ -68,6 +68,11 @@ try {
   await page.waitForURL('**/app', { timeout: 3 * T });
   await unlockIfNeeded(page);
   await page.getByText('Hoje até agora').first().waitFor({ timeout: T });
+  // E2: ao acabar o 2.o estabelecimento aparece uma vez a mensagem «Parabens» (Painel geral e Hub).
+  const congrats = page.getByRole('dialog', { name: 'Parabéns!' });
+  await congrats.waitFor({ timeout: T });
+  ok(true, 'mensagem «Parabéns» ao acabar o 2.º estabelecimento');
+  await congrats.getByRole('button', { name: 'Agora não' }).click();
   ok((await page.getByRole('button', { name: 'Os seus estabelecimentos' }).innerText()).includes('Mercearia 24h'), 'concluido: o painel abre no 2.o');
   const nProd = await page.evaluate(async () => (await (await fetch('/api/products', { credentials: 'same-origin' })).json()).length);
   ok(nProd > 0, 'o 2.o tem os produtos copiados do 1.o', nProd);

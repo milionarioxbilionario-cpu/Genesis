@@ -2925,7 +2925,9 @@ function leaks(v, path = '', out = []) {
   }
   return out;
 }
-const isoDay = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+// O dia como o servidor o conta (Maputo, UTC+2): entre as 22h e a meia-noite UTC o
+// «hoje» UTC ja e ontem em Maputo e os rastreios do dia vinham vazios.
+const isoDay = (d = new Date()) => new Date(d.getTime() + 2 * 3600000).toISOString().slice(0, 10);
 
 async function test53() {
   section(53, 'E2: gerente — entra com e-mail e senha, so as rotas da lista (403 no resto), nenhum custo/lucro nas respostas, sem act, PIN de autorizacao proprio com o nome no rastreio, senha nova e desactivar cortam logo');
@@ -2973,6 +2975,7 @@ async function test53() {
       '/api/inventory/suppliers', '/api/settings', '/api/owner/tenant', '/api/owner/cashiers', '/api/owner/terminals', '/api/shopping-lists', '/api/shopping-lists/suggestion', '/api/sales',
       '/api/owner/shift-closings', '/api/owner/debts', '/api/owner/goals/current', '/api/owner/goals/history'];
     if (sup.data?.id) allowed.push('/api/inventory/suppliers/' + sup.data.id + '/entries');
+    if (s1.data?.id) allowed.push('/api/owner/sales/' + s1.data.id);
     for (const p of allowed) {
       const r = await g.req('GET', p);
       const found = r.status === 200 ? leaks(r.data) : [];
@@ -2980,9 +2983,9 @@ async function test53() {
     }
     const daily = (await g.req('GET', '/api/owner/reports/daily')).data;
     ok(daily && daily.gross_revenue >= 10000 && Array.isArray(daily.losses) && daily.losses.length >= 1 && daily.losses.every((l) => l.value === undefined), 'relatorio do gerente: receita sim; perdas so com quantidades (o valor e a custo)', daily && daily.losses);
-    const tl = (await g.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}`)).data;
+    const tl = (await g.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}&page_size=200`)).data;
     ok(tl && !tl.rows.some((e) => e.type === 'expense') && tl.rows.filter((e) => e.type === 'loss' || e.type === 'stock').every((e) => e.amount === undefined), 'rastreio do gerente: sem despesas; perdas e compras sem valor', tl && tl.rows.map((e) => e.type));
-    const tlOwner = (await owner.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}`)).data;
+    const tlOwner = (await owner.req('GET', `/api/owner/reports/timeline?from=${day}&to=${day}&page_size=200`)).data;
     ok(tlOwner.rows.some((e) => e.type === 'expense') && tlOwner.rows.some((e) => e.type === 'sale' && typeof e.profit === 'number'), 'o dono continua a ver despesas e lucro no rastreio');
     const st = (await g.req('GET', '/api/settings')).data;
     ok(st && !st.store.phone && !st.store.email && st.taxes === undefined && st.fixed_costs === undefined && st.hours, 'definicoes do gerente: horario sim; contacto do dono, impostos e custos fixos nao', st);
@@ -3013,6 +3016,15 @@ async function test53() {
     // Sem custos nas escritas: produto novo com custo 0 (o dono e avisado), entrada e edicao sem mexer no custo.
     const np = await g.req('POST', '/api/products', { name: 'Produto do Gerente E2', category: 'Geral', sell_price: 5000, cost_price: 999, stock_qty: 3 });
     ok(np.status === 201 && np.data.cost_price === undefined, 'gerente cria um produto (a resposta nao traz custo)', np);
+    // Revisao de seguranca (31/10): tirar do catalogo e do dono (is_active ignorado).
+    const off2 = await g.req('PATCH', '/api/products/' + np.data.id, { is_active: false, sell_price: 5000 });
+    ok(off2.status === 200 && (await prisma.product.findUnique({ where: { id: np.data.id } })).is_active === true, 'gerente nao tira produtos do catalogo (is_active ignorado)', off2.status);
+    const slg = await g.req('POST', '/api/shopping-lists', { name: 'Lista do gerente', items: [{ product_id: ctx.product.id, quantity: 1 }] });
+    ok(slg.status === 201 && JSON.stringify(slg.data.totals) === JSON.stringify({ units: 1 }) && leaks(slg.data).length === 0, 'lista guardada pelo gerente: a resposta so com unidades (o total era a custo)', slg.data && slg.data.totals);
+    const hid = await prisma.auditLog.findFirst({ where: { tenant_id: t, action: 'CREATE_EXPENSE' } });
+    ok(hid && (await g.req('GET', '/api/owner/audit/' + hid.id)).status === 404 && (await owner.req('GET', '/api/owner/audit/' + hid.id)).status === 200, 'detalhe do rastreio: o gerente nao abre uma despesa (404), o dono sim', hid && hid.action);
+    const clash = await owner.req('PUT', '/api/settings/authorization-pin', { pin: MPIN, owner_password: OWNER_PW });
+    ok(clash.status === 409 && clash.data?.code === 'PIN_TAKEN', 'o dono nao pode escolher para si o PIN de um gerente (409)', clash);
     ok((await prisma.product.findUnique({ where: { id: np.data.id } })).cost_price === 0, 'o custo que o gerente mandou foi ignorado (fica 0)');
     const notesO = (await owner.req('GET', '/api/owner/notifications')).data.items;
     ok(notesO.some((n) => n.type === 'cost_missing' && n.params.names.includes('Produto do Gerente E2')), 'o dono e avisado no sino: produto criado pelo gerente sem custo', notesO.map((n) => n.type));
@@ -3066,9 +3078,17 @@ async function test53() {
     ok((await g.req('GET', '/api/owner/overview')).status === 401, 'senha nova: a sessao aberta do gerente cai');
     const g2 = client();
     ok((await g2.req('POST', '/api/auth/login', { email, password: pw + 'Y' })).status === 200, 'entra com a senha nova');
-    await owner.req('PUT', `/api/managers/${managerId}`, { is_active: false });
+    await owner.req('PUT', `/api/managers/${managerId}`, { pin: '7531' });
+    // O canal ao vivo aberto pelo gerente fecha quando ele e desactivado (antes continuava).
+    const t0 = Date.now();
+    const sse = await readSse('/api/owner/live', { Cookie: 'token=' + g2.jar.get('token') }, 99, 90000, () => owner.req('PUT', `/api/managers/${managerId}`, { is_active: false }));
+    const secs = Math.round((Date.now() - t0) / 1000);
+    ok(sse.status === 200 && secs < 75, 'canal ao vivo: fecha sozinho quando o gerente e desactivado (' + secs + ' s)', secs);
     ok((await g2.req('GET', '/api/owner/overview')).status === 401, 'desactivado: a sessao acaba no pedido seguinte');
     ok((await client().req('POST', '/api/auth/login', { email, password: pw + 'Y' })).status === 401, 'desactivado: nao entra');
+    const back = await owner.req('PUT', `/api/managers/${managerId}`, { is_active: true });
+    ok(back.status === 200 && back.data.is_active && back.data.has_pin === false, 'reactivar tira o PIN antigo (o dono define outro)', back.data);
+    await owner.req('PUT', `/api/managers/${managerId}`, { is_active: false });
 
     // Outro dono nao ve nem mexe nos gerentes deste.
     otherTenant = await prisma.tenant.create({ data: { name: ctx.tenant.name + '-O', owner_name: 'Outro', business_type: 'bottle_store', location: 'Teste', phone: '840000008', status: 'active', onboarding_completed: true } });
@@ -3122,6 +3142,10 @@ async function test54() {
     ok(tot.today.revenue === a.today.revenue + b.today.revenue && tot.month.revenue === a.month.revenue + b.month.revenue && tot.week.revenue === a.week.revenue + b.week.revenue, 'totais = soma dos estabelecimentos (hoje, 7 dias, mes)', tot);
     ok(typeof a.month.net_profit === 'number' && typeof tot.month.net_profit === 'number' && 'change_pct' in tot.today && typeof a.open_now === 'boolean', 'lucro liquido do mes, comparacoes e «aberto agora»', { net: tot.month.net_profit, open: a.open_now });
 
+    // L17: uma venda pelo id, so no seu estabelecimento.
+    const one = await sw.req('GET', '/api/owner/sales/' + saleB.data.id);
+    ok(one.status === 200 && one.data.id === saleB.data.id && one.data.items.length === 1, 'GET /api/owner/sales/:id: a venda de B, em B', one.status);
+    ok((await owner.req('GET', '/api/owner/sales/' + saleB.data.id)).status === 404, 'a venda de B nao se le a partir de A (404)');
     const rec = await owner.req('GET', '/api/group/recent?limit=10');
     const rb = rec.data.find((s) => s.id === saleB.data.id);
     const rt = rec.data.find((s) => s.id === saleT.data.id);

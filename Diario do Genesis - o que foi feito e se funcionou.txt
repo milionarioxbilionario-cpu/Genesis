@@ -2298,3 +2298,16 @@ SITE REAL (31/10, 2.ª parte): publicado e testado em genesismz.com: as correcç
 - AO ENTRAR (com 2 ou mais estabelecimentos): aparece «Em qual estabelecimento deseja entrar?», com os cartões de cada um (vendas de hoje, aberto/fechado) e o cartão «Painel geral». Lembra-se da última escolha. Ao criar o 2.º estabelecimento aparece uma vez a mensagem «Parabéns: activou o Painel geral e o Hub».
 - Ficou para depois: «Mudar o principal», vários estabelecimentos no pedido de conta, o aviso de venda abrir a própria venda, o relatório de todos por WhatsApp e o mapa 3D completo.
 - Testes: 608 + 354 + 140 verificações no servidor, todas certas; testes automáticos 144 + 76. Funcionou: sim no servidor de testes; falta repetir no site real depois de publicar.
+
+
+=== 01/11/2026 — E2: revisão de segurança dos gerentes e do Painel geral ===
+- Pus três «revisores» independentes a tentar furar o que fiz ontem (gerentes e Painel geral). Encontraram coisas reais, que já corrigi:
+  - ao guardar uma lista de compras, o servidor devolvia ao gerente o total a preço de custo (dava para saber o custo de qualquer produto);
+  - o aviso ao vivo das vendas continuava a chegar a um gerente desactivado (agora fecha em menos de meio minuto);
+  - o gerente conseguia tirar um produto do catálogo por um caminho escondido;
+  - o seu PIN podia ficar igual ao de um gerente (o rastreio dizia «dono» no que foi o gerente);
+  - mais quatro pormenores (rastreio, o seu WhatsApp nos registos de envio, a ordem das sugestões de compra e dois «0,00 MT» falsos no ecrã do gerente).
+- Ficou um risco por fechar, que já existia antes: um terminal emparelhado consegue enviar, sem PIN, vendas e perdas em nome de um caixista (é o caminho das vendas guardadas sem internet). Desde ontem o gerente também emparelha terminais. Vou corrigir com um «passe» por caixista, com cuidado para não perder vendas guardadas sem internet.
+- Novo: tocar no aviso de uma venda abre essa venda (antes abria a lista).
+- Testes: 149 + 82 verificações no servidor, todas certas. Funcionou: sim no servidor; falta repetir no site real depois de publicar.
+- Nota: o relógio deste computador está cerca de 1 hora atrasado. A app usa a hora do servidor (certa), mas convém acertar a hora do Windows.

@@ -157,7 +157,7 @@ function Stock({ products }) {
               { key: 'qty', header: t('Deste lote'), align: 'right', render: (l) => <span>{isMeasured(l.unit) ? `${formatQty(l.quantity, l.unit)} / ${formatQty(l.product_stock ?? l.quantity, l.unit)}` : t('{a} de {b} un.', { a: int(l.quantity), b: int(l.product_stock ?? l.quantity) })}</span> },
               { key: 'expiry', header: t('Validade'), render: (l) => date(l.expiry_date) },
               { key: 'left', header: '', align: 'right', render: (l) => <Badge tone={l.days_left < 0 ? 'danger' : l.days_left <= 2 ? 'danger' : 'warning'}>{l.days_left < 0 ? t('Expirado') : l.days_left === 0 ? t('Expira hoje') : t('{n} dia(s)', { n: l.days_left })}</Badge> },
-              { key: 'value', header: t('Valor (custo)'), align: 'right', render: (l) => money(l.value) },
+              ...(seesCosts ? [{ key: 'value', header: t('Valor (custo)'), align: 'right', render: (l) => money(l.value) }] : []),
             ]}
             rows={lots}
             rowKey="lot_id"
